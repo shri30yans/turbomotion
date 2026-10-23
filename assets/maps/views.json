@@ -1,0 +1,693 @@
+{
+ "places": {
+  "amber": [
+   75.8513,
+   26.9855
+  ],
+  "jaigarh": [
+   75.8456,
+   26.9851
+  ],
+  "jaipur": [
+   75.8237,
+   26.9258
+  ],
+  "delhi": [
+   77.241,
+   28.6562
+  ],
+  "agra": [
+   78.0211,
+   27.1795
+  ],
+  "ajmer": [
+   74.6399,
+   26.4499
+  ],
+  "sanganer": [
+   75.786,
+   26.8206
+  ],
+  "sambhar": [
+   75.1899,
+   26.9072
+  ],
+  "dausa": [
+   76.3375,
+   26.8932
+  ],
+  "haldighati": [
+   73.6984,
+   24.8925
+  ],
+  "kabul": [
+   69.2075,
+   34.5553
+  ],
+  "patna": [
+   85.1376,
+   25.5941
+  ],
+  "rajmahal": [
+   87.84,
+   25.05
+  ],
+  "udaipur": [
+   73.7125,
+   24.5854
+  ],
+  "jodhpur": [
+   73.0243,
+   26.2389
+  ],
+  "chaksu": [
+   75.9435,
+   26.6047
+  ]
+ },
+ "maps": {
+  "region": {
+   "title": "NORTHERN INDIA · 16TH CENTURY",
+   "home": [
+    "India"
+   ],
+   "views": [
+    {
+     "center": [
+      79,
+      23.5
+     ],
+     "span": 34,
+     "step": 1
+    },
+    {
+     "center": [
+      76.6,
+      27.4
+     ],
+     "span": 7.2,
+     "at": "c0",
+     "dur": 2.6,
+     "step": 1
+    },
+    {
+     "center": [
+      76.7,
+      27.5
+     ],
+     "span": 7,
+     "step": 2
+    }
+   ],
+   "areas": [
+    {
+     "state": "Rajasthan",
+     "at": "c0+0.6",
+     "step": 1
+    }
+   ],
+   "labels": [
+    {
+     "text": "RAJASTHAN",
+     "at_": [
+      74.6,
+      26.2
+     ],
+     "at": "c0+1.2",
+     "step": 1,
+     "faint": true
+    }
+   ],
+   "pins": [
+    {
+     "place": "amber",
+     "label": "Amber",
+     "at": "c0+1.4",
+     "step": 1,
+     "style": "home",
+     "dx": -30,
+     "dy": 14
+    },
+    {
+     "place": "delhi",
+     "label": "Delhi",
+     "at": "c1",
+     "step": 1
+    },
+    {
+     "place": "agra",
+     "label": "Agra",
+     "at": "c2",
+     "step": 1
+    }
+   ],
+   "routes": [
+    {
+     "via": [
+      "amber",
+      "delhi"
+     ],
+     "at": "c1",
+     "dur": 1,
+     "step": 1,
+     "label": "≈ 220 km",
+     "bend": 0,
+     "dashed": true,
+     "labelDx": -70
+    },
+    {
+     "via": [
+      "amber",
+      "agra"
+     ],
+     "at": "c2",
+     "dur": 1,
+     "step": 1,
+     "label": "≈ 220 km",
+     "bend": 0,
+     "dashed": true,
+     "labelDy": 70
+    }
+   ],
+   "rings": [
+    {
+     "center": [
+      77.62,
+      27.92
+     ],
+     "km": 125,
+     "label": "MUGHAL HEARTLAND",
+     "at": "c0",
+     "step": 2
+    }
+   ]
+  },
+  "journey1562": {
+   "title": "JANUARY – FEBRUARY 1562",
+   "home": [
+    "India"
+   ],
+   "legend": "ROUTE SIMPLIFIED · MODERN BORDERS",
+   "views": [
+    {
+     "center": [
+      76.45,
+      26.85
+     ],
+     "span": 4.6
+    },
+    {
+     "center": [
+      76.2,
+      26.85
+     ],
+     "span": 4.2,
+     "at": "c2",
+     "dur": 2
+    }
+   ],
+   "pins": [
+    {
+     "place": "amber",
+     "label": "Amber",
+     "at": 0.2,
+     "style": "home",
+     "dx": -26,
+     "dy": -24
+    },
+    {
+     "place": "agra",
+     "label": "Agra",
+     "sub": "AKBAR'S CAPITAL",
+     "at": "c0"
+    },
+    {
+     "place": "ajmer",
+     "label": "Ajmer",
+     "sub": "PILGRIMAGE",
+     "at": "c1+0.4",
+     "dx": -22
+    },
+    {
+     "place": "sanganer",
+     "label": "Sanganer",
+     "sub": "20 JAN · BHARMAL MEETS AKBAR",
+     "at": "c2",
+     "dy": 48
+    },
+    {
+     "place": "sambhar",
+     "label": "Sambhar",
+     "sub": "6 FEB · THE MARRIAGE",
+     "at": "c2+1.8",
+     "dx": -22,
+     "dy": -30
+    }
+   ],
+   "routes": [
+    {
+     "via": [
+      "agra",
+      "dausa",
+      "sanganer",
+      "ajmer"
+     ],
+     "at": "c0+0.3",
+     "dur": 3.2,
+     "bend": 0.06,
+     "color": "teal"
+    }
+   ]
+  },
+  "campaigns": {
+   "title": "MAN SINGH I · MUGHAL COMMANDS",
+   "home": [
+    "India"
+   ],
+   "views": [
+    {
+     "center": [
+      75,
+      27
+     ],
+     "span": 11,
+     "step": 1
+    },
+    {
+     "center": [
+      78,
+      29.6
+     ],
+     "span": 33,
+     "at": "c0",
+     "dur": 2.4,
+     "step": 1
+    },
+    {
+     "center": [
+      78,
+      29.6
+     ],
+     "span": 33,
+     "step": 2
+    },
+    {
+     "center": [
+      79,
+      28
+     ],
+     "span": 32,
+     "step": 3
+    },
+    {
+     "center": [
+      79,
+      28
+     ],
+     "span": 32,
+     "step": 4
+    }
+   ],
+   "pins": [
+    {
+     "place": "amber",
+     "label": "Amber",
+     "at": 0.2,
+     "step": 1,
+     "style": "home",
+     "dx": -24,
+     "dy": 46
+    },
+    {
+     "place": "haldighati",
+     "label": "Haldighati",
+     "sub": "1576",
+     "at": 0.5,
+     "step": 1,
+     "dx": -22
+    },
+    {
+     "place": "kabul",
+     "label": "Kabul",
+     "sub": "1581 · GOVERNOR 1585–86",
+     "at": "c1",
+     "step": 1
+    },
+    {
+     "place": "patna",
+     "label": "Bihar",
+     "sub": "GOVERNOR 1587–94",
+     "at": "c0",
+     "step": 2
+    },
+    {
+     "place": "rajmahal",
+     "label": "Bengal",
+     "sub": "3 TERMS · 1595–1606",
+     "at": "c0",
+     "step": 3,
+     "dx": -22,
+     "dy": 50
+    }
+   ],
+   "routes": [
+    {
+     "via": [
+      "amber",
+      "kabul"
+     ],
+     "at": "c1",
+     "dur": 1.4,
+     "step": 1,
+     "dashed": true,
+     "bend": -0.15
+    },
+    {
+     "via": [
+      "amber",
+      "patna"
+     ],
+     "at": "c0",
+     "dur": 1.2,
+     "step": 2,
+     "dashed": true,
+     "bend": -0.12
+    },
+    {
+     "via": [
+      "patna",
+      "rajmahal"
+     ],
+     "at": "c0",
+     "dur": 1,
+     "step": 3,
+     "dashed": true,
+     "bend": -0.2
+    }
+   ],
+   "areas": [
+    {
+     "state": "Bihar",
+     "at": "c0",
+     "step": 4
+    },
+    {
+     "state": "West Bengal",
+     "at": "c0+0.2",
+     "step": 4
+    }
+   ],
+   "labels": [
+    {
+     "text": "THE EMPEROR'S PROVINCES",
+     "at_": [
+      84.5,
+      22.4
+     ],
+     "at": "c0+0.4",
+     "step": 4,
+     "size": 26
+    }
+   ]
+  },
+  "rajput1708": {
+   "title": "1708 · THE RAJPUT ALLIANCE",
+   "home": [
+    "India"
+   ],
+   "views": [
+    {
+     "center": [
+      74.9,
+      25.9
+     ],
+     "span": 6.4
+    }
+   ],
+   "areas": [
+    {
+     "state": "Rajasthan",
+     "at": 0.1
+    }
+   ],
+   "pins": [
+    {
+     "place": "amber",
+     "label": "Amber",
+     "sub": "IMPERIAL GARRISON",
+     "at": 0.2,
+     "style": "home"
+    },
+    {
+     "place": "udaipur",
+     "label": "Mewar",
+     "sub": "UDAIPUR",
+     "at": "c0",
+     "dx": -22
+    },
+    {
+     "place": "jodhpur",
+     "label": "Marwar",
+     "sub": "JODHPUR",
+     "at": "c1",
+     "dx": -22
+    }
+   ],
+   "routes": [
+    {
+     "via": [
+      "udaipur",
+      "amber"
+     ],
+     "at": "c2-0.4",
+     "dur": 1.2,
+     "color": "teal",
+     "bend": 0.12
+    },
+    {
+     "via": [
+      "jodhpur",
+      "amber"
+     ],
+     "at": "c2-0.2",
+     "dur": 1.2,
+     "color": "teal",
+     "bend": -0.1
+    }
+   ]
+  },
+  "amber_jaipur": {
+   "title": "AMBER → JAIPUR",
+   "home": [
+    "India"
+   ],
+   "legend": "SCHEMATIC · HILLS AND STREETS SIMPLIFIED",
+   "views": [
+    {
+     "center": [
+      75.848,
+      26.972
+     ],
+     "span": 0.13,
+     "step": 1
+    },
+    {
+     "center": [
+      75.838,
+      26.955
+     ],
+     "span": 0.19,
+     "step": 2
+    }
+   ],
+   "schematic": [
+    {
+     "kind": "hills",
+     "at": 0.2,
+     "pts": [
+      [
+       75.835,
+       27.004,
+       1.8
+      ],
+      [
+       75.858,
+       27.008,
+       2
+      ],
+      [
+       75.88,
+       26.995,
+       1.6
+      ],
+      [
+       75.874,
+       26.972,
+       1.3
+      ],
+      [
+       75.828,
+       26.99,
+       1.5
+      ],
+      [
+       75.822,
+       26.972,
+       1.4
+      ],
+      [
+       75.815,
+       26.955,
+       1.3
+      ],
+      [
+       75.808,
+       26.942,
+       1.1
+      ],
+      [
+       75.842,
+       26.976,
+       1
+      ],
+      [
+       75.795,
+       26.99,
+       1.6
+      ],
+      [
+       75.9,
+       27.01,
+       1.6
+      ]
+     ]
+    },
+    {
+     "kind": "lake",
+     "at": 0.4,
+     "pts": [
+      [
+       75.851,
+       26.9845
+      ],
+      [
+       75.856,
+       26.9842
+      ],
+      [
+       75.8585,
+       26.9865
+      ],
+      [
+       75.855,
+       26.9883
+      ],
+      [
+       75.851,
+       26.9872
+      ]
+     ]
+    },
+    {
+     "kind": "grid",
+     "at": "c0",
+     "step": 2,
+     "pts": [
+      [
+       75.806,
+       26.935
+      ],
+      [
+       75.836,
+       26.912
+      ]
+     ]
+    }
+   ],
+   "pins": [
+    {
+     "place": "amber",
+     "label": "Amber",
+     "sub": "OLD CAPITAL",
+     "at": 0.3,
+     "style": "home",
+     "dx": 30,
+     "dy": 10
+    },
+    {
+     "place": "jaigarh",
+     "label": "Jaigarh",
+     "at": 0.6,
+     "dx": -24,
+     "dy": -20
+    },
+    {
+     "place": "jaipur",
+     "label": "Jaipur",
+     "sub": "FOUNDED 1727",
+     "at": "c0+0.6",
+     "step": 2,
+     "dx": 40,
+     "dy": 20
+    }
+   ],
+   "rings": [
+    {
+     "center": [
+      75.8513,
+      26.9855
+     ],
+     "km": 1.6,
+     "at": "c0",
+     "step": 1
+    }
+   ],
+   "routes": [
+    {
+     "via": [
+      "amber",
+      "jaipur"
+     ],
+     "at": 0.3,
+     "dur": 1.2,
+     "step": 2,
+     "label": "11 km",
+     "bend": 0.08,
+     "dashed": true,
+     "labelDx": 70
+    }
+   ],
+   "labels": [
+    {
+     "text": "ARAVALLI HILLS",
+     "at_": [
+      75.875,
+      27.018
+     ],
+     "at": 0.8,
+     "faint": true
+    },
+    {
+     "text": "OPEN PLAIN",
+     "at_": [
+      75.885,
+      26.925
+     ],
+     "at": "c0",
+     "step": 2,
+     "faint": true
+    },
+    {
+     "text": "≈34 m AVENUES",
+     "at_": [
+      75.821,
+      26.906
+     ],
+     "at": "c0+1.2",
+     "step": 2,
+     "size": 26
+    }
+   ]
+  }
+ }
+}

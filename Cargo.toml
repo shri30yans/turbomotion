@@ -1,0 +1,18 @@
+[package]
+name = "turbomotion"
+version = "0.1.0"
+edition = "2021"
+description = "Native renderer for compiled films: Skia on Metal, no browser."
+readme = "README.md"
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+metal = "0.31"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+skia-safe = { version = "0.87", features = ["metal", "textlayout"] }
+
+[profile.release]
+lto = "thin"
+codegen-units = 1

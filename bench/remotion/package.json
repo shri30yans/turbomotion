@@ -1,0 +1,4 @@
+{"name":"turbomotion-remotion-reference","private":true,
+ "scripts":{"studio":"remotion studio src/index.tsx --port=8890","typecheck":"tsc --noEmit"},
+ "dependencies":{"remotion":"4.0.538","@remotion/cli":"4.0.538","@remotion/renderer":"4.0.538","@remotion/bundler":"4.0.538","gsap":"3.14.2","react":"19.2.0","react-dom":"19.2.0"},
+ "devDependencies":{"typescript":"5.9.3","@types/react":"19.2.0"}}

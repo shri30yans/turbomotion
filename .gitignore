@@ -1,0 +1,5 @@
+/target
+/bench/work
+/bench/remotion/node_modules
+/bench/remotion/package-lock.json
+.DS_Store
