@@ -15,6 +15,7 @@ pub mod geo;
 pub mod media;
 pub mod model;
 pub mod noise;
+pub mod pack;
 pub mod path;
 pub mod post;
 pub mod render;

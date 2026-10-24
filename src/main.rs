@@ -31,6 +31,8 @@ enum Command {
 }
 
 fn main() -> Result<()> {
+    // film graphics (globe, maps, charts...) are offered to compositions as packs; comp itself knows none of them
+    turbomotion_comp::pack::register(turbomotion_studio::pack::all);
     match Cli::parse().command {
         Command::Comp { command } => turbomotion_comp::cli::run(command),
         Command::Studio { command } => turbomotion_studio::cli::run(command),
