@@ -3,6 +3,7 @@
 
 mod caption;
 mod card;
+mod clip;
 mod compare;
 mod diagram;
 mod map;
@@ -68,12 +69,14 @@ struct Entry {
 
 const TABLE: &[Entry] = &[
     Entry { kinds: &["photo", "illustration"], params: photo::PARAMS, verify: accept, prepare: photo::prepare },
+    Entry { kinds: &["clip"], params: clip::PARAMS, verify: accept, prepare: clip::prepare },
     Entry { kinds: &["stat"], params: stat::PARAMS, verify: accept, prepare: stat::prepare },
     Entry { kinds: &["card"], params: card::PARAMS, verify: accept, prepare: card::prepare },
     Entry { kinds: &["painting"], params: painting::PARAMS, verify: accept, prepare: painting::prepare },
     Entry { kinds: &["compare"], params: compare::PARAMS, verify: accept, prepare: compare::prepare },
     Entry { kinds: &["map"], params: map::PARAMS, verify: accept, prepare: map::prepare },
     Entry { kinds: &["diagram"], params: diagram::DIAGRAM_PARAMS, verify: diagram::verify, prepare: diagram::prepare_diagram },
+    Entry { kinds: &["graph"], params: diagram::GRAPH_PARAMS, verify: accept, prepare: diagram::prepare_graph },
     Entry { kinds: &["plan"], params: diagram::PLAN_PARAMS, verify: accept, prepare: diagram::prepare_plan },
 ];
 

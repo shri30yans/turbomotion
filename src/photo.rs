@@ -82,6 +82,24 @@ impl Photo {
         Self::prepare(context, film, public, shot, look)
     }
 
+    /// A clip shot's camera and grade over `first`, its first decoded frame (every frame is the same size).
+    pub fn for_clip(shot: &Shot, first: Image) -> Result<Self> {
+        let view = |key: &str, default: View| shot.param(key).map(parse_view).unwrap_or(Ok(default));
+        Ok(Self {
+            image: first,
+            depth: None,
+            motion: Move {
+                from: view("from", View { cx: 0.5, cy: 0.5, zoom: 1.0 })?,
+                to: view("to", View { cx: 0.5, cy: 0.5, zoom: 1.0 })?,
+                duration: shot.duration,
+                has_depth: false,
+            },
+            grade: shot.param("grade").map(Grade::parse).transpose()?.unwrap_or(Grade::Warm),
+            dim: shot.param("dim").map(str::parse).transpose().context("dim is not a number")?.unwrap_or(0.0),
+            vignette: VIGNETTE,
+        })
+    }
+
     /// A stat shot's backdrop: warm grade, dimmed, flat (no parallax).
     pub fn dimmed(context: &mut DirectContext, film: &Film, public: &Path, shot: &Shot) -> Result<Self> {
         let look = Look { depth: false, grade: Some(Grade::Warm), dim: STAT_DIM, vignette: STAT_VIGNETTE };
@@ -115,20 +133,25 @@ impl Photo {
     }
 
     pub fn draw(&self, canvas: &Canvas, effect: &PhotoEffect, film: &Film, seconds: f32) -> Result<()> {
+        self.draw_with(canvas, effect, film, seconds, &self.image)
+    }
+
+    /// Draw `frame` (same size as the shot's image) through this shot's camera and grade.
+    pub fn draw_with(&self, canvas: &Canvas, effect: &PhotoEffect, film: &Film, seconds: f32, frame: &Image) -> Result<()> {
         let (w, h) = (film.width as f32, film.height as f32);
         let place = self.placement(film, seconds);
         let sampling = SamplingOptions::new(FilterMode::Linear, MipmapMode::None);
         let child = |image: &Image| image.to_shader((TileMode::Clamp, TileMode::Clamp), sampling, None).map(ChildPtr::Shader);
-        let image = child(&self.image).context("image shader")?;
+        let image = child(frame).context("image shader")?;
         // Without a depth map the shader never samples `dep`; bind the photo to satisfy the child slot.
-        let depth = child(self.depth.as_ref().unwrap_or(&self.image)).context("depth shader")?;
+        let depth = child(self.depth.as_ref().unwrap_or(frame)).context("depth shader")?;
         let size = |i: &Image| [i.width() as f32, i.height() as f32];
-        let depth_size = size(self.depth.as_ref().unwrap_or(&self.image));
+        let depth_size = size(self.depth.as_ref().unwrap_or(frame));
         let mut uniforms = Vec::with_capacity(24 * 4);
         let mut push = |values: &[f32]| values.iter().for_each(|v| uniforms.extend_from_slice(&v.to_ne_bytes()));
         push(&[w, h]);
         push(&[place.rect.x, place.rect.y, place.rect.w, place.rect.h]);
-        push(&size(&self.image));
+        push(&size(frame));
         push(&depth_size);
         push(&place.shift);
         push(&place.focus);

@@ -1,0 +1,20 @@
+// Floating bokeh dust: every dot lifts the backdrop toward white by its own Gaussian (`dust_apply`).
+const int MAX_DOTS = 96;
+uniform float count;
+uniform float4 dots[MAX_DOTS];   // x, y (integer pixel of the centre), sigma, strength * support (<0 = none)
+uniform float4 extra[MAX_DOTS];  // support half-size, unused x3
+
+half4 main(float2 p) {
+    float2 px = floor(p);
+    float keep = 1.0;
+    for (int i = 0; i < MAX_DOTS; i++) {
+        if (float(i) >= count) break;
+        float2 d = px - dots[i].xy;
+        float half_size = extra[i].x;
+        if (abs(d.x) > half_size || abs(d.y) > half_size) continue;
+        float g = dots[i].w * exp(-dot(d, d) / (2.0 * dots[i].z * dots[i].z));
+        keep *= 1.0 - g;
+    }
+    float a = 1.0 - keep;
+    return half4(half3(a), a);
+}

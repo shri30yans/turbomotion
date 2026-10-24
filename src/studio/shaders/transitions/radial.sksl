@@ -1,0 +1,15 @@
+// Circular reveal of B from the centre with a glowing rim (the reference `tr_radial`).
+uniform shader a;
+uniform shader b;
+uniform float2 frame;
+uniform float k;       // reveal radius as a fraction of the half-diagonal, softness included
+uniform float soft;
+
+half4 main(float2 p) {
+    float2 half_frame = frame * 0.5;
+    float r = length(p - 0.5 - half_frame) / length(half_frame);
+    float m = clamp((k - r) / soft, 0.0, 1.0);
+    float rim = exp(-pow((r - (k - soft)) / 0.02, 2.0)) * 0.5;
+    half3 c = mix(a.eval(p).rgb, b.eval(p).rgb, half(m)) + half3(1.0, 0.95, 0.9) * half(rim);
+    return half4(clamp(c, half3(0.0), half3(1.0)), 1.0);
+}

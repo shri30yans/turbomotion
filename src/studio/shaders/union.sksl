@@ -1,0 +1,4 @@
+// Union of coverage masks: shapes that abut add up to full coverage, shapes that overlap never exceed it.
+half4 main(half4 src, half4 dst) {
+    return min(src + dst, half4(1.0));
+}

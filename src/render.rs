@@ -131,7 +131,7 @@ pub struct Job<'a> {
 /// Render `frames` into a silent mp4 at `out`.
 pub fn render_segment(job: &Job, frames: Range<u32>, out: &Path) -> Result<Timings> {
     let mut renderer = Renderer::new(job.project)?;
-    let mut encoder = Encoder::spawn(out, job.project.film, job.codec)?;
+    let mut encoder = Encoder::spawn(out, job.project.film.into(), job.codec)?;
     let mut pixels = Vec::new();
     let (mut readback, mut encode) = (Duration::ZERO, Duration::ZERO);
 

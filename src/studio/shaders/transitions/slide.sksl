@@ -1,0 +1,40 @@
+// B pushes in over A, which drifts back and darkens for depth (the reference `tr_slide_parallax`).
+uniform shader a;      // clamped at the edges
+uniform shader b;      // transparent beyond the edges
+uniform float frame_w;
+uniform float progress;    // eased 0..1
+uniform float direction;
+uniform float offset;      // whole pixels B is still away from rest (signed)
+
+const int RADIUS = 120;        // half the 241-tap kernel OpenCV picks for a float image at sigma 30
+const float SIGMA = 30.0;
+
+// 1 where B covers column `x`
+float covered(float x) {
+    float w = frame_w;
+    return direction > 0.0 ? (x >= clamp(offset, 0.0, w) ? 1.0 : 0.0) : (x < max(0.0, w + offset) ? 1.0 : 0.0);
+}
+
+// the cover mask blurred along x with OpenCV's default border (reflect without repeating the edge pixel)
+float shade(float x) {
+    float sum = 0.0;
+    float norm = 0.0;
+    for (int j = -RADIUS; j <= RADIUS; j++) {
+        float g = exp(-float(j * j) / (2.0 * SIGMA * SIGMA));
+        float i = x + float(j);
+        if (i < 0.0) i = -i;
+        if (i > frame_w - 1.0) i = 2.0 * (frame_w - 1.0) - i;
+        sum += g * covered(i);
+        norm += g;
+    }
+    return sum / norm;
+}
+
+half4 main(float2 p) {
+    float x = p.x - 0.5;
+    float m = covered(x);
+    half3 under = a.eval(float2(p.x + progress * frame_w * 0.22 * direction, p.y)).rgb * half(1.0 - 0.5 * progress);
+    under *= half(1.0 - 0.35 * shade(x) * (1.0 - m));
+    half3 over = b.eval(float2(p.x - offset, p.y)).rgb;
+    return half4(under * half(1.0 - m) + over * half(m), 1.0);
+}

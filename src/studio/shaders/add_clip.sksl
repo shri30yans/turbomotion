@@ -1,0 +1,4 @@
+// Additive light that never exceeds 1 (the reference clips after every add; half-float layers would not).
+half4 main(half4 src, half4 dst) {
+    return half4(min(dst.rgb + src.rgb, half3(1.0)), dst.a);
+}

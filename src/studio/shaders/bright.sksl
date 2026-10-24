@@ -1,0 +1,15 @@
+// Bloom source (after the grade prelude): graded colour, averaged over each 4x4 block (exactly an area downscale), then thresholded.
+uniform shader src;
+uniform float threshold;
+
+half4 main(float2 p) {
+    float2 base = floor(p) * 4.0;
+    float3 sum = float3(0.0);
+    for (int y = 0; y < 4; y++) {
+        for (int x = 0; x < 4; x++) {
+            sum += float3(grade(src.eval(base + float2(float(x) + 0.5, float(y) + 0.5)).rgb));
+        }
+    }
+    float3 avg = sum / 16.0;
+    return half4(half3(clamp(avg - threshold, 0.0, 1.0) / (1.0 - threshold)), 1.0);
+}

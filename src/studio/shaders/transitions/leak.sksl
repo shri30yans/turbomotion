@@ -1,0 +1,13 @@
+// A warm light leak sweeping across the cut (the reference `tr_lightleak`).
+uniform shader base;
+uniform float2 frame;
+uniform float strength;   // sin(pi u)
+uniform float centre;     // horizontal position of the flare, 0..1
+
+half4 main(float2 p) {
+    float2 q = (p - 0.5) / (frame - 1.0);
+    float blob = exp(-(pow((q.x - centre) / 0.35, 2.0) + pow((q.y - 0.35) / 0.55, 2.0)));
+    float tail = exp(-pow((q.x - centre + 0.25) / 0.5, 2.0));
+    half3 glow = half3(1.0, 0.55, 0.28) * half(blob * strength * 1.15) + half3(0.9, 0.3, 0.2) * half(tail * 0.3 * strength);
+    return half4(clamp(base.eval(p).rgb + glow, half3(0.0), half3(1.0)), 1.0);
+}

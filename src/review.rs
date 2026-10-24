@@ -47,6 +47,12 @@ const OVERLAP_SHARE: f32 = 0.12;
 const PROBES: [f32; 3] = [0.4, 0.75, 0.97];
 /// Every n-th shot (from the 5th) is redrawn after another frame to prove drawing is stateless.
 const DETERMINISM_EVERY: usize = 9;
+/// Text shorter than this many pixels is hard to read once the film is a phone-sized thumbnail.
+const SMALL_TEXT: f32 = 18.0;
+/// A shot whose first and last probe differ by less than this mean channel value (0-255) did not move.
+const STILL_DIFF: f32 = 0.35;
+/// ...and only counts as a held picture when it lasts at least this long.
+const STILL_SECONDS: f32 = 5.0;
 /// How far ahead the determinism check wanders before coming back.
 const WANDER_FRAMES: u32 = 45;
 
@@ -84,26 +90,44 @@ fn frame_hash(renderer: &mut Renderer, frame: u32, pixels: &mut Vec<u8>) -> Resu
 }
 
 /// Probe text layout at three moments per shot and check that sampled frames redraw identically;
-/// write the report to `report` and return how many frames had layout issues.
-pub fn qa(project: Project, report: &Path, only: &[String]) -> Result<usize> {
+/// write the report to `report` and return (frames with layout issues, frames that redrew differently).
+pub fn qa(project: Project, report: &Path, only: &[String]) -> Result<(usize, usize)> {
     let film = project.film;
     let size = (film.width as f32, film.height as f32);
     let mut renderer = Renderer::new(project)?;
     let (mut issues, mut determinism): (Vec<Value>, Vec<Value>) = (Vec::new(), Vec::new());
+    let (mut still, mut small): (Vec<Value>, Vec<Value>) = (Vec::new(), Vec::new());
+    let mut pixels = Vec::new();
 
     for shot in select(project, only)? {
+        let mut snaps: Vec<Vec<u8>> = Vec::new();
         for fraction in PROBES {
             let frame = shot.start_frame + (shot.duration_in_frames as f32 * fraction).floor() as u32;
             let (drawn, boxes) = probe::record(|| renderer.draw(frame));
             drawn?;
+            if shot.duration >= STILL_SECONDS && (fraction == PROBES[0] || fraction == PROBES[2]) {
+                renderer.pixels(&mut pixels)?;
+                snaps.push(pixels.clone());
+            }
+            if fraction == PROBES[2] {
+                let tiny: Vec<String> = boxes.iter().filter(|b| b.rect.height() < SMALL_TEXT && b.rect.height() > 2.0 && b.text.chars().count() >= 8).map(|b| format!("{:?} ({}px)", b.text, b.rect.height().round())).collect();
+                if !tiny.is_empty() {
+                    small.push(json!({"shot": shot.id, "text": tiny}));
+                }
+            }
             let found = layout_issues(&boxes, size);
             if !found.is_empty() {
                 issues.push(json!({"shot": shot.id, "type": shot.kind, "args": shot.args.join(" "), "frame": frame, "issues": found}));
             }
         }
+        if let [a, b] = snaps.as_slice() {
+            let diff = a.iter().zip(b).step_by(8).map(|(x, y)| x.abs_diff(*y) as f64).sum::<f64>() / (a.len() / 8).max(1) as f64;
+            if (diff as f32) < STILL_DIFF {
+                still.push(json!({"shot": shot.id, "type": shot.kind, "seconds": shot.duration, "diff": diff}));
+            }
+        }
     }
     if only.is_empty() {
-        let mut pixels = Vec::new();
         for shot in film.shots.iter().skip(DETERMINISM_EVERY / 2).step_by(DETERMINISM_EVERY) {
             let frame = shot.start_frame + (shot.duration_in_frames as f32 * 0.6).floor() as u32;
             let first = frame_hash(&mut renderer, frame, &mut pixels)?;
@@ -113,10 +137,10 @@ pub fn qa(project: Project, report: &Path, only: &[String]) -> Result<usize> {
         }
     }
     let identical = determinism.iter().filter(|d| d["identical"] == true).count();
-    let summary = format!("qa: {} frames with layout issues; determinism {identical}/{} identical", issues.len(), determinism.len());
-    fs::write(report, serde_json::to_string_pretty(&json!({"issues": issues, "determinism": determinism}))?).with_context(|| format!("writing {}", report.display()))?;
+    let summary = format!("qa: {} frames with layout issues; {} held pictures; {} shots with small text; determinism {identical}/{} identical", issues.len(), still.len(), small.len(), determinism.len());
+    fs::write(report, serde_json::to_string_pretty(&json!({"issues": issues, "determinism": determinism, "heldPictures": still, "smallText": small}))?).with_context(|| format!("writing {}", report.display()))?;
     println!("{summary}");
-    Ok(issues.len())
+    Ok((issues.len(), determinism.len() - identical))
 }
 
 #[cfg(test)]

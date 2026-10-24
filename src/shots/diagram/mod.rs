@@ -3,6 +3,7 @@
 
 mod engineering;
 mod explainers;
+mod graph;
 mod kit;
 mod node;
 
@@ -20,6 +21,7 @@ use crate::{
 
 pub const DIAGRAM_PARAMS: &[&str] = &["step"];
 pub const PLAN_PARAMS: &[&str] = &["step", "highlight", "mark"];
+pub const GRAPH_PARAMS: &[&str] = graph::PARAMS;
 
 /// The diagrams `shot diagram <name>` can name.
 const DIAGRAMS: &[(&str, Build)] = &[
@@ -107,13 +109,23 @@ pub fn prepare_diagram(loader: &mut Loader, shot: &Shot) -> Result<Box<dyn Scene
     assemble(loader, shot, *build)
 }
 
+/// A `graph` shot: tree, flow or timeline laid out from its JSON data file.
+pub fn prepare_graph(loader: &mut Loader, shot: &Shot) -> Result<Box<dyn Scene>> {
+    let json = graph::load(loader.public, shot)?;
+    let sheet = graph::build(&Kit { fonts: loader.fonts }, shot, &json)?;
+    finish(loader, shot, sheet)
+}
+
 pub fn prepare_plan(loader: &mut Loader, shot: &Shot) -> Result<Box<dyn Scene>> {
     assemble(loader, shot, engineering::palace_plan)
 }
 
 fn assemble(loader: &mut Loader, shot: &Shot, build: Build) -> Result<Box<dyn Scene>> {
-    let kit = Kit { fonts: loader.fonts };
-    let mut sheet = build(&kit, shot)?;
+    let sheet = build(&Kit { fonts: loader.fonts }, shot)?;
+    finish(loader, shot, sheet)
+}
+
+fn finish(loader: &mut Loader, shot: &Shot, mut sheet: Sheet) -> Result<Box<dyn Scene>> {
     sheet.nodes.iter_mut().try_for_each(|n| n.resolve(shot, sheet.step))?;
 
     let size = (loader.film.width as f32, loader.film.height as f32);

@@ -1,0 +1,17 @@
+// Radial zoom blur about the frame centre: the mean of progressively scaled copies (the reference `zoom_blur`).
+uniform shader src;
+uniform float2 frame;
+uniform float amount;
+uniform float taps;
+
+half4 main(float2 p) {
+    float2 centre = frame * 0.5;
+    float2 q = p - 0.5;
+    half3 sum = half3(0.0);
+    for (int i = 0; i < 16; i++) {
+        if (float(i) >= taps) break;
+        float s = 1.0 + amount * float(i) / (taps - 1.0);
+        sum += src.eval(centre + (q - centre) / s + 0.5).rgb;
+    }
+    return half4(sum / half(taps), 1.0);
+}

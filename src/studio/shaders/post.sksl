@@ -1,0 +1,34 @@
+// The final look in one pass: grade, bloom, radial chromatic aberration, vignette, film grain and the in/out fade
+// (the reference `post` followed by the fade in `Film.frame`).
+uniform shader src;      // scene or transition output, full resolution
+uniform shader bloom_a;  // highlights blurred at quarter resolution (narrow)
+uniform shader bloom_b;  // the same, blurred wider
+uniform shader grain;    // gaussian noise at full resolution, stored as 0.5 + 0.1 * n
+uniform float2 res;
+uniform float4 look;     // bloom strength, chromatic amount, vignette strength, grain strength
+uniform float fade;
+
+// graded scene plus bloom at the pixel whose index-space position is `q` (centre-based sampling adds 0.5)
+half3 shade(float2 q) {
+    float2 s = q + 0.5;
+    half3 c = grade(src.eval(s).rgb);
+    if (look.x > 0.0) c = min(c + (bloom_a.eval(s / 4.0).rgb + 0.6 * bloom_b.eval(s / 4.0).rgb) * half(look.x), half3(1.0));
+    return c;
+}
+
+half4 main(float2 p) {
+    float2 q = p - 0.5;                      // OpenCV pixel index
+    float2 c = res * 0.5;
+    half3 col;
+    if (look.y >= 0.15) {
+        float sr = 1.0 + look.y / 900.0;
+        float sb = 1.0 - look.y / 900.0;
+        col = half3(shade((q - c) / sr + c).r, shade(q).g, shade((q - c) / sb + c).b);
+    } else {
+        col = shade(q);
+    }
+    float2 n = (q - c) / c;
+    float vig = 1.0 - look.z * pow(clamp(length(n) - 0.45, 0.0, 1.0), 1.8);
+    col = col * half(vig) + half(grain.eval(p).r - 0.5) * 10.0 * half(look.w);
+    return half4(clamp(col, half3(0.0), half3(1.0)) * half(fade), 1.0);
+}

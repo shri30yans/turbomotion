@@ -1,0 +1,15 @@
+// Soft diagonal wipe from A to B with a bright edge (the reference `tr_luma`).
+uniform shader a;
+uniform shader b;
+uniform float2 direction;   // unit vector the wipe travels along
+uniform float extent;       // projection of the far corner on `direction`
+uniform float k;            // wipe position
+uniform float soft;
+
+half4 main(float2 p) {
+    float t = dot(p - 0.5, direction) / extent;
+    float m = clamp((k - t) / soft + 0.5, 0.0, 1.0);
+    float edge = exp(-pow((t - k) / (soft * 0.35), 2.0)) * 0.35;
+    half3 c = mix(a.eval(p).rgb, b.eval(p).rgb, half(m)) + half(edge);
+    return half4(clamp(c, half3(0.0), half3(1.0)), 1.0);
+}

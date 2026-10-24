@@ -1,0 +1,25 @@
+// Whip pan: both frames slide sideways under heavy horizontal motion blur (the reference `tr_whip`).
+uniform shader a;
+uniform shader b;
+uniform float frame_w;
+uniform float amount;      // total blur span in pixels
+uniform float offset;      // how far the pan has travelled (signed)
+uniform float direction;   // +1 pans left, -1 pans right
+uniform float cut;         // width of the columns still showing A
+uniform float taps;
+
+half4 main(float2 p) {
+    float x = p.x - 0.5;
+    bool shows_a = direction > 0.0 ? x < cut : x >= frame_w - cut;
+    float shift = shows_a ? offset : offset - frame_w * direction;
+    bool blur = abs(amount) >= 1.5;      // below that the reference leaves the frame unblurred
+    float n = blur ? taps : 1.0;
+    half3 sum = half3(0.0);
+    for (int i = 0; i < 16; i++) {
+        if (float(i) >= n) break;
+        float f = blur ? float(i) / (taps - 1.0) - 0.5 : 0.0;
+        float2 at = float2(p.x + shift - amount * f, p.y);
+        sum += shows_a ? a.eval(at).rgb : b.eval(at).rgb;
+    }
+    return half4(sum / half(n), 1.0);
+}

@@ -30,14 +30,28 @@ impl Codec {
     }
 }
 
+/// Frame geometry and rate of the video being encoded.
+#[derive(Debug, Clone, Copy)]
+pub struct VideoFormat {
+    pub width: i32,
+    pub height: i32,
+    pub fps: u32,
+}
+
+impl From<&Film> for VideoFormat {
+    fn from(film: &Film) -> Self {
+        Self { width: film.width, height: film.height, fps: film.fps }
+    }
+}
+
 pub struct Encoder {
     child: Child,
     stdin: ChildStdin,
 }
 
 impl Encoder {
-    pub fn spawn(out: &Path, film: &Film, codec: &Codec) -> Result<Self> {
-        let (width, height, fps) = (film.width, film.height, film.fps);
+    pub fn spawn(out: &Path, format: VideoFormat, codec: &Codec) -> Result<Self> {
+        let VideoFormat { width, height, fps } = format;
         let mut child = Command::new("ffmpeg")
             .args(["-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "bgra"])
             .args(["-s", &format!("{width}x{height}"), "-r", &fps.to_string(), "-i", "-"])

@@ -1,0 +1,52 @@
+// An orthographic globe textured from equirectangular land, border and highlight masks, shaded and rimmed with
+// atmosphere (the reference `maps.globe_layer`). Drawn into a square layer of diameter `d` at its origin.
+uniform shader land_tex;
+uniform shader border_tex;
+uniform shader hl0;
+uniform shader hl1;
+uniform shader hl2;
+uniform shader hl3;
+uniform float d;
+uniform float2 facing;       // longitude, latitude the globe is turned to (radians)
+uniform float2 tex_size;     // equirectangular texture width, height in texels
+uniform float3 land_c;
+uniform float3 sea_c;
+uniform float3 border_c;
+uniform float3 rim_c;
+uniform float4 hl[4];        // highlight colour rgb and alpha
+
+const float EDGE_SIGMA = 0.8;   // the reference softens the limb with a Gaussian of this sigma
+
+half4 main(float2 p) {
+    float r = d * 0.5;
+    float x = (p.x - r) / r;
+    float y = -(p.y - r) / r;
+    float r2 = x * x + y * y;
+    float z = sqrt(clamp(1.0 - r2, 0.0, 1.0));
+    // view axes (x right, y up, z toward the viewer) to world axes
+    float wx = z * cos(facing.y) - y * sin(facing.y);
+    float wz = z * sin(facing.y) + y * cos(facing.y);
+    float lon = degrees(atan(x, wx) + facing.x);
+    float lat = degrees(asin(clamp(wz, -1.0, 1.0)));
+    float2 at = float2(mod(lon + 180.0, 360.0) / 360.0 * tex_size.x, (90.0 - lat) / 180.0 * tex_size.y) + 0.5;
+
+    float land = land_tex.eval(at).a;
+    float border = border_tex.eval(at).a;
+    float shade = clamp(0.55 + 0.55 * (z * 0.75 - x * 0.25 + y * 0.35), 0.25, 1.1);
+    float3 col = sea_c * (1.0 - land) + land_c * land;
+    col = col * (0.75 + 0.45 * shade) + border_c * border * 0.55;
+    float m0 = hl0.eval(at).a * hl[0].a;
+    col = col * (1.0 - m0) + hl[0].rgb * m0 * shade;
+    float m1 = hl1.eval(at).a * hl[1].a;
+    col = col * (1.0 - m1) + hl[1].rgb * m1 * shade;
+    float m2 = hl2.eval(at).a * hl[2].a;
+    col = col * (1.0 - m2) + hl[2].rgb * m2 * shade;
+    float m3 = hl3.eval(at).a * hl[3].a;
+    col = col * (1.0 - m3) + hl[3].rgb * m3 * shade;
+    col = clamp(col + rim_c * pow(clamp(1.0 - z, 0.0, 1.0), 2.4) * 0.55, 0.0, 1.0);
+
+    // coverage of a unit disc blurred by EDGE_SIGMA: a logistic fit of the Gaussian step across the limb
+    float inside = (1.0 - sqrt(r2)) * r;
+    float a = 1.0 / (1.0 + exp(-1.702 * inside / EDGE_SIGMA));
+    return half4(half3(col * a), half(a));
+}

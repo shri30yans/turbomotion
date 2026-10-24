@@ -1,0 +1,15 @@
+// Colour grade shared by every program that applies one (the reference `fx.grade`): contrast, lift/gain, gamma,
+// saturation and a tint. Programs that include this source start their uniform list with `g1`, `g2`, `g3`.
+uniform float4 g1;       // lift, gamma, gain, sat
+uniform float4 g2;       // tint rgb, tint_k
+uniform float2 g3;       // contrast, grade enabled
+
+half3 grade(half3 c) {
+    if (g3.y < 0.5) return c;
+    float3 a = (float3(c) - 0.5) * g3.x + 0.5;
+    a = pow(clamp(a * g1.z + g1.x, 0.0, 1.0), float3(1.0 / g1.y));
+    float l = dot(a, float3(0.299, 0.587, 0.114));
+    a = float3(l) + (a - l) * g1.w;
+    a = a * (1.0 - g2.w) + g2.xyz * g2.w;
+    return half3(clamp(a, 0.0, 1.0));
+}

@@ -1,12 +1,14 @@
 //! Native renderer for compiled films: reads `film.json`, draws with Skia on Metal, pipes raw
 //! frames to ffmpeg. Comments citing `bench/remotion/src/…` refer to the Remotion implementation
-//! of the same shots, kept as the benchmark and parity reference.
+//! of the same shots, kept as the benchmark and parity reference. The `studio` subcommand renders
+//! the motion-graphics films of `src/studio` (see its README).
 
 mod camera;
 mod chrome;
 mod css_filter;
 mod ease;
 mod encode;
+mod figure;
 mod film;
 mod gpu;
 mod layer;
@@ -21,6 +23,8 @@ mod probe;
 mod render;
 mod review;
 mod shots;
+mod spot;
+mod studio;
 mod text;
 
 use std::{fs, path::PathBuf, thread, time::Instant};
@@ -131,6 +135,11 @@ enum Command {
         #[arg(long)]
         assets: PathBuf,
     },
+    /// The studio motion-graphics renderer: renders a compiled studio film (see src/studio/README.md)
+    Studio {
+        #[command(subcommand)]
+        command: studio::cli::Command,
+    },
     /// Check text layout at three moments per shot and that frames redraw identically
     Qa {
         #[command(flatten)]
@@ -141,6 +150,9 @@ enum Command {
         /// Only these shots (comma separated ids; skips the determinism check)
         #[arg(long, value_delimiter = ',')]
         shots: Vec<String>,
+        /// Exit 0 even when layout issues or non-deterministic frames were found (the report still lists them)
+        #[arg(long)]
+        allow_issues: bool,
     },
 }
 
@@ -155,14 +167,19 @@ fn main() -> Result<()> {
             let film = load(&source, &shots)?;
             review::stills(project(&film, &source), &dir, &shots, at)
         }
+        Command::Studio { command } => studio::cli::run(command),
         Command::Reads { diagram, step, assets } => {
             let fonts = text::Fonts::load(&assets.join("fonts"))?;
             println!("{}", serde_json::to_string(&shots::diagram_reads(&fonts, &diagram, step)?)?);
             Ok(())
         }
-        Command::Qa { source, report, shots } => {
+        Command::Qa { source, report, shots, allow_issues } => {
             let film = load(&source, &shots)?;
-            review::qa(project(&film, &source), &report, &shots).map(|_| ())
+            let (layout, unstable) = review::qa(project(&film, &source), &report, &shots)?;
+            if !allow_issues && (layout > 0 || unstable > 0) {
+                anyhow::bail!("qa failed: {layout} frames with layout issues, {unstable} frames that did not redraw identically (see {})", report.display());
+            }
+            Ok(())
         }
     }
 }

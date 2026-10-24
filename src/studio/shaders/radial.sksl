@@ -1,0 +1,13 @@
+// Radial backdrop: `c_in` at the centre fading to `c_out` (the reference `radial_bg`).
+uniform float2 res;
+uniform float3 c_in;
+uniform float3 c_out;
+uniform float2 centre;   // fractions of the frame
+uniform float rad;
+
+half4 main(float2 p) {
+    float2 q = (p - 0.5) / res;                       // pixel index / size
+    float r = length(float2(q.x - centre.x, (q.y - centre.y) * (res.y / res.x))) / (rad * 0.62);
+    float k = pow(clamp(r, 0.0, 1.0), 1.2);
+    return half4(half3(mix(c_in, c_out, k)), 1.0);
+}

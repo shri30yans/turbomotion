@@ -27,6 +27,17 @@ numbers is in this repo. [How the test was run](#how-we-measured) · [Why it is 
 
 ---
 
+## Two renderers, one engine
+
+`turbomotion render` draws *shot films*: photographs, cards, maps, diagrams and stats on paper, one shot after another
+(the Remotion-replacement above). `turbomotion studio render` draws *motion-graphics films*: kinetic type, charts,
+a 3D-look title system, flat maps and a globe, photo plates and 17 transitions under a film-look post stack, from a
+compiled `film.json`. Both share the GPU context, the encoder and the parallel segment scheduler. The studio renderer
+is documented in [src/studio/README.md](src/studio/README.md); on a 17-minute 1080p film it renders at 126 fps with
+three workers.
+
+---
+
 ## Why this exists
 
 I make narrated explainer films: a photo with a slow camera move, a big number, a map that draws a

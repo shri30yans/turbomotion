@@ -1,0 +1,19 @@
+// A soft round sprite: bright core, Gaussian halo and an optional ring, drawn inside a square so its edge cuts off
+// exactly where the reference's small float sprites did (pins, packets, the chart head, pulses).
+uniform float2 centre;
+uniform float3 colour;
+uniform float4 core;     // core radius, core width, core amplitude, colour gain from the core
+uniform float4 halo;     // halo sigma, halo amplitude, ring radius, ring width
+uniform float2 ring;     // ring amplitude, output exponent
+uniform float opacity;
+uniform float colour_base;
+
+half4 main(float2 p) {
+    float d = length(p - 0.5 - centre);
+    float c = clamp(1.0 - (d - core.x) / core.y, 0.0, 1.0);
+    float h = halo.y * exp(-pow(d / halo.x, 2.0));
+    float r = ring.x > 0.0 ? ring.x * exp(-pow((d - halo.z) / halo.w, 2.0)) : 0.0;
+    float a = pow(clamp(core.z * c + h + r, 0.0, 1.0), ring.y) * opacity;
+    float3 rgb = colour * (colour_base + core.w * c);
+    return half4(half3(rgb * a), half(a));
+}
