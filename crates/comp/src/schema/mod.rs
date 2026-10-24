@@ -1,6 +1,7 @@
 //! The composition file as data: strict, typed, and free of meaning. Nothing here loads a file, resolves a name or
 //! touches a GPU; that is `plan`'s job. A mistake is reported with the field's name and the valid alternatives.
 
+pub mod blocks;
 mod kinds;
 mod path;
 mod shape;

@@ -86,6 +86,7 @@ impl Plan {
     }
 
     pub fn from_value(mut value: Value, dir: &Path) -> Result<Plan> {
+        schema::blocks::expand(&mut value, dir).context("expanding blocks")?;
         schema::time::preprocess(&mut value).context("resolving times and variables")?;
         let root: schema::Composition = serde_json::from_value(value).map_err(|e| anyhow!("{e}")).context("the composition")?;
         let fx = Library::load(dir)?;

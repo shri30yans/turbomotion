@@ -40,6 +40,11 @@ pub fn preprocess(root: &mut Value) -> Result<()> {
     Ok(())
 }
 
+/// Replace `$name` / `${name}` in a whole JSON value (used to instantiate blocks).
+pub fn substitute_vars(v: &mut Value, vars: &Map<String, Value>) -> Result<()> {
+    substitute(v, vars, true)
+}
+
 /// `"$name"` becomes the variable's value (any JSON type); `"a ${name} b"` interpolates text.
 fn substitute(v: &mut Value, vars: &Map<String, Value>, inside_vars: bool) -> Result<()> {
     match v {

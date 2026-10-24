@@ -42,6 +42,29 @@ pub fn run(plan: &Plan) -> anyhow::Result<Vec<Finding>> {
         out.push(Finding { severity: Severity::Warn, rule: "light-without-3d", layer: None, t: None, message: "there are lights but no three_d layer to shade".into(), fix: "set \"three_d\": true on the layers the lights should shade".into() });
     }
 
+    // text that a nested composition's own frame cuts off
+    for (name, comp) in plan.comps.iter().filter(|(n, _)| !n.is_empty()) {
+        let (cw, ch) = (f64::from(comp.width), f64::from(comp.height));
+        let n = 24;
+        'layers: for l in comp.layers.iter().filter(|l| matches!(l.def.kind, Kind::Text(_))) {
+            for k in 0..n {
+                let t = l.start + (l.end - l.start).max(0.0) * (f64::from(k) + 0.5) / f64::from(n);
+                if t >= comp.dur {
+                    continue;
+                }
+                let f = ev.frame(name, t)?;
+                let st = &f.layers[l.index];
+                if let (true, Some(b)) = (shows(st) && st.opacity > 0.9, st.bounds) {
+                    if b[0] < -1.0 || b[1] < -1.0 || b[2] > cw + 1.0 || b[3] > ch + 1.0 {
+                        let label = format!("{} in comp {name:?}", l.label);
+                        out.push(warn("clipped-by-comp", &label, Some(t), format!("text reaches [{:.0}, {:.0}, {:.0}, {:.0}] but its composition is only {cw:.0}x{ch:.0}, so the edge is cut off", b[0], b[1], b[2], b[3]), "enlarge the nested composition's width/height, shorten the text or lower its size"));
+                        continue 'layers;
+                    }
+                }
+            }
+        }
+    }
+
     for l in &root.layers {
         let shown: Vec<usize> = (0..frames.len()).filter(|i| shows(&frames[*i].layers[l.index])).collect();
         let drawable = !matches!(l.def.kind, Kind::Camera(_) | Kind::Light(_) | Kind::Null | Kind::Audio(_) | Kind::Adjustment) && !l.is_matte_source && !l.def.common.hidden;
@@ -144,5 +167,13 @@ mod tests {
         for rule in ["outside-safe-area", "low-contrast", "text-too-small", "starts-after-end", "never-visible", "never-on-screen", "3d-without-camera"] {
             assert!(got.contains(&rule), "{rule} missing from {got:?}");
         }
+    }
+
+    #[test]
+    fn text_cut_off_by_a_nested_composition_is_reported() {
+        let v = json!({"dur": 2, "comps": {"small": {"width": 300, "height": 100, "dur": 2, "layers": [
+            {"type": "text", "text": "This is far too wide for its box", "size": 60, "color": "#fff", "pos": [10, 50]}]}},
+            "layers": [{"type": "solid", "color": "#123"}, {"type": "precomp", "comp": "small", "pos": [960, 540]}]});
+        assert!(findings(v).contains(&"clipped-by-comp"));
     }
 }

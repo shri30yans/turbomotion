@@ -1,0 +1,9 @@
+{
+  "width": 1600, "height": 520, "fps": 30, "dur": 4,
+  "vars": {"title": "A bold idea", "subtitle": "and how it moves", "accent": "#7cc7ff", "ink": "#ffffff", "sub": "#aab4d6", "font": "Avenir Next"},
+  "layers": [
+    {"type": "text", "id": "kicker", "text": "$subtitle", "font": "$font", "weight": 600, "size": 34, "tracking": 6, "color": "$accent", "pos": [800, 70], "align": "center", "preset": {"name": "tracking_in", "at": 0.05}},
+    {"type": "text", "id": "title", "text": "$title", "font": "$font", "weight": 800, "size": 150, "color": "$ink", "leading": 1.02, "pos": [800, 270], "align": "center", "preset": {"name": "rise", "at": 0.25}},
+    {"type": "shape", "id": "rule", "pos": [800, 470], "items": [{"rect": [-160, -2, 320, 4], "radius": 2, "fill": "$accent"}], "scale": {"from": [0, 1], "to": [1, 1], "at": 0.7, "dur": 0.7, "ease": "expo.out"}}
+  ]
+}

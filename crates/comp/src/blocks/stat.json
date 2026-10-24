@@ -1,0 +1,9 @@
+{
+  "width": 1000, "height": 360, "fps": 30, "dur": 4,
+  "vars": {"from": 0, "to": 1200, "prefix": "", "suffix": "", "decimals": 0, "label": "users", "accent": "#ffd37a", "ink": "#ffffff", "sub": "#aab4d6", "font": "Avenir Next Condensed", "count_time": 1.6},
+  "layers": [
+    {"type": "text", "id": "value", "text": {"from": "$from", "to": "$to", "at": 0.1, "dur": "$count_time", "ease": "expo.out", "sep": ",", "prefix": "$prefix", "suffix": "$suffix", "decimals": "$decimals"},
+     "font": "$font", "weight": 800, "size": 150, "color": "$accent", "pos": [500, 140], "align": "center"},
+    {"type": "text", "id": "label", "text": "$label", "font": "$font", "weight": 500, "size": 44, "tracking": 4, "color": "$sub", "pos": [500, 270], "align": "center", "preset": {"name": "fade_up", "at": 0.5}}
+  ]
+}

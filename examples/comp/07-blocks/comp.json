@@ -1,0 +1,10 @@
+{
+  "width": 1280, "height": 720, "fps": 30, "dur": 6, "bg": "#0a0e1c",
+  "layers": [
+    {"type": "texture", "shader": "clouds", "params": {"low": "#070a16", "high": "#1c2a52", "scale": 500, "speed": 0.04}},
+    {"type": "precomp", "block": "title_card", "pos": [640, 200], "scale": 0.7, "dur": 5.5, "vars": {"title": "Blocks are reuse", "subtitle": "ONE LINE, NOT FORTY"}},
+    {"type": "precomp", "block": "stat", "start": 1.2, "dur": 4.5, "pos": [330, 470], "scale": 0.62, "vars": {"to": 12840, "suffix": " fps", "label": "RENDER SPEED"}},
+    {"type": "precomp", "block": "stat", "start": 1.6, "dur": 4.1, "pos": [950, 470], "scale": 0.62, "vars": {"to": 98.5, "decimals": 1, "suffix": "%", "label": "FIRST-TRY PASS", "accent": "#7cffb2"}},
+    {"type": "precomp", "block": "lower_third", "start": 2.4, "dur": 3.4, "pos": [500, 640], "scale": 0.8, "vars": {"name": "Grace Hopper", "role": "Rear Admiral, compiler pioneer"}, "exit": {"preset": "fade", "dur": 0.4}}
+  ]
+}

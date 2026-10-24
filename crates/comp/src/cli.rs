@@ -66,6 +66,11 @@ pub enum Command {
     },
     /// List the installed font families a text layer can name
     Fonts,
+    /// Reusable parametrised sub-compositions: the built-in ones and any in `blocks/`, with their variables, as JSON
+    Blocks {
+        #[arg(long, default_value = ".")]
+        dir: PathBuf,
+    },
     /// Shader plugins: list what is available, or render one with each knob swept across its range
     Fx {
         #[command(subcommand)]
@@ -139,6 +144,17 @@ pub fn run(command: Command) -> Result<()> {
             for f in turbomotion_core::typeface::families() {
                 println!("{f}");
             }
+            Ok(())
+        }
+        Command::Blocks { dir } => {
+            let list: Vec<_> = crate::schema::blocks::available(&dir)
+                .into_iter()
+                .filter_map(|(name, src)| {
+                    let v: serde_json::Value = serde_json::from_str(&src).ok()?;
+                    Some(serde_json::json!({"block": name, "size": [v["width"], v["height"]], "dur": v["dur"], "vars": v["vars"], "use": {"type": "precomp", "block": name, "vars": {}, "pos": [960, 540]}}))
+                })
+                .collect();
+            println!("{}", serde_json::to_string_pretty(&list)?);
             Ok(())
         }
         Command::Fx { command } => fx(command),
