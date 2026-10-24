@@ -54,6 +54,11 @@ pub fn layers() -> Vec<Entry> {
                 "size": [4, 10], "shape": "spark", "trail": 3, "colors": [[0, "#ffffff"], [0.4, "#ffd36b"], [1, "#ff4a3d"]], "opacity_over_life": [[0, 1], [0.8, 1], [1, 0]]}),
         },
         Entry {
+            name: "pack",
+            summary: "Graphics owned by another crate and registered by the host (a globe, a map, a chart): {\"type\": \"pack\", \"name\": \"<pack>\", \"params\": {...}}. `comp catalogue` lists the packs this build has under `packs`. A pack paints a picture from its params and the layer's time; everything else (transform, effects, masks, mattes, 3D) works on it like any layer.",
+            example: json!({"type": "solid", "color": "#000"}),
+        },
+        Entry {
             name: "camera",
             summary: "A 3D camera (the topmost active one is used). Layers with \"three_d\": true are projected through it. Default: 1:1 at z = 0.",
             example: json!({"type": "camera", "zoom": 1800, "pos": [{"from": 760, "to": 1160, "dur": 4, "ease": "sine.inOut"}, 540, -1800], "poi": [960, 540, 0]}),
@@ -106,6 +111,7 @@ pub fn all() -> Value {
         "expressions": expression_functions(),
         "effects": effects_catalogue(),
         "shader_plugins": shader_plugins(),
+        "packs": crate::pack::catalogue().into_iter().map(|(n, s)| json!({"name": n, "summary": s})).collect::<Vec<_>>(),
         "make_a_new_effect": "Write effects/<name>.sksl beside comp.json: header comments `// @effect name`, `// @kind effect|generator`, `// @summary ...`, `// @param name float|vec2|color default [min max] -- doc`, then `half4 main(float2 xy)`. You get `image` (effects), `resolution`, `time` and a library (hash21, vnoise, fbm, worley, rot2, luma, hsv2rgb, straight, premul). Try it with `comp fx test <name> --out sheet.png`; then use it like any effect: {\"effect\": \"name\", \"param\": value}.",
         "time_literals": ["1.5s", "45f", "beat:8", "bar:2", "marker:drop", "title.end", "title.start", "prev.end", "comp.end", "any of those followed by +0.25 or -3f"],
         "property_forms": {

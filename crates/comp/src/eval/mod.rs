@@ -129,6 +129,7 @@ pub enum Content {
     Adjustment,
     Texture { size: [f64; 2], shader: fx::PluginState },
     Particles(particles::ParticleState),
+    Pack { name: String, params: serde_json::Value, size: [f64; 2] },
 }
 
 impl<'p> Evaluator<'p> {
@@ -205,7 +206,7 @@ impl<'p> Evaluator<'p> {
                 }
             }
         };
-        let raster = matches!(l.def.kind, Kind::Solid(_) | Kind::Image(_) | Kind::Video(_) | Kind::Texture(_) | Kind::Precomp(_));
+        let raster = matches!(l.def.kind, Kind::Solid(_) | Kind::Image(_) | Kind::Video(_) | Kind::Texture(_) | Kind::Precomp(_) | Kind::Pack(_));
         let default_pos = if raster { vec![cw / 2.0, ch / 2.0, 0.0] } else { vec![0.0, 0.0, 0.0] };
         let mut pos = vec(&cm.pos, default_pos, 10)?;
         pos.resize(3, 0.0);
@@ -413,6 +414,7 @@ impl<'p> Evaluator<'p> {
                 (Content::Video { view, src_time: media::video_time(v, info.dur, lt) }, Some([0.0, 0.0, size[0], size[1]]))
             }
             Kind::Adjustment => (Content::Adjustment, None),
+            Kind::Pack(p) => (Content::Pack { name: p.name.clone(), params: p.params.clone(), size }, Some([0.0, 0.0, size[0], size[1]])),
             Kind::Particles(p) => {
                 let st = particles::state(self, c, l, p, t, lt)?;
                 (Content::Particles(st), Some([0.0, 0.0, size[0], size[1]]))

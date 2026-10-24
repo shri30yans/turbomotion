@@ -179,6 +179,9 @@ impl CompPlan {
             };
             let masks = def.common.masks.iter().enumerate().map(|(k, m)| PathGeo::build(&m.path).with_context(|| format!("mask {k}"))).collect::<Result<_>>().with_context(|| label.clone())?;
             let along = def.common.along.as_ref().map(|a| PathGeo::build(&a.path)).transpose().context("along").with_context(|| label.clone())?;
+            if let Kind::Pack(pk) = &def.kind {
+                crate::pack::check(&pk.name, &pk.params).with_context(|| label.clone())?;
+            }
             let fx = def.fx.iter().enumerate().map(|(k, f)| lib.plan_fx(f).with_context(|| format!("fx {k}"))).collect::<Result<Vec<_>>>().with_context(|| label.clone())?;
             let texture = match &def.kind {
                 Kind::Texture(t) => {

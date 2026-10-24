@@ -31,6 +31,13 @@ pub fn paint_content(ctx: &Ctx, c: &Canvas, _frame: &Frame, _comp: &CompPlan, st
             Ok(())
         }
         Content::Particles(st) => super::particles::paint(c, &ctx.programs.sprite, st),
+        Content::Pack { name, params, size } => {
+            let pack = ctx.packs.iter().find(|p| p.name() == name).ok_or_else(|| anyhow::anyhow!("no pack called {name:?} is registered"))?;
+            let pc = crate::pack::PackCtx { like: c, width: size[0] as i32, height: size[1] as i32, dir: &ctx.plan.dir };
+            let layer = pack.paint(&pc, params, st.local_t)?;
+            c.draw_image_with_sampling_options(layer.image(), (0, 0), turbomotion_core::layer::linear(), None);
+            Ok(())
+        }
         Content::Texture { size, shader } => super::fx::generate(ctx, c, shader, *size, st.local_t),
         Content::Precomp { frame: None } | Content::None | Content::Adjustment => Ok(()),
     };

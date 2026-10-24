@@ -36,6 +36,7 @@ pub struct Renderer<'a> {
     shaders: Shaders,
     programs: programs::Programs,
     res: res::Resources,
+    packs: Vec<Box<dyn crate::pack::Pack>>,
     ev: Evaluator<'a>,
 }
 
@@ -45,6 +46,7 @@ pub struct Ctx<'a> {
     pub shaders: &'a Shaders,
     pub programs: &'a programs::Programs,
     pub res: &'a res::Resources,
+    pub packs: &'a [Box<dyn crate::pack::Pack>],
     /// The root frame re-evaluated across the shutter, for layers with motion blur (empty when there is none).
     pub subs: &'a [Frame],
 }
@@ -56,7 +58,7 @@ impl<'a> Renderer<'a> {
         let size = ISize::new(root.width as i32, root.height as i32);
         let surface = gpu.frame_surface(size)?;
         let info = ImageInfo::new(size, ColorType::BGRA8888, AlphaType::Premul, None);
-        Ok(Renderer { plan, gpu, surface, info, shaders: Shaders::compile().context("compiling the platform shaders")?, programs: programs::Programs::compile()?, res: res::Resources::default(), ev: Evaluator::new(plan) })
+        Ok(Renderer { plan, gpu, surface, info, shaders: Shaders::compile().context("compiling the platform shaders")?, programs: programs::Programs::compile()?, res: res::Resources::default(), packs: crate::pack::instances(), ev: Evaluator::new(plan) })
     }
 
     /// Draw frame number `frame` of the root composition into the surface.
@@ -87,7 +89,7 @@ impl<'a> Renderer<'a> {
     }
 
     pub fn draw_state(&mut self, state: &Frame, subs: &[Frame]) -> Result<()> {
-        let ctx = Ctx { plan: self.plan, shaders: &self.shaders, programs: &self.programs, res: &self.res, subs };
+        let ctx = Ctx { plan: self.plan, shaders: &self.shaders, programs: &self.programs, res: &self.res, packs: &self.packs, subs };
         let canvas = self.surface.canvas();
         canvas.clear(skia_safe::Color::BLACK);
         let layer = comp_layer(&ctx, canvas, state).with_context(|| format!("drawing t={:.3}s", state.t))?;
