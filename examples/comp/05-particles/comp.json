@@ -1,0 +1,18 @@
+{
+  "width": 1280, "height": 720, "fps": 30, "dur": 5, "bg": "#04050b",
+  "layers": [
+    {"type": "texture", "shader": "gradient", "params": {"from": "#0a1030", "to": "#04050b", "angle": 90}},
+    {"type": "particles", "id": "fireflies", "pos": [640, 400], "blend": "screen",
+     "emitter": {"shape": "rect", "size": [1200, 500]}, "rate": 18, "life": [3, 5], "speed": [8, 25], "angle": -90, "spread": 360,
+     "size": [10, 26], "shape": "soft", "prewarm": 5,
+     "colors": [[0, "#ffe9a0"], [1, "#9be3ff"]], "opacity_over_life": [[0, 0], [0.2, 0.9], [0.8, 0.9], [1, 0]],
+     "turbulence": {"amount": 60, "scale": 200, "speed": 0.4}},
+    {"type": "particles", "id": "burst", "pos": [640, 360], "blend": "add", "start": 1.0,
+     "rate": 0, "burst": [{"at": 0.0, "count": 220}, {"at": 0.25, "count": 120}], "life": [1.2, 2.2], "speed": [160, 520], "spread": 360, "drag": 1.6, "gravity": [0, 220],
+     "size": [3, 8], "shape": "spark", "trail": 5, "trail_step": 0.025,
+     "colors": [[0, "#ffffff"], [0.3, "#ffd36b"], [1, "#ff4a3d"]], "size_over_life": [[0, 1], [1, 0.2]], "opacity_over_life": [[0, 1], [0.7, 1], [1, 0]], "seed": 7},
+    {"type": "particles", "id": "ring", "pos": [640, 360], "blend": "screen", "start": 1.0, "rate": 0, "burst": [{"at": 0, "count": 1}], "life": [0.8, 0.8], "speed": [0, 0], "size": [20, 20], "shape": "ring",
+     "size_over_life": [[0, 1], [1, 30]], "opacity_over_life": [[0, 0.9], [1, 0]], "colors": [[0, "#ffffff"]]}
+  ],
+  "look": [{"effect": "vignette", "strength": 0.4}]
+}

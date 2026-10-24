@@ -48,6 +48,12 @@ pub fn layers() -> Vec<Entry> {
             example: json!({"type": "texture", "shader": "clouds", "params": {"scale": 300, "high": "#9aa7c7"}, "blend": "screen", "opacity": 0.6}),
         },
         Entry {
+            name: "particles",
+            summary: "A particle system where every particle is a closed-form function of its age (so any frame renders alone). The emitter sits at the layer's position. Emit continuously (`rate`) and/or in `burst`s; `prewarm` starts it already running. Shapes: soft, circle, square, spark (streak along travel), star, ring. Use blend `add` or `screen` for light.",
+            example: json!({"type": "particles", "pos": [960, 900], "blend": "add", "rate": 90, "life": [1, 2.5], "speed": [180, 420], "angle": -90, "spread": 40, "gravity": [0, 160], "drag": 0.4,
+                "size": [4, 10], "shape": "spark", "trail": 3, "colors": [[0, "#ffffff"], [0.4, "#ffd36b"], [1, "#ff4a3d"]], "opacity_over_life": [[0, 1], [0.8, 1], [1, 0]]}),
+        },
+        Entry {
             name: "camera",
             summary: "A 3D camera (the topmost active one is used). Layers with \"three_d\": true are projected through it. Default: 1:1 at z = 0.",
             example: json!({"type": "camera", "zoom": 1800, "pos": [{"from": 760, "to": 1160, "dur": 4, "ease": "sine.inOut"}, 540, -1800], "poi": [960, 540, 0]}),

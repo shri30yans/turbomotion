@@ -30,6 +30,7 @@ pub fn paint_content(ctx: &Ctx, c: &Canvas, _frame: &Frame, _comp: &CompPlan, st
             c.draw_image_with_sampling_options(layer.image(), (0, 0), turbomotion_core::layer::linear(), Some(&p));
             Ok(())
         }
+        Content::Particles(st) => super::particles::paint(c, &ctx.programs.sprite, st),
         Content::Texture { size, shader } => super::fx::generate(ctx, c, shader, *size, st.local_t),
         Content::Precomp { frame: None } | Content::None | Content::Adjustment => Ok(()),
     };

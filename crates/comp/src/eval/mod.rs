@@ -5,6 +5,7 @@
 pub mod env;
 pub mod fx;
 pub mod mat4;
+pub mod particles;
 pub mod media;
 pub mod shape;
 pub mod text;
@@ -111,6 +112,7 @@ pub enum Content {
     Precomp { frame: Option<Box<Frame>> },
     Adjustment,
     Texture { size: [f64; 2], shader: fx::PluginState },
+    Particles(particles::ParticleState),
 }
 
 impl<'p> Evaluator<'p> {
@@ -382,6 +384,10 @@ impl<'p> Evaluator<'p> {
                 (Content::Video { view, src_time: media::video_time(v, info.dur, lt) }, Some([0.0, 0.0, size[0], size[1]]))
             }
             Kind::Adjustment => (Content::Adjustment, None),
+            Kind::Particles(p) => {
+                let st = particles::state(self, c, l, p, t, lt)?;
+                (Content::Particles(st), Some([0.0, 0.0, size[0], size[1]]))
+            }
             Kind::Texture(_) => {
                 let plan = l.texture.as_ref().ok_or_else(|| anyhow!("texture layer without a planned shader"))?;
                 (Content::Texture { size, shader: fx::plugin(self, c, l.index, plan, t, lt, 40)? }, Some([0.0, 0.0, size[0], size[1]]))

@@ -5,6 +5,7 @@
 mod content;
 mod fx;
 mod media;
+mod particles;
 mod post;
 mod programs;
 mod res;
