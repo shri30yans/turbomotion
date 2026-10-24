@@ -3,6 +3,7 @@
 //! this directly, and a test can assert that a title is inside the safe area at 1.2 s without drawing a pixel.
 
 pub mod env;
+pub mod fx;
 pub mod mat4;
 pub mod media;
 pub mod shape;
@@ -37,6 +38,8 @@ pub struct Frame {
     pub bg: Option<Rgba>,
     pub camera: Option<CameraState>,
     pub lights: Vec<LightState>,
+    /// The composition's `look` chain.
+    pub look: Vec<fx::FxState>,
     pub layers: Vec<LayerState>,
 }
 
@@ -92,6 +95,7 @@ pub struct LayerState {
     pub extra_blur: f64,
     pub extra_smear: f64,
     pub masks: Vec<MaskState>,
+    pub fx: Vec<fx::FxState>,
     pub content: Content,
 }
 
@@ -106,6 +110,7 @@ pub enum Content {
     Video { view: media::View, src_time: f64 },
     Precomp { frame: Option<Box<Frame>> },
     Adjustment,
+    Texture { size: [f64; 2], shader: fx::PluginState },
 }
 
 impl<'p> Evaluator<'p> {
@@ -135,7 +140,8 @@ impl<'p> Evaluator<'p> {
             let st = self.layer(c, l, t, &mut cache, camera.as_ref()).with_context(|| format!("{} at {t:.3}s", l.label))?;
             layers.push(st);
         }
-        Ok(Frame { comp: c.name.clone(), t, width: c.width, height: c.height, bg, camera, lights, layers })
+        let look = fx::chain(self, c, 0, &c.look, t, t).context("look")?;
+        Ok(Frame { comp: c.name.clone(), t, width: c.width, height: c.height, bg, camera, lights, look, layers })
     }
 
     /// The analysed sound of the audio or video layer with id `id` (anywhere in the file), and the file time at `t_comp`.
@@ -331,6 +337,7 @@ impl<'p> Evaluator<'p> {
             extra_blur: m.blur,
             extra_smear: m.smear,
             masks: shape::masks(self, c, l, t)?,
+            fx: fx::chain(self, c, l.index, &l.fx, t, lt)?,
             content,
         })
     }
@@ -375,6 +382,10 @@ impl<'p> Evaluator<'p> {
                 (Content::Video { view, src_time: media::video_time(v, info.dur, lt) }, Some([0.0, 0.0, size[0], size[1]]))
             }
             Kind::Adjustment => (Content::Adjustment, None),
+            Kind::Texture(_) => {
+                let plan = l.texture.as_ref().ok_or_else(|| anyhow!("texture layer without a planned shader"))?;
+                (Content::Texture { size, shader: fx::plugin(self, c, l.index, plan, t, lt, 40)? }, Some([0.0, 0.0, size[0], size[1]]))
+            }
             _ => (Content::None, None),
         })
     }

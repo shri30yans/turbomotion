@@ -1,0 +1,20 @@
+// @effect light_leak
+// @kind generator
+// @summary Warm out-of-focus film light bleeding in from an edge. Blend it with `screen` or `add`.
+// @param color_a color #ff7a2a -- main glow colour
+// @param color_b color #ff2a6a -- second glow colour
+// @param x float 0 -0.5 1.5 -- glow centre, share of the width (animate to sweep)
+// @param spread float 0.45 0.1 1.5 -- size as a share of the width
+// @param flicker float 0.15 0 1 -- how much it breathes
+half4 main(float2 xy) {
+    float2 p = xy / resolution;
+    float2 c = float2(x, 0.35);
+    float d = length((p - c) * float2(resolution.x / resolution.y, 1.0)) / spread;
+    float g = exp(-d * d * 1.6);
+    float n = fbm(p * 3.0 + float2(time * 0.2, 0.0));
+    g *= 0.7 + 0.6 * n;
+    g *= 1.0 + flicker * sin(time * 7.0 + n * 6.0);
+    float3 col = mix(color_a.rgb, color_b.rgb, clamp(d * 0.7 + n * 0.4, 0.0, 1.0));
+    float a = clamp(g, 0.0, 1.0);
+    return half4(half3(col * a), half(a));
+}

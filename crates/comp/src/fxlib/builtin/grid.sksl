@@ -1,0 +1,16 @@
+// @effect grid
+// @kind generator
+// @summary Lines on a regular grid, for blueprint backgrounds and HUD overlays.
+// @param size float 60 8 400 -- cell size in px
+// @param thickness float 1.5 0.5 12 -- line thickness in px
+// @param line color #5aa9ff -- line colour
+// @param background color #00000000 -- fill colour (default transparent)
+// @param offset vec2 0,0 -- scrolls the grid in px
+half4 main(float2 xy) {
+    float2 p = xy + offset;
+    float2 g = abs(fract(p / size + 0.5) - 0.5) * size;
+    float d = min(g.x, g.y);
+    float k = 1.0 - smoothstep(thickness * 0.5, thickness * 0.5 + 1.0, d);
+    float4 c = mix(background, line, k);
+    return premul(c.rgb, c.a);
+}

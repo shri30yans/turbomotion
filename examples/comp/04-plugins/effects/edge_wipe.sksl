@@ -1,0 +1,16 @@
+// @effect edge_wipe
+// @summary Reveals the layer from left to right behind a glowing, slightly noisy edge.
+// @param progress float 0 0 1 -- 0 = hidden, 1 = fully revealed (animate this)
+// @param glow color #7cc7ff -- colour of the leading edge
+// @param edge float 0.06 0.005 0.5 -- width of the edge as a share of the layer
+half4 main(float2 xy) {
+    float x = xy.x / resolution.x;
+    float wobble = (vnoise(float2(xy.y / 40.0, time * 2.0)) - 0.5) * 0.04;
+    float front = mix(-edge, 1.0 + edge, progress) + wobble;
+    float shown = 1.0 - smoothstep(front - edge * 0.25, front, x);
+    float rim = exp(-pow((x - front) / edge, 2.0)) * smoothstep(0.0, 0.05, progress) * (1.0 - smoothstep(0.95, 1.0, progress));
+    half4 c = image.eval(xy);
+    float3 rgb = c.rgb * shown + glow.rgb * rim * 0.9 * c.a;
+    float a = c.a * max(shown, rim * 0.5);
+    return half4(half3(rgb), half(a));
+}

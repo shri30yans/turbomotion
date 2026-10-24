@@ -3,6 +3,7 @@
 pub mod anim;
 pub mod audio;
 pub mod eval;
+pub mod fxlib;
 pub mod media;
 pub mod plan;
 pub mod render;

@@ -1,0 +1,15 @@
+// @effect kaleidoscope
+// @summary Mirrors a wedge of the picture around the centre.
+// @param segments float 6 2 24 -- number of mirrored wedges
+// @param rotation float 0 -360 360 -- spin in degrees
+// @param zoom float 1 0.25 4 -- magnification of the source
+half4 main(float2 xy) {
+    float2 c = resolution * 0.5;
+    float2 p = xy - c;
+    float r = length(p);
+    float a = atan(p.y, p.x) - radians(rotation);
+    float w = TAU / max(segments, 1.0);
+    a = abs(mod(a, w) - w * 0.5);
+    float2 q = float2(cos(a), sin(a)) * r / zoom + c;
+    return image.eval(clamp(q, float2(0.0), resolution));
+}

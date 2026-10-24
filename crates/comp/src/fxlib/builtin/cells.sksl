@@ -1,0 +1,14 @@
+// @effect cells
+// @kind generator
+// @summary Cellular (worley) pattern: caustics, cracked ground, scales, bokeh when thresholded.
+// @param scale float 90 10 600 -- cell size in px
+// @param speed float 0.2 0 3 -- how fast the cells wander
+// @param edge float 0.08 0.01 0.5 -- thickness of the bright lines between cells
+// @param line color #bfe8ff -- colour of the lines
+// @param fill color #082038 -- colour inside the cells
+half4 main(float2 xy) {
+    float2 f = worley12(xy / scale + time * speed);
+    float k = 1.0 - smoothstep(0.0, edge, f.y - f.x);
+    float4 c = mix(fill, line, k);
+    return premul(c.rgb, c.a);
+}

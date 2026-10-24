@@ -1,0 +1,17 @@
+// @effect gradient
+// @kind generator
+// @summary Smooth two-colour gradient with film-style dither (no banding).
+// @param from color #1a1f3a -- colour at the start
+// @param to color #e0603a -- colour at the end
+// @param angle float 90 -180 180 -- direction in degrees; 90 runs top to bottom
+// @param mid float 0.5 0.05 0.95 -- where the halfway colour sits
+half4 main(float2 xy) {
+    float2 d = float2(cos(radians(angle)), sin(radians(angle)));
+    float2 p = (xy - resolution * 0.5);
+    float len = abs(d.x) * resolution.x + abs(d.y) * resolution.y;
+    float t = clamp(dot(p, d) / len + 0.5, 0.0, 1.0);
+    t = pow(t, log(0.5) / log(mid));
+    float4 c = mix(from, to, t);
+    c.rgb += (hash21(xy) - 0.5) * (1.5 / 255.0);
+    return premul(clamp(c.rgb, 0.0, 1.0), c.a);
+}

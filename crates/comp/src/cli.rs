@@ -23,6 +23,27 @@ pub enum CodecKind {
 }
 
 #[derive(Subcommand)]
+pub enum FxCommand {
+    /// Every effect and generator in the built-in pack and the project's `effects/` folder, with parameters, as JSON
+    List {
+        /// The project folder (the one holding `effects/`)
+        #[arg(long, default_value = ".")]
+        dir: PathBuf,
+    },
+    /// Render one effect or generator with each float parameter swept over five values, as a contact sheet
+    Test {
+        name: String,
+        #[arg(long, default_value = ".")]
+        dir: PathBuf,
+        /// A picture to apply an effect to (default: a built-in test card)
+        #[arg(long)]
+        on: Option<PathBuf>,
+        #[arg(long)]
+        out: PathBuf,
+    },
+}
+
+#[derive(Subcommand)]
 pub enum Command {
     /// Print everything a composition can contain, with a working example of each, as JSON
     Catalogue,
@@ -33,6 +54,11 @@ pub enum Command {
     },
     /// List the installed font families a text layer can name
     Fonts,
+    /// Shader plugins: list what is available, or render one with each knob swept across its range
+    Fx {
+        #[command(subcommand)]
+        command: FxCommand,
+    },
     /// What is true at a moment: every layer's position, opacity, bounds and state, as JSON
     Inspect {
         #[command(flatten)]
@@ -103,6 +129,7 @@ pub fn run(command: Command) -> Result<()> {
             }
             Ok(())
         }
+        Command::Fx { command } => fx(command),
         Command::Check { source } => {
             let plan = Plan::load(&source.file)?;
             let root = plan.root();
@@ -168,6 +195,32 @@ pub fn run(command: Command) -> Result<()> {
             render::render_video(&source.file, &codec, frames, workers, &out)?;
             let wall = started.elapsed().as_secs_f64();
             println!("{n} frames in {wall:.2}s = {:.1} fps ({workers} workers) -> {}", n as f64 / wall, out.display());
+            Ok(())
+        }
+    }
+}
+
+fn fx(command: FxCommand) -> Result<()> {
+    match command {
+        FxCommand::List { dir } => {
+            let lib = crate::fxlib::Library::load(&dir)?;
+            let all: Vec<_> = lib
+                .defs()
+                .map(|d| serde_json::json!({"name": d.name, "kind": d.kind, "summary": d.summary, "origin": d.origin, "params": d.params}))
+                .collect();
+            println!("{}", serde_json::to_string_pretty(&all)?);
+            Ok(())
+        }
+        FxCommand::Test { name, dir, on, out } => {
+            let lib = crate::fxlib::Library::load(&dir)?;
+            let sweep = crate::fxlib::sweep::build(lib.get(&name)?, on.as_deref())?;
+            let plan = Plan::from_value(sweep.comp, &dir)?;
+            let mut renderer = render::Renderer::new(&plan)?;
+            fs::write(&out, renderer.sheet(&sweep.times, crate::fxlib::sweep::STEPS as u32, 256)?).with_context(|| format!("writing {}", out.display()))?;
+            for l in &sweep.legend {
+                println!("{l}");
+            }
+            println!("sheet -> {} ({} columns sweep each parameter low to high)", out.display(), crate::fxlib::sweep::STEPS);
             Ok(())
         }
     }

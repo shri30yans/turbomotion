@@ -1,0 +1,15 @@
+// @effect mirror
+// @summary Reflects one half of the layer onto the other.
+// @param axis float 0.5 0 1 -- where the mirror line sits, share of the width
+// @param vertical float 0 0 1 -- 0 mirrors left/right, 1 mirrors top/bottom
+half4 main(float2 xy) {
+    float2 p = xy;
+    if (vertical > 0.5) {
+        float m = resolution.y * axis;
+        p.y = xy.y > m ? 2.0 * m - xy.y : xy.y;
+    } else {
+        float m = resolution.x * axis;
+        p.x = xy.x > m ? 2.0 * m - xy.x : xy.x;
+    }
+    return image.eval(clamp(p, float2(0.0), resolution));
+}

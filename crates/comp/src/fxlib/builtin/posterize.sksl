@@ -1,0 +1,8 @@
+// @effect posterize
+// @summary Reduces each channel to a few flat levels.
+// @param levels float 4 2 16 -- number of levels per channel
+half4 main(float2 xy) {
+    float4 c = straight(xy);
+    float n = max(levels, 2.0) - 1.0;
+    return premul(floor(c.rgb * n + 0.5) / n, c.a);
+}

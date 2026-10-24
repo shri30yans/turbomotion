@@ -1,0 +1,17 @@
+{
+  "width": 1280, "height": 720, "fps": 30, "dur": 5, "bg": "#05060c",
+  "layers": [
+    {"type": "texture", "shader": "clouds", "params": {"low": "#05060c", "high": "#2a3b7a", "scale": 420, "speed": 0.06, "threshold": 0.3}},
+    {"type": "texture", "shader": "grid", "params": {"size": 80, "thickness": 1, "line": "#27407a", "offset": {"from": [0, 0], "to": [0, 160], "dur": 5, "ease": "none"}}, "opacity": 0.5},
+    {"type": "text", "id": "title", "text": "Plugins are just files", "font": "Avenir Next", "weight": 800, "size": 92, "color": "#ffffff", "pos": [640, 330], "align": "center",
+     "fx": [
+       {"effect": "edge_wipe", "progress": {"from": 0, "to": 1, "at": 0.4, "dur": 1.4, "ease": "power3.inOut"}},
+       {"effect": "glow", "radius": 18, "strength": 0.6}
+     ]},
+    {"type": "image", "id": "card", "src": "../03-media/photo.jpg", "start": 1.2, "size": [520, 300], "pos": [640, 520], "fit": "cover",
+     "fx": [{"effect": "duotone", "shadow": "#0b1030", "light": "#ffcf8a", "amount": {"from": 1, "to": 0, "at": 2.2, "dur": 1.5}}, {"effect": "halftone", "size": 8, "amount": {"from": 1, "to": 0, "at": 1.4, "dur": 1.2}}],
+     "enter": {"preset": "slide_up", "dur": 0.6}},
+    {"type": "texture", "shader": "light_leak", "start": 2.5, "dur": 2.5, "blend": "screen", "opacity": 0.7, "params": {"x": {"from": -0.2, "to": 1.2, "dur": 2.5, "ease": "sine.inOut"}}}
+  ],
+  "look": [{"effect": "vhs", "amount": 0.2, "bleed": 3, "noise": 0.1}, {"effect": "vignette", "strength": 0.4}]
+}

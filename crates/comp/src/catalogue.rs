@@ -6,7 +6,7 @@ use serde::Serialize;
 use serde_json::{json, Value};
 use turbomotion_core::effects;
 
-use crate::{anim::expr, eval::transit};
+use crate::eval::transit;
 
 #[derive(Serialize)]
 pub struct Entry {
@@ -41,6 +41,11 @@ pub fn layers() -> Vec<Entry> {
             name: "adjustment",
             summary: "Applies its effects to everything below it (a grade, a glitch, a blur over the whole picture). Masks limit it to a region; opacity fades it.",
             example: json!({"type": "adjustment", "fx": [{"effect": "chromatic_aberration", "amount": 4}, {"effect": "vignette", "strength": 0.4}]}),
+        },
+        Entry {
+            name: "texture",
+            summary: "Paints a generator shader over the layer (noise, clouds, cells, stripes, grid, gradient, light_leak, or your own `effects/<name>.sksl` with `@kind generator`). Use it as a background, a matte, or blended over footage. `comp fx list` shows each one's parameters.",
+            example: json!({"type": "texture", "shader": "clouds", "params": {"scale": 300, "high": "#9aa7c7"}, "blend": "screen", "opacity": 0.6}),
         },
         Entry {
             name: "camera",
@@ -82,6 +87,11 @@ pub fn effects_catalogue() -> Vec<effects::Entry> {
     effects::catalogue()
 }
 
+fn shader_plugins() -> Value {
+    let lib = crate::fxlib::Library::load(std::path::Path::new("")).expect("the built-in pack compiles");
+    Value::Array(lib.defs().map(|d| json!({"name": d.name, "kind": d.kind, "summary": d.summary, "params": d.params.iter().map(|p| format!("{} {:?} = {:?}", p.name, p.ty, p.default)).collect::<Vec<_>>()})).collect())
+}
+
 pub fn all() -> Value {
     json!({
         "layers": layers(),
@@ -89,6 +99,8 @@ pub fn all() -> Value {
         "eases": eases(),
         "expressions": expression_functions(),
         "effects": effects_catalogue(),
+        "shader_plugins": shader_plugins(),
+        "make_a_new_effect": "Write effects/<name>.sksl beside comp.json: header comments `// @effect name`, `// @kind effect|generator`, `// @summary ...`, `// @param name float|vec2|color default [min max] -- doc`, then `half4 main(float2 xy)`. You get `image` (effects), `resolution`, `time` and a library (hash21, vnoise, fbm, worley, rot2, luma, hsv2rgb, straight, premul). Try it with `comp fx test <name> --out sheet.png`; then use it like any effect: {\"effect\": \"name\", \"param\": value}.",
         "time_literals": ["1.5s", "45f", "beat:8", "bar:2", "marker:drop", "title.end", "title.start", "prev.end", "comp.end", "any of those followed by +0.25 or -3f"],
         "property_forms": {
             "constant": 40,
@@ -130,6 +142,6 @@ mod tests {
         for e in ["none", "power1.in", "power4.inOut", "sine.out", "expo.in", "circ.out", "back.out(1.7)", "elastic.out(1, 0.4)", "bounce.inOut", "steps(4)", "cubic(0.2, 0, 0, 1)", "spring(0.5)", "smooth", "wiggle(5)", "rough(1, 20, 3)", "slow(0.7, 0.7)", "hold"] {
             crate::anim::ease::Ease::parse(e).unwrap_or_else(|err| panic!("{e}: {err:#}"));
         }
-        let _ = expr::Expr::parse("wiggle(2, 30)").unwrap();
+        let _ = crate::anim::expr::Expr::parse("wiggle(2, 30)").unwrap();
     }
 }

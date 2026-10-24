@@ -1,0 +1,15 @@
+// @effect clouds
+// @kind generator
+// @summary Layered fractal noise: smoke, fog, nebula, paper grain at a larger scale.
+// @param scale float 300 20 2000 -- size of the largest billows in px
+// @param speed float 0.1 0 2 -- drift per second
+// @param low color #05060c -- colour of the clear parts
+// @param high color #9aa7c7 -- colour of the dense parts
+// @param threshold float 0.35 0 1 -- values below this are clear
+// @param softness float 0.4 0.01 1 -- how gradually density rises above the threshold
+half4 main(float2 xy) {
+    float n = fbm(xy / scale + float2(time * speed, time * speed * 0.6));
+    float d = smoothstep(threshold, threshold + softness, n);
+    float4 c = mix(low, high, d);
+    return premul(c.rgb, c.a);
+}

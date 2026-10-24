@@ -1,0 +1,21 @@
+// @effect halftone
+// @summary Newspaper dot screen: dots grow with brightness.
+// @param size float 14 4 80 -- cell size in px
+// @param angle float 25 -90 90 -- screen angle in degrees
+// @param ink color #101010 -- dot colour
+// @param paper color #f4efe4 -- background colour
+// @param amount float 1 0 1 -- 0 = original, 1 = dots only
+half4 main(float2 xy) {
+    float a = radians(angle);
+    float2 p = rot2(xy, a) / size;
+    float2 cell = floor(p) + 0.5;
+    float2 centre = rot2(cell * size, -a);
+    float l = luma(straight(centre).rgb);
+    float r = sqrt(1.0 - l) * 0.72;
+    float d = length(fract(p) - 0.5);
+    float aa = 1.0 / size;
+    float dot_cover = 1.0 - smoothstep(r - aa, r + aa, d);
+    float4 src = straight(xy);
+    float3 toned = mix(paper.rgb, ink.rgb, dot_cover);
+    return premul(mix(src.rgb, toned, amount), src.a);
+}

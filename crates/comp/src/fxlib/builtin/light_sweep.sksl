@@ -1,0 +1,15 @@
+// @effect light_sweep
+// @summary A soft band of light that travels across the layer, brightening what is under it.
+// @param position float 0 -0.3 1.3 -- where the band is, 0 = left/top edge, 1 = opposite edge (animate this)
+// @param width float 0.18 0.02 1 -- band width as a share of the layer
+// @param angle float 20 -90 90 -- tilt of the band in degrees
+// @param strength float 0.8 0 3 -- brightness added at the centre of the band
+// @param tint color #fff3d6 -- colour of the light
+half4 main(float2 xy) {
+    half4 c = image.eval(xy);
+    float2 p = rot2(xy - resolution * 0.5, radians(angle)) / max(resolution.x, resolution.y) + 0.5;
+    float d = abs(p.x - position) / width;
+    float band = exp(-d * d * 2.5);
+    float3 add = (tint.rgb) * band * strength * c.a;
+    return half4(half3(c.rgb + half3(add)), c.a);
+}

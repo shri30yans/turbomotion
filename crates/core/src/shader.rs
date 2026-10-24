@@ -45,19 +45,39 @@ impl Uniforms {
 }
 
 pub struct Program {
-    name: &'static str,
+    name: String,
     effect: RuntimeEffect,
 }
 
 impl Program {
-    pub fn shader(name: &'static str, sksl: &str) -> Result<Self> {
-        let effect = RuntimeEffect::make_for_shader(sksl, None).map_err(|e| anyhow!("shader {name}: {e}"))?;
-        Ok(Self { name, effect })
+    /// An instance whose uniforms are given by name: each value is written at the offset the compiler chose, so the
+    /// caller never counts bytes. Every uniform of the program must be given, with exactly its number of floats.
+    pub fn instance_named(&self, values: &[(&str, &[f32])], children: &[Shader]) -> Result<Shader> {
+        let mut data = vec![0u8; self.effect.uniform_size()];
+        for u in self.effect.uniforms() {
+            let (_, v) = values.iter().find(|(n, _)| *n == u.name()).ok_or_else(|| anyhow!("{}: no value for uniform {:?}", self.name, u.name()))?;
+            ensure!(v.len() * 4 == u.size_in_bytes(), "{}: uniform {:?} takes {} floats, {} given", self.name, u.name(), u.size_in_bytes() / 4, v.len());
+            for (i, f) in v.iter().enumerate() {
+                data[u.offset() + i * 4..u.offset() + i * 4 + 4].copy_from_slice(&f.to_ne_bytes());
+            }
+        }
+        let kids: Vec<ChildPtr> = children.iter().cloned().map(ChildPtr::Shader).collect();
+        self.effect.make_shader(Data::new_copy(&data), &kids, None::<&Matrix>).ok_or_else(|| anyhow!("{}: could not make a shader instance", self.name))
     }
 
-    pub fn blender(name: &'static str, sksl: &str) -> Result<Self> {
+    /// Names of the program's uniforms (for checking a manifest against the compiled code).
+    pub fn uniform_names(&self) -> Vec<String> {
+        self.effect.uniforms().iter().map(|u| u.name().to_string()).collect()
+    }
+
+    pub fn shader(name: &str, sksl: &str) -> Result<Self> {
+        let effect = RuntimeEffect::make_for_shader(sksl, None).map_err(|e| anyhow!("shader {name}: {e}"))?;
+        Ok(Self { name: name.to_string(), effect })
+    }
+
+    pub fn blender(name: &str, sksl: &str) -> Result<Self> {
         let effect = RuntimeEffect::make_for_blender(sksl, None).map_err(|e| anyhow!("blender {name}: {e}"))?;
-        Ok(Self { name, effect })
+        Ok(Self { name: name.to_string(), effect })
     }
 
     fn data(&self, u: Uniforms) -> Result<Data> {

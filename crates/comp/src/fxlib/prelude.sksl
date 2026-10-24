@@ -1,0 +1,75 @@
+// ---- turbomotion standard library (available to every effect and generator) ----
+const float PI = 3.14159265;
+const float TAU = 6.28318531;
+
+float hash11(float p) { p = fract(p * 0.1031); p *= p + 33.33; p *= p + p; return fract(p); }
+float hash21(float2 p) { float3 q = fract(float3(p.xyx) * 0.1031); q += dot(q, q.yzx + 33.33); return fract((q.x + q.y) * q.z); }
+float2 hash22(float2 p) { float3 q = fract(float3(p.xyx) * float3(0.1031, 0.1030, 0.0973)); q += dot(q, q.yzx + 33.33); return fract((q.xx + q.yz) * q.zy); }
+
+// smooth value noise in 0..1
+float vnoise(float2 p) {
+    float2 i = floor(p);
+    float2 f = fract(p);
+    float2 u = f * f * (3.0 - 2.0 * f);
+    return mix(mix(hash21(i), hash21(i + float2(1, 0)), u.x), mix(hash21(i + float2(0, 1)), hash21(i + float2(1, 1)), u.x), u.y);
+}
+
+// fractal noise, 5 octaves, 0..1
+float fbm(float2 p) {
+    float a = 0.5;
+    float s = 0.0;
+    for (int i = 0; i < 5; i++) {
+        s += a * vnoise(p);
+        p = p * 2.03 + float2(17.1, 9.2);
+        a *= 0.5;
+    }
+    return s;
+}
+
+// distance to the nearest of a jittered grid of points (cellular noise); 0 at a point, about 1 between points
+float worley(float2 p) {
+    float2 i = floor(p);
+    float2 f = fract(p);
+    float d = 8.0;
+    for (int y = -1; y <= 1; y++) {
+        for (int x = -1; x <= 1; x++) {
+            float2 g = float2(float(x), float(y));
+            float2 o = hash22(i + g);
+            d = min(d, length(g + o - f));
+        }
+    }
+    return d;
+}
+
+// the distances to the nearest and second-nearest point of the same jittered grid: (F1, F2). F2 - F1 is 0 on the borders between cells.
+float2 worley12(float2 p) {
+    float2 i = floor(p);
+    float2 f = fract(p);
+    float d1 = 8.0;
+    float d2 = 8.0;
+    for (int y = -1; y <= 1; y++) {
+        for (int x = -1; x <= 1; x++) {
+            float2 g = float2(float(x), float(y));
+            float d = length(g + hash22(i + g) - f);
+            if (d < d1) { d2 = d1; d1 = d; } else if (d < d2) { d2 = d; }
+        }
+    }
+    return float2(d1, d2);
+}
+
+float2 rot2(float2 p, float a) { float c = cos(a); float s = sin(a); return float2(c * p.x - s * p.y, s * p.x + c * p.y); }
+float luma(float3 c) { return dot(c, float3(0.2126, 0.7152, 0.0722)); }
+
+float3 hsv2rgb(float3 c) {
+    float3 p = abs(fract(c.xxx + float3(1.0, 2.0 / 3.0, 1.0 / 3.0)) * 6.0 - 3.0);
+    return c.z * mix(float3(1.0), clamp(p - 1.0, 0.0, 1.0), c.y);
+}
+
+float sdCircle(float2 p, float r) { return length(p) - r; }
+float sdBox(float2 p, float2 half_size) { float2 d = abs(p) - half_size; return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0); }
+
+// Straight colour plus alpha back to the premultiplied colour the renderer expects.
+half4 premul(float3 rgb, float a) { return half4(half3(rgb * a), half(a)); }
+// The input layer at a point, as straight (not premultiplied) colour plus alpha.
+float4 straight(float2 p) { half4 c = image.eval(p); return float4(c.a > 0.0 ? c.rgb / c.a : float3(0.0), c.a); }
+// ---- end of standard library ----

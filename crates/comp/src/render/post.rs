@@ -9,7 +9,7 @@ use super::{content::paint_content, Ctx};
 use crate::{
     eval::{Frame, LayerState},
     plan::CompPlan,
-    schema::{Fx, MaskMode, MatteMode},
+    schema::{MaskMode, MatteMode},
 };
 
 fn blank(like: &Canvas, w: i32, h: i32) -> Result<Surface> {
@@ -17,10 +17,6 @@ fn blank(like: &Canvas, w: i32, h: i32) -> Result<Surface> {
     let mut s = like.new_surface(&info, None).with_context(|| format!("no GPU memory for a {w}x{h} layer"))?;
     s.canvas().clear(skia_safe::Color::TRANSPARENT);
     Ok(s)
-}
-
-fn builtin_chain(lp: &crate::plan::LayerPlan) -> Vec<effects::Effect> {
-    lp.def.fx.iter().filter_map(|f| if let Fx::Builtin(e) = f { Some((**e).clone()) } else { None }).collect()
 }
 
 /// The layer fully processed except for its opacity and blend: content, effects, masks and its own matte.
@@ -35,8 +31,8 @@ pub fn layer_image(ctx: &Ctx, like: &Canvas, frame: &Frame, comp: &CompPlan, i: 
         let e: effects::Effect = serde_json::from_value(serde_json::json!({"effect": "directional_blur", "distance": st.extra_smear, "angle": 0}))?;
         img = effects::apply(ctx.shaders, like, img, &[e], st.local_t)?;
     }
-    if !lp.def.fx.is_empty() {
-        img = effects::apply(ctx.shaders, like, img, &builtin_chain(lp), st.local_t)?;
+    if !lp.fx.is_empty() {
+        img = super::fx::chain(ctx, like, img, &lp.fx, &st.fx, st.local_t)?;
     }
     if !lp.masks.is_empty() {
         let cov = mask_coverage(like, frame, comp, st)?;
@@ -137,7 +133,7 @@ pub fn adjust(ctx: &Ctx, like: &Canvas, acc: &mut Surface, frame: &Frame, comp: 
     let lp = &comp.layers[st.index];
     let (w, h) = (frame.width as i32, frame.height as i32);
     let below = Layer::from_image(acc.image_snapshot());
-    let changed = effects::apply(ctx.shaders, like, Layer::from_image(below.image().clone()), &builtin_chain(lp), st.local_t)?;
+    let changed = super::fx::chain(ctx, like, Layer::from_image(below.image().clone()), &lp.fx, &st.fx, st.local_t)?;
     // coverage: the masks (or everywhere) times the layer's opacity
     let mut cov = if lp.masks.is_empty() {
         let mut s = blank(like, w, h)?;

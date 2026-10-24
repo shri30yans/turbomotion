@@ -1,0 +1,18 @@
+// @effect glitch_slices
+// @summary Horizontal bands jump sideways at random, with a colour split on the displaced ones.
+// @param amount float 40 0 300 -- largest sideways jump in px
+// @param bands float 14 2 60 -- number of horizontal bands
+// @param rate float 12 1 60 -- how many times a second the pattern changes
+// @param density float 0.35 0 1 -- share of bands that jump
+half4 main(float2 xy) {
+    float step_t = floor(time * rate);
+    float band = floor(xy.y / resolution.y * bands);
+    float on = hash21(float2(band, step_t)) < density ? 1.0 : 0.0;
+    float dx = (hash21(float2(band + 7.0, step_t)) * 2.0 - 1.0) * amount * on;
+    float2 p = float2(clamp(xy.x + dx, 0.0, resolution.x), xy.y);
+    half4 c = image.eval(p);
+    float split = on * amount * 0.12;
+    half4 r = image.eval(float2(clamp(p.x + split, 0.0, resolution.x), p.y));
+    half4 b = image.eval(float2(clamp(p.x - split, 0.0, resolution.x), p.y));
+    return half4(r.r, c.g, b.b, max(c.a, max(r.a, b.a)));
+}

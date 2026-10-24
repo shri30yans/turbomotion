@@ -3,6 +3,7 @@
 //! masks and matte, and lands on the composite with its opacity and blend mode.
 
 mod content;
+mod fx;
 mod media;
 mod post;
 mod programs;
@@ -191,7 +192,11 @@ pub fn comp_layer(ctx: &Ctx, like: &Canvas, frame: &Frame) -> Result<Layer> {
         }
         acc.canvas().draw_image(img.image(), (0, 0), Some(&paint));
     }
-    Ok(Layer::from_image(acc.image_snapshot()))
+    let out = Layer::from_image(acc.image_snapshot());
+    if comp.look.is_empty() {
+        return Ok(out);
+    }
+    fx::chain(ctx, like, out, &comp.look, &frame.look, frame.t).context("look")
 }
 
 fn premul(c: Color4f) -> Color4f {

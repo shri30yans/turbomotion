@@ -17,6 +17,7 @@ use crate::{
     media::probe::{self, ImageInfo, VideoInfo},
     schema::{self, Fx, Kind, Layer, Marker, MatteMode, MotionBlur},
 };
+use crate::fxlib::{Kind as FxKind, Library, PlanFx, PluginPlan};
 use geometry::PathGeo;
 
 pub struct Plan {
@@ -26,6 +27,8 @@ pub struct Plan {
     pub comps: BTreeMap<String, CompPlan>,
     /// Font roles declared by the file.
     pub fonts: BTreeMap<String, String>,
+    /// Built-in and project shader plugins.
+    pub fx: Library,
 }
 
 /// The root composition is stored under this name.
@@ -42,7 +45,7 @@ pub struct CompPlan {
     pub markers: Vec<Marker>,
     pub mblur: Option<MotionBlur>,
     /// Effects over the finished picture.
-    pub look: Vec<Fx>,
+    pub look: Vec<PlanFx>,
     pub layers: Vec<LayerPlan>,
 }
 
@@ -61,6 +64,10 @@ pub struct LayerPlan {
     pub masks: Vec<PathGeo>,
     pub along: Option<PathGeo>,
     pub media: Media,
+    /// The layer's effect chain, in order.
+    pub fx: Vec<PlanFx>,
+    /// A texture layer's generator and parameters.
+    pub texture: Option<PluginPlan>,
 }
 
 /// A layer's media file, probed at plan time.
@@ -81,13 +88,14 @@ impl Plan {
     pub fn from_value(mut value: Value, dir: &Path) -> Result<Plan> {
         schema::time::preprocess(&mut value).context("resolving times and variables")?;
         let root: schema::Composition = serde_json::from_value(value).map_err(|e| anyhow!("{e}")).context("the composition")?;
+        let fx = Library::load(dir)?;
         let mut comps = BTreeMap::new();
         for (name, c) in &root.comps {
             ensure!(!name.is_empty(), "a nested composition needs a name");
-            comps.insert(name.clone(), CompPlan::build(name, c, &root, dir).with_context(|| format!("comp {name:?}"))?);
+            comps.insert(name.clone(), CompPlan::build(name, c, &root, dir, &fx).with_context(|| format!("comp {name:?}"))?);
         }
-        comps.insert(ROOT.into(), CompPlan::build(ROOT, &root, &root, dir).context("the root composition")?);
-        let plan = Plan { dir: dir.to_path_buf(), fps: root.fps.max(1), comps, fonts: root.fonts.clone() };
+        comps.insert(ROOT.into(), CompPlan::build(ROOT, &root, &root, dir, &fx).context("the root composition")?);
+        let plan = Plan { dir: dir.to_path_buf(), fps: root.fps.max(1), comps, fonts: root.fonts.clone(), fx };
         plan.check_references()?;
         Ok(plan)
     }
@@ -140,7 +148,7 @@ impl Plan {
 }
 
 impl CompPlan {
-    fn build(name: &str, c: &schema::Composition, root: &schema::Composition, dir: &Path) -> Result<CompPlan> {
+    fn build(name: &str, c: &schema::Composition, root: &schema::Composition, dir: &Path, lib: &Library) -> Result<CompPlan> {
         ensure!(c.width > 0 && c.height > 0, "width and height must be positive");
         ensure!(c.dur > 0.0, "dur (seconds) must be positive");
         let mut layers = Vec::with_capacity(c.layers.len());
@@ -170,7 +178,16 @@ impl CompPlan {
             };
             let masks = def.common.masks.iter().enumerate().map(|(k, m)| PathGeo::build(&m.path).with_context(|| format!("mask {k}"))).collect::<Result<_>>().with_context(|| label.clone())?;
             let along = def.common.along.as_ref().map(|a| PathGeo::build(&a.path)).transpose().context("along").with_context(|| label.clone())?;
-            layers.push(LayerPlan { index: i, label, def, start, end, parent: None, matte: None, is_matte_source: false, shapes, masks, along, media });
+            let fx = def.fx.iter().enumerate().map(|(k, f)| lib.plan_fx(f).with_context(|| format!("fx {k}"))).collect::<Result<Vec<_>>>().with_context(|| label.clone())?;
+            let texture = match &def.kind {
+                Kind::Texture(t) => {
+                    let plan = lib.plan(&t.shader, &t.params).with_context(|| label.clone())?;
+                    ensure!(lib.get(&t.shader)?.kind == FxKind::Generator, "{label}: {:?} is an effect that needs an input layer; a texture layer takes a generator", t.shader);
+                    Some(plan)
+                }
+                _ => None,
+            };
+            layers.push(LayerPlan { index: i, label, def, start, end, parent: None, matte: None, is_matte_source: false, shapes, masks, along, media, fx, texture });
         }
         // names → indices
         let mut ids: HashMap<String, usize> = HashMap::new();
@@ -220,7 +237,7 @@ impl CompPlan {
             beat_offset: c.beat_offset,
             markers: c.markers.clone(),
             mblur: c.mblur,
-            look: c.look.iter().enumerate().map(|(i, f)| Fx::parse(f).with_context(|| format!("look {i}"))).collect::<Result<_>>()?,
+            look: c.look.iter().enumerate().map(|(i, f)| Fx::parse(f).and_then(|f| lib.plan_fx(&f)).with_context(|| format!("look {i}"))).collect::<Result<_>>()?,
             layers,
         })
     }

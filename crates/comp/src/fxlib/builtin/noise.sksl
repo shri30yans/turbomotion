@@ -1,0 +1,14 @@
+// @effect noise
+// @kind generator
+// @summary Smooth monochrome value noise, drifting over time. Use as a matte, a displacement source or a texture.
+// @param scale float 120 4 1000 -- feature size in px
+// @param speed float 0.3 0 5 -- drift per second
+// @param low color #000000 -- colour of the low values
+// @param high color #ffffff -- colour of the high values
+// @param contrast float 1 0.2 4 -- 1 = natural, higher = harder
+half4 main(float2 xy) {
+    float n = vnoise(xy / scale + float2(time * speed, 0.0));
+    n = clamp((n - 0.5) * contrast + 0.5, 0.0, 1.0);
+    float4 c = mix(low, high, n);
+    return premul(c.rgb, c.a);
+}

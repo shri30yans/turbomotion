@@ -1,0 +1,16 @@
+// @effect ripple
+// @summary Rings of displacement spreading from a point, like a drop in water.
+// @param x float 0.5 0 1 -- centre, share of the width
+// @param y float 0.5 0 1 -- centre, share of the height
+// @param amplitude float 14 0 80 -- displacement in px
+// @param wavelength float 70 10 400 -- distance between rings in px
+// @param speed float 220 -1000 1000 -- how fast the rings travel, px per second
+// @param falloff float 900 100 4000 -- distance at which the ripple has faded, px
+half4 main(float2 xy) {
+    float2 c = resolution * float2(x, y);
+    float2 d = xy - c;
+    float r = length(d);
+    float k = sin((r - time * speed) / wavelength * TAU) * amplitude * exp(-r / falloff);
+    float2 dir = r > 0.001 ? d / r : float2(0.0);
+    return image.eval(clamp(xy + dir * k, float2(0.0), resolution));
+}

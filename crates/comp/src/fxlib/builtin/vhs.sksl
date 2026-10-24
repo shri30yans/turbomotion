@@ -1,0 +1,22 @@
+// @effect vhs
+// @summary Worn tape: wobbling lines, colour bleed, tracking noise and a rolling bar.
+// @param amount float 0.5 0 1 -- overall strength
+// @param bleed float 6 0 30 -- horizontal colour smear in px
+// @param noise float 0.25 0 1 -- tracking noise strength
+half4 main(float2 xy) {
+    float line = floor(xy.y / 2.0);
+    float wob = (vnoise(float2(line * 0.07, time * 3.0)) - 0.5) * 10.0 * amount;
+    float roll = fract(time * 0.23);
+    float bar = smoothstep(0.0, 0.02, abs(xy.y / resolution.y - roll)) ;
+    wob += (1.0 - bar) * 24.0 * amount;
+    float2 p = float2(clamp(xy.x + wob, 0.0, resolution.x), xy.y);
+    half4 c = image.eval(p);
+    half4 r = image.eval(float2(clamp(p.x + bleed * amount, 0.0, resolution.x), p.y));
+    half4 b = image.eval(float2(clamp(p.x - bleed * amount, 0.0, resolution.x), p.y));
+    float3 rgb = float3(r.r, c.g, b.b);
+    float n = hash21(float2(xy.x * 0.5, line + floor(time * 30.0)));
+    float streak = step(0.985, hash21(float2(line, floor(time * 12.0)))) * 0.5;
+    rgb += (n - 0.5) * noise * amount + streak * amount;
+    rgb *= 1.0 - 0.15 * amount * sin(xy.y * 1.6);
+    return half4(half3(rgb * c.a), c.a);
+}
