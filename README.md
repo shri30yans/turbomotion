@@ -27,14 +27,20 @@ numbers is in this repo. [How the test was run](#how-we-measured) · [Why it is 
 
 ---
 
-## Two renderers, one engine
+## Three renderers, one platform
+
+`turbomotion comp …` is the After Effects-style engine: layers on a timeline with masks and track mattes, nested
+compositions, video and audio, shape and path layers, per-character text animation, particles, 3D cameras and lights,
+expressions, and shader plugins an agent can write as one file. It is described in
+[crates/comp/README.md](crates/comp/README.md); the architecture and the ownership rules are in
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 `turbomotion render` draws *shot films*: photographs, cards, maps, diagrams and stats on paper, one shot after another
 (the Remotion-replacement above). `turbomotion studio render` draws *motion-graphics films*: kinetic type, charts,
 a 3D-look title system, flat maps and a globe, photo plates and 17 transitions under a film-look post stack, from a
 compiled `film.json`. Both share the GPU context, the encoder and the parallel segment scheduler. The studio renderer
 (with a 26-effect layer library any element or scene can use, [gallery](docs/studio-effects.jpg))
-is documented in [src/studio/README.md](src/studio/README.md); on a 17-minute 1080p film it renders at 126 fps with
+is documented in [crates/studio/src/README.md](crates/studio/src/README.md); on a 17-minute 1080p film it renders at 126 fps with
 three workers.
 
 ---
@@ -141,9 +147,9 @@ film.json ──► scene per shot ──► Skia canvas on a Metal GPU surface 
 - **Deterministic.** Rendering a frame twice gives the same pixels (checked on every benchmark run, for
   both renderers).
 
-Source map: `src/shots/` (one file per shot type), `src/text.rs` (Skia text layout), `src/photo.sksl`
-(the parallax shader), `src/render.rs` + `src/encode.rs` (workers and the ffmpeg pipe), `src/review.rs`
-(the QA).
+Source map: `crates/shots/src/shots/` (one file per shot type), `crates/shots/src/text.rs` (Skia text layout),
+`crates/shots/src/photo.sksl` (the parallax shader), `crates/shots/src/render.rs` (workers), `crates/core/src/encode.rs`
+(the ffmpeg pipe), `crates/shots/src/review.rs` (the QA).
 
 ## Why is it faster?
 
@@ -303,8 +309,13 @@ that folder commercially.
 ## Layout
 
 ```
-src/                  the renderer (≈6k lines of Rust)
-assets/               fonts, paper and grain textures, Natural Earth map data
+src/main.rs           the command line: composes the crates' subcommands, nothing else
+crates/core/          the platform: GPU, encoder, parallel scheduler, SkSL runner, effects library, grade
+crates/comp/          compositions (schema → plan → eval → render), shader plugins, check, blocks, packs
+crates/studio/        compiled motion-graphics films: elements, globe, maps, charts, transitions
+crates/shots/         the original shot renderer and its assets (fonts, paper, Natural Earth)
+docs/ARCHITECTURE.md  where code lives and why
+examples/comp/        runnable compositions (shapes, type, media, plugins, particles, 3D, blocks, packs)
 examples/hello.json   the smallest complete film
 bench/corpus/         the synthetic benchmark film and its (generated) photographs
 bench/remotion/       the Remotion reference implementation

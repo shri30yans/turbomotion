@@ -60,11 +60,13 @@ Adding an effect is a parameter struct plus one function in a family file (`effe
 Effects run on the element's own full-frame layer, so pixel parameters are plain pixels and centre points
 (`x`, `y`) are fractions of the frame. Effects are not part of the Python parity reference.
 
-## What is still missing for a general motion-graphics tool
+## General motion-graphics features live in `comp`
 
-Masks and track mattes, layer nesting (pre-compositions), video and audio inputs and an audio-synced timeline, shape
-and path layers with trim/offset, per-character text animators, particles, 3D cameras and lights, expressions, and a
-cross-platform backend (Metal only today). The effects library and the strict JSON schema are the base for these.
+Masks and track mattes, nested compositions, video and audio, shape and path layers, per-character text animation,
+particles, 3D cameras and lights, expressions and shader plugins belong to the composition engine
+(`crates/comp`, `turbomotion comp`), not to this film renderer. Film elements (globe, maps, charts, panels) can sit on
+a composition's timeline through the `studio.element` pack (`src/pack.rs`). Still missing here: a cross-platform
+backend (Metal only today).
 
 ## Module map
 

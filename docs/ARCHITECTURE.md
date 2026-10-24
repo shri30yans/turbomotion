@@ -62,9 +62,10 @@ render/   how it looks              Frame → pixels on the GPU: painters per la
 Each stage has its own tests: schema errors are strings, plan resolution is tables, evaluation is numbers, rendering
 is goldens. A bug is found in the earliest stage that can express it.
 
-Supporting modules: `anim/` (eases, keyframes, expression language, noise, audio-reactive signals), `media/` (image
-cache, ffmpeg video decoder, audio analysis), `audio/` (mix graph), `fxlib/` (shader plugins), `presets/` (named text
-and layer animations), `check/` (lint and assertions).
+Supporting modules: `anim/` (eases, keyframes, expression language, noise), `media/` (image cache, ffmpeg video
+decoder, probes), `audio/` (mix and audio-reactive signals), `fxlib/` (shader plugins and the built-in effect and
+texture pack), `text/` (layout, per-character animators, named presets), `check/` (lint and assertions),
+`schema/blocks.rs` (parametrised sub-compositions), `pack.rs` (the Pack interface), `catalogue.rs`.
 
 ## How an agent makes an effect
 
