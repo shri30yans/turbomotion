@@ -1,0 +1,40 @@
+{
+  "width": 1280, "height": 720, "fps": 30, "dur": 4,
+  "bg": "#0b0f1a",
+  "comps": {
+    "badge": {
+      "width": 400, "height": 400, "dur": 4,
+      "layers": [
+        {"type": "shape", "pos": [200, 200], "items": [
+          {"polygon": [0, 0, 150, 6], "fill": {"gradient": {"type": "radial", "center": [0, -40], "radius": 190, "stops": [[0, "#ffd37a"], [1, "#e0561b"]]}}, "stroke": {"color": "#fff7e0", "width": 6, "join": "round"}}
+        ], "rotation": {"from": 0, "to": 60, "dur": 4, "ease": "none"}},
+        {"type": "shape", "pos": [200, 200], "items": [
+          {"star": [0, 0, 70, 30, 5], "fill": "#0b0f1a"}
+        ], "rotation": {"from": 0, "to": -120, "dur": 4, "ease": "none"}}
+      ]
+    }
+  },
+  "layers": [
+    {"type": "solid", "color": "#0b0f1a"},
+    {"type": "shape", "id": "grid", "opacity": 0.35, "items": [
+      {"d": "M 0 180 H 1280 M 0 360 H 1280 M 0 540 H 1280 M 320 0 V 720 M 640 0 V 720 M 960 0 V 720", "stroke": {"color": "#3a4a7a", "width": 1.5}, "trim": {"end": {"from": 0, "to": 1, "dur": 1.2, "ease": "power2.out"}}}
+    ]},
+    {"type": "null", "id": "rig", "pos": [640, 360], "rotation": "wiggle(0.8, 6)"},
+    {"type": "shape", "id": "ring", "parent": "rig", "items": [
+      {"ellipse": [0, 0, 220, 220], "stroke": {"color": "#7cc7ff", "width": 10, "cap": "round"},
+       "trim": {"start": {"from": 0, "to": 0.15, "at": 1.4, "dur": 1.2, "ease": "power2.inOut"}, "end": {"from": 0, "to": 1, "at": 0.2, "dur": 1.4, "ease": "expo.out"}}},
+      {"ellipse": [0, 0, 160, 160], "stroke": {"color": "#ffffff", "width": 3, "dash": [2, 14], "cap": "round", "dash_offset": "time * 40"}}
+    ]},
+    {"type": "precomp", "id": "badge", "comp": "badge", "parent": "rig", "pos": [0, 0], "start": 0.3,
+     "enter": {"preset": "pop", "dur": 0.7}, "exit": {"preset": "blur", "dur": 0.4},
+     "scale": 0.75, "fx": [{"effect": "glow", "radius": 30, "strength": 0.8}]},
+    {"type": "shape", "id": "reveal", "hidden": true, "items": [
+      {"rect": [-640, -40, 1280, 80], "fill": "#fff"}
+    ], "pos": [640, {"from": 760, "to": 360, "at": 0.4, "dur": 1.6, "ease": "expo.inOut"}]},
+    {"type": "shape", "id": "bars", "matte": {"source": "reveal", "mode": "alpha"}, "items": [
+      {"rect": [0, 0, 1280, 720], "fill": {"gradient": {"type": "linear", "from": [0, 0], "to": [1280, 0], "stops": [[0, "#ff3d81"], [0.5, "#7a5cff"], [1, "#19d3ff"]]}}}
+    ], "opacity": 0.55, "blend": "screen"},
+    {"type": "shape", "masks": [{"path": {"ellipse": [640, 360, 140, 140]}, "feather": 40, "mode": "subtract"}], "items": [{"rect": [0, 0, 1280, 720], "fill": "#00000099"}]},
+    {"type": "adjustment", "fx": [{"effect": "vignette", "strength": 0.45}, {"effect": "grain", "amount": 0.05}]}
+  ]
+}

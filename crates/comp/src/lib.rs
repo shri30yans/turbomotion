@@ -1,17 +1,10 @@
-//! After Effects-style compositions (in progress).
+//! After Effects-style compositions: schema → plan → eval → render (see docs/ARCHITECTURE.md).
 
-pub mod cli {
-    use clap::Subcommand;
+pub mod anim;
+pub mod eval;
+pub mod plan;
+pub mod render;
+pub mod schema;
 
-    #[derive(Subcommand)]
-    pub enum Command {
-        /// Print what a composition can contain
-        Catalogue,
-    }
-
-    pub fn run(command: Command) -> anyhow::Result<()> {
-        match command {
-            Command::Catalogue => Ok(()),
-        }
-    }
-}
+pub mod catalogue;
+pub mod cli;
