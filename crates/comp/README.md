@@ -45,10 +45,11 @@ Anything animated is a *property*: a number, an expression string, keys `[[t, va
 // @effect duotone
 // @summary Maps brightness onto two colours.
 // @param shadow color #101030 -- colour of the darks
+// @param light color #ffd6a0 -- colour of the lights
 // @param amount float 1 0 1 -- 0 keeps the original, 1 is fully mapped
 half4 main(float2 xy) {
     float4 c = straight(xy);
-    return premul(mix(c.rgb, mix(shadow.rgb, #ffd6a0, luma(c.rgb)), amount), c.a);
+    return premul(mix(c.rgb, mix(shadow.rgb, light.rgb, luma(c.rgb)), amount), c.a);
 }
 ```
 
