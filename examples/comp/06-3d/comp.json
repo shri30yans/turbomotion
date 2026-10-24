@@ -1,0 +1,13 @@
+{
+  "width": 1280, "height": 720, "fps": 30, "dur": 5, "bg": "#06070d",
+  "layers": [
+    {"type": "camera", "pos": {"from": [420, 360, -1100], "to": [860, 360, -1100], "dur": 5, "ease": "sine.inOut"}, "poi": [640, 360, 300], "zoom": 1100, "dof": {"focus": 1500, "blur": 14}},
+    {"type": "light", "kind": "ambient", "color": "#4a5b8a", "intensity": 0.55},
+    {"type": "light", "kind": "spot", "pos": {"from": [200, 0, -600], "to": [1080, 0, -600], "dur": 5, "ease": "sine.inOut"}, "target": [640, 400, 300], "color": "#ffe2b0", "intensity": 1.8, "radius": 900, "cone": 38, "shine": 0.7},
+    {"type": "solid", "id": "wall", "three_d": true, "size": [2400, 1000], "color": "#2b3350", "pos": [640, 360, 650], "anchor": [1200, 500, 0], "material": {"specular": 0.4, "shininess": 24}},
+    {"type": "shape", "id": "card1", "three_d": true, "pos": [330, 380, 120], "rot_y": 24, "items": [{"rect": [-130, -170, 260, 340], "radius": 18, "fill": "#ff6b3d"}], "material": {"specular": 0.8, "shininess": 40}},
+    {"type": "shape", "id": "card2", "three_d": true, "pos": [640, 360, 300], "items": [{"rect": [-130, -170, 260, 340], "radius": 18, "fill": "#3dd6ff"}], "material": {"specular": 0.8, "shininess": 40}},
+    {"type": "shape", "id": "card3", "three_d": true, "pos": [950, 380, 520], "rot_y": -24, "items": [{"rect": [-130, -170, 260, 340], "radius": 18, "fill": "#b7ff6b"}], "material": {"specular": 0.8, "shininess": 40}}
+  ],
+  "look": [{"effect": "vignette", "strength": 0.35}]
+}

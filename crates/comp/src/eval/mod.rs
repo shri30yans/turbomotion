@@ -97,7 +97,23 @@ pub struct LayerState {
     pub extra_smear: f64,
     pub masks: Vec<MaskState>,
     pub fx: Vec<fx::FxState>,
+    /// Present when lights shade this layer.
+    pub lit: Option<LitState>,
     pub content: Content,
+}
+
+/// Where a lit layer stands in the world, for the lighting shader and for `inspect`.
+#[derive(Serialize, Clone)]
+pub struct LitState {
+    pub origin: [f64; 3],
+    pub axis_u: [f64; 3],
+    pub axis_v: [f64; 3],
+    /// Unit normal (unflipped; the shader turns it toward the viewer).
+    pub normal: [f64; 3],
+    pub material: [f64; 4],
+    /// Screen pixels to layer-plane coordinates, row-major 3x3.
+    #[serde(skip)]
+    pub inverse: [f64; 9],
 }
 
 #[derive(Serialize)]
@@ -139,7 +155,7 @@ impl<'p> Evaluator<'p> {
         }
 
         for l in &c.layers {
-            let st = self.layer(c, l, t, &mut cache, camera.as_ref()).with_context(|| format!("{} at {t:.3}s", l.label))?;
+            let st = self.layer(c, l, t, &mut cache, camera.as_ref(), !lights.is_empty()).with_context(|| format!("{} at {t:.3}s", l.label))?;
             layers.push(st);
         }
         let look = fx::chain(self, c, 0, &c.look, t, t).context("look")?;
@@ -282,7 +298,7 @@ impl<'p> Evaluator<'p> {
         Ok(w)
     }
 
-    fn layer(&self, c: &CompPlan, l: &LayerPlan, t: f64, cache: &mut Vec<Option<(Mat4, Mat4)>>, camera: Option<&CameraState>) -> Result<LayerState> {
+    fn layer(&self, c: &CompPlan, l: &LayerPlan, t: f64, cache: &mut Vec<Option<(Mat4, Mat4)>>, camera: Option<&CameraState>, any_lights: bool) -> Result<LayerState> {
         let lt = t - l.start;
         let active = is_active(l, t);
         let cm = &l.def.common;
@@ -310,13 +326,25 @@ impl<'p> Evaluator<'p> {
 
         let (screen, depth) = match (cm.three_d, camera) {
             (true, Some(cam)) => {
-                let z = cam.view.apply(world.0[3], world.0[7], world.0[11])[2];
+                // depth of the layer's anchor point (where `pos` puts it), not of its corner
+                let a = world.apply(props.anchor[0], props.anchor[1], props.anchor[2]);
+                let z = cam.view.apply(a[0], a[1], a[2])[2];
                 (cam.view_proj.mul(&world), z)
             }
             _ => (world, 0.0),
         };
 
         let (content, local_bounds) = self.content(c, l, t, lt, size, active)?;
+        // depth of field: a 3D layer away from the focal distance softens in proportion to how far off it is
+        let dof_blur = match (cm.three_d, camera.and_then(|c| c.dof)) {
+            (true, Some([focus, blur])) if focus > 1.0 => blur * (depth - focus).abs() / focus,
+            _ => 0.0,
+        };
+        let lit = if any_lights && cm.three_d && cm.lit.unwrap_or(true) && !matches!(l.def.kind, Kind::Camera(_) | Kind::Light(_) | Kind::Null | Kind::Adjustment | Kind::Audio(_)) {
+            lit_state(&world, &screen, cm.material.unwrap_or_default())
+        } else {
+            None
+        };
         let mut visible = active && !cm.hidden && !l.is_matte_source && !matches!(l.def.kind, Kind::Camera(_) | Kind::Light(_) | Kind::Null | Kind::Audio(_));
         let origin = screen.project(0.0, 0.0, 0.0).map_or([f64::NAN, f64::NAN], |p| [p[0], p[1]]);
         let bounds = local_bounds.and_then(|b| project_bounds(&screen, b, &mut visible));
@@ -336,10 +364,11 @@ impl<'p> Evaluator<'p> {
             screen,
             world,
             three_d: cm.three_d,
-            extra_blur: m.blur,
+            extra_blur: m.blur + dof_blur,
             extra_smear: m.smear,
             masks: shape::masks(self, c, l, t)?,
             fx: fx::chain(self, c, l.index, &l.fx, t, lt)?,
+            lit,
             content,
         })
     }
@@ -418,7 +447,7 @@ impl<'p> Evaluator<'p> {
                 }
             }
         };
-        let pos = vec3(&cam.pos, [w / 2.0, h / 2.0, -zoom], 10)?;
+        let pos = vec3(&l.def.common.pos, [w / 2.0, h / 2.0, -zoom], 10)?;
         let poi = vec3(&cam.poi, [w / 2.0, h / 2.0, 0.0], 20)?;
         let roll = cam.roll.as_ref().map_or(Ok(0.0), |r| r.0.at(lt, &env(30)))?;
         let dof = cam.dof.as_ref().map(|d| Ok::<_, anyhow::Error>([d.focus.0.at(lt, &env(31))?, d.blur.0.at(lt, &env(32))?])).transpose()?;
@@ -443,7 +472,7 @@ impl<'p> Evaluator<'p> {
                 }
             }
         };
-        let pos = vec3(&light.pos, [w / 2.0, h / 2.0, -600.0], 10)?;
+        let pos = vec3(&l.def.common.pos, [w / 2.0, h / 2.0, -600.0], 10)?;
         let target = vec3(&light.target, [w / 2.0, h / 2.0, 0.0], 20)?;
         let dir = {
             let d = [target[0] - pos[0], target[1] - pos[1], target[2] - pos[2]];
@@ -462,6 +491,32 @@ impl<'p> Evaluator<'p> {
             shine: light.shine.unwrap_or(0.0),
         })
     }
+}
+
+fn lit_state(world: &Mat4, screen: &Mat4, mat: crate::schema::Material) -> Option<LitState> {
+    let w = &world.0;
+    let origin = [w[3], w[7], w[11]];
+    let axis_u = [w[0], w[4], w[8]];
+    let axis_v = [w[1], w[5], w[9]];
+    let cross = [axis_u[1] * axis_v[2] - axis_u[2] * axis_v[1], axis_u[2] * axis_v[0] - axis_u[0] * axis_v[2], axis_u[0] * axis_v[1] - axis_u[1] * axis_v[0]];
+    let n = (cross[0] * cross[0] + cross[1] * cross[1] + cross[2] * cross[2]).sqrt();
+    if n < 1e-9 {
+        return None;
+    }
+    // layer plane (u, v) -> screen: the columns of the screen matrix for u, v and the origin
+    let s = &screen.0;
+    let h = [s[0], s[1], s[3], s[4], s[5], s[7], s[12], s[13], s[15]];
+    let det = h[0] * (h[4] * h[8] - h[5] * h[7]) - h[1] * (h[3] * h[8] - h[5] * h[6]) + h[2] * (h[3] * h[7] - h[4] * h[6]);
+    if det.abs() < 1e-12 {
+        return None;
+    }
+    let d = 1.0 / det;
+    let inverse = [
+        (h[4] * h[8] - h[5] * h[7]) * d, (h[2] * h[7] - h[1] * h[8]) * d, (h[1] * h[5] - h[2] * h[4]) * d,
+        (h[5] * h[6] - h[3] * h[8]) * d, (h[0] * h[8] - h[2] * h[6]) * d, (h[2] * h[3] - h[0] * h[5]) * d,
+        (h[3] * h[7] - h[4] * h[6]) * d, (h[1] * h[6] - h[0] * h[7]) * d, (h[0] * h[4] - h[1] * h[3]) * d,
+    ];
+    Some(LitState { origin, axis_u, axis_v, normal: [cross[0] / n, cross[1] / n, cross[2] / n], material: [mat.ambient, mat.diffuse, mat.specular, mat.shininess.max(1.0)], inverse })
 }
 
 /// The evaluated transform properties of one layer.
@@ -505,4 +560,32 @@ fn project_bounds(m: &Mat4, b: [f64; 4], visible: &mut bool) -> Option<[f64; 4]>
     let y0 = pts.iter().map(|p| p[1]).fold(f64::INFINITY, f64::min);
     let y1 = pts.iter().map(|p| p[1]).fold(f64::NEG_INFINITY, f64::max);
     Some([x0, y0, x1, y1])
+}
+
+#[cfg(test)]
+mod light_tests {
+    use super::*;
+    use crate::plan::ROOT;
+    use serde_json::json;
+
+    #[test]
+    fn cameras_and_lights_follow_their_animated_position_and_lights_reach_3d_layers() {
+        let plan = Plan::from_value(
+            json!({"dur": 4, "layers": [
+                {"type": "camera", "pos": {"from": [0, 0, -1000], "to": [400, 0, -1000], "dur": 4, "ease": "none"}, "dof": {"focus": 1000, "blur": 10}},
+                {"type": "light", "kind": "point", "pos": [100, 200, -300]},
+                {"type": "solid", "color": "#fff", "id": "far", "three_d": true, "pos": [640, 360, 1000]},
+                {"type": "solid", "color": "#fff", "id": "flat", "three_d": true, "lit": false, "pos": [640, 360, 0]}
+            ]}),
+            std::path::Path::new("."),
+        )
+        .unwrap();
+        let f = Evaluator::new(&plan).frame(ROOT, 2.0).unwrap();
+        assert_eq!(f.camera.as_ref().unwrap().pos, [200.0, 0.0, -1000.0]);
+        assert_eq!(f.lights[0].pos, [100.0, 200.0, -300.0]);
+        let (far, flat) = (&f.layers[2], &f.layers[3]);
+        assert!(far.lit.is_some() && flat.lit.is_none());
+        // the layer far behind the focal distance is much softer than the one near it
+        assert!(far.extra_blur > 5.0 && flat.extra_blur < 2.0, "{} {}", far.extra_blur, flat.extra_blur);
+    }
 }

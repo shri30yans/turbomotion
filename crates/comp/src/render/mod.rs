@@ -4,6 +4,7 @@
 
 mod content;
 mod fx;
+mod light;
 mod media;
 mod particles;
 mod post;

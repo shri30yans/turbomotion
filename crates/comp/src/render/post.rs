@@ -24,6 +24,9 @@ pub fn layer_image(ctx: &Ctx, like: &Canvas, frame: &Frame, comp: &CompPlan, i: 
     let st = &frame.layers[i];
     let lp = &comp.layers[i];
     let mut img = Layer::try_render(like, frame.width as i32, frame.height as i32, |c| paint_content(ctx, c, frame, comp, st, lp))?;
+    if st.lit.is_some() {
+        img = super::light::apply(ctx, like, img, frame, st)?;
+    }
     if st.extra_blur > 0.3 {
         img = img.blurred(like, st.extra_blur)?;
     }

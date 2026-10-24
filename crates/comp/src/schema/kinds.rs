@@ -223,9 +223,6 @@ pub struct Camera {
     /// Alternatively a horizontal field of view in degrees.
     #[serde(default)]
     pub fov: Option<P>,
-    /// Default: the middle of the composition, `zoom` pixels in front of it.
-    #[serde(default)]
-    pub pos: Option<Pos>,
     /// Point of interest the camera looks at. Default: the middle of the composition.
     #[serde(default)]
     pub poi: Option<Pos>,
@@ -263,8 +260,6 @@ pub struct Light {
     pub color: Option<Col>,
     #[serde(default)]
     pub intensity: Option<P>,
-    #[serde(default)]
-    pub pos: Option<Pos>,
     /// Directional and spot lights point at this world position.
     #[serde(default)]
     pub target: Option<Pos>,

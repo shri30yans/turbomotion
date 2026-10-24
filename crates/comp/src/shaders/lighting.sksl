@@ -1,0 +1,56 @@
+// Per-pixel lighting of a flat layer standing in 3D. The layer's own pixels are the albedo; the shader works out where
+// on the plane each screen pixel is (through the inverse of the layer's screen homography), places that point in the
+// world and sums up to four lights.
+uniform shader img;
+uniform float3x3 inv;       // screen px -> layer plane coordinates (homogeneous)
+uniform float3 origin;      // world position of the layer's (0,0)
+uniform float3 axis_u;      // world vector of one layer unit along x
+uniform float3 axis_v;      // ... and along y
+uniform float3 eye;         // camera position in world space
+uniform float4 material;    // ambient, diffuse, specular, shininess
+uniform float3 light_pos[4];
+uniform float3 light_dir[4];
+uniform float3 light_color[4];    // colour already times intensity
+uniform float4 light_params[4];   // kind (0 none, 1 ambient, 2 point, 3 spot, 4 directional), radius, cos(cone), shine
+
+half4 main(float2 xy) {
+    half4 src = img.eval(xy);
+    if (src.a <= 0.0) { return src; }
+    float3 h = inv * float3(xy, 1.0);
+    float2 uv = h.xy / h.z;
+    float3 p = origin + axis_u * uv.x + axis_v * uv.y;
+    float3 n = normalize(cross(axis_u, axis_v));
+    float3 v = normalize(eye - p);
+    if (dot(n, v) < 0.0) { n = -n; }
+    float3 ambient = float3(0.0);
+    float3 diffuse = float3(0.0);
+    float3 spec = float3(0.0);
+    for (int i = 0; i < 4; i++) {
+        float kind = light_params[i].x;
+        if (kind < 0.5) { continue; }
+        if (kind < 1.5) { ambient += light_color[i]; continue; }
+        float3 l;
+        float atten = 1.0;
+        if (kind > 3.5) {
+            l = -normalize(light_dir[i]);
+        } else {
+            float3 d = light_pos[i] - p;
+            float dist = length(d);
+            l = d / max(dist, 1e-4);
+            float r = max(light_params[i].y, 1.0);
+            atten = 1.0 / (1.0 + (dist * dist) / (r * r));
+            if (kind > 2.5) {
+                float c = dot(-l, normalize(light_dir[i]));
+                atten *= smoothstep(light_params[i].z, mix(light_params[i].z, 1.0, 0.25), c);
+            }
+        }
+        float nl = max(dot(n, l), 0.0);
+        diffuse += light_color[i] * (nl * atten);
+        if (light_params[i].w > 0.0 && nl > 0.0) {
+            float3 hv = normalize(l + v);
+            spec += light_color[i] * (pow(max(dot(n, hv), 0.0), material.w) * light_params[i].w * atten);
+        }
+    }
+    float3 lit = float3(src.rgb) * (ambient * material.x + diffuse * material.y) + spec * material.z * src.a;
+    return half4(half3(lit), src.a);
+}

@@ -182,6 +182,22 @@ pub struct Along {
     pub orient: bool,
 }
 
+/// How a lit 3D layer answers to light: strengths of the ambient and diffuse response, the specular highlight and its tightness.
+#[derive(Debug, Deserialize, Clone, Copy)]
+#[serde(default, deny_unknown_fields)]
+pub struct Material {
+    pub ambient: f64,
+    pub diffuse: f64,
+    pub specular: f64,
+    pub shininess: f64,
+}
+
+impl Default for Material {
+    fn default() -> Self {
+        Material { ambient: 1.0, diffuse: 1.0, specular: 0.0, shininess: 32.0 }
+    }
+}
+
 /// Fields every layer has.
 #[derive(Debug, Deserialize, Clone, Default)]
 #[serde(default, deny_unknown_fields)]
@@ -195,6 +211,10 @@ pub struct Common {
     /// Do not draw this layer (it can still be a parent, a matte or a camera target).
     pub hidden: bool,
     pub three_d: bool,
+    /// A 3D layer is lit by the composition's lights (default: yes when there are any). `false` keeps it flat.
+    pub lit: Option<bool>,
+    /// How a lit layer answers to light.
+    pub material: Option<Material>,
     pub pos: Option<Pos>,
     pub anchor: Option<Pos>,
     pub scale: Option<Scale>,
@@ -221,7 +241,7 @@ pub struct Layer {
 }
 
 const COMMON_KEYS: &[&str] = &[
-    "id", "start", "dur", "parent", "hidden", "three_d", "pos", "anchor", "scale", "rotation", "rot_x", "rot_y", "opacity", "blend", "fx", "masks", "matte", "mblur", "along", "enter", "exit",
+    "id", "start", "dur", "parent", "hidden", "three_d", "lit", "material", "pos", "anchor", "scale", "rotation", "rot_x", "rot_y", "opacity", "blend", "fx", "masks", "matte", "mblur", "along", "enter", "exit",
 ];
 
 /// Parse layer number `index` of a composition.
