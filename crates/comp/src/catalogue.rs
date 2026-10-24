@@ -20,6 +20,26 @@ pub fn layers() -> Vec<Entry> {
     vec![
         Entry { name: "solid", summary: "A flat rectangle: backgrounds, flashes, mattes. Size defaults to the composition.", example: json!({"type": "solid", "color": "#101828"}) },
         Entry {
+            name: "text",
+            summary: "Text with real shaping. `font` is a family or a file; `align` left|center|right (the layer's pos is the alignment edge, vertically centred); `width` wraps. `preset` is a named per-character animation (see `text_presets`); `animators` build your own (GSAP staggers or After Effects range selectors). `text` can also be a counter {from, to, at, dur, ease, decimals, sep, prefix, suffix}.",
+            example: json!({"type": "text", "text": "Make it move\nlike you mean it", "font": "Avenir Next", "weight": 800, "size": 96, "color": "#ffffff", "pos": [960, 540], "align": "center", "preset": {"name": "rise", "at": 0.3}}),
+        },
+        Entry {
+            name: "image",
+            summary: "Your own picture. `fit` cover|contain|fill|none, `focus` keeps the subject when cropping, `camera` is a Ken Burns move {from: {zoom, center}, to, ease}, `parallax` {depth: <grey image, white = near>, strength} gives a 2.5D move. EXIF orientation is applied. Size the source to at least the pixels shown (check warns about upscaling).",
+            example: json!({"type": "image", "src": "photo.jpg", "fit": "cover", "focus": [0.6, 0.5], "camera": {"from": {"zoom": 1.0, "center": [0.45, 0.5]}, "to": {"zoom": 1.3, "center": [0.6, 0.5]}, "ease": "sine.inOut"}}),
+        },
+        Entry {
+            name: "video",
+            summary: "A video file streamed through ffmpeg. `src_in` starts into the file, `speed`, `loop`, `fit`, `size`; its sound is mixed unless `mute`. Combine with masks and mattes for rounded or shaped clips.",
+            example: json!({"type": "video", "src": "clip.mp4", "size": [640, 360], "loop": true, "mute": true}),
+        },
+        Entry {
+            name: "audio",
+            summary: "A sound on the timeline: `volume` (a property), `fade_in`, `fade_out`, `src_in`, `speed`. Mixed in Rust (soft-clipped) and muxed into the render. Other layers can react: `amp(\"id\")` is its loudness, `onset(\"id\")` spikes on hits.",
+            example: json!({"type": "audio", "id": "music", "src": "music.wav", "volume": 0.8, "fade_out": 1.0}),
+        },
+        Entry {
             name: "shape",
             summary: "Vector shapes with fill, gradient, stroke, dashes, trim (draw-on), morph and repeat. Geometry: rect, ellipse, polygon, star, d (SVG path), points.",
             example: json!({"type": "shape", "pos": [960, 540], "items": [
@@ -111,6 +131,7 @@ pub fn all() -> Value {
         "expressions": expression_functions(),
         "effects": effects_catalogue(),
         "shader_plugins": shader_plugins(),
+        "text_presets": ["rise", "rise_words", "fade_up", "blur_in", "pop", "slam", "drop", "typewriter", "scramble", "tracking_in", "wave_in", "spin_in", "elastic", "fade_out", "rise_out"],
         "packs": crate::pack::catalogue().into_iter().map(|(n, s)| json!({"name": n, "summary": s})).collect::<Vec<_>>(),
         "make_a_new_effect": "Write effects/<name>.sksl beside comp.json: header comments `// @effect name`, `// @kind effect|generator`, `// @summary ...`, `// @param name float|vec2|color default [min max] -- doc`, then `half4 main(float2 xy)`. You get `image` (effects), `resolution`, `time` and a library (hash21, vnoise, fbm, worley, rot2, luma, hsv2rgb, straight, premul). Try it with `comp fx test <name> --out sheet.png`; then use it like any effect: {\"effect\": \"name\", \"param\": value}.",
         "time_literals": ["1.5s", "45f", "beat:8", "bar:2", "marker:drop", "title.end", "title.start", "prev.end", "comp.end", "any of those followed by +0.25 or -3f"],
@@ -137,7 +158,17 @@ mod tests {
 
     #[test]
     fn every_layer_example_loads() {
+        let media = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/comp/03-media");
         for e in layers() {
+            if matches!(e.name, "image" | "video" | "audio") {
+                // media examples need files; the generated ones may not exist in a fresh checkout
+                if media.join("photo.jpg").exists() && media.join("clip.mp4").exists() {
+                    let mut ex = e.example.clone();
+                    ex["src"] = serde_json::json!(match e.name { "image" => "photo.jpg", "video" => "clip.mp4", _ => "beat.wav" });
+                    Plan::from_value(json!({"layers": [ex]}), &media).unwrap_or_else(|err| panic!("{}: {err:#}", e.name));
+                }
+                continue;
+            }
             load(vec![e.example.clone()]).unwrap_or_else(|err| panic!("{}: {err:#}", e.name));
         }
     }
