@@ -136,6 +136,9 @@ pub struct Parallax {
 #[serde(deny_unknown_fields)]
 pub struct Image {
     pub src: String,
+    /// The viewport in pixels: the composition's size by default (the natural size with `fit: none`).
+    #[serde(default)]
+    pub size: Option<[f64; 2]>,
     #[serde(default)]
     pub fit: Fit,
     /// The point to keep when cropping, as a fraction of the image.
@@ -151,6 +154,8 @@ pub struct Image {
 #[serde(deny_unknown_fields)]
 pub struct Video {
     pub src: String,
+    #[serde(default)]
+    pub size: Option<[f64; 2]>,
     /// Seconds into the file where playback starts.
     #[serde(default)]
     pub src_in: f64,

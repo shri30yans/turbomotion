@@ -3,8 +3,12 @@
 //! masks and matte, and lands on the composite with its opacity and blend mode.
 
 mod content;
+mod media;
 mod post;
+mod programs;
+mod res;
 mod shape;
+mod text;
 
 use anyhow::{Context, Result};
 use skia_safe::{png_encoder, AlphaType, Canvas, Color4f, ColorType, ISize, ImageInfo, Paint, Pixmap, Surface};
@@ -27,12 +31,17 @@ pub struct Renderer<'a> {
     surface: Surface,
     info: ImageInfo,
     shaders: Shaders,
+    programs: programs::Programs,
+    res: res::Resources,
+    ev: Evaluator<'a>,
 }
 
 /// Everything painting needs besides the canvas.
 pub struct Ctx<'a> {
     pub plan: &'a Plan,
     pub shaders: &'a Shaders,
+    pub programs: &'a programs::Programs,
+    pub res: &'a res::Resources,
 }
 
 impl<'a> Renderer<'a> {
@@ -42,13 +51,13 @@ impl<'a> Renderer<'a> {
         let size = ISize::new(root.width as i32, root.height as i32);
         let surface = gpu.frame_surface(size)?;
         let info = ImageInfo::new(size, ColorType::BGRA8888, AlphaType::Premul, None);
-        Ok(Renderer { plan, gpu, surface, info, shaders: Shaders::compile().context("compiling the platform shaders")? })
+        Ok(Renderer { plan, gpu, surface, info, shaders: Shaders::compile().context("compiling the platform shaders")?, programs: programs::Programs::compile()?, res: res::Resources::default(), ev: Evaluator::new(plan) })
     }
 
     /// Draw frame number `frame` of the root composition into the surface.
     pub fn draw(&mut self, frame: u32) -> Result<()> {
         let t = f64::from(frame) / f64::from(self.plan.fps);
-        let state = Evaluator::new(self.plan).frame(ROOT, t).with_context(|| format!("evaluating frame {frame}"))?;
+        let state = self.ev.frame(ROOT, t).with_context(|| format!("evaluating frame {frame}"))?;
         self.draw_state(&state)
     }
 
@@ -58,7 +67,7 @@ impl<'a> Renderer<'a> {
     }
 
     pub fn draw_state(&mut self, state: &Frame) -> Result<()> {
-        let ctx = Ctx { plan: self.plan, shaders: &self.shaders };
+        let ctx = Ctx { plan: self.plan, shaders: &self.shaders, programs: &self.programs, res: &self.res };
         let canvas = self.surface.canvas();
         canvas.clear(skia_safe::Color::BLACK);
         let layer = comp_layer(&ctx, canvas, state).with_context(|| format!("drawing t={:.3}s", state.t))?;
@@ -123,8 +132,13 @@ impl<'a> Renderer<'a> {
 pub fn render_video(plan_file: &std::path::Path, codec: &Codec, frames: std::ops::Range<u32>, workers: u32, out: &std::path::Path) -> Result<()> {
     let plan = Plan::load(plan_file)?;
     let format = VideoFormat { width: plan.root().width as i32, height: plan.root().height as i32, fps: plan.fps };
+    let fps = f64::from(plan.fps);
+    let silent = out.with_extension("silent.mp4");
+    let wav = out.with_extension("mix.wav");
+    let has_sound = crate::audio::mix(&plan, frames.end as f64 / fps, &wav)?.is_some();
     drop(plan);
-    parallel::render(frames, workers, out, |range, part| {
+    let video_out: &std::path::Path = if has_sound { &silent } else { out };
+    parallel::render(frames, workers, video_out, |range, part| {
         let plan = Plan::load(plan_file)?;
         let mut renderer = Renderer::new(&plan)?;
         let mut encoder = Encoder::spawn(part, format, codec)?;
@@ -136,6 +150,11 @@ pub fn render_video(plan_file: &std::path::Path, codec: &Codec, frames: std::ops
         }
         encoder.finish()
     })?;
+    if has_sound {
+        crate::audio::mux(&silent, &wav, out)?;
+        std::fs::remove_file(&silent).ok();
+        std::fs::remove_file(&wav).ok();
+    }
     Ok(())
 }
 

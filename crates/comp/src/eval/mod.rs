@@ -4,7 +4,9 @@
 
 pub mod env;
 pub mod mat4;
+pub mod media;
 pub mod shape;
+pub mod text;
 pub mod transit;
 
 use anyhow::{anyhow, Context, Result};
@@ -14,7 +16,7 @@ use turbomotion_core::effects::Blend;
 use crate::{
     anim::{ease::Ease, prop::Rgba},
     plan::{CompPlan, LayerPlan, Plan},
-    schema::{Kind, Transit},
+    schema::{Fit, Kind, Transit},
 };
 pub use env::LayerEnv;
 use mat4::Mat4;
@@ -22,6 +24,8 @@ pub use shape::{MaskState, ShapeState};
 
 pub struct Evaluator<'p> {
     pub plan: &'p Plan,
+    pub text: crate::text::layout::Engine,
+    signals: std::cell::RefCell<std::collections::HashMap<String, std::rc::Rc<crate::audio::signal::Signal>>>,
 }
 
 #[derive(Serialize)]
@@ -97,13 +101,16 @@ pub enum Content {
     None,
     Solid { color: Rgba, size: [f64; 2] },
     Shape { items: Vec<ShapeState> },
+    Text(text::TextState),
+    Image { view: media::View, parallax: Option<media::ParallaxState> },
+    Video { view: media::View, src_time: f64 },
     Precomp { frame: Option<Box<Frame>> },
     Adjustment,
 }
 
 impl<'p> Evaluator<'p> {
     pub fn new(plan: &'p Plan) -> Self {
-        Evaluator { plan }
+        Evaluator { plan, text: crate::text::layout::Engine::new(), signals: Default::default() }
     }
 
     pub fn frame(&self, comp: &str, t: f64) -> Result<Frame> {
@@ -131,6 +138,31 @@ impl<'p> Evaluator<'p> {
         Ok(Frame { comp: c.name.clone(), t, width: c.width, height: c.height, bg, camera, lights, layers })
     }
 
+    /// The analysed sound of the audio or video layer with id `id` (anywhere in the file), and the file time at `t_comp`.
+    pub fn signal(&self, id: &str, comp: &CompPlan, t_comp: f64) -> Result<(std::rc::Rc<crate::audio::signal::Signal>, f64)> {
+        let (c, l) = std::iter::once(comp)
+            .chain(self.plan.comps.values())
+            .find_map(|c| c.layers.iter().find(|l| l.def.common.id.as_deref() == Some(id)).map(|l| (c, l)))
+            .ok_or_else(|| anyhow!("no audio or video layer with id {id:?} to analyse"))?;
+        let (path, src_in, speed, start) = match (&l.def.kind, &l.media) {
+            (Kind::Audio(a), crate::plan::Media::Audio { path, .. }) => (path, a.src_in, a.speed, l.start),
+            (Kind::Video(v), crate::plan::Media::Video { path, .. }) => (path, v.src_in, v.speed, l.start),
+            _ => return Err(anyhow!("layer {id:?} is not an audio or video layer")),
+        };
+        let _ = c;
+        let key = path.display().to_string();
+        let known = self.signals.borrow().get(&key).cloned();
+        let sig = match known {
+            Some(s) => s,
+            None => {
+                let s = std::rc::Rc::new(crate::audio::signal::Signal::load(path)?);
+                self.signals.borrow_mut().insert(key, s.clone());
+                s
+            }
+        };
+        Ok((sig, src_in + (t_comp - start) * speed))
+    }
+
     /// Transform properties of a layer at composition time `t`, before parenting.
     pub fn local_props(&self, c: &CompPlan, l: &LayerPlan, t: f64, depth: u32) -> Result<Props> {
         let lt = t - l.start;
@@ -156,7 +188,12 @@ impl<'p> Evaluator<'p> {
         let mut anchor = vec(&cm.anchor, vec![], 20)?;
         let size = self.layer_size(c, l);
         if anchor.is_empty() {
-            anchor = if raster { vec![size[0] / 2.0, size[1] / 2.0, 0.0] } else { vec![0.0, 0.0, 0.0] };
+            if let Kind::Text(tx) = &l.def.kind {
+                let lay = text::layout_of(self, c, l, tx, t)?;
+                anchor = vec![f64::from(lay.anchor[0]), f64::from(lay.anchor[1]), 0.0];
+            } else {
+                anchor = if raster { vec![size[0] / 2.0, size[1] / 2.0, 0.0] } else { vec![0.0, 0.0, 0.0] };
+            }
         }
         anchor.resize(3, 0.0);
         let mut scale = match &cm.scale {
@@ -201,6 +238,14 @@ impl<'p> Evaluator<'p> {
             Kind::Solid(s) => s.size.unwrap_or(full),
             Kind::Precomp(p) => self.plan.comps.get(&p.comp).map_or(full, |n| [f64::from(n.width), f64::from(n.height)]),
             Kind::Texture(t) => t.size.unwrap_or(full),
+            Kind::Image(i) => match (&l.media, i.fit) {
+                (crate::plan::Media::Image { info, .. }, Fit::None) => i.size.unwrap_or([f64::from(info.w), f64::from(info.h)]),
+                _ => i.size.unwrap_or(full),
+            },
+            Kind::Video(v) => match (&l.media, v.fit) {
+                (crate::plan::Media::Video { info, .. }, Fit::None) => v.size.unwrap_or([f64::from(info.w), f64::from(info.h)]),
+                _ => v.size.unwrap_or(full),
+            },
             _ => full,
         }
     }
@@ -314,6 +359,20 @@ impl<'p> Evaluator<'p> {
                     None
                 };
                 (Content::Precomp { frame }, Some([0.0, 0.0, size[0], size[1]]))
+            }
+            Kind::Text(tx) => {
+                let st = text::state(self, c, l, tx, t)?;
+                let b = [0.0, 0.0, f64::from(st.width), f64::from(st.height)];
+                (Content::Text(st), Some(b))
+            }
+            Kind::Image(im) => {
+                let (view, parallax) = media::image_state(self, c, l, im, t, size)?;
+                (Content::Image { view, parallax }, Some([0.0, 0.0, size[0], size[1]]))
+            }
+            Kind::Video(v) => {
+                let crate::plan::Media::Video { info, .. } = &l.media else { unreachable!("probed at plan time") };
+                let view = media::video_view(v, l, size);
+                (Content::Video { view, src_time: media::video_time(v, info.dur, lt) }, Some([0.0, 0.0, size[0], size[1]]))
             }
             Kind::Adjustment => (Content::Adjustment, None),
             _ => (Content::None, None),

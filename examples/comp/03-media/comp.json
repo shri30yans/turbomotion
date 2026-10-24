@@ -1,0 +1,23 @@
+{
+  "width": 1280, "height": 720, "fps": 30, "dur": 6, "bpm": 120,
+  "look": [{"effect": "grain", "amount": 0.05}, {"effect": "vignette", "strength": 0.3}],
+  "layers": [
+    {"type": "audio", "id": "beat", "src": "beat.wav", "volume": 0.9},
+    {"type": "image", "id": "photo", "src": "photo.jpg", "fit": "cover", "focus": [0.62, 0.5],
+     "camera": {"from": {"zoom": 1.0, "center": [0.45, 0.5]}, "to": {"zoom": 1.35, "center": [0.62, 0.55]}, "ease": "sine.inOut"},
+     "parallax": {"depth": "depth.png", "strength": 0.018, "look": [{"from": -1, "to": 1, "dur": 6, "ease": "sine.inOut"}, 0]}},
+    {"type": "adjustment", "fx": [{"effect": "grade", "sat": 1.15, "contrast": 1.08, "tint": [255, 140, 60], "tint_k": 0.06}]},
+    {"type": "shape", "id": "pulse", "pos": [1120, 110], "items": [
+      {"ellipse": [0, 0, 36, 36], "fill": "#ffd37a", "scale": "1 + amp(\"beat\") * 0.6"},
+      {"ellipse": [0, 0, 56, 56], "stroke": {"color": "#ffd37a", "width": 3}, "opacity": "max(0, 1 - onset(\"beat\") * 3)", "scale": "1 + onset(\"beat\") * 1.2"}
+    ]},
+    {"type": "video", "id": "clip", "src": "clip.mp4", "size": [360, 202], "pos": [200, 540], "loop": true, "mute": true, "start": 0.5,
+     "enter": {"preset": "slide_up", "dur": 0.6},
+     "masks": [{"path": {"rect": [0, 0, 360, 202], "radius": 18}}],
+     "fx": [{"effect": "shadow", "dy": 14, "blur": 22, "opacity": 0.5}]},
+    {"type": "image", "id": "phone", "src": "phone.jpg", "fit": "contain", "size": [150, 220], "pos": [1090, 560], "start": 1.0, "enter": {"preset": "pop", "dur": 0.6},
+     "masks": [{"path": {"rect": [0, 0, 150, 220], "radius": 14}}]},
+    {"type": "text", "text": "your own images, parallax from a depth map", "font": "Avenir Next", "weight": 700, "size": 46, "color": "#fff", "pos": [640, 150], "align": "center",
+     "preset": {"name": "rise", "at": 0.3}, "fx": [{"effect": "shadow", "dy": 4, "blur": 14, "opacity": 0.6}]}
+  ]
+}

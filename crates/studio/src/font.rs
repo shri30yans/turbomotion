@@ -2,10 +2,11 @@
 //! pixels, integer ascent/descent, and a bounding box that spans the ink and the advance. Layout is therefore identical
 //! even though Skia draws the glyph outlines.
 
-use std::{collections::HashMap, fs, path::Path};
+use std::{collections::HashMap, path::Path};
 
 use anyhow::{Context, Result};
-use skia_safe::{Font, FontHinting, FontMgr, Path as SkPath, Typeface};
+use skia_safe::{Font, FontHinting, Path as SkPath, Typeface};
+use turbomotion_core::typeface;
 
 use super::model::Film;
 
@@ -27,55 +28,15 @@ impl Bbox {
     }
 }
 
-/// Face `index` of a TrueType collection as a standalone sfnt (macOS' font manager only opens the first face of a
-/// collection from memory). Plain `.ttf` files pass through for index 0.
-fn extract_face(bytes: &[u8], index: u32) -> Result<Vec<u8>> {
-    let be32 = |at: usize| -> Result<u32> {
-        let b = bytes.get(at..at + 4).context("truncated font file")?;
-        Ok(u32::from_be_bytes([b[0], b[1], b[2], b[3]]))
-    };
-    let be16 = |at: usize| -> Result<u16> {
-        let b = bytes.get(at..at + 2).context("truncated font file")?;
-        Ok(u16::from_be_bytes([b[0], b[1]]))
-    };
-    let dir = if bytes.starts_with(b"ttcf") {
-        anyhow::ensure!(index < be32(8)?, "collection has {} faces", be32(8)?);
-        be32(12 + 4 * index as usize)? as usize
-    } else {
-        anyhow::ensure!(index == 0, "not a collection");
-        return Ok(bytes.to_vec());
-    };
-    let tables = be16(dir + 4)? as usize;
-    let mut out = bytes.get(dir..dir + 12 + 16 * tables).context("truncated table directory")?.to_vec();
-    let mut data = Vec::new();
-    let data_start = out.len();
-    for t in 0..tables {
-        let rec = dir + 12 + 16 * t;
-        let (offset, length) = (be32(rec + 8)? as usize, be32(rec + 12)? as usize);
-        let body = bytes.get(offset..offset + length).context("table outside the file")?;
-        let new_offset = (data_start + data.len()) as u32;
-        out[12 + 16 * t + 8..12 + 16 * t + 12].copy_from_slice(&new_offset.to_be_bytes());
-        data.extend_from_slice(body);
-        data.resize(data.len().next_multiple_of(4), 0);
-    }
-    out.extend_from_slice(&data);
-    Ok(out)
-}
-
 pub struct Fonts {
     faces: HashMap<String, Typeface>,
 }
 
 impl Fonts {
     pub fn load(film: &Film) -> Result<Self> {
-        let mgr = FontMgr::new();
         let mut faces = HashMap::new();
         for (role, (file, index)) in &film.fonts {
-            let path = Path::new(&film.font_dir).join(file);
-            let bytes = fs::read(&path).with_context(|| format!("reading font {}", path.display()))?;
-            let single = extract_face(&bytes, *index).with_context(|| format!("reading face {index} of {}", path.display()))?;
-            let face = mgr.new_from_data(&single, None).with_context(|| format!("decoding font {} (collection index {index})", path.display()))?;
-            faces.insert(role.clone(), face);
+            faces.insert(role.clone(), typeface::from_file(&Path::new(&film.font_dir).join(file), *index)?);
         }
         Ok(Self { faces })
     }

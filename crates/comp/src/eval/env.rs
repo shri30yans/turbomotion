@@ -86,10 +86,22 @@ impl Env for LayerEnv<'_> {
                         other => bail!("ref(): unknown property {other:?}; use x, y, z, rotation, opacity, scale, sx, sy"),
                     }
                 }
+                // amp("track"): loudness 0..1 of an audio or video layer at this moment.
+                "amp" => {
+                    let id = args.first().ok_or_else(|| anyhow!("amp() needs a layer id"))?.str()?;
+                    let (sig, t) = self.ev.signal(id, self.comp, self.t_comp)?;
+                    sig.amp(t)
+                }
+                // onset("track"): seconds since the latest hard hit (kick, clap) in the track.
+                "onset" => {
+                    let id = args.first().ok_or_else(|| anyhow!("onset() needs a layer id"))?.str()?;
+                    let (sig, t) = self.ev.signal(id, self.comp, self.t_comp)?;
+                    sig.since_onset(t)
+                }
                 _ => return Err(anyhow!("unknown function {name}()")),
             })
         };
-        if ["beat", "bar", "beat_index", "marker", "ref"].contains(&name) { Some(run()) } else { None }
+        if ["beat", "bar", "beat_index", "marker", "ref", "amp", "onset"].contains(&name) { Some(run()) } else { None }
     }
 
     fn salt(&self) -> u32 {

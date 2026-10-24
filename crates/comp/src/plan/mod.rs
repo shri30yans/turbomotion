@@ -14,7 +14,8 @@ use serde_json::Value;
 
 use crate::{
     anim::prop::ColorProp,
-    schema::{self, Kind, Layer, Marker, MatteMode, MotionBlur},
+    media::probe::{self, ImageInfo, VideoInfo},
+    schema::{self, Fx, Kind, Layer, Marker, MatteMode, MotionBlur},
 };
 use geometry::PathGeo;
 
@@ -40,6 +41,8 @@ pub struct CompPlan {
     pub beat_offset: f64,
     pub markers: Vec<Marker>,
     pub mblur: Option<MotionBlur>,
+    /// Effects over the finished picture.
+    pub look: Vec<Fx>,
     pub layers: Vec<LayerPlan>,
 }
 
@@ -57,6 +60,15 @@ pub struct LayerPlan {
     pub shapes: Vec<PathGeo>,
     pub masks: Vec<PathGeo>,
     pub along: Option<PathGeo>,
+    pub media: Media,
+}
+
+/// A layer's media file, probed at plan time.
+pub enum Media {
+    None,
+    Image { path: PathBuf, info: ImageInfo, depth: Option<(PathBuf, ImageInfo)> },
+    Video { path: PathBuf, info: VideoInfo },
+    Audio { path: PathBuf, dur: f64 },
 }
 
 impl Plan {
@@ -72,9 +84,9 @@ impl Plan {
         let mut comps = BTreeMap::new();
         for (name, c) in &root.comps {
             ensure!(!name.is_empty(), "a nested composition needs a name");
-            comps.insert(name.clone(), CompPlan::build(name, c, &root).with_context(|| format!("comp {name:?}"))?);
+            comps.insert(name.clone(), CompPlan::build(name, c, &root, dir).with_context(|| format!("comp {name:?}"))?);
         }
-        comps.insert(ROOT.into(), CompPlan::build(ROOT, &root, &root).context("the root composition")?);
+        comps.insert(ROOT.into(), CompPlan::build(ROOT, &root, &root, dir).context("the root composition")?);
         let plan = Plan { dir: dir.to_path_buf(), fps: root.fps.max(1), comps, fonts: root.fonts.clone() };
         plan.check_references()?;
         Ok(plan)
@@ -128,7 +140,7 @@ impl Plan {
 }
 
 impl CompPlan {
-    fn build(name: &str, c: &schema::Composition, root: &schema::Composition) -> Result<CompPlan> {
+    fn build(name: &str, c: &schema::Composition, root: &schema::Composition, dir: &Path) -> Result<CompPlan> {
         ensure!(c.width > 0 && c.height > 0, "width and height must be positive");
         ensure!(c.dur > 0.0, "dur (seconds) must be positive");
         let mut layers = Vec::with_capacity(c.layers.len());
@@ -137,11 +149,18 @@ impl CompPlan {
             let ty = v.get("type").and_then(Value::as_str).unwrap_or("?");
             let label = format!("layer {i} ({ty}{})", def.common.id.as_deref().map_or(String::new(), |id| format!(" {id:?}")));
             let start = def.common.start;
+            let media = probe_media(&def.kind, dir).with_context(|| label.clone())?;
+            let natural = match (&media, &def.kind) {
+                (Media::Video { info, .. }, Kind::Video(v)) if !v.looping => Some((info.dur - v.src_in).max(0.0) / v.speed.max(1e-6)),
+                (Media::Audio { dur, .. }, Kind::Audio(a)) => Some((dur - a.src_in).max(0.0) / a.speed.max(1e-6)),
+                _ => None,
+            };
             let end = match (def.common.dur, &def.kind) {
                 (Some(d), _) => {
                     ensure!(d >= 0.0, "{label}: dur must not be negative");
                     start + d
                 }
+                (None, _) if natural.is_some() => (start + natural.unwrap_or(0.0)).min(c.dur.max(start)),
                 (None, Kind::Precomp(p)) => root.comps.get(&p.comp).map_or(c.dur, |n| (start + (n.dur - p.offset) / p.speed.max(1e-6)).min(c.dur.max(start))),
                 (None, _) => c.dur,
             };
@@ -151,7 +170,7 @@ impl CompPlan {
             };
             let masks = def.common.masks.iter().enumerate().map(|(k, m)| PathGeo::build(&m.path).with_context(|| format!("mask {k}"))).collect::<Result<_>>().with_context(|| label.clone())?;
             let along = def.common.along.as_ref().map(|a| PathGeo::build(&a.path)).transpose().context("along").with_context(|| label.clone())?;
-            layers.push(LayerPlan { index: i, label, def, start, end, parent: None, matte: None, is_matte_source: false, shapes, masks, along });
+            layers.push(LayerPlan { index: i, label, def, start, end, parent: None, matte: None, is_matte_source: false, shapes, masks, along, media });
         }
         // names → indices
         let mut ids: HashMap<String, usize> = HashMap::new();
@@ -201,6 +220,7 @@ impl CompPlan {
             beat_offset: c.beat_offset,
             markers: c.markers.clone(),
             mblur: c.mblur,
+            look: c.look.iter().enumerate().map(|(i, f)| Fx::parse(f).with_context(|| format!("look {i}"))).collect::<Result<_>>()?,
             layers,
         })
     }
@@ -251,4 +271,30 @@ mod tests {
         let e = format!("{:#}", plan(json!({"layers": [{"type": "blob"}]})).err().unwrap());
         assert!(e.contains("solid, shape, text"), "{e}");
     }
+}
+
+fn probe_media(kind: &Kind, dir: &Path) -> Result<Media> {
+    Ok(match kind {
+        Kind::Image(i) => {
+            let path = probe::absolute(dir, &i.src);
+            let info = probe::image(&path, &i.src)?;
+            let depth = i.parallax.as_ref().map(|p| -> Result<_> {
+                let dp = probe::absolute(dir, &p.depth);
+                let di = probe::image(&dp, &p.depth).context("parallax depth map")?;
+                Ok((dp, di))
+            });
+            Media::Image { path, info, depth: depth.transpose()? }
+        }
+        Kind::Video(v) => {
+            let path = probe::absolute(dir, &v.src);
+            let info = probe::video(&path, &v.src)?;
+            Media::Video { path, info }
+        }
+        Kind::Audio(a) => {
+            let path = probe::absolute(dir, &a.src);
+            let dur = probe::audio(&path, &a.src)?;
+            Media::Audio { path, dur }
+        }
+        _ => Media::None,
+    })
 }

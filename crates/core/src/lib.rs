@@ -13,3 +13,4 @@ pub mod layer;
 pub mod parallel;
 pub mod shader;
 pub mod shaders;
+pub mod typeface;

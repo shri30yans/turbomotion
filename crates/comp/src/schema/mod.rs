@@ -46,13 +46,15 @@ pub struct Composition {
     pub fonts: BTreeMap<String, String>,
     /// Frames of motion blur per frame: 0 = off. Layers with `"mblur": true` blur along their motion.
     pub mblur: Option<MotionBlur>,
+    /// Effects applied to the finished picture, so images from different sources share one look.
+    pub look: Vec<Value>,
     /// Layers, bottom first.
     pub layers: Vec<Value>,
 }
 
 impl Default for Composition {
     fn default() -> Self {
-        Composition { width: 1920, height: 1080, fps: 30, dur: 5.0, bg: None, bpm: None, beat_offset: 0.0, markers: vec![], comps: BTreeMap::new(), vars: Map::new(), fonts: BTreeMap::new(), mblur: None, layers: vec![] }
+        Composition { width: 1920, height: 1080, fps: 30, dur: 5.0, bg: None, bpm: None, beat_offset: 0.0, markers: vec![], comps: BTreeMap::new(), vars: Map::new(), fonts: BTreeMap::new(), mblur: None, look: vec![], layers: vec![] }
     }
 }
 

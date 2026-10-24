@@ -1,0 +1,18 @@
+{
+  "width": 1280, "height": 720, "fps": 30, "dur": 6,
+  "bg": "#0e0e12",
+  "layers": [
+    {"type": "solid", "color": {"from": "#14141c", "to": "#1d1030", "dur": 6, "ease": "none"}},
+    {"type": "text", "id": "kicker", "text": "NEW FROM TURBOMOTION", "font": "Avenir Next", "weight": 600, "size": 26, "tracking": 8, "color": "#7cc7ff",
+     "pos": [640, 190], "align": "center", "preset": {"name": "tracking_in", "at": 0.1}},
+    {"type": "text", "id": "headline", "text": "Make it move\nlike you mean it", "font": "Avenir Next", "weight": 800, "size": 96, "leading": 1.05, "color": "#ffffff",
+     "pos": [640, 360], "align": "center", "preset": {"name": "rise", "at": 0.5}},
+    {"type": "text", "id": "sub", "text": "per-character animators, masks and mattes, on the GPU", "font": "Avenir Next", "weight": 500, "size": 30, "color": "#aab4d6",
+     "pos": [640, 520], "align": "center", "preset": {"name": "blur_in", "at": 1.6}},
+    {"type": "text", "id": "count", "start": 2.6, "text": {"from": 0, "to": 12840, "dur": 2.0, "ease": "expo.out", "sep": ",", "suffix": " fps"}, "font": "Avenir Next Condensed", "weight": 700, "size": 64, "color": "#ffd37a",
+     "pos": [640, 620], "align": "center", "enter": {"preset": "slide_up", "dur": 0.6},
+     "animators": [{"by": "chars", "props": {"opacity": -1, "y": 20}, "selector": {"start": {"from": 0, "to": 1, "at": 0, "dur": 0.8, "ease": "none"}, "end": 1, "shape": "square"}}]},
+    {"type": "text", "id": "tag", "start": 3.4, "text": "SCRAMBLE", "font": "Avenir Next", "weight": 900, "size": 40, "color": "#ff6b9a", "pos": [140, 90], "align": "left", "preset": {"name": "scramble", "each": 0.06}},
+    {"type": "adjustment", "fx": [{"effect": "vignette", "strength": 0.35}]}
+  ]
+}

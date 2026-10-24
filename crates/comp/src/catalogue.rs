@@ -72,7 +72,7 @@ pub fn expression_functions() -> Value {
         "variables": ["time (layer seconds)", "comp_time", "value (the keyframed value)", "index", "fps", "frame", "width", "height", "dur", "progress (0..1 of the layer's life)", "bpm", "pi", "tau"],
         "math": ["sin", "cos", "tan", "asin", "acos", "atan", "atan2", "abs", "min", "max", "floor", "ceil", "round", "sqrt", "pow", "exp", "ln", "sign", "fract", "mod", "step", "pingpong", "clamp(x, lo, hi)", "lerp(a, b, t)", "radians", "degrees"],
         "motion": ["linear(x, x0, x1, y0, y1)", "smooth(x0, x1, x)", "ease(\"expo.out\", x, x0, x1, y0, y1)", "wiggle(freq, amp, octaves?)", "noise(x)", "noise2(x, y)", "random(seed)"],
-        "rhythm": ["beat() 0..1 within the beat", "bar() 0..1 within the bar", "beat_index()", "marker(\"name\") seconds since the marker"],
+        "rhythm": ["beat() 0..1 within the beat", "bar() 0..1 within the bar", "beat_index()", "marker(\"name\") seconds since the marker", "amp(\"audio layer id\") loudness 0..1", "onset(\"audio layer id\") seconds since the latest kick or hit"],
         "layers": ["ref(\"layer id\", \"x|y|z|rotation|opacity|scale|sx|sy\")"],
         "operators": "+ - * / % ^ == != < <= > >= && || ! and a ? b : c",
     })

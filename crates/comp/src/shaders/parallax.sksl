@@ -1,0 +1,12 @@
+// 2.5D parallax: displace the picture by its depth map (white = near).
+uniform shader img;
+uniform shader depth;
+uniform float2 shift;    // px of displacement at full depth difference
+uniform float2 lo;       // clamp box for sampling, in the picture's own coordinates
+uniform float2 hi;
+
+half4 main(float2 xy) {
+    half d = depth.eval(xy).r;
+    float2 o = shift * (float(d) - 0.5) * 2.0;
+    return img.eval(clamp(xy + o, lo, hi));
+}

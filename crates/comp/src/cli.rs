@@ -31,6 +31,8 @@ pub enum Command {
         #[command(flatten)]
         source: Source,
     },
+    /// List the installed font families a text layer can name
+    Fonts,
     /// What is true at a moment: every layer's position, opacity, bounds and state, as JSON
     Inspect {
         #[command(flatten)]
@@ -95,9 +97,29 @@ pub fn run(command: Command) -> Result<()> {
             println!("{}", serde_json::to_string_pretty(&catalogue::all())?);
             Ok(())
         }
+        Command::Fonts => {
+            for f in turbomotion_core::typeface::families() {
+                println!("{f}");
+            }
+            Ok(())
+        }
         Command::Check { source } => {
             let plan = Plan::load(&source.file)?;
             let root = plan.root();
+            // Evaluate the timeline at the interesting moments so expression, font and reference mistakes surface now.
+            let ev = Evaluator::new(&plan);
+            let mut times = vec![0.0, root.dur / 2.0, (root.dur - 1.0 / f64::from(plan.fps)).max(0.0)];
+            for l in &root.layers {
+                times.push(l.start + 0.01);
+                times.push((l.start + l.end) / 2.0);
+                times.push((l.end - 0.02).max(l.start));
+            }
+            times.retain(|t| *t >= 0.0 && *t < root.dur);
+            times.sort_by(f64::total_cmp);
+            times.dedup_by(|a, b| (*a - *b).abs() < 1e-6);
+            for t in times.iter().take(96) {
+                ev.frame(ROOT, *t).with_context(|| format!("evaluating the composition at {t:.2}s"))?;
+            }
             println!("ok: {}x{} at {} fps, {:.2}s ({} frames), {} layers, {} nested comps", root.width, root.height, plan.fps, root.dur, plan.frames(), root.layers.len(), plan.comps.len() - 1);
             Ok(())
         }
