@@ -2,6 +2,7 @@
 
 pub mod anim;
 pub mod audio;
+pub mod check;
 pub mod eval;
 pub mod fxlib;
 pub mod media;

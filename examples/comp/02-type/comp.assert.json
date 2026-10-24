@@ -1,0 +1,6 @@
+[
+  {"visible_by": {"layer": "headline", "t": 1.6}},
+  {"stays_in_frame": {"layer": "headline", "safe": 0.9}},
+  {"before": {"first": "headline", "then": "sub"}},
+  {"keeps_moving": {"window": 3.0}}
+]

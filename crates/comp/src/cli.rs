@@ -6,7 +6,7 @@ use anyhow::{ensure, Context, Result};
 use clap::{Args, Subcommand, ValueEnum};
 use turbomotion_core::encode::Codec;
 
-use crate::{catalogue, eval::Evaluator, plan::{Plan, ROOT}, render};
+use crate::{catalogue, check, eval::Evaluator, plan::{Plan, ROOT}, render};
 
 #[derive(Args)]
 pub struct Source {
@@ -51,6 +51,18 @@ pub enum Command {
     Check {
         #[command(flatten)]
         source: Source,
+        /// Assertions to verify (default: `comp.assert.json` beside the composition, if there is one)
+        #[arg(long)]
+        assert: Option<PathBuf>,
+        /// Print the findings as JSON
+        #[arg(long)]
+        json: bool,
+        /// Treat warnings as failures
+        #[arg(long)]
+        strict: bool,
+        /// Also render a frame twice and require identical pixels
+        #[arg(long)]
+        determinism: bool,
     },
     /// List the installed font families a text layer can name
     Fonts,
@@ -130,7 +142,7 @@ pub fn run(command: Command) -> Result<()> {
             Ok(())
         }
         Command::Fx { command } => fx(command),
-        Command::Check { source } => {
+        Command::Check { source, assert, json, strict, determinism } => {
             let plan = Plan::load(&source.file)?;
             let root = plan.root();
             // Evaluate the timeline at the interesting moments so expression, font and reference mistakes surface now.
@@ -147,7 +159,43 @@ pub fn run(command: Command) -> Result<()> {
             for t in times.iter().take(96) {
                 ev.frame(ROOT, *t).with_context(|| format!("evaluating the composition at {t:.2}s"))?;
             }
-            println!("ok: {}x{} at {} fps, {:.2}s ({} frames), {} layers, {} nested comps", root.width, root.height, plan.fps, root.dur, plan.frames(), root.layers.len(), plan.comps.len() - 1);
+            let mut findings = check::lint::run(&plan)?;
+            let assert_path = assert.or_else(|| Some(source.file.with_file_name("comp.assert.json")).filter(|p| p.exists()));
+            let asserted = if let Some(p) = &assert_path {
+                let list = check::assertions::load(p)?;
+                findings.extend(check::assertions::run(&plan, &list)?);
+                list.len()
+            } else {
+                0
+            };
+            if determinism {
+                let mut r = render::Renderer::new(&plan)?;
+                let (mut a, mut b) = (vec![], vec![]);
+                let t = root.dur / 2.0;
+                r.draw_at(t)?;
+                r.pixels(&mut a)?;
+                r.draw_at(0.0)?;
+                r.draw_at(t)?;
+                r.pixels(&mut b)?;
+                if a != b {
+                    findings.push(check::Finding { severity: check::Severity::Error, rule: "determinism", layer: None, t: Some(t), message: "the same frame drew differently the second time".into(), fix: "something depends on state outside time: an unseeded random, a cache keyed wrongly, a video decoder restart".into() });
+                }
+            }
+            let errors = findings.iter().filter(|f| f.severity == check::Severity::Error).count();
+            let warnings = findings.len() - errors;
+            if json {
+                println!("{}", serde_json::to_string_pretty(&findings)?);
+            } else {
+                for f in &findings {
+                    println!("{f}");
+                }
+                println!(
+                    "{}: {}x{} at {} fps, {:.2}s ({} frames), {} layers, {} nested comps; {} assertions; {errors} errors, {warnings} warnings",
+                    if errors == 0 { "ok" } else { "FAILED" },
+                    root.width, root.height, plan.fps, root.dur, plan.frames(), root.layers.len(), plan.comps.len() - 1, asserted
+                );
+            }
+            ensure!(errors == 0 && !(strict && warnings > 0), "{errors} errors, {warnings} warnings");
             Ok(())
         }
         Command::Inspect { source, t, layer } => {
