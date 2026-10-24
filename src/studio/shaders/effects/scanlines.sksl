@@ -1,0 +1,12 @@
+// Horizontal scanlines: every `spacing` pixels the colour dims by `strength`.
+uniform shader src;
+uniform float spacing;
+uniform float strength;
+uniform float thickness;   // fraction of the spacing that is dark
+
+half4 main(float2 p) {
+    half4 c = src.eval(p);
+    float phase = fract(p.y / spacing);
+    float dark = smoothstep(0.0, 0.15, phase) * (1.0 - smoothstep(thickness, thickness + 0.15, phase));
+    return half4(c.rgb * half(1.0 - strength * (1.0 - dark)), c.a);
+}

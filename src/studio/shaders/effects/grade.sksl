@@ -1,0 +1,8 @@
+// The scene colour grade (see grade.sksl at the top level) applied to a layer's straight colour.
+uniform shader src;
+
+half4 main(float2 p) {
+    half4 c = src.eval(p);
+    if (c.a <= 0.0) return c;
+    return half4(grade(c.rgb / c.a) * c.a, c.a);
+}

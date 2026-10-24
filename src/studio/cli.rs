@@ -31,6 +31,8 @@ pub enum CodecKind {
 
 #[derive(Subcommand)]
 pub enum Command {
+    /// Print the effects catalogue as JSON: every effect an element's or scene's `fx` list accepts, with an example
+    Effects,
     /// Render the film (or a frame range) to a silent mp4
     Render {
         #[command(flatten)]
@@ -68,6 +70,10 @@ pub enum Command {
 
 pub fn run(command: Command) -> Result<()> {
     match command {
+        Command::Effects => {
+            println!("{}", serde_json::to_string_pretty(&super::effects::catalogue())?);
+            Ok(())
+        }
         Command::Render { source, out, from, to, workers, codec, bitrate, crf } => {
             let film = Film::load(&source.dir)?;
             let codec = match codec {

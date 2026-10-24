@@ -1,0 +1,13 @@
+// Motion blur: the mean of `taps` copies spread along `span` (premultiplied, transparent beyond the layer).
+uniform shader src;
+uniform float2 span;
+uniform float taps;
+
+half4 main(float2 p) {
+    half4 sum = half4(0.0);
+    for (int i = 0; i < 64; i++) {
+        if (float(i) >= taps) break;
+        sum += src.eval(p + span * (float(i) / (taps - 1.0) - 0.5));
+    }
+    return sum / half(taps);
+}

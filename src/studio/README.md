@@ -33,6 +33,39 @@ render.rs      Renderer: one per worker, owns the GPU surface, the Stage and the
 Everything is composed in half-float, premultiplied `Layer`s (`layer.rs`). Elements build a layer (text, panel, chart,
 map…) and land it with `anim::blit`, which applies the entrance, exit, shadow and rotation shared by all of them.
 
+## Effects: one library for any layer
+
+Any element, and any whole scene, can carry an `fx` list. Each effect takes the layer built so far and returns a new
+one, in order; every number can be animated with `[[seconds, value], ...]` keys; an element can also set a `blend`
+mode (`add`, `screen`, `multiply`, `overlay`, `difference`, ...).
+
+```json
+{"k": "title", "text": "HELLO", "t0": 2.0,
+ "fx": [{"effect": "glow", "radius": 30, "color": [255, 200, 120]},
+        {"effect": "blur", "radius": [[2.0, 24], [3.0, 0]]},
+        {"effect": "rgb_split", "distance": 6}],
+ "blend": "screen"}
+```
+
+`turbomotion studio effects` prints the catalogue as JSON (name, what it does, a complete example), generated from the
+same registry the renderer parses with (`effects/mod.rs`), so it cannot drift. 26 effects today: blur, directional
+blur, radial blur, glow, shadow, outline, brightness, contrast, saturation, hue, exposure, gamma, invert, tint, grade,
+wave, twirl, bulge, pixelate, chromatic aberration, RGB split, grain, scanlines, vignette, opacity, transform.
+Unknown effects, unknown parameters and out-of-order keys are errors at load. `examples/studio-effects/` renders every
+effect on a title ([gallery](../../docs/studio-effects.jpg)).
+
+Adding an effect is a parameter struct plus one function in a family file (`effects/blur.rs`, `color.rs`, `distort.rs`,
+`edge.rs`, `texture.rs`, `place.rs`) and one line in the `registry!` list.
+
+Effects run on the element's own full-frame layer, so pixel parameters are plain pixels and centre points
+(`x`, `y`) are fractions of the frame. Effects are not part of the Python parity reference.
+
+## What is still missing for a general motion-graphics tool
+
+Masks and track mattes, layer nesting (pre-compositions), video and audio inputs and an audio-synced timeline, shape
+and path layers with trim/offset, per-character text animators, particles, 3D cameras and lights, expressions, and a
+cross-platform backend (Metal only today). The effects library and the strict JSON schema are the base for these.
+
 ## Module map
 
 | Area | Modules |
@@ -40,6 +73,7 @@ map…) and land it with `anim::blit`, which applies the entrance, exit, shadow 
 | Data | `model` (film schema), `geo` (outlines, Mercator view, great circles, globe projection), `media` (photographs, characters) |
 | Services | `stage` (the bundle every element draws with), `shaders` + `shader` + `shaders/*.sksl`, `font` + `typeset`, `cache`, `atlas` (map masks and globe textures) |
 | Drawing | `layer`, `anim`, `fx` (tilt, extrusion, reflection, halo, sprites), `background`, `grade`, `noise` |
+| Effects | `effects/` (registry, one file per family, `shaders/effects/*.sksl`) |
 | Elements | `elements/{text, panels, surface, marks, charts, maps, photo}` — one function per element kind, dispatched in `elements/mod.rs` |
 | Frame | `scene`, `transitions/`, `post`, `render`, `cli` |
 | Reference parity | `rng` (numpy's MT19937, bit-exact), `pyfmt` (Python number formatting), `ease`, `geom` (OpenCV's matrix conventions), `path` |

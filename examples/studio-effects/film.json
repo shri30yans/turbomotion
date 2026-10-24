@@ -1,0 +1,1818 @@
+{
+ "fps": 24,
+ "width": 1920,
+ "height": 1080,
+ "end": 54.0,
+ "fonts": {
+  "dinc": [
+   "Supplemental/DIN Condensed Bold.ttf",
+   0
+  ],
+  "avn_b": [
+   "Avenir Next.ttc",
+   8
+  ],
+  "avn_m": [
+   "Avenir Next.ttc",
+   5
+  ]
+ },
+ "font_dir": "/System/Library/Fonts/",
+ "scenes": [
+  {
+   "id": "blur",
+   "t0": 0.0,
+   "t1": 2.0,
+   "trans": "cut",
+   "trd": 0.5,
+   "grade": {},
+   "vig": 0.5,
+   "bloom": 0.3,
+   "ca": 0.0,
+   "bg": {
+    "style": "studio"
+   },
+   "cam": [],
+   "shakes": [],
+   "els": [
+    {
+     "k": "title",
+     "text": "EFFECT",
+     "size": 230,
+     "fill": [
+      222,
+      176,
+      82
+     ],
+     "x": 960,
+     "y": 470,
+     "t0": 0.0,
+     "in": "none",
+     "fx": [
+      {
+       "effect": "blur",
+       "radius": 8
+      }
+     ]
+    },
+    {
+     "k": "text",
+     "text": "BLUR",
+     "font": "avn_b",
+     "size": 54,
+     "x": 960,
+     "y": 800,
+     "t0": 0.0,
+     "in": "none"
+    },
+    {
+     "k": "text",
+     "text": "Gaussian blur. `radius` is the sigma in pixels.",
+     "font": "avn_m",
+     "size": 30,
+     "fill": [
+      160,
+      175,
+      195
+     ],
+     "maxw": 1500,
+     "x": 960,
+     "y": 880,
+     "t0": 0.0,
+     "in": "none"
+    }
+   ]
+  },
+  {
+   "id": "directional_blur",
+   "t0": 2.0,
+   "t1": 4.0,
+   "trans": "cut",
+   "trd": 0.5,
+   "grade": {},
+   "vig": 0.5,
+   "bloom": 0.3,
+   "ca": 0.0,
+   "bg": {
+    "style": "studio"
+   },
+   "cam": [],
+   "shakes": [],
+   "els": [
+    {
+     "k": "title",
+     "text": "EFFECT",
+     "size": 230,
+     "fill": [
+      222,
+      176,
+      82
+     ],
+     "x": 960,
+     "y": 470,
+     "t0": 2.0,
+     "in": "none",
+     "fx": [
+      {
+       "angle": 0,
+       "distance": 40,
+       "effect": "directional_blur"
+      }
+     ]
+    },
+    {
+     "k": "text",
+     "text": "DIRECTIONAL BLUR",
+     "font": "avn_b",
+     "size": 54,
+     "x": 960,
+     "y": 800,
+     "t0": 2.0,
+     "in": "none"
+    },
+    {
+     "k": "text",
+     "text": "Motion blur: smears the layer `distance` pixels along `angle` degrees.",
+     "font": "avn_m",
+     "size": 30,
+     "fill": [
+      160,
+      175,
+      195
+     ],
+     "maxw": 1500,
+     "x": 960,
+     "y": 880,
+     "t0": 2.0,
+     "in": "none"
+    }
+   ]
+  },
+  {
+   "id": "radial_blur",
+   "t0": 4.0,
+   "t1": 6.0,
+   "trans": "cut",
+   "trd": 0.5,
+   "grade": {},
+   "vig": 0.5,
+   "bloom": 0.3,
+   "ca": 0.0,
+   "bg": {
+    "style": "studio"
+   },
+   "cam": [],
+   "shakes": [],
+   "els": [
+    {
+     "k": "title",
+     "text": "EFFECT",
+     "size": 230,
+     "fill": [
+      222,
+      176,
+      82
+     ],
+     "x": 960,
+     "y": 470,
+     "t0": 4.0,
+     "in": "none",
+     "fx": [
+      {
+       "amount": 0.1,
+       "effect": "radial_blur",
+       "x": 0.5,
+       "y": 0.5
+      }
+     ]
+    },
+    {
+     "k": "text",
+     "text": "RADIAL BLUR",
+     "font": "avn_b",
+     "size": 54,
+     "x": 960,
+     "y": 800,
+     "t0": 4.0,
+     "in": "none"
+    },
+    {
+     "k": "text",
+     "text": "Zoom blur from a point (`x`, `y` as fractions of the frame); `amount` 0.1 smears 10%.",
+     "font": "avn_m",
+     "size": 30,
+     "fill": [
+      160,
+      175,
+      195
+     ],
+     "maxw": 1500,
+     "x": 960,
+     "y": 880,
+     "t0": 4.0,
+     "in": "none"
+    }
+   ]
+  },
+  {
+   "id": "glow",
+   "t0": 6.0,
+   "t1": 8.0,
+   "trans": "cut",
+   "trd": 0.5,
+   "grade": {},
+   "vig": 0.5,
+   "bloom": 0.3,
+   "ca": 0.0,
+   "bg": {
+    "style": "studio"
+   },
+   "cam": [],
+   "shakes": [],
+   "els": [
+    {
+     "k": "title",
+     "text": "EFFECT",
+     "size": 230,
+     "fill": [
+      222,
+      176,
+      82
+     ],
+     "x": 960,
+     "y": 470,
+     "t0": 6.0,
+     "in": "none",
+     "fx": [
+      {
+       "color": [
+        255,
+        200,
+        120
+       ],
+       "effect": "glow",
+       "radius": 24,
+       "strength": 1,
+       "threshold": 0
+      }
+     ]
+    },
+    {
+     "k": "text",
+     "text": "GLOW",
+     "font": "avn_b",
+     "size": 54,
+     "x": 960,
+     "y": 800,
+     "t0": 6.0,
+     "in": "none"
+    },
+    {
+     "k": "text",
+     "text": "Adds a blurred copy back on top. `threshold` limits it to the bright parts, `color` tints the halo.",
+     "font": "avn_m",
+     "size": 30,
+     "fill": [
+      160,
+      175,
+      195
+     ],
+     "maxw": 1500,
+     "x": 960,
+     "y": 880,
+     "t0": 6.0,
+     "in": "none"
+    }
+   ]
+  },
+  {
+   "id": "shadow",
+   "t0": 8.0,
+   "t1": 10.0,
+   "trans": "cut",
+   "trd": 0.5,
+   "grade": {},
+   "vig": 0.5,
+   "bloom": 0.3,
+   "ca": 0.0,
+   "bg": {
+    "style": "studio"
+   },
+   "cam": [],
+   "shakes": [],
+   "els": [
+    {
+     "k": "title",
+     "text": "EFFECT",
+     "size": 230,
+     "fill": [
+      222,
+      176,
+      82
+     ],
+     "x": 960,
+     "y": 470,
+     "t0": 8.0,
+     "in": "none",
+     "fx": [
+      {
+       "blur": 16,
+       "color": [
+        0,
+        0,
+        0
+       ],
+       "dx": 0,
+       "dy": 12,
+       "effect": "shadow",
+       "opacity": 0.5
+      }
+     ]
+    },
+    {
+     "k": "text",
+     "text": "SHADOW",
+     "font": "avn_b",
+     "size": 54,
+     "x": 960,
+     "y": 800,
+     "t0": 8.0,
+     "in": "none"
+    },
+    {
+     "k": "text",
+     "text": "Soft drop shadow behind the layer's shape.",
+     "font": "avn_m",
+     "size": 30,
+     "fill": [
+      160,
+      175,
+      195
+     ],
+     "maxw": 1500,
+     "x": 960,
+     "y": 880,
+     "t0": 8.0,
+     "in": "none"
+    }
+   ]
+  },
+  {
+   "id": "outline",
+   "t0": 10.0,
+   "t1": 12.0,
+   "trans": "cut",
+   "trd": 0.5,
+   "grade": {},
+   "vig": 0.5,
+   "bloom": 0.3,
+   "ca": 0.0,
+   "bg": {
+    "style": "studio"
+   },
+   "cam": [],
+   "shakes": [],
+   "els": [
+    {
+     "k": "title",
+     "text": "EFFECT",
+     "size": 230,
+     "fill": [
+      222,
+      176,
+      82
+     ],
+     "x": 960,
+     "y": 470,
+     "t0": 10.0,
+     "in": "none",
+     "fx": [
+      {
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "effect": "outline",
+       "opacity": 1,
+       "width": 4
+      }
+     ]
+    },
+    {
+     "k": "text",
+     "text": "OUTLINE",
+     "font": "avn_b",
+     "size": 54,
+     "x": 960,
+     "y": 800,
+     "t0": 10.0,
+     "in": "none"
+    },
+    {
+     "k": "text",
+     "text": "Solid outline `width` pixels around the layer's shape.",
+     "font": "avn_m",
+     "size": 30,
+     "fill": [
+      160,
+      175,
+      195
+     ],
+     "maxw": 1500,
+     "x": 960,
+     "y": 880,
+     "t0": 10.0,
+     "in": "none"
+    }
+   ]
+  },
+  {
+   "id": "brightness",
+   "t0": 12.0,
+   "t1": 14.0,
+   "trans": "cut",
+   "trd": 0.5,
+   "grade": {},
+   "vig": 0.5,
+   "bloom": 0.3,
+   "ca": 0.0,
+   "bg": {
+    "style": "studio"
+   },
+   "cam": [],
+   "shakes": [],
+   "els": [
+    {
+     "k": "title",
+     "text": "EFFECT",
+     "size": 230,
+     "fill": [
+      222,
+      176,
+      82
+     ],
+     "x": 960,
+     "y": 470,
+     "t0": 12.0,
+     "in": "none",
+     "fx": [
+      {
+       "amount": 0.2,
+       "effect": "brightness"
+      }
+     ]
+    },
+    {
+     "k": "text",
+     "text": "BRIGHTNESS",
+     "font": "avn_b",
+     "size": 54,
+     "x": 960,
+     "y": 800,
+     "t0": 12.0,
+     "in": "none"
+    },
+    {
+     "k": "text",
+     "text": "Adds `amount` (0..1 scale) to every channel.",
+     "font": "avn_m",
+     "size": 30,
+     "fill": [
+      160,
+      175,
+      195
+     ],
+     "maxw": 1500,
+     "x": 960,
+     "y": 880,
+     "t0": 12.0,
+     "in": "none"
+    }
+   ]
+  },
+  {
+   "id": "contrast",
+   "t0": 14.0,
+   "t1": 16.0,
+   "trans": "cut",
+   "trd": 0.5,
+   "grade": {},
+   "vig": 0.5,
+   "bloom": 0.3,
+   "ca": 0.0,
+   "bg": {
+    "style": "studio"
+   },
+   "cam": [],
+   "shakes": [],
+   "els": [
+    {
+     "k": "title",
+     "text": "EFFECT",
+     "size": 230,
+     "fill": [
+      222,
+      176,
+      82
+     ],
+     "x": 960,
+     "y": 470,
+     "t0": 14.0,
+     "in": "none",
+     "fx": [
+      {
+       "amount": 1.3,
+       "effect": "contrast"
+      }
+     ]
+    },
+    {
+     "k": "text",
+     "text": "CONTRAST",
+     "font": "avn_b",
+     "size": 54,
+     "x": 960,
+     "y": 800,
+     "t0": 14.0,
+     "in": "none"
+    },
+    {
+     "k": "text",
+     "text": "1 = unchanged, 0 = flat grey, 2 = punchy.",
+     "font": "avn_m",
+     "size": 30,
+     "fill": [
+      160,
+      175,
+      195
+     ],
+     "maxw": 1500,
+     "x": 960,
+     "y": 880,
+     "t0": 14.0,
+     "in": "none"
+    }
+   ]
+  },
+  {
+   "id": "saturation",
+   "t0": 16.0,
+   "t1": 18.0,
+   "trans": "cut",
+   "trd": 0.5,
+   "grade": {},
+   "vig": 0.5,
+   "bloom": 0.3,
+   "ca": 0.0,
+   "bg": {
+    "style": "studio"
+   },
+   "cam": [],
+   "shakes": [],
+   "els": [
+    {
+     "k": "title",
+     "text": "EFFECT",
+     "size": 230,
+     "fill": [
+      222,
+      176,
+      82
+     ],
+     "x": 960,
+     "y": 470,
+     "t0": 16.0,
+     "in": "none",
+     "fx": [
+      {
+       "amount": 1.4,
+       "effect": "saturation"
+      }
+     ]
+    },
+    {
+     "k": "text",
+     "text": "SATURATION",
+     "font": "avn_b",
+     "size": 54,
+     "x": 960,
+     "y": 800,
+     "t0": 16.0,
+     "in": "none"
+    },
+    {
+     "k": "text",
+     "text": "1 = unchanged, 0 = black and white, 2 = vivid.",
+     "font": "avn_m",
+     "size": 30,
+     "fill": [
+      160,
+      175,
+      195
+     ],
+     "maxw": 1500,
+     "x": 960,
+     "y": 880,
+     "t0": 16.0,
+     "in": "none"
+    }
+   ]
+  },
+  {
+   "id": "hue",
+   "t0": 18.0,
+   "t1": 20.0,
+   "trans": "cut",
+   "trd": 0.5,
+   "grade": {},
+   "vig": 0.5,
+   "bloom": 0.3,
+   "ca": 0.0,
+   "bg": {
+    "style": "studio"
+   },
+   "cam": [],
+   "shakes": [],
+   "els": [
+    {
+     "k": "title",
+     "text": "EFFECT",
+     "size": 230,
+     "fill": [
+      222,
+      176,
+      82
+     ],
+     "x": 960,
+     "y": 470,
+     "t0": 18.0,
+     "in": "none",
+     "fx": [
+      {
+       "degrees": 90,
+       "effect": "hue"
+      }
+     ]
+    },
+    {
+     "k": "text",
+     "text": "HUE",
+     "font": "avn_b",
+     "size": 54,
+     "x": 960,
+     "y": 800,
+     "t0": 18.0,
+     "in": "none"
+    },
+    {
+     "k": "text",
+     "text": "Rotates colours around the wheel by `degrees`.",
+     "font": "avn_m",
+     "size": 30,
+     "fill": [
+      160,
+      175,
+      195
+     ],
+     "maxw": 1500,
+     "x": 960,
+     "y": 880,
+     "t0": 18.0,
+     "in": "none"
+    }
+   ]
+  },
+  {
+   "id": "exposure",
+   "t0": 20.0,
+   "t1": 22.0,
+   "trans": "cut",
+   "trd": 0.5,
+   "grade": {},
+   "vig": 0.5,
+   "bloom": 0.3,
+   "ca": 0.0,
+   "bg": {
+    "style": "studio"
+   },
+   "cam": [],
+   "shakes": [],
+   "els": [
+    {
+     "k": "title",
+     "text": "EFFECT",
+     "size": 230,
+     "fill": [
+      222,
+      176,
+      82
+     ],
+     "x": 960,
+     "y": 470,
+     "t0": 20.0,
+     "in": "none",
+     "fx": [
+      {
+       "amount": 0.5,
+       "effect": "exposure"
+      }
+     ]
+    },
+    {
+     "k": "text",
+     "text": "EXPOSURE",
+     "font": "avn_b",
+     "size": 54,
+     "x": 960,
+     "y": 800,
+     "t0": 20.0,
+     "in": "none"
+    },
+    {
+     "k": "text",
+     "text": "Photographic stops: +1 doubles the light.",
+     "font": "avn_m",
+     "size": 30,
+     "fill": [
+      160,
+      175,
+      195
+     ],
+     "maxw": 1500,
+     "x": 960,
+     "y": 880,
+     "t0": 20.0,
+     "in": "none"
+    }
+   ]
+  },
+  {
+   "id": "gamma",
+   "t0": 22.0,
+   "t1": 24.0,
+   "trans": "cut",
+   "trd": 0.5,
+   "grade": {},
+   "vig": 0.5,
+   "bloom": 0.3,
+   "ca": 0.0,
+   "bg": {
+    "style": "studio"
+   },
+   "cam": [],
+   "shakes": [],
+   "els": [
+    {
+     "k": "title",
+     "text": "EFFECT",
+     "size": 230,
+     "fill": [
+      222,
+      176,
+      82
+     ],
+     "x": 960,
+     "y": 470,
+     "t0": 22.0,
+     "in": "none",
+     "fx": [
+      {
+       "amount": 1.2,
+       "effect": "gamma"
+      }
+     ]
+    },
+    {
+     "k": "text",
+     "text": "GAMMA",
+     "font": "avn_b",
+     "size": 54,
+     "x": 960,
+     "y": 800,
+     "t0": 22.0,
+     "in": "none"
+    },
+    {
+     "k": "text",
+     "text": "Mid-tone curve: above 1 lightens, below 1 darkens.",
+     "font": "avn_m",
+     "size": 30,
+     "fill": [
+      160,
+      175,
+      195
+     ],
+     "maxw": 1500,
+     "x": 960,
+     "y": 880,
+     "t0": 22.0,
+     "in": "none"
+    }
+   ]
+  },
+  {
+   "id": "invert",
+   "t0": 24.0,
+   "t1": 26.0,
+   "trans": "cut",
+   "trd": 0.5,
+   "grade": {},
+   "vig": 0.5,
+   "bloom": 0.3,
+   "ca": 0.0,
+   "bg": {
+    "style": "studio"
+   },
+   "cam": [],
+   "shakes": [],
+   "els": [
+    {
+     "k": "title",
+     "text": "EFFECT",
+     "size": 230,
+     "fill": [
+      222,
+      176,
+      82
+     ],
+     "x": 960,
+     "y": 470,
+     "t0": 24.0,
+     "in": "none",
+     "fx": [
+      {
+       "amount": 1,
+       "effect": "invert"
+      }
+     ]
+    },
+    {
+     "k": "text",
+     "text": "INVERT",
+     "font": "avn_b",
+     "size": 54,
+     "x": 960,
+     "y": 800,
+     "t0": 24.0,
+     "in": "none"
+    },
+    {
+     "k": "text",
+     "text": "Negative; `amount` 1 is a full invert.",
+     "font": "avn_m",
+     "size": 30,
+     "fill": [
+      160,
+      175,
+      195
+     ],
+     "maxw": 1500,
+     "x": 960,
+     "y": 880,
+     "t0": 24.0,
+     "in": "none"
+    }
+   ]
+  },
+  {
+   "id": "tint",
+   "t0": 26.0,
+   "t1": 28.0,
+   "trans": "cut",
+   "trd": 0.5,
+   "grade": {},
+   "vig": 0.5,
+   "bloom": 0.3,
+   "ca": 0.0,
+   "bg": {
+    "style": "studio"
+   },
+   "cam": [],
+   "shakes": [],
+   "els": [
+    {
+     "k": "title",
+     "text": "EFFECT",
+     "size": 230,
+     "fill": [
+      222,
+      176,
+      82
+     ],
+     "x": 960,
+     "y": 470,
+     "t0": 26.0,
+     "in": "none",
+     "fx": [
+      {
+       "amount": 0.6,
+       "color": [
+        255,
+        120,
+        60
+       ],
+       "effect": "tint"
+      }
+     ]
+    },
+    {
+     "k": "text",
+     "text": "TINT",
+     "font": "avn_b",
+     "size": 54,
+     "x": 960,
+     "y": 800,
+     "t0": 26.0,
+     "in": "none"
+    },
+    {
+     "k": "text",
+     "text": "Paints the layer toward `color` by `amount` (0..1), keeping its shape.",
+     "font": "avn_m",
+     "size": 30,
+     "fill": [
+      160,
+      175,
+      195
+     ],
+     "maxw": 1500,
+     "x": 960,
+     "y": 880,
+     "t0": 26.0,
+     "in": "none"
+    }
+   ]
+  },
+  {
+   "id": "grade",
+   "t0": 28.0,
+   "t1": 30.0,
+   "trans": "cut",
+   "trd": 0.5,
+   "grade": {},
+   "vig": 0.5,
+   "bloom": 0.3,
+   "ca": 0.0,
+   "bg": {
+    "style": "studio"
+   },
+   "cam": [],
+   "shakes": [],
+   "els": [
+    {
+     "k": "title",
+     "text": "EFFECT",
+     "size": 230,
+     "fill": [
+      222,
+      176,
+      82
+     ],
+     "x": 960,
+     "y": 470,
+     "t0": 28.0,
+     "in": "none",
+     "fx": [
+      {
+       "contrast": 1.1,
+       "effect": "grade",
+       "gain": 1,
+       "gamma": 1,
+       "lift": 0,
+       "sat": 0.8,
+       "tint": [
+        20,
+        40,
+        80
+       ],
+       "tint_k": 0.1
+      }
+     ]
+    },
+    {
+     "k": "text",
+     "text": "GRADE",
+     "font": "avn_b",
+     "size": 54,
+     "x": 960,
+     "y": 800,
+     "t0": 28.0,
+     "in": "none"
+    },
+    {
+     "k": "text",
+     "text": "The scene colour grade on one layer: lift, gamma, gain, sat, contrast, tint (rgb) and tint_k.",
+     "font": "avn_m",
+     "size": 30,
+     "fill": [
+      160,
+      175,
+      195
+     ],
+     "maxw": 1500,
+     "x": 960,
+     "y": 880,
+     "t0": 28.0,
+     "in": "none"
+    }
+   ]
+  },
+  {
+   "id": "wave",
+   "t0": 30.0,
+   "t1": 32.0,
+   "trans": "cut",
+   "trd": 0.5,
+   "grade": {},
+   "vig": 0.5,
+   "bloom": 0.3,
+   "ca": 0.0,
+   "bg": {
+    "style": "studio"
+   },
+   "cam": [],
+   "shakes": [],
+   "els": [
+    {
+     "k": "title",
+     "text": "EFFECT",
+     "size": 230,
+     "fill": [
+      222,
+      176,
+      82
+     ],
+     "x": 960,
+     "y": 470,
+     "t0": 30.0,
+     "in": "none",
+     "fx": [
+      {
+       "amplitude": 12,
+       "angle": 0,
+       "effect": "wave",
+       "speed": 0.5,
+       "wavelength": 160
+      }
+     ]
+    },
+    {
+     "k": "text",
+     "text": "WAVE",
+     "font": "avn_b",
+     "size": 54,
+     "x": 960,
+     "y": 800,
+     "t0": 30.0,
+     "in": "none"
+    },
+    {
+     "k": "text",
+     "text": "Sine wave displacement: `amplitude` px, `wavelength` px, `speed` crests per second, `angle` of travel.",
+     "font": "avn_m",
+     "size": 30,
+     "fill": [
+      160,
+      175,
+      195
+     ],
+     "maxw": 1500,
+     "x": 960,
+     "y": 880,
+     "t0": 30.0,
+     "in": "none"
+    }
+   ]
+  },
+  {
+   "id": "twirl",
+   "t0": 32.0,
+   "t1": 34.0,
+   "trans": "cut",
+   "trd": 0.5,
+   "grade": {},
+   "vig": 0.5,
+   "bloom": 0.3,
+   "ca": 0.0,
+   "bg": {
+    "style": "studio"
+   },
+   "cam": [],
+   "shakes": [],
+   "els": [
+    {
+     "k": "title",
+     "text": "EFFECT",
+     "size": 230,
+     "fill": [
+      222,
+      176,
+      82
+     ],
+     "x": 960,
+     "y": 470,
+     "t0": 32.0,
+     "in": "none",
+     "fx": [
+      {
+       "angle": 90,
+       "effect": "twirl",
+       "radius": 300,
+       "x": 0.5,
+       "y": 0.5
+      }
+     ]
+    },
+    {
+     "k": "text",
+     "text": "TWIRL",
+     "font": "avn_b",
+     "size": 54,
+     "x": 960,
+     "y": 800,
+     "t0": 32.0,
+     "in": "none"
+    },
+    {
+     "k": "text",
+     "text": "Swirls the picture around (`x`, `y`) by `angle` degrees within `radius` pixels.",
+     "font": "avn_m",
+     "size": 30,
+     "fill": [
+      160,
+      175,
+      195
+     ],
+     "maxw": 1500,
+     "x": 960,
+     "y": 880,
+     "t0": 32.0,
+     "in": "none"
+    }
+   ]
+  },
+  {
+   "id": "bulge",
+   "t0": 34.0,
+   "t1": 36.0,
+   "trans": "cut",
+   "trd": 0.5,
+   "grade": {},
+   "vig": 0.5,
+   "bloom": 0.3,
+   "ca": 0.0,
+   "bg": {
+    "style": "studio"
+   },
+   "cam": [],
+   "shakes": [],
+   "els": [
+    {
+     "k": "title",
+     "text": "EFFECT",
+     "size": 230,
+     "fill": [
+      222,
+      176,
+      82
+     ],
+     "x": 960,
+     "y": 470,
+     "t0": 34.0,
+     "in": "none",
+     "fx": [
+      {
+       "effect": "bulge",
+       "radius": 300,
+       "strength": 0.5,
+       "x": 0.5,
+       "y": 0.5
+      }
+     ]
+    },
+    {
+     "k": "text",
+     "text": "BULGE",
+     "font": "avn_b",
+     "size": 54,
+     "x": 960,
+     "y": 800,
+     "t0": 34.0,
+     "in": "none"
+    },
+    {
+     "k": "text",
+     "text": "Magnifies (positive) or pinches (negative) the picture around (`x`, `y`) within `radius` pixels.",
+     "font": "avn_m",
+     "size": 30,
+     "fill": [
+      160,
+      175,
+      195
+     ],
+     "maxw": 1500,
+     "x": 960,
+     "y": 880,
+     "t0": 34.0,
+     "in": "none"
+    }
+   ]
+  },
+  {
+   "id": "pixelate",
+   "t0": 36.0,
+   "t1": 38.0,
+   "trans": "cut",
+   "trd": 0.5,
+   "grade": {},
+   "vig": 0.5,
+   "bloom": 0.3,
+   "ca": 0.0,
+   "bg": {
+    "style": "studio"
+   },
+   "cam": [],
+   "shakes": [],
+   "els": [
+    {
+     "k": "title",
+     "text": "EFFECT",
+     "size": 230,
+     "fill": [
+      222,
+      176,
+      82
+     ],
+     "x": 960,
+     "y": 470,
+     "t0": 36.0,
+     "in": "none",
+     "fx": [
+      {
+       "effect": "pixelate",
+       "size": 16
+      }
+     ]
+    },
+    {
+     "k": "text",
+     "text": "PIXELATE",
+     "font": "avn_b",
+     "size": 54,
+     "x": 960,
+     "y": 800,
+     "t0": 36.0,
+     "in": "none"
+    },
+    {
+     "k": "text",
+     "text": "Mosaic of `size` pixel blocks.",
+     "font": "avn_m",
+     "size": 30,
+     "fill": [
+      160,
+      175,
+      195
+     ],
+     "maxw": 1500,
+     "x": 960,
+     "y": 880,
+     "t0": 36.0,
+     "in": "none"
+    }
+   ]
+  },
+  {
+   "id": "chromatic_aberration",
+   "t0": 38.0,
+   "t1": 40.0,
+   "trans": "cut",
+   "trd": 0.5,
+   "grade": {},
+   "vig": 0.5,
+   "bloom": 0.3,
+   "ca": 0.0,
+   "bg": {
+    "style": "studio"
+   },
+   "cam": [],
+   "shakes": [],
+   "els": [
+    {
+     "k": "title",
+     "text": "EFFECT",
+     "size": 230,
+     "fill": [
+      222,
+      176,
+      82
+     ],
+     "x": 960,
+     "y": 470,
+     "t0": 38.0,
+     "in": "none",
+     "fx": [
+      {
+       "amount": 6,
+       "effect": "chromatic_aberration"
+      }
+     ]
+    },
+    {
+     "k": "text",
+     "text": "CHROMATIC ABERRATION",
+     "font": "avn_b",
+     "size": 54,
+     "x": 960,
+     "y": 800,
+     "t0": 38.0,
+     "in": "none"
+    },
+    {
+     "k": "text",
+     "text": "Red and blue part ways toward the corners by `amount` pixels, like a cheap lens.",
+     "font": "avn_m",
+     "size": 30,
+     "fill": [
+      160,
+      175,
+      195
+     ],
+     "maxw": 1500,
+     "x": 960,
+     "y": 880,
+     "t0": 38.0,
+     "in": "none"
+    }
+   ]
+  },
+  {
+   "id": "rgb_split",
+   "t0": 40.0,
+   "t1": 42.0,
+   "trans": "cut",
+   "trd": 0.5,
+   "grade": {},
+   "vig": 0.5,
+   "bloom": 0.3,
+   "ca": 0.0,
+   "bg": {
+    "style": "studio"
+   },
+   "cam": [],
+   "shakes": [],
+   "els": [
+    {
+     "k": "title",
+     "text": "EFFECT",
+     "size": 230,
+     "fill": [
+      222,
+      176,
+      82
+     ],
+     "x": 960,
+     "y": 470,
+     "t0": 40.0,
+     "in": "none",
+     "fx": [
+      {
+       "angle": 0,
+       "distance": 8,
+       "effect": "rgb_split"
+      }
+     ]
+    },
+    {
+     "k": "text",
+     "text": "RGB SPLIT",
+     "font": "avn_b",
+     "size": 54,
+     "x": 960,
+     "y": 800,
+     "t0": 40.0,
+     "in": "none"
+    },
+    {
+     "k": "text",
+     "text": "Red and blue shift `distance` pixels apart along `angle` degrees; green stays.",
+     "font": "avn_m",
+     "size": 30,
+     "fill": [
+      160,
+      175,
+      195
+     ],
+     "maxw": 1500,
+     "x": 960,
+     "y": 880,
+     "t0": 40.0,
+     "in": "none"
+    }
+   ]
+  },
+  {
+   "id": "grain",
+   "t0": 42.0,
+   "t1": 44.0,
+   "trans": "cut",
+   "trd": 0.5,
+   "grade": {},
+   "vig": 0.5,
+   "bloom": 0.3,
+   "ca": 0.0,
+   "bg": {
+    "style": "studio"
+   },
+   "cam": [],
+   "shakes": [],
+   "els": [
+    {
+     "k": "title",
+     "text": "EFFECT",
+     "size": 230,
+     "fill": [
+      222,
+      176,
+      82
+     ],
+     "x": 960,
+     "y": 470,
+     "t0": 42.0,
+     "in": "none",
+     "fx": [
+      {
+       "amount": 0.12,
+       "effect": "grain",
+       "seed": 0
+      }
+     ]
+    },
+    {
+     "k": "text",
+     "text": "GRAIN",
+     "font": "avn_b",
+     "size": 54,
+     "x": 960,
+     "y": 800,
+     "t0": 42.0,
+     "in": "none"
+    },
+    {
+     "k": "text",
+     "text": "Film grain, redrawn 24 times a second.",
+     "font": "avn_m",
+     "size": 30,
+     "fill": [
+      160,
+      175,
+      195
+     ],
+     "maxw": 1500,
+     "x": 960,
+     "y": 880,
+     "t0": 42.0,
+     "in": "none"
+    }
+   ]
+  },
+  {
+   "id": "scanlines",
+   "t0": 44.0,
+   "t1": 46.0,
+   "trans": "cut",
+   "trd": 0.5,
+   "grade": {},
+   "vig": 0.5,
+   "bloom": 0.3,
+   "ca": 0.0,
+   "bg": {
+    "style": "studio"
+   },
+   "cam": [],
+   "shakes": [],
+   "els": [
+    {
+     "k": "title",
+     "text": "EFFECT",
+     "size": 230,
+     "fill": [
+      222,
+      176,
+      82
+     ],
+     "x": 960,
+     "y": 470,
+     "t0": 44.0,
+     "in": "none",
+     "fx": [
+      {
+       "effect": "scanlines",
+       "spacing": 4,
+       "strength": 0.35,
+       "thickness": 0.5
+      }
+     ]
+    },
+    {
+     "k": "text",
+     "text": "SCANLINES",
+     "font": "avn_b",
+     "size": 54,
+     "x": 960,
+     "y": 800,
+     "t0": 44.0,
+     "in": "none"
+    },
+    {
+     "k": "text",
+     "text": "CRT scanlines every `spacing` pixels, dimming by `strength`.",
+     "font": "avn_m",
+     "size": 30,
+     "fill": [
+      160,
+      175,
+      195
+     ],
+     "maxw": 1500,
+     "x": 960,
+     "y": 880,
+     "t0": 44.0,
+     "in": "none"
+    }
+   ]
+  },
+  {
+   "id": "vignette",
+   "t0": 46.0,
+   "t1": 48.0,
+   "trans": "cut",
+   "trd": 0.5,
+   "grade": {},
+   "vig": 0.5,
+   "bloom": 0.3,
+   "ca": 0.0,
+   "bg": {
+    "style": "studio"
+   },
+   "cam": [],
+   "shakes": [],
+   "els": [
+    {
+     "k": "title",
+     "text": "EFFECT",
+     "size": 230,
+     "fill": [
+      222,
+      176,
+      82
+     ],
+     "x": 960,
+     "y": 470,
+     "t0": 46.0,
+     "in": "none",
+     "fx": [
+      {
+       "effect": "vignette",
+       "softness": 0.45,
+       "strength": 0.5
+      }
+     ]
+    },
+    {
+     "k": "text",
+     "text": "VIGNETTE",
+     "font": "avn_b",
+     "size": 54,
+     "x": 960,
+     "y": 800,
+     "t0": 46.0,
+     "in": "none"
+    },
+    {
+     "k": "text",
+     "text": "Darkens toward the corners.",
+     "font": "avn_m",
+     "size": 30,
+     "fill": [
+      160,
+      175,
+      195
+     ],
+     "maxw": 1500,
+     "x": 960,
+     "y": 880,
+     "t0": 46.0,
+     "in": "none"
+    }
+   ]
+  },
+  {
+   "id": "opacity",
+   "t0": 48.0,
+   "t1": 50.0,
+   "trans": "cut",
+   "trd": 0.5,
+   "grade": {},
+   "vig": 0.5,
+   "bloom": 0.3,
+   "ca": 0.0,
+   "bg": {
+    "style": "studio"
+   },
+   "cam": [],
+   "shakes": [],
+   "els": [
+    {
+     "k": "title",
+     "text": "EFFECT",
+     "size": 230,
+     "fill": [
+      222,
+      176,
+      82
+     ],
+     "x": 960,
+     "y": 470,
+     "t0": 48.0,
+     "in": "none",
+     "fx": [
+      {
+       "effect": "opacity",
+       "value": 0.6
+      }
+     ]
+    },
+    {
+     "k": "text",
+     "text": "OPACITY",
+     "font": "avn_b",
+     "size": 54,
+     "x": 960,
+     "y": 800,
+     "t0": 48.0,
+     "in": "none"
+    },
+    {
+     "k": "text",
+     "text": "Fades the whole layer.",
+     "font": "avn_m",
+     "size": 30,
+     "fill": [
+      160,
+      175,
+      195
+     ],
+     "maxw": 1500,
+     "x": 960,
+     "y": 880,
+     "t0": 48.0,
+     "in": "none"
+    }
+   ]
+  },
+  {
+   "id": "transform",
+   "t0": 50.0,
+   "t1": 52.0,
+   "trans": "cut",
+   "trd": 0.5,
+   "grade": {},
+   "vig": 0.5,
+   "bloom": 0.3,
+   "ca": 0.0,
+   "bg": {
+    "style": "studio"
+   },
+   "cam": [],
+   "shakes": [],
+   "els": [
+    {
+     "k": "title",
+     "text": "EFFECT",
+     "size": 230,
+     "fill": [
+      222,
+      176,
+      82
+     ],
+     "x": 960,
+     "y": 470,
+     "t0": 50.0,
+     "in": "none",
+     "fx": [
+      {
+       "anchor_x": 0.5,
+       "anchor_y": 0.5,
+       "effect": "transform",
+       "rotation": -6,
+       "scale": 1.15,
+       "x": 40,
+       "y": -20
+      }
+     ]
+    },
+    {
+     "k": "text",
+     "text": "TRANSFORM",
+     "font": "avn_b",
+     "size": 54,
+     "x": 960,
+     "y": 800,
+     "t0": 50.0,
+     "in": "none"
+    },
+    {
+     "k": "text",
+     "text": "Moves (`x`, `y` px), scales and rotates (clockwise degrees) the layer about an anchor (fractions of the frame).",
+     "font": "avn_m",
+     "size": 30,
+     "fill": [
+      160,
+      175,
+      195
+     ],
+     "maxw": 1500,
+     "x": 960,
+     "y": 880,
+     "t0": 50.0,
+     "in": "none"
+    }
+   ]
+  },
+  {
+   "id": "animated_blur",
+   "t0": 52.0,
+   "t1": 54.0,
+   "trans": "cut",
+   "trd": 0.5,
+   "grade": {},
+   "vig": 0.5,
+   "bloom": 0.3,
+   "ca": 0.0,
+   "bg": {
+    "style": "studio"
+   },
+   "cam": [],
+   "shakes": [],
+   "els": [
+    {
+     "k": "title",
+     "text": "EFFECT",
+     "size": 230,
+     "fill": [
+      222,
+      176,
+      82
+     ],
+     "x": 960,
+     "y": 470,
+     "t0": 52.0,
+     "in": "none",
+     "fx": [
+      {
+       "effect": "blur",
+       "radius": [
+        [
+         52.2,
+         28
+        ],
+        [
+         53.6,
+         0
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "k": "text",
+     "text": "ANIMATED BLUR",
+     "font": "avn_b",
+     "size": 54,
+     "x": 960,
+     "y": 800,
+     "t0": 52.0,
+     "in": "none"
+    },
+    {
+     "k": "text",
+     "text": "Any number can be animated with [[seconds, value], ...] keys.",
+     "font": "avn_m",
+     "size": 30,
+     "fill": [
+      160,
+      175,
+      195
+     ],
+     "maxw": 1500,
+     "x": 960,
+     "y": 880,
+     "t0": 52.0,
+     "in": "none"
+    }
+   ]
+  }
+ ]
+}

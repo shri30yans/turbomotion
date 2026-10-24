@@ -1,0 +1,14 @@
+// Colour fringing: red and blue sample opposite ways. Radial grows from the centre; directional is a constant shift.
+uniform shader src;
+uniform float2 centre;
+uniform float2 shift;      // directional shift in pixels (used when radial is 0)
+uniform float radial;      // pixels of shift at the layer's half diagonal, 0 for directional
+uniform float half_diagonal;
+
+half4 main(float2 p) {
+    float2 o = radial > 0.0 ? (p - centre) / half_diagonal * radial : shift;
+    half4 r = src.eval(p + o);
+    half4 g = src.eval(p);
+    half4 b = src.eval(p - o);
+    return half4(r.r, g.g, b.b, max(r.a, max(g.a, b.a)));
+}

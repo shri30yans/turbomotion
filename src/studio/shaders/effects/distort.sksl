@@ -1,0 +1,28 @@
+// Geometric distortions that move where each pixel samples from: wave, twirl and bulge.
+uniform shader src;
+uniform float mode;        // 0 wave, 1 twirl, 2 bulge
+uniform float4 shape;      // wave: amplitude, wavelength, phase, direction (radians) | twirl: angle (radians), radius | bulge: strength, radius
+uniform float2 centre;
+
+half4 main(float2 p) {
+    float2 at = p;
+    float2 d = p - centre;
+    float r = length(d);
+    if (mode < 0.5) {
+        float2 along = float2(cos(shape.w), sin(shape.w));
+        float2 across = float2(-along.y, along.x);
+        at = p + across * shape.x * sin(6.28318530718 * dot(p, along) / shape.y + shape.z);
+    } else if (mode < 1.5) {
+        if (r < shape.y) {
+            float turn = shape.x * pow(1.0 - r / shape.y, 2.0);
+            float cs = cos(turn);
+            float sn = sin(turn);
+            at = centre + float2(d.x * cs - d.y * sn, d.x * sn + d.y * cs);
+        }
+    } else {
+        if (r < shape.y) {
+            at = centre + d * (1.0 - shape.x * (1.0 - pow(r / shape.y, 2.0)));
+        }
+    }
+    return src.eval(at);
+}

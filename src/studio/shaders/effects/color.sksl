@@ -1,0 +1,26 @@
+// Per-pixel colour adjustments on straight (unpremultiplied) colour; each effect sets only its own fields.
+uniform shader src;
+uniform float4 tone;      // brightness, contrast, saturation, hue (radians)
+uniform float4 curve;     // exposure (stops), gamma, invert amount, tint amount
+uniform float3 tint;
+
+half4 main(float2 p) {
+    half4 c = src.eval(p);
+    if (c.a <= 0.0) return c;
+    float3 rgb = float3(c.rgb) / float(c.a);
+    rgb *= exp2(curve.x);
+    rgb += tone.x;
+    rgb = (rgb - 0.5) * tone.y + 0.5;
+    float luma = dot(rgb, float3(0.299, 0.587, 0.114));
+    rgb = float3(luma) + (rgb - luma) * tone.z;
+    // hue: rotate chroma in YIQ space
+    float3 yiq = float3(dot(rgb, float3(0.299, 0.587, 0.114)), dot(rgb, float3(0.596, -0.274, -0.322)), dot(rgb, float3(0.211, -0.523, 0.312)));
+    float cs = cos(tone.w);
+    float sn = sin(tone.w);
+    yiq = float3(yiq.x, yiq.y * cs - yiq.z * sn, yiq.y * sn + yiq.z * cs);
+    rgb = float3(yiq.x + 0.956 * yiq.y + 0.621 * yiq.z, yiq.x - 0.272 * yiq.y - 0.647 * yiq.z, yiq.x - 1.106 * yiq.y + 1.703 * yiq.z);
+    rgb = pow(clamp(rgb, 0.0, 1.0), float3(1.0 / max(curve.y, 1e-3)));
+    rgb = mix(rgb, 1.0 - rgb, curve.z);
+    rgb = mix(rgb, tint, curve.w);
+    return half4(half3(clamp(rgb, 0.0, 1.0)) * c.a, c.a);
+}

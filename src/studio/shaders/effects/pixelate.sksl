@@ -1,0 +1,7 @@
+// Mosaic: every `size` x `size` block takes the colour at its centre.
+uniform shader src;
+uniform float size;
+
+half4 main(float2 p) {
+    return src.eval((floor(p / size) + 0.5) * size);
+}

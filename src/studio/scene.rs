@@ -1,10 +1,11 @@
-//! One scene as an image: the backdrop, every live element in plan order, then the camera move and shake.
+//! One scene as an image: the backdrop, every live element in plan order, the camera move and shake, then the scene's
+//! own effects (an adjustment layer over everything).
 
 use anyhow::{Context, Result};
 use skia_safe::{Canvas, Image, Paint, Rect, TileMode};
 
 use super::{
-    elements,
+    effects, elements,
     ease::sine_io,
     geom::Mat3,
     layer::{linear, Layer},
@@ -22,10 +23,12 @@ pub fn render(st: &Stage, like: &Canvas, scene: &Scene, t: f64) -> Result<Image>
         st.backdrop.draw(&st.shaders, c, &scene.bg, t)?;
         scene.els.iter().filter(|e| live(e, t)).try_for_each(|el| elements::draw(st, c, el, t).with_context(|| format!("scene {:?}", scene.id)))
     })?;
-    match camera(scene, t) {
-        Some(m) => Ok(Layer::render(like, W, H, |c| camera_pass(c, &flat, &m))?.image().clone()),
-        None => Ok(flat.image().clone()),
-    }
+    let framed = match camera(scene, t) {
+        Some(m) => Layer::render(like, W, H, |c| camera_pass(c, &flat, &m))?,
+        None => flat,
+    };
+    let adjusted = effects::apply(st, like, framed, &scene.fx, t).with_context(|| format!("scene {:?}", scene.id))?;
+    Ok(adjusted.image().clone())
 }
 
 /// Zoom, pan, roll and shake at `t` as the matrix the reference builds, or `None` when the camera is at rest.

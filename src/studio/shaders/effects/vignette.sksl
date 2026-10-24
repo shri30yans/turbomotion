@@ -1,0 +1,12 @@
+// Darken toward the layer's corners.
+uniform shader src;
+uniform float2 size;
+uniform float strength;
+uniform float softness;    // how far in from the corner the falloff starts (0..1 of the half diagonal)
+
+half4 main(float2 p) {
+    half4 c = src.eval(p);
+    float2 n = (p - size * 0.5) / (size * 0.5);
+    float v = 1.0 - strength * pow(clamp(length(n) - softness, 0.0, 1.0), 1.8);
+    return half4(c.rgb * half(v), c.a);
+}

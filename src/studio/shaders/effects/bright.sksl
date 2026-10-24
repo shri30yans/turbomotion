@@ -1,0 +1,11 @@
+// Keep only what is brighter than `threshold` (luma, 0..1), rescaled so white stays white: the source of a glow.
+uniform shader src;
+uniform float threshold;
+
+half4 main(float2 p) {
+    half4 c = src.eval(p);
+    if (c.a <= 0.0) return c;
+    float luma = dot(float3(c.rgb) / float(c.a), float3(0.299, 0.587, 0.114));
+    float keep = clamp((luma - threshold) / max(1.0 - threshold, 1e-3), 0.0, 1.0);
+    return c * half(keep);
+}

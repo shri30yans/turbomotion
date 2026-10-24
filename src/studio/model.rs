@@ -8,6 +8,8 @@ use anyhow::{bail, Context, Result};
 use serde::Deserialize;
 use serde_json::{Map, Value};
 
+use super::effects::{Blend, Effect};
+
 pub const W: i32 = 1920;
 pub const H: i32 = 1080;
 
@@ -90,6 +92,9 @@ pub struct Scene {
     /// (time, amplitude px)
     pub shakes: Vec<[f64; 2]>,
     pub els: Vec<Element>,
+    /// Effects applied to the whole scene image after the camera move (an adjustment layer).
+    #[serde(default)]
+    pub fx: Vec<Effect>,
 }
 
 /// `fx.grade` keyword arguments; an empty grade is skipped entirely.
@@ -146,9 +151,13 @@ pub struct Common {
     pub overlap_ok: bool,
     pub sfx: Option<String>,
     pub sfx_v: Option<f64>,
+    /// Effects applied to the element's layer, in order (`turbomotion studio effects` lists them).
+    pub fx: Vec<Effect>,
+    /// How the element combines with the scene beneath it.
+    pub blend: Option<Blend>,
 }
 
-const COMMON_KEYS: [&str; 10] = ["t0", "t1", "in", "out", "d", "dout", "op", "overlap_ok", "sfx", "sfx_v"];
+const COMMON_KEYS: [&str; 12] = ["t0", "t1", "in", "out", "d", "dout", "op", "overlap_ok", "sfx", "sfx_v", "fx", "blend"];
 
 #[derive(Debug, Clone)]
 pub struct Element {

@@ -2,7 +2,7 @@
 
 use anyhow::Result;
 
-use super::{grade, shader::Program, transitions};
+use super::{effects, grade, shader::Program, transitions};
 
 pub struct Shaders {
     pub radial: Program,
@@ -22,6 +22,7 @@ pub struct Shaders {
     pub globe: Program,
     pub plate: Program,
     pub transitions: transitions::Programs,
+    pub effects: effects::Programs,
 }
 
 impl Shaders {
@@ -43,6 +44,7 @@ impl Shaders {
             paper: Program::shader("paper", include_str!("shaders/paper.sksl"))?,
             globe: Program::shader("globe", include_str!("shaders/globe.sksl"))?,
             transitions: transitions::Programs::compile()?,
+            effects: effects::Programs::compile()?,
             plate: Program::shader("plate", &[grade::SKSL, include_str!("shaders/plate.sksl")].concat())?,
         })
     }

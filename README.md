@@ -33,6 +33,7 @@ numbers is in this repo. [How the test was run](#how-we-measured) · [Why it is 
 (the Remotion-replacement above). `turbomotion studio render` draws *motion-graphics films*: kinetic type, charts,
 a 3D-look title system, flat maps and a globe, photo plates and 17 transitions under a film-look post stack, from a
 compiled `film.json`. Both share the GPU context, the encoder and the parallel segment scheduler. The studio renderer
+(with a 26-effect layer library any element or scene can use, [gallery](docs/studio-effects.jpg))
 is documented in [src/studio/README.md](src/studio/README.md); on a 17-minute 1080p film it renders at 126 fps with
 three workers.
 

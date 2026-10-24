@@ -14,12 +14,25 @@ use skia_safe::Canvas;
 
 use super::{
     anim::Timing,
-    model::{Element, Kind},
+    effects,
+    layer::Layer,
+    model::{Element, Kind, H, W},
     stage::Stage,
 };
 
-/// Draw one element at time `t` onto the scene canvas.
+/// Draw one element at time `t` onto the scene canvas. An element with effects or a blend mode is drawn on its own
+/// transparent layer first, which the effects then process before it lands on the scene.
 pub fn draw(st: &Stage, cv: &Canvas, el: &Element, t: f64) -> Result<()> {
+    if el.common.fx.is_empty() && el.common.blend.is_none() {
+        return draw_kind(st, cv, el, t);
+    }
+    let layer = Layer::try_render(cv, W, H, |c| draw_kind(st, c, el, t))?;
+    let layer = effects::apply(st, cv, layer, &el.common.fx, t)?;
+    effects::composite(cv, &layer, el.common.blend);
+    Ok(())
+}
+
+fn draw_kind(st: &Stage, cv: &Canvas, el: &Element, t: f64) -> Result<()> {
     let tm = Timing::new(&el.common, t);
     match &el.kind {
         Kind::Text(e) => text::text(st, cv, e, &tm),

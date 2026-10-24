@@ -3,6 +3,7 @@
 
 pub mod anim;
 pub mod atlas;
+pub mod effects;
 pub mod elements;
 pub mod background;
 pub mod cache;

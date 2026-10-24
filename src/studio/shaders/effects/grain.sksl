@@ -1,0 +1,14 @@
+// Film grain: hashed noise added to the colour, scaled by coverage so it never fogs transparent areas.
+uniform shader src;
+uniform float amount;
+uniform float seed;
+
+float hash(float2 q, float s) {
+    return fract(sin(dot(q + s * 17.0, float2(12.9898, 78.233))) * 43758.5453);
+}
+
+half4 main(float2 p) {
+    half4 c = src.eval(p);
+    float n = (hash(floor(p), seed) - 0.5) * amount;
+    return half4(clamp(c.rgb + half(n) * c.a, half3(0.0), half3(c.a)), c.a);
+}
