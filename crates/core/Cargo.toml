@@ -1,0 +1,12 @@
+[package]
+name = "turbomotion-core"
+version = "0.1.0"
+edition = "2021"
+description = "The platform under every turbomotion renderer: GPU context, video encoder, shader runner, layers, easing and the effects library. Knows nothing about films."
+
+[dependencies]
+anyhow.workspace = true
+metal.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+skia-safe.workspace = true

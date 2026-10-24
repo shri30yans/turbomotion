@@ -732,10 +732,56 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "clap",
+ "turbomotion-comp",
+ "turbomotion-shots",
+ "turbomotion-studio",
+]
+
+[[package]]
+name = "turbomotion-comp"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "serde",
+ "serde_json",
+ "skia-safe",
+ "turbomotion-core",
+]
+
+[[package]]
+name = "turbomotion-core"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
  "metal",
  "serde",
  "serde_json",
  "skia-safe",
+]
+
+[[package]]
+name = "turbomotion-shots"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "serde",
+ "serde_json",
+ "skia-safe",
+ "turbomotion-core",
+]
+
+[[package]]
+name = "turbomotion-studio"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "serde",
+ "serde_json",
+ "skia-safe",
+ "turbomotion-core",
 ]
 
 [[package]]

@@ -20,7 +20,7 @@ ROOT = Path(__file__).resolve().parents[1]
 BINARY = Path(os.environ.get('TURBOMOTION', ROOT / 'target/release/turbomotion'))
 FILM = ROOT / 'bench/corpus/film.json'
 PUBLIC = ROOT / 'bench/corpus/public'
-ASSETS = ROOT / 'assets'
+ASSETS = ROOT / 'crates/shots/assets'
 GOLDEN = ROOT / 'bench/golden'
 MIN_SSIM = 0.93
 

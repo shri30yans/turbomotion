@@ -1,0 +1,13 @@
+[package]
+name = "turbomotion-comp"
+version = "0.1.0"
+edition = "2021"
+description = "After Effects-style compositions: layers, masks, mattes, nested comps, video and audio, shape and text animators, particles, 3D cameras and lights, expressions."
+
+[dependencies]
+anyhow.workspace = true
+clap.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+skia-safe.workspace = true
+turbomotion-core.workspace = true
