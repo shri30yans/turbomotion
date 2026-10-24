@@ -1,4 +1,4 @@
-//! The engineering diagrams of `bench/remotion/src/diagrams/Engineering.tsx`: the three-stage water lift
+//! The engineering diagrams: the three-stage water lift
 //! and the palace plan.
 
 use std::f32::consts::PI;

@@ -1,5 +1,4 @@
 //! The paper backdrop behind typography, diagrams and framed artwork
-//! (`Paper` in `Typography.tsx`, `Board` in `diagrams/kit.tsx`).
 
 use std::path::Path;
 

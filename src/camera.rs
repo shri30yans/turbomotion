@@ -1,5 +1,4 @@
-//! Camera maths, ported from `bench/remotion/src/core.ts` (`camera`, `easeCam`) and
-//! `bench/remotion/src/shots/Photo.tsx` (`useCamera`).
+//! Camera maths: the keyed zoom and pan of photo shots.
 
 use anyhow::{bail, Context, Result};
 
@@ -11,8 +10,7 @@ pub struct Rect {
     pub h: f32,
 }
 
-/// Where the camera looks: normalised image centre and zoom. Held in f64 like the reference's
-/// JavaScript numbers: the lateral-drift test below sits exactly on a parameter value
+/// Where the camera looks: normalised image centre and zoom. Held in f64: the lateral-drift test below sits exactly on a parameter value
 /// (a 0.02 pan) that single precision rounds to the other side of.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct View {

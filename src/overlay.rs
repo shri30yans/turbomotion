@@ -1,5 +1,4 @@
 //! Photo overlays: scrim, tag, badge, hero word, title and note.
-//! Layout constants mirror `PhotoShot` in `bench/remotion/src/shots/Photo.tsx`.
 
 use anyhow::Result;
 use skia_safe::{

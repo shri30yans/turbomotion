@@ -1,6 +1,5 @@
 //! Kinetic typography card: a kicker, lines of display type (the later lines italic in the
 //! accent colour) and a rule, optionally beside a photograph.
-//! Mirrors `CardShot` in `bench/remotion/src/shots/Typography.tsx`.
 
 use anyhow::{Context, Result};
 use skia_safe::{gpu::Mipmapped, Canvas, Image, Paint, PaintCap, PaintStyle, Point, RRect, Rect};

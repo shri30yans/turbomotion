@@ -1,6 +1,5 @@
 //! Native renderer for compiled films: reads `film.json`, draws with Skia on Metal, pipes raw
-//! frames to ffmpeg. Comments citing `bench/remotion/src/…` refer to the Remotion implementation
-//! of the same shots, kept as the benchmark and parity reference. The `studio` subcommand renders
+//! frames to ffmpeg. The `studio` subcommand renders
 //! the motion-graphics films of `src/studio` (see its README).
 
 mod camera;

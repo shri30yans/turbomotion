@@ -1,5 +1,4 @@
-// Port of the WebGL fragment shader in bench/remotion/src/ui/DepthImage.tsx:
-// depth parallax, colour grade, vignette and dim in one pass.
+// Depth parallax, colour grade, vignette and dim in one pass.
 uniform shader img;
 uniform shader dep;
 uniform float2 res;

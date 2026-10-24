@@ -1,6 +1,5 @@
 //! Map shots: Natural Earth outlines under a keyed camera, with areas, rivers, schematic
 //! terrain, rings, routes, pins and labels that appear on the shot's cues.
-//! Mirrors `MapShot` in `bench/remotion/src/maps/MapShot.tsx`.
 
 mod geo;
 mod spec;
@@ -24,7 +23,7 @@ use crate::{
     text::{Family, Halo, Style, TextBlock, UNBOUNDED},
 };
 
-/// `focus` and `pins` appear on some map shots but the reference map ignores them.
+/// `focus` and `pins` appear on some map shots but the map ignores them.
 pub const PARAMS: &[&str] = &["step", "rings", "note", "focus", "pins"];
 
 const WATER: Color = Color::from_rgb(0xCF, 0xDA, 0xD2);

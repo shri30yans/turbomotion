@@ -1,5 +1,4 @@
 //! A big number that counts up on its cue, over a dimmed photograph.
-//! Mirrors `StatShot` in `bench/remotion/src/shots/Typography.tsx`.
 
 use anyhow::{Context, Result};
 use skia_safe::{Canvas, Paint, Point, Rect};

@@ -1,4 +1,4 @@
-//! Hand-drawn explainer diagrams and the palace plan (`bench/remotion/src/diagrams`): a board of vector
+//! Hand-drawn explainer diagrams and the palace plan: a board of vector
 //! shapes that enter step by step on the narration's cues.
 
 mod engineering;

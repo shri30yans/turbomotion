@@ -37,7 +37,7 @@ pub fn fade_up(seconds: f32, at: f32, y: f32, duration: f32) -> Presence {
     Presence { opacity: p, dy: y * (1.0 - p) }
 }
 
-/// How far Remotion's GSAP leaves a `pop` element from where it belongs once the tween is over.
+/// How far a GSAP-style tween leaves a `pop` element from where it belongs once the tween is over.
 ///
 /// A scale tween from `from` to 1 about "50% 50%" of an SVG element comes out permanently
 /// translated by -(1 - from) / 2 of the element's own width and height, during the tween and

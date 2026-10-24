@@ -1,5 +1,5 @@
-//! A retained vector scene in the vocabulary of the reference SVG diagrams: shapes with fill and
-//! stroke, groups that pass their paint down, and the step/cue choreography of `kit.tsx`.
+//! A retained vector scene in the vocabulary of SVG diagrams: shapes with fill and
+//! stroke, groups that pass their paint down, and the step/cue choreography.
 //!
 //! A node can carry a reveal (`data-s`: "enter on step 2's cue 1, as a pop") and a hide
 //! (`data-hide`). `Node::resolve` turns them into times for one shot and step; drawing then

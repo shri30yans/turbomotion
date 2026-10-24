@@ -1,5 +1,4 @@
 //! Historical artwork shown whole on dark paper, then explored by a slow camera move.
-//! Mirrors `PaintingShot` in `bench/remotion/src/shots/Typography.tsx`.
 
 use anyhow::{Context, Result};
 use skia_safe::{gpu::Mipmapped, BlurStyle, Canvas, Color, Image, MaskFilter, Paint, PaintStyle, Point, RRect, Rect};
@@ -18,7 +17,7 @@ use crate::{
     text::{Align, Family, Shadow, Style, TextBlock, UNBOUNDED},
 };
 
-/// `tag` is accepted but never shown: the reference fades `.tag` in nowhere in this shot type.
+/// `tag` is accepted but never shown: this shot type has nowhere to fade it in.
 pub const PARAMS: &[&str] = &["from", "to", "badge", "note", "tag"];
 
 const BOX_HEIGHT: f32 = 880.0;

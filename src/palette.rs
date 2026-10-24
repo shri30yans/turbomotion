@@ -1,4 +1,4 @@
-//! The film's design tokens (`C` in `bench/remotion/src/core.ts`).
+//! The film's design tokens .
 
 use skia_safe::Color;
 

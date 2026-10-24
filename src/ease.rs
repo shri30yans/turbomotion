@@ -1,4 +1,4 @@
-//! GSAP easing curves, as named in the Remotion shot components.
+//! GSAP easing curves.
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Ease {

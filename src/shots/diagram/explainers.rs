@@ -1,4 +1,4 @@
-//! The explainer diagrams of `bench/remotion/src/diagrams/Explainers.tsx`.
+//! The explainer diagrams.
 
 use std::f32::consts::PI;
 

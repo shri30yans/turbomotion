@@ -1,5 +1,4 @@
 //! Film-level layers drawn over every shot: chapter marks and the paper grain.
-//! Mirrors `ChapterMark` and `Texture` in `bench/remotion/src/Film.tsx`.
 
 use std::{fs, path::Path};
 

@@ -1,4 +1,4 @@
-//! Drawing vocabulary shared by the diagrams (`diagrams/kit.tsx` and the `Person` of `Explainers.tsx`).
+//! Drawing vocabulary shared by the diagrams.
 
 use anyhow::Result;
 use skia_safe::Color;

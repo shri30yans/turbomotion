@@ -1,5 +1,5 @@
 //! Photo pins: a pulsing dot on a point of the image, a leader line and a label, each
-//! revealed on a script cue. Mirrors the pin layer of `PhotoShot` in `bench/remotion/src/shots/Photo.tsx`.
+//! revealed on a script cue.
 
 use anyhow::{bail, Context, Result};
 use skia_safe::{BlurStyle, Canvas, MaskFilter, Paint, PaintCap, PaintStyle, Path, PathMeasure, Point, RRect, Rect};

@@ -26,7 +26,7 @@ use crate::{
 #[derive(Debug, Clone, Copy)]
 pub struct Moment {
     pub seconds: f32,
-    /// Frames since the shot began (Remotion's `useCurrentFrame` inside a sequence).
+    /// Frames since the shot began.
     pub frame: f32,
 }
 

@@ -1,6 +1,5 @@
 //! A comparison on one shared scale: bars start at the same baseline and share one
 //! pixels-per-unit, so length is the argument. Bar `i` lands on cue `i`.
-//! Mirrors `CompareShot` in `bench/remotion/src/shots/Compare.tsx`.
 
 use anyhow::{Context, Result};
 use skia_safe::{Canvas, Color, Paint, PaintStyle, Path, Point, RRect, Rect};
@@ -207,7 +206,7 @@ impl Compare {
         });
     }
 
-    /// The guide line is declared dashed, but the reference reveals it with `drawSVG`, which
+    /// The guide line is declared dashed, but it is revealed by a stroke-draw tween, which
     /// replaces the dash pattern, so it is always solid.
     fn draw_reference(&self, canvas: &Canvas, reference: &Reference, bottom: f32, s: f32) {
         let drawn = motion::draw(s, reference.at, 0.8, Ease::PowerInOut(2));
