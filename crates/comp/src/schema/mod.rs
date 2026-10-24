@@ -44,7 +44,7 @@ pub struct Composition {
     pub vars: Map<String, Value>,
     /// Font roles: `{"display": "fonts/Anton.ttf"}`, then `"font": "display"` on text layers.
     pub fonts: BTreeMap<String, String>,
-    /// Frames of motion blur per frame: 0 = off. Layers with `"mblur": true` blur along their motion.
+    /// Motion blur settings (samples per frame, shutter angle). Layers with `"mblur": true` blur along their motion; the defaults are 8 samples at 180 degrees.
     pub mblur: Option<MotionBlur>,
     /// Effects applied to the finished picture, so images from different sources share one look.
     pub look: Vec<Value>,

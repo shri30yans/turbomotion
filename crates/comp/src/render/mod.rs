@@ -44,6 +44,8 @@ pub struct Ctx<'a> {
     pub shaders: &'a Shaders,
     pub programs: &'a programs::Programs,
     pub res: &'a res::Resources,
+    /// The root frame re-evaluated across the shutter, for layers with motion blur (empty when there is none).
+    pub subs: &'a [Frame],
 }
 
 impl<'a> Renderer<'a> {
@@ -60,7 +62,8 @@ impl<'a> Renderer<'a> {
     pub fn draw(&mut self, frame: u32) -> Result<()> {
         let t = f64::from(frame) / f64::from(self.plan.fps);
         let state = self.ev.frame(ROOT, t).with_context(|| format!("evaluating frame {frame}"))?;
-        self.draw_state(&state)
+        let subs = self.shutter_frames(t).with_context(|| format!("evaluating the shutter of frame {frame}"))?;
+        self.draw_state(&state, &subs)
     }
 
     /// Draw the frame nearest to `t` seconds.
@@ -68,8 +71,22 @@ impl<'a> Renderer<'a> {
         self.draw((t * f64::from(self.plan.fps)).round().max(0.0) as u32)
     }
 
-    pub fn draw_state(&mut self, state: &Frame) -> Result<()> {
-        let ctx = Ctx { plan: self.plan, shaders: &self.shaders, programs: &self.programs, res: &self.res };
+    /// The root composition at evenly spread moments while the shutter is open, when any layer asks for motion blur.
+    fn shutter_frames(&self, t: f64) -> Result<Vec<Frame>> {
+        let root = self.plan.root();
+        if !root.layers.iter().any(|l| l.def.common.mblur) {
+            return Ok(vec![]);
+        }
+        let mb = root.mblur.unwrap_or_default();
+        if mb.samples < 2 || mb.shutter <= 0.0 {
+            return Ok(vec![]);
+        }
+        let open = mb.shutter / 360.0 / f64::from(self.plan.fps);
+        (0..mb.samples).map(|i| self.ev.frame(ROOT, t + ((f64::from(i) + 0.5) / f64::from(mb.samples) - 0.5) * open)).collect()
+    }
+
+    pub fn draw_state(&mut self, state: &Frame, subs: &[Frame]) -> Result<()> {
+        let ctx = Ctx { plan: self.plan, shaders: &self.shaders, programs: &self.programs, res: &self.res, subs };
         let canvas = self.surface.canvas();
         canvas.clear(skia_safe::Color::BLACK);
         let layer = comp_layer(&ctx, canvas, state).with_context(|| format!("drawing t={:.3}s", state.t))?;
@@ -185,12 +202,31 @@ pub fn comp_layer(ctx: &Ctx, like: &Canvas, frame: &Frame) -> Result<Layer> {
         if !st.visible || st.opacity <= 0.0 {
             continue;
         }
-        let img = post::layer_image(ctx, like, frame, comp, i).with_context(|| comp.layers[i].label.clone())?;
         let mut paint = Paint::default();
-        paint.set_alpha_f(st.opacity as f32);
         if let Some(b) = st.blend_mode {
             paint.set_blend_mode(b.skia());
         }
+        if comp.layers[i].def.common.mblur && !ctx.subs.is_empty() && frame.comp == crate::plan::ROOT {
+            // average the layer over the open shutter, each sample with its own opacity
+            let n = ctx.subs.len() as f32;
+            let mut sum = like.new_surface(&info, None).with_context(|| format!("no GPU memory for a {w}x{h} blur accumulator"))?;
+            sum.canvas().clear(skia_safe::Color::TRANSPARENT);
+            let mut plus = Paint::default();
+            plus.set_blend_mode(skia_safe::BlendMode::Plus);
+            for sub in ctx.subs {
+                let s = &sub.layers[i];
+                if !s.visible || s.opacity <= 0.0 {
+                    continue;
+                }
+                let img = post::layer_image(ctx, like, sub, comp, i).with_context(|| comp.layers[i].label.clone())?;
+                plus.set_alpha_f(s.opacity as f32 / n);
+                sum.canvas().draw_image(img.image(), (0, 0), Some(&plus));
+            }
+            acc.canvas().draw_image(sum.image_snapshot(), (0, 0), Some(&paint));
+            continue;
+        }
+        let img = post::layer_image(ctx, like, frame, comp, i).with_context(|| comp.layers[i].label.clone())?;
+        paint.set_alpha_f(st.opacity as f32);
         acc.canvas().draw_image(img.image(), (0, 0), Some(&paint));
     }
     let out = Layer::from_image(acc.image_snapshot());
