@@ -12,10 +12,10 @@ good. Four principles follow.
 1. **A frame is a pure function of time.** `frame(t) = draw(evaluate(plan, t))`. No state carried from the previous
    frame. This is what makes parallel segments, single-frame stills, scrubbing and golden tests possible, and it is the
    only reason an agent can re-render one moment after changing one number.
-2. **Say it in data; write code only for new pixels.** Almost everything an editor does (cut, move, fade, mask, split a
-   title into letters, stagger, shake the camera) is *composition*, and composition is JSON. Code is needed only when
-   the *look itself* is new (a new distortion, a new texture, a new generator), and that code is a small shader, not a
-   Rust change.
+2. **Say it in data; write code only for new pixels.** The engine sees JSON: a frame is a pure function of that
+   document. Authors write **Python or TypeScript** (a project's kit, the SDK) that emits the JSON. Code inside the renderer is needed
+   only when the *look itself* is new (a new distortion, a new texture, a new generator), and that code is a small
+   shader, not a Rust change.
 3. **Verifiable without eyes, then with eyes.** The agent must be able to ask "where is the title at 1.2 s, and is it
    inside the safe area?" and get a number back (`inspect`, `check`, assertions), and only then look at a picture
    (`sheet`). Pictures are expensive and ambiguous; numbers are cheap and exact.
@@ -25,25 +25,47 @@ good. Four principles follow.
 ## Ownership
 
 ```
-turbomotion (bin)            the command line, nothing else
+turbomotion (crates/cli)     the command line, nothing else
+├── turbomotion-script       TypeScript authoring: strip, run on QuickJS, emit a composition; embeds the SDK
 ├── turbomotion-comp         compositions: schema → plan → eval → render, the editor's model of time
-├── turbomotion-studio       compiled word-anchored films; owns globe, maps, charts, photo plates, panels
-├── turbomotion-shots        the original shot renderer; owns its shots, paper, fonts, assets
-└── turbomotion-core         the platform; knows nothing about films, shots or compositions
+└── turbomotion-core         the platform; knows nothing about films, compositions or any domain
 ```
 
-`core` ← everything else. Nothing depends on `studio` or `shots` except the binary. `comp` never imports a film
-element; if a film needs to appear inside a composition it is offered through the `Pack` interface (below).
+`core` ← `comp` ← `script` ← `cli`. Nothing in this repository knows about a film, a channel, a style or a brand.
+Domain graphics (a globe, a chart, a generator of tiles) arrive from outside: as a **pack** registered by a host
+binary (below), as **blocks** and **shader plugins** found on named search paths, or as JSON a project generates.
 
 | Crate | Owns | Must not contain |
 | --- | --- | --- |
-| `core` | GPU context, encoder, segment-parallel scheduler, SkSL runner, half-float `Layer`, easing maths, the effects library, colour grade | fonts, timelines, scenes, maps, globe, charts, anything named after a film |
-| `comp` | the composition schema, time and property evaluation (keys, GSAP eases, expressions), the layer tree, masks and mattes, text animators, media, audio mix, 3D camera and lights, particles, user shader plugins, `check`/`inspect`/`sheet` | film-specific elements, Python-parity quirks |
-| `studio` | the compiled-film model, film elements, the 17 film transitions, parity helpers (`rng`, `pyfmt`), geography | generic effects (they are in `core`), composition features |
-| `shots` | shot types, paper, pins, its own fonts and assets | anything `studio` or `comp` could share |
+| `core` | GPU context, encoder, segment-parallel scheduler, SkSL runner, half-float `Layer`, easing maths, the effects library, colour grade | fonts, timelines, scenes, anything named after a film |
+| `comp` | the composition schema, time and property evaluation (keys, GSAP eases, expressions), the layer tree, masks and mattes, text animators, media, audio mix, 3D camera and lights, particles, shader plugins, `check`/`inspect`/`sheet`, the built-in blocks (`crates/comp/blocks/`) | film-specific elements, project paths, anything that finds files by walking up folders |
+| `script` | TypeScript stripping, deterministic QuickJS execution, the SDK (`crates/script/sdk/`), the `sdk` CLI | rendering or text shaping (those are `comp`) |
 
-Rule of thumb for a new feature: *would a film about something else want it?* Yes → `core` or `comp`. No → the crate
-of the film it serves.
+Rule of thumb for a new feature: *would a project about something else want it?* Yes → `core` or `comp`. No → it
+belongs in `motions/`, as a block, a plugin or a generator.
+
+### Transitions are continuous by construction
+
+A transition is a pair of per-layer modifiers (`eval/transit`): the outgoing and incoming shot read the same eased
+progress, one as `h = e`, the other as `h = 1 - e`. A transition is smooth when the two sides agree on geometry and
+speed at every instant, so each shot preset states an invariant and a test holds it: pushes and pans keep both shots one
+strip; `cross_zoom` keeps a constant scale ratio (one exponential zoom, no jump in speed where one replaces the other);
+`window` keeps the incoming card and the portal it opens in the outgoing shot the same rectangle. `timeline.mblur`
+adds true sub-frame motion blur on top of any of them. Add a transition by writing its invariant first.
+
+### Where the engine looks for files
+
+An explicit list, in this order (a later entry replaces an earlier one of the same name):
+
+| Kind | Order |
+| --- | --- |
+| blocks | built-ins → `TURBOMOTION_BLOCK_PATH` → the composition's `"block_path"` → its own `blocks/` |
+| shader plugins | `TURBOMOTION_FX_PATH` → the composition's `"fx_path"` → its own `effects/` |
+| SDK | `--sdk-dir`, otherwise the modules compiled into the binary |
+| media, fonts | relative to the composition's `"root"` (default: its folder) |
+
+A path that does not exist is an error naming the setting that listed it. There is no ancestor search and no lookup
+beside the executable: a build must behave the same wherever the checkout is.
 
 ### Inside `comp`: one direction, four stages
 
@@ -64,8 +86,8 @@ is goldens. A bug is found in the earliest stage that can express it.
 
 Supporting modules: `anim/` (eases, keyframes, expression language, noise), `media/` (image cache, ffmpeg video
 decoder, probes), `audio/` (mix and audio-reactive signals), `fxlib/` (shader plugins and the built-in effect and
-texture pack), `text/` (layout, per-character animators, named presets), `check/` (lint and assertions),
-`schema/blocks.rs` (parametrised sub-compositions), `pack.rs` (the Pack interface), `catalogue.rs`.
+texture pack), `text/` (layout, per-character animators, named presets; a character the designed font does not have falls back to another installed face and is painted in the same colour as the rest of the line), `check/` (lint and assertions),
+`schema/blocks.rs` (parametrised sub-compositions; built-ins in `crates/comp/blocks/<job>/`, more from `block_path`), `schema/tokens.rs` (palette, type roles, image treat, surface recipes), `pack.rs` (the Pack interface), `catalogue.rs`.
 
 ## How an agent makes an effect
 
@@ -74,7 +96,7 @@ There are four levels. The agent should always use the lowest one that works.
 | Level | What the agent writes | Rebuild? | Example |
 | --- | --- | --- | --- |
 | 1. Compose | a `comp.json` using the catalogue | no | masked line reveal, parallax photo, kick-synced camera shake |
-| 2. Template | a parametrised sub-composition ("block") with declared variables, stored in `blocks/` | no | lower third with `{name, role}`, stat counter |
+| 2. Template | a TypeScript function in a project's library (`motions/lib`) that returns layers, or block JSON on a `block_path` | no | `term_card(term, what, why, example)`, `scene_bug` |
 | 3. New pixels | a shader plugin: `effects/<name>.sksl` + a manifest that types its uniforms | no | VHS tracking, halftone, caustics, any distortion |
 | 4. New capability | Rust in `comp` or `core`, reviewed | yes | a new layer kind |
 
@@ -121,7 +143,11 @@ The agent loop is write → `check` → `inspect` → `sheet` → fix. Each step
 
 * **`check`**: is it *valid and sane*? Schema, unknown names with "did you mean", missing assets, shader compile
   errors, text wider than its box, layers that are never visible, elements outside the 90 % action-safe box, text
-  below a contrast ratio, durations that are zero, cycles in parents, a matte that matters but is not found.
+  below a contrast ratio, durations that are zero, cycles in parents, a matte that matters but is not found,
+  a generator that paints past a `layout: backdrop` plate (`paints-past-plate`), anything a nested composition
+  itself cuts off. `"clip_to": "plate"` keeps a layer inside another layer's alpha without hiding the plate
+  (a track matte would). Nested comps smaller than the parent resolve their own type scale from *their* height,
+  so a card does not inherit 140 px display type from a 1080p film.
 * **`inspect --t 1.2 [--layer title]`**: what is *true* at that instant (position, scale, opacity, bounding box,
   which characters are visible). This is the stage-3 `Frame` printed as JSON.
 * **assertions** (`comp.assert.json` beside the composition): `appearsBy`, `staysInFrame`, `before`, `keepsMoving`,
@@ -147,7 +173,7 @@ pub trait Pack {
 }
 ```
 
-A layer `{"type": "pack:studio.globe", ...}` calls the registered pack. `studio` can implement `Pack` for its elements
+A layer `{"type": "pack:studio.globe", ...}` calls the registered pack. A host can implement `Pack` for its elements
 without `comp` knowing they exist. Packs are registered by the binary. This keeps the globe where it belongs and still
 lets one timeline contain it.
 
@@ -157,7 +183,7 @@ lets one timeline contain it.
 2. Shader plugins with the prelude and `fx test` (the agent's hands for new looks).
 3. Image pipeline: probe, mipmapped sampling, Ken Burns, parallax, treat (the agent's own media).
 4. Text engine: per-character animators, GSAP-style staggers, masked line reveals, scramble, counters.
-5. Blocks library with thumbnails (reuse beats invention).
+5. Blocks library with thumbnails (reuse beats invention). Built-ins: lower_third, title_card, stat, holo_slab, compare_two, definition, step_chain, stamp, connector, callout, and a small icon set.
 6. Audio: mix graph, beat/onset detection, `beat:N` time literals (fast-paced editing lives on the beat grid).
 7. Motion blur by temporal sampling, 3D camera and lights, particles.
 8. Alpha export, vertical presets, SVG and Lottie import.
