@@ -1,11 +1,15 @@
 //! `turbomotion`: the command line. It owns no rendering; each subcommand belongs to the crate that implements it.
 //!
-//! * (top level) the original shot renderer, `turbomotion-shots`
-//! * `studio`    compiled motion-graphics films, `turbomotion-studio`
-//! * `comp`      After Effects-style compositions, `turbomotion-comp`
+//! * `comp`  compositions: layers on a timeline, rendered by `turbomotion-comp` on the platform in `turbomotion-core`
+//! * `docs`  the reference pages, generated from the catalogue and the SDK's doc comments
+//! * `sdk`   TypeScript films that build those compositions, `turbomotion-script`
+
+use std::path::PathBuf;
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
+
+mod docs;
 
 #[derive(Parser)]
 #[command(about = "Native motion-graphics renderer: Skia on Metal, no browser")]
@@ -21,21 +25,29 @@ enum Command {
         #[command(subcommand)]
         command: turbomotion_comp::cli::Command,
     },
-    /// Compiled motion-graphics films (see crates/studio/README.md)
-    Studio {
+    /// TypeScript films: run a script on the embedded engine and build or render the composition it describes
+    Sdk {
         #[command(subcommand)]
-        command: turbomotion_studio::cli::Command,
+        command: turbomotion_script::cli::Command,
     },
-    #[command(flatten)]
-    Shots(turbomotion_shots::cli::Command),
+    /// Write the reference pages from the code (the catalogue and the SDK's doc comments), or check they are current
+    Docs {
+        /// Where the pages live
+        #[arg(long, default_value = "docs/reference")]
+        dir: PathBuf,
+        /// Rewrite the pages
+        #[arg(long, conflicts_with = "check")]
+        write: bool,
+        /// Fail if any page is out of date (the default)
+        #[arg(long)]
+        check: bool,
+    },
 }
 
 fn main() -> Result<()> {
-    // film graphics (globe, maps, charts...) are offered to compositions as packs; comp itself knows none of them
-    turbomotion_comp::pack::register(turbomotion_studio::pack::all);
     match Cli::parse().command {
         Command::Comp { command } => turbomotion_comp::cli::run(command),
-        Command::Studio { command } => turbomotion_studio::cli::run(command),
-        Command::Shots(command) => turbomotion_shots::cli::run(command),
+        Command::Sdk { command } => turbomotion_script::cli::run(command),
+        Command::Docs { dir, write, .. } => docs::run(&dir, !write),
     }
 }

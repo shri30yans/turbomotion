@@ -1,15 +1,14 @@
-[package]
-name = "turbomotion"
+[workspace]
+resolver = "2"
+members = ["crates/core", "crates/comp", "crates/script", "crates/cli"]
+
+[workspace.package]
 version = "0.1.0"
 edition = "2021"
-description = "Native motion-graphics renderer: Skia on Metal, no browser. This package is the command line; the work lives in crates/."
-readme = "README.md"
-
-[workspace]
-members = ["crates/core", "crates/comp", "crates/studio", "crates/shots"]
 
 [workspace.dependencies]
 anyhow = "1"
+flate2 = "1"
 clap = { version = "4", features = ["derive"] }
 metal = "0.31"
 serde = { version = "1", features = ["derive"] }
@@ -17,15 +16,10 @@ serde_json = "1"
 skia-safe = { version = "0.87", features = ["metal", "textlayout"] }
 turbomotion-core = { path = "crates/core" }
 turbomotion-comp = { path = "crates/comp" }
-turbomotion-studio = { path = "crates/studio" }
-turbomotion-shots = { path = "crates/shots" }
-
-[dependencies]
-anyhow.workspace = true
-clap.workspace = true
-turbomotion-comp.workspace = true
-turbomotion-studio.workspace = true
-turbomotion-shots.workspace = true
+turbomotion-script = { path = "crates/script" }
+oxc = { version = "=0.100.0", features = ["transformer", "codegen", "semantic"] }
+oxc_sourcemap = "=6.1.1"
+rquickjs = { version = "0.14", features = ["loader"] }
 
 [profile.release]
 lto = "thin"

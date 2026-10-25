@@ -1,0 +1,22 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    # Skia draws on Metal, so the engine builds and tests on macOS.
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: "1.89"
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo clippy --release --workspace --all-targets -- -D warnings
+      - run: cargo test --release --workspace
+      # The reference pages are generated; this fails when the code changed and the pages did not.
+      - run: cargo run --release -- docs --check

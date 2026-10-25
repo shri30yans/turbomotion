@@ -1,9 +1,6 @@
 /target
-/bench/work
-/bench/remotion/node_modules
-/bench/remotion/package-lock.json
 .DS_Store
-/examples/comp/*/*.jpg
-/examples/comp/*/*.png
-/examples/comp/*/*.mp4
-/examples/comp/*/*.wav
+/examples/**/*.jpg
+/examples/**/*.png
+/examples/**/*.mp4
+/examples/**/*.wav
