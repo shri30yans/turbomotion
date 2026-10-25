@@ -1,7 +1,0 @@
-// Nearest-neighbour enlargement of the area-averaged frame, indexed like OpenCV's INTER_NEAREST.
-uniform shader small;
-uniform float2 factor;      // small size / full size
-
-half4 main(float2 p) {
-    return half4(small.eval(floor((p - 0.5) * factor) + 0.5).rgb, 1.0);
-}
