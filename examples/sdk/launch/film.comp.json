@@ -1,0 +1,2632 @@
+{
+  "bg": "#0b0d12",
+  "fps": 30,
+  "height": 1080,
+  "timeline": {
+    "shots": [
+      {
+        "bg": "#0b0d12",
+        "camera": {
+          "deg": 24,
+          "move": "orbit"
+        },
+        "dur": 2.6,
+        "id": "hook",
+        "layers": [
+          {
+            "color": "#7f8cb0",
+            "id": "light1",
+            "intensity": 0.55,
+            "kind": "ambient",
+            "type": "light"
+          },
+          {
+            "color": "#ffd9a0",
+            "id": "light2",
+            "intensity": 1.4,
+            "kind": "point",
+            "pos": [
+              500,
+              160,
+              -900
+            ],
+            "radius": 2600,
+            "type": "light"
+          },
+          {
+            "bevel": 6,
+            "color": "#f4f1ea",
+            "depth": 70,
+            "font": "Avenir Next",
+            "id": "letter0",
+            "material": {
+              "shininess": 40,
+              "specular": 0.7
+            },
+            "opacity": {
+              "at": 0.2,
+              "dur": 1,
+              "ease": "back.out(1.4)",
+              "from": 0,
+              "to": 1
+            },
+            "pos": [
+              539.1999999999999,
+              540,
+              {
+                "at": 0.2,
+                "dur": 1,
+                "ease": "back.out(1.4)",
+                "from": -400,
+                "to": 0
+              }
+            ],
+            "rot_x": {
+              "at": 0.2,
+              "dur": 1,
+              "ease": "back.out(1.4)",
+              "from": -100,
+              "to": 0
+            },
+            "rot_y": {
+              "at": 0.2,
+              "dur": 1,
+              "ease": "back.out(1.4)",
+              "from": 60,
+              "to": 0
+            },
+            "side": "#b8442c",
+            "size": 240,
+            "text": "M",
+            "three_d": true,
+            "type": "text3d",
+            "weight": 800
+          },
+          {
+            "bevel": 6,
+            "color": "#f4f1ea",
+            "depth": 70,
+            "font": "Avenir Next",
+            "id": "letter1",
+            "material": {
+              "shininess": 40,
+              "specular": 0.7
+            },
+            "opacity": {
+              "at": 0.27,
+              "dur": 1,
+              "ease": "back.out(1.4)",
+              "from": 0,
+              "to": 1
+            },
+            "pos": [
+              755.9999999999999,
+              540,
+              {
+                "at": 0.27,
+                "dur": 1,
+                "ease": "back.out(1.4)",
+                "from": -400,
+                "to": 0
+              }
+            ],
+            "rot_x": {
+              "at": 0.27,
+              "dur": 1,
+              "ease": "back.out(1.4)",
+              "from": -100,
+              "to": 0
+            },
+            "rot_y": {
+              "at": 0.27,
+              "dur": 1,
+              "ease": "back.out(1.4)",
+              "from": 60,
+              "to": 0
+            },
+            "side": "#b8442c",
+            "size": 240,
+            "text": "O",
+            "three_d": true,
+            "type": "text3d",
+            "weight": 800
+          },
+          {
+            "bevel": 6,
+            "color": "#f4f1ea",
+            "depth": 70,
+            "font": "Avenir Next",
+            "id": "letter2",
+            "material": {
+              "shininess": 40,
+              "specular": 0.7
+            },
+            "opacity": {
+              "at": 0.34,
+              "dur": 1,
+              "ease": "back.out(1.4)",
+              "from": 0,
+              "to": 1
+            },
+            "pos": [
+              936.7999999999998,
+              540,
+              {
+                "at": 0.34,
+                "dur": 1,
+                "ease": "back.out(1.4)",
+                "from": -400,
+                "to": 0
+              }
+            ],
+            "rot_x": {
+              "at": 0.34,
+              "dur": 1,
+              "ease": "back.out(1.4)",
+              "from": -100,
+              "to": 0
+            },
+            "rot_y": {
+              "at": 0.34,
+              "dur": 1,
+              "ease": "back.out(1.4)",
+              "from": 60,
+              "to": 0
+            },
+            "side": "#b8442c",
+            "size": 240,
+            "text": "T",
+            "three_d": true,
+            "type": "text3d",
+            "weight": 800
+          },
+          {
+            "bevel": 6,
+            "color": "#f4f1ea",
+            "depth": 70,
+            "font": "Avenir Next",
+            "id": "letter3",
+            "material": {
+              "shininess": 40,
+              "specular": 0.7
+            },
+            "opacity": {
+              "at": 0.41,
+              "dur": 1,
+              "ease": "back.out(1.4)",
+              "from": 0,
+              "to": 1
+            },
+            "pos": [
+              1055.1999999999998,
+              540,
+              {
+                "at": 0.41,
+                "dur": 1,
+                "ease": "back.out(1.4)",
+                "from": -400,
+                "to": 0
+              }
+            ],
+            "rot_x": {
+              "at": 0.41,
+              "dur": 1,
+              "ease": "back.out(1.4)",
+              "from": -100,
+              "to": 0
+            },
+            "rot_y": {
+              "at": 0.41,
+              "dur": 1,
+              "ease": "back.out(1.4)",
+              "from": 60,
+              "to": 0
+            },
+            "side": "#b8442c",
+            "size": 240,
+            "text": "I",
+            "three_d": true,
+            "type": "text3d",
+            "weight": 800
+          },
+          {
+            "bevel": 6,
+            "color": "#f4f1ea",
+            "depth": 70,
+            "font": "Avenir Next",
+            "id": "letter4",
+            "material": {
+              "shininess": 40,
+              "specular": 0.7
+            },
+            "opacity": {
+              "at": 0.48,
+              "dur": 1,
+              "ease": "back.out(1.4)",
+              "from": 0,
+              "to": 1
+            },
+            "pos": [
+              1197.6,
+              540,
+              {
+                "at": 0.48,
+                "dur": 1,
+                "ease": "back.out(1.4)",
+                "from": -400,
+                "to": 0
+              }
+            ],
+            "rot_x": {
+              "at": 0.48,
+              "dur": 1,
+              "ease": "back.out(1.4)",
+              "from": -100,
+              "to": 0
+            },
+            "rot_y": {
+              "at": 0.48,
+              "dur": 1,
+              "ease": "back.out(1.4)",
+              "from": 60,
+              "to": 0
+            },
+            "side": "#b8442c",
+            "size": 240,
+            "text": "O",
+            "three_d": true,
+            "type": "text3d",
+            "weight": 800
+          },
+          {
+            "bevel": 6,
+            "color": "#f4f1ea",
+            "depth": 70,
+            "font": "Avenir Next",
+            "id": "letter5",
+            "material": {
+              "shininess": 40,
+              "specular": 0.7
+            },
+            "opacity": {
+              "at": 0.55,
+              "dur": 1,
+              "ease": "back.out(1.4)",
+              "from": 0,
+              "to": 1
+            },
+            "pos": [
+              1397.5999999999997,
+              540,
+              {
+                "at": 0.55,
+                "dur": 1,
+                "ease": "back.out(1.4)",
+                "from": -400,
+                "to": 0
+              }
+            ],
+            "rot_x": {
+              "at": 0.55,
+              "dur": 1,
+              "ease": "back.out(1.4)",
+              "from": -100,
+              "to": 0
+            },
+            "rot_y": {
+              "at": 0.55,
+              "dur": 1,
+              "ease": "back.out(1.4)",
+              "from": 60,
+              "to": 0
+            },
+            "side": "#b8442c",
+            "size": 240,
+            "text": "N",
+            "three_d": true,
+            "type": "text3d",
+            "weight": 800
+          }
+        ]
+      },
+      {
+        "bg": "#0b0d12",
+        "dur": 3,
+        "id": "wall",
+        "in": {
+          "dur": 0.6,
+          "type": "zoom_through"
+        },
+        "layers": [
+          {
+            "color": "#8a96b8",
+            "id": "light3",
+            "intensity": 0.6,
+            "kind": "ambient",
+            "type": "light"
+          },
+          {
+            "color": "#ffe2b0",
+            "id": "light4",
+            "intensity": 1.2,
+            "kind": "point",
+            "pos": [
+              300,
+              -200,
+              -1200
+            ],
+            "radius": 4000,
+            "type": "light"
+          },
+          {
+            "id": "cam",
+            "poi": [
+              960,
+              540,
+              -100
+            ],
+            "pos": [
+              960,
+              540,
+              {
+                "at": 0.2,
+                "dur": 2.7,
+                "ease": "sine.inOut",
+                "from": -2700,
+                "to": -1450
+              }
+            ],
+            "type": "camera",
+            "zoom": 2000
+          },
+          {
+            "id": "wall",
+            "pos": [
+              960,
+              500,
+              0
+            ],
+            "rot_x": 25,
+            "rot_y": -20,
+            "three_d": true,
+            "type": "null"
+          },
+          {
+            "id": "card0",
+            "items": [
+              {
+                "fill": "#ffd23d",
+                "radius": 18,
+                "rect": [
+                  -104,
+                  -68,
+                  208,
+                  136
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 40,
+              "specular": 0.8
+            },
+            "opacity": {
+              "at": 0.685,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              -944,
+              -328,
+              0
+            ],
+            "rot_y": {
+              "at": 0.685,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 70,
+              "to": 0
+            },
+            "scale": {
+              "at": 0.685,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "card1",
+            "items": [
+              {
+                "fill": "#ffd23d",
+                "radius": 18,
+                "rect": [
+                  -104,
+                  -68,
+                  208,
+                  136
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 40,
+              "specular": 0.8
+            },
+            "opacity": {
+              "at": 0.655,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              -708,
+              -328,
+              0
+            ],
+            "rot_y": {
+              "at": 0.655,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 70,
+              "to": 0
+            },
+            "scale": {
+              "at": 0.655,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "card2",
+            "items": [
+              {
+                "fill": "#ffd23d",
+                "radius": 18,
+                "rect": [
+                  -104,
+                  -68,
+                  208,
+                  136
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 40,
+              "specular": 0.8
+            },
+            "opacity": {
+              "at": 0.625,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              -472,
+              -328,
+              0
+            ],
+            "rot_y": {
+              "at": 0.625,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 70,
+              "to": 0
+            },
+            "scale": {
+              "at": 0.625,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "card3",
+            "items": [
+              {
+                "fill": "#ffd23d",
+                "radius": 18,
+                "rect": [
+                  -104,
+                  -68,
+                  208,
+                  136
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 40,
+              "specular": 0.8
+            },
+            "opacity": {
+              "at": 0.595,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              -236,
+              -328,
+              0
+            ],
+            "rot_y": {
+              "at": 0.595,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 70,
+              "to": 0
+            },
+            "scale": {
+              "at": 0.595,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "card4",
+            "items": [
+              {
+                "fill": "#ff4d8d",
+                "radius": 18,
+                "rect": [
+                  -104,
+                  -68,
+                  208,
+                  136
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 40,
+              "specular": 0.8
+            },
+            "opacity": {
+              "at": 0.565,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              0,
+              -328,
+              0
+            ],
+            "rot_y": {
+              "at": 0.565,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 70,
+              "to": 0
+            },
+            "scale": {
+              "at": 0.565,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "card5",
+            "items": [
+              {
+                "fill": "#ffd23d",
+                "radius": 18,
+                "rect": [
+                  -104,
+                  -68,
+                  208,
+                  136
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 40,
+              "specular": 0.8
+            },
+            "opacity": {
+              "at": 0.535,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              236,
+              -328,
+              0
+            ],
+            "rot_y": {
+              "at": 0.535,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 70,
+              "to": 0
+            },
+            "scale": {
+              "at": 0.535,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "card6",
+            "items": [
+              {
+                "fill": "#ff6b3d",
+                "radius": 18,
+                "rect": [
+                  -104,
+                  -68,
+                  208,
+                  136
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 40,
+              "specular": 0.8
+            },
+            "opacity": {
+              "at": 0.505,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              472,
+              -328,
+              0
+            ],
+            "rot_y": {
+              "at": 0.505,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 70,
+              "to": 0
+            },
+            "scale": {
+              "at": 0.505,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "card7",
+            "items": [
+              {
+                "fill": "#ffd23d",
+                "radius": 18,
+                "rect": [
+                  -104,
+                  -68,
+                  208,
+                  136
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 40,
+              "specular": 0.8
+            },
+            "opacity": {
+              "at": 0.475,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              708,
+              -328,
+              0
+            ],
+            "rot_y": {
+              "at": 0.475,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 70,
+              "to": 0
+            },
+            "scale": {
+              "at": 0.475,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "card8",
+            "items": [
+              {
+                "fill": "#ffd23d",
+                "radius": 18,
+                "rect": [
+                  -104,
+                  -68,
+                  208,
+                  136
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 40,
+              "specular": 0.8
+            },
+            "opacity": {
+              "at": 0.445,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              -944,
+              -164,
+              0
+            ],
+            "rot_y": {
+              "at": 0.445,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 70,
+              "to": 0
+            },
+            "scale": {
+              "at": 0.445,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "card9",
+            "items": [
+              {
+                "fill": "#b7ff6b",
+                "radius": 18,
+                "rect": [
+                  -104,
+                  -68,
+                  208,
+                  136
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 40,
+              "specular": 0.8
+            },
+            "opacity": {
+              "at": 0.415,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              -708,
+              -164,
+              0
+            ],
+            "rot_y": {
+              "at": 0.415,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 70,
+              "to": 0
+            },
+            "scale": {
+              "at": 0.415,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "card10",
+            "items": [
+              {
+                "fill": "#b7ff6b",
+                "radius": 18,
+                "rect": [
+                  -104,
+                  -68,
+                  208,
+                  136
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 40,
+              "specular": 0.8
+            },
+            "opacity": {
+              "at": 0.385,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              -472,
+              -164,
+              0
+            ],
+            "rot_y": {
+              "at": 0.385,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 70,
+              "to": 0
+            },
+            "scale": {
+              "at": 0.385,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "card11",
+            "items": [
+              {
+                "fill": "#ff4d8d",
+                "radius": 18,
+                "rect": [
+                  -104,
+                  -68,
+                  208,
+                  136
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 40,
+              "specular": 0.8
+            },
+            "opacity": {
+              "at": 0.355,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              -236,
+              -164,
+              0
+            ],
+            "rot_y": {
+              "at": 0.355,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 70,
+              "to": 0
+            },
+            "scale": {
+              "at": 0.355,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "card12",
+            "items": [
+              {
+                "fill": "#b7ff6b",
+                "radius": 18,
+                "rect": [
+                  -104,
+                  -68,
+                  208,
+                  136
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 40,
+              "specular": 0.8
+            },
+            "opacity": {
+              "at": 0.325,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              0,
+              -164,
+              0
+            ],
+            "rot_y": {
+              "at": 0.325,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 70,
+              "to": 0
+            },
+            "scale": {
+              "at": 0.325,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "card13",
+            "items": [
+              {
+                "fill": "#c77dff",
+                "radius": 18,
+                "rect": [
+                  -104,
+                  -68,
+                  208,
+                  136
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 40,
+              "specular": 0.8
+            },
+            "opacity": {
+              "at": 0.295,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              236,
+              -164,
+              0
+            ],
+            "rot_y": {
+              "at": 0.295,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 70,
+              "to": 0
+            },
+            "scale": {
+              "at": 0.295,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "card14",
+            "items": [
+              {
+                "fill": "#c77dff",
+                "radius": 18,
+                "rect": [
+                  -104,
+                  -68,
+                  208,
+                  136
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 40,
+              "specular": 0.8
+            },
+            "opacity": {
+              "at": 0.265,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              472,
+              -164,
+              0
+            ],
+            "rot_y": {
+              "at": 0.265,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 70,
+              "to": 0
+            },
+            "scale": {
+              "at": 0.265,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "card15",
+            "items": [
+              {
+                "fill": "#ff6b3d",
+                "radius": 18,
+                "rect": [
+                  -104,
+                  -68,
+                  208,
+                  136
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 40,
+              "specular": 0.8
+            },
+            "opacity": {
+              "at": 0.235,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              708,
+              -164,
+              0
+            ],
+            "rot_y": {
+              "at": 0.235,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 70,
+              "to": 0
+            },
+            "scale": {
+              "at": 0.235,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "card16",
+            "items": [
+              {
+                "fill": "#3dd6ff",
+                "radius": 18,
+                "rect": [
+                  -104,
+                  -68,
+                  208,
+                  136
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 40,
+              "specular": 0.8
+            },
+            "opacity": {
+              "at": 0.205,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              -944,
+              0,
+              0
+            ],
+            "rot_y": {
+              "at": 0.205,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 70,
+              "to": 0
+            },
+            "scale": {
+              "at": 0.205,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "card17",
+            "items": [
+              {
+                "fill": "#3dd6ff",
+                "radius": 18,
+                "rect": [
+                  -104,
+                  -68,
+                  208,
+                  136
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 40,
+              "specular": 0.8
+            },
+            "opacity": {
+              "at": 0.175,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              -708,
+              0,
+              0
+            ],
+            "rot_y": {
+              "at": 0.175,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 70,
+              "to": 0
+            },
+            "scale": {
+              "at": 0.175,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "card18",
+            "items": [
+              {
+                "fill": "#b7ff6b",
+                "radius": 18,
+                "rect": [
+                  -104,
+                  -68,
+                  208,
+                  136
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 40,
+              "specular": 0.8
+            },
+            "opacity": {
+              "at": 0.145,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              -472,
+              0,
+              0
+            ],
+            "rot_y": {
+              "at": 0.145,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 70,
+              "to": 0
+            },
+            "scale": {
+              "at": 0.145,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "card19",
+            "items": [
+              {
+                "fill": "#b7ff6b",
+                "radius": 18,
+                "rect": [
+                  -104,
+                  -68,
+                  208,
+                  136
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 40,
+              "specular": 0.8
+            },
+            "opacity": {
+              "at": 0.115,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              -236,
+              0,
+              0
+            ],
+            "rot_y": {
+              "at": 0.115,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 70,
+              "to": 0
+            },
+            "scale": {
+              "at": 0.115,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "card20",
+            "items": [
+              {
+                "fill": "#ffffff",
+                "radius": 18,
+                "rect": [
+                  -150,
+                  -95,
+                  300,
+                  190
+                ]
+              }
+            ],
+            "lit": false,
+            "material": {
+              "shininess": 40,
+              "specular": 0.8
+            },
+            "opacity": {
+              "at": 0.115,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              0,
+              0,
+              -140
+            ],
+            "rot_y": {
+              "at": 0.115,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 70,
+              "to": 0
+            },
+            "scale": {
+              "at": 0.115,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "card21",
+            "items": [
+              {
+                "fill": "#ffd23d",
+                "radius": 18,
+                "rect": [
+                  -104,
+                  -68,
+                  208,
+                  136
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 40,
+              "specular": 0.8
+            },
+            "opacity": {
+              "at": 0.145,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              236,
+              0,
+              0
+            ],
+            "rot_y": {
+              "at": 0.145,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 70,
+              "to": 0
+            },
+            "scale": {
+              "at": 0.145,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "card22",
+            "items": [
+              {
+                "fill": "#ff6b3d",
+                "radius": 18,
+                "rect": [
+                  -104,
+                  -68,
+                  208,
+                  136
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 40,
+              "specular": 0.8
+            },
+            "opacity": {
+              "at": 0.175,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              472,
+              0,
+              0
+            ],
+            "rot_y": {
+              "at": 0.175,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 70,
+              "to": 0
+            },
+            "scale": {
+              "at": 0.175,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "card23",
+            "items": [
+              {
+                "fill": "#ffd23d",
+                "radius": 18,
+                "rect": [
+                  -104,
+                  -68,
+                  208,
+                  136
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 40,
+              "specular": 0.8
+            },
+            "opacity": {
+              "at": 0.205,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              708,
+              0,
+              0
+            ],
+            "rot_y": {
+              "at": 0.205,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 70,
+              "to": 0
+            },
+            "scale": {
+              "at": 0.205,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "card24",
+            "items": [
+              {
+                "fill": "#ffd23d",
+                "radius": 18,
+                "rect": [
+                  -104,
+                  -68,
+                  208,
+                  136
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 40,
+              "specular": 0.8
+            },
+            "opacity": {
+              "at": 0.235,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              -944,
+              164,
+              0
+            ],
+            "rot_y": {
+              "at": 0.235,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 70,
+              "to": 0
+            },
+            "scale": {
+              "at": 0.235,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "card25",
+            "items": [
+              {
+                "fill": "#b7ff6b",
+                "radius": 18,
+                "rect": [
+                  -104,
+                  -68,
+                  208,
+                  136
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 40,
+              "specular": 0.8
+            },
+            "opacity": {
+              "at": 0.265,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              -708,
+              164,
+              0
+            ],
+            "rot_y": {
+              "at": 0.265,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 70,
+              "to": 0
+            },
+            "scale": {
+              "at": 0.265,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "card26",
+            "items": [
+              {
+                "fill": "#ff4d8d",
+                "radius": 18,
+                "rect": [
+                  -104,
+                  -68,
+                  208,
+                  136
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 40,
+              "specular": 0.8
+            },
+            "opacity": {
+              "at": 0.295,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              -472,
+              164,
+              0
+            ],
+            "rot_y": {
+              "at": 0.295,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 70,
+              "to": 0
+            },
+            "scale": {
+              "at": 0.295,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "card27",
+            "items": [
+              {
+                "fill": "#c77dff",
+                "radius": 18,
+                "rect": [
+                  -104,
+                  -68,
+                  208,
+                  136
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 40,
+              "specular": 0.8
+            },
+            "opacity": {
+              "at": 0.325,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              -236,
+              164,
+              0
+            ],
+            "rot_y": {
+              "at": 0.325,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 70,
+              "to": 0
+            },
+            "scale": {
+              "at": 0.325,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "card28",
+            "items": [
+              {
+                "fill": "#c77dff",
+                "radius": 18,
+                "rect": [
+                  -104,
+                  -68,
+                  208,
+                  136
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 40,
+              "specular": 0.8
+            },
+            "opacity": {
+              "at": 0.355,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              0,
+              164,
+              0
+            ],
+            "rot_y": {
+              "at": 0.355,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 70,
+              "to": 0
+            },
+            "scale": {
+              "at": 0.355,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "card29",
+            "items": [
+              {
+                "fill": "#3dd6ff",
+                "radius": 18,
+                "rect": [
+                  -104,
+                  -68,
+                  208,
+                  136
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 40,
+              "specular": 0.8
+            },
+            "opacity": {
+              "at": 0.385,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              236,
+              164,
+              0
+            ],
+            "rot_y": {
+              "at": 0.385,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 70,
+              "to": 0
+            },
+            "scale": {
+              "at": 0.385,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "card30",
+            "items": [
+              {
+                "fill": "#ffd23d",
+                "radius": 18,
+                "rect": [
+                  -104,
+                  -68,
+                  208,
+                  136
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 40,
+              "specular": 0.8
+            },
+            "opacity": {
+              "at": 0.415,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              472,
+              164,
+              0
+            ],
+            "rot_y": {
+              "at": 0.415,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 70,
+              "to": 0
+            },
+            "scale": {
+              "at": 0.415,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "card31",
+            "items": [
+              {
+                "fill": "#3dd6ff",
+                "radius": 18,
+                "rect": [
+                  -104,
+                  -68,
+                  208,
+                  136
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 40,
+              "specular": 0.8
+            },
+            "opacity": {
+              "at": 0.445,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              708,
+              164,
+              0
+            ],
+            "rot_y": {
+              "at": 0.445,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 70,
+              "to": 0
+            },
+            "scale": {
+              "at": 0.445,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "card32",
+            "items": [
+              {
+                "fill": "#ff6b3d",
+                "radius": 18,
+                "rect": [
+                  -104,
+                  -68,
+                  208,
+                  136
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 40,
+              "specular": 0.8
+            },
+            "opacity": {
+              "at": 0.475,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              -944,
+              328,
+              0
+            ],
+            "rot_y": {
+              "at": 0.475,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 70,
+              "to": 0
+            },
+            "scale": {
+              "at": 0.475,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "card33",
+            "items": [
+              {
+                "fill": "#c77dff",
+                "radius": 18,
+                "rect": [
+                  -104,
+                  -68,
+                  208,
+                  136
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 40,
+              "specular": 0.8
+            },
+            "opacity": {
+              "at": 0.505,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              -708,
+              328,
+              0
+            ],
+            "rot_y": {
+              "at": 0.505,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 70,
+              "to": 0
+            },
+            "scale": {
+              "at": 0.505,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "card34",
+            "items": [
+              {
+                "fill": "#ff4d8d",
+                "radius": 18,
+                "rect": [
+                  -104,
+                  -68,
+                  208,
+                  136
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 40,
+              "specular": 0.8
+            },
+            "opacity": {
+              "at": 0.535,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              -472,
+              328,
+              0
+            ],
+            "rot_y": {
+              "at": 0.535,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 70,
+              "to": 0
+            },
+            "scale": {
+              "at": 0.535,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "card35",
+            "items": [
+              {
+                "fill": "#3dd6ff",
+                "radius": 18,
+                "rect": [
+                  -104,
+                  -68,
+                  208,
+                  136
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 40,
+              "specular": 0.8
+            },
+            "opacity": {
+              "at": 0.565,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              -236,
+              328,
+              0
+            ],
+            "rot_y": {
+              "at": 0.565,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 70,
+              "to": 0
+            },
+            "scale": {
+              "at": 0.565,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "card36",
+            "items": [
+              {
+                "fill": "#ff6b3d",
+                "radius": 18,
+                "rect": [
+                  -104,
+                  -68,
+                  208,
+                  136
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 40,
+              "specular": 0.8
+            },
+            "opacity": {
+              "at": 0.595,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              0,
+              328,
+              0
+            ],
+            "rot_y": {
+              "at": 0.595,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 70,
+              "to": 0
+            },
+            "scale": {
+              "at": 0.595,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "card37",
+            "items": [
+              {
+                "fill": "#c77dff",
+                "radius": 18,
+                "rect": [
+                  -104,
+                  -68,
+                  208,
+                  136
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 40,
+              "specular": 0.8
+            },
+            "opacity": {
+              "at": 0.625,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              236,
+              328,
+              0
+            ],
+            "rot_y": {
+              "at": 0.625,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 70,
+              "to": 0
+            },
+            "scale": {
+              "at": 0.625,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "card38",
+            "items": [
+              {
+                "fill": "#b7ff6b",
+                "radius": 18,
+                "rect": [
+                  -104,
+                  -68,
+                  208,
+                  136
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 40,
+              "specular": 0.8
+            },
+            "opacity": {
+              "at": 0.655,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              472,
+              328,
+              0
+            ],
+            "rot_y": {
+              "at": 0.655,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 70,
+              "to": 0
+            },
+            "scale": {
+              "at": 0.655,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "card39",
+            "items": [
+              {
+                "fill": "#ffd23d",
+                "radius": 18,
+                "rect": [
+                  -104,
+                  -68,
+                  208,
+                  136
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 40,
+              "specular": 0.8
+            },
+            "opacity": {
+              "at": 0.685,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              708,
+              328,
+              0
+            ],
+            "rot_y": {
+              "at": 0.685,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 70,
+              "to": 0
+            },
+            "scale": {
+              "at": 0.685,
+              "dur": 0.55,
+              "ease": "back.out(1.7)",
+              "from": 0,
+              "to": 1
+            },
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "align": "center",
+            "color": "#0b0d12",
+            "font": "Avenir Next",
+            "id": "label2",
+            "opacity": {
+              "at": 0.78,
+              "dur": 0.3,
+              "ease": "power1.out",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              -472,
+              -328,
+              -6
+            ],
+            "size": 46,
+            "text": "RUST",
+            "three_d": true,
+            "type": "text",
+            "weight": 800
+          },
+          {
+            "align": "center",
+            "color": "#0b0d12",
+            "font": "Avenir Next",
+            "id": "label6",
+            "opacity": {
+              "at": 0.75,
+              "dur": 0.3,
+              "ease": "power1.out",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              472,
+              -328,
+              -6
+            ],
+            "size": 46,
+            "text": "LIVE",
+            "three_d": true,
+            "type": "text",
+            "weight": 800
+          },
+          {
+            "align": "center",
+            "color": "#0b0d12",
+            "font": "Avenir Next",
+            "id": "label7",
+            "opacity": {
+              "at": 0.72,
+              "dur": 0.3,
+              "ease": "power1.out",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              708,
+              -328,
+              -6
+            ],
+            "size": 46,
+            "text": "3D",
+            "three_d": true,
+            "type": "text",
+            "weight": 800
+          },
+          {
+            "align": "center",
+            "color": "#0b0d12",
+            "font": "Avenir Next",
+            "id": "label11",
+            "opacity": {
+              "at": 0.69,
+              "dur": 0.3,
+              "ease": "power1.out",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              -236,
+              -164,
+              -6
+            ],
+            "size": 46,
+            "text": "FX",
+            "three_d": true,
+            "type": "text",
+            "weight": 800
+          },
+          {
+            "align": "center",
+            "color": "#0b0d12",
+            "font": "Avenir Next",
+            "id": "label14",
+            "opacity": {
+              "at": 0.66,
+              "dur": 0.3,
+              "ease": "power1.out",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              472,
+              -164,
+              -6
+            ],
+            "size": 46,
+            "text": "FAST",
+            "three_d": true,
+            "type": "text",
+            "weight": 800
+          },
+          {
+            "align": "center",
+            "color": "#0b0d12",
+            "font": "Avenir Next",
+            "id": "label16",
+            "opacity": {
+              "at": 0.63,
+              "dur": 0.3,
+              "ease": "power1.out",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              -944,
+              0,
+              -6
+            ],
+            "size": 46,
+            "text": "3D",
+            "three_d": true,
+            "type": "text",
+            "weight": 800
+          },
+          {
+            "align": "center",
+            "color": "#0b0d12",
+            "font": "Avenir Next",
+            "id": "label20",
+            "opacity": {
+              "at": 0.6,
+              "dur": 0.3,
+              "ease": "power1.out",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              0,
+              0,
+              -146
+            ],
+            "size": 54,
+            "text": "LAUNCH",
+            "three_d": true,
+            "type": "text",
+            "weight": 800
+          },
+          {
+            "align": "center",
+            "color": "#0b0d12",
+            "font": "Avenir Next",
+            "id": "label24",
+            "opacity": {
+              "at": 0.63,
+              "dur": 0.3,
+              "ease": "power1.out",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              -944,
+              164,
+              -6
+            ],
+            "size": 46,
+            "text": "4K",
+            "three_d": true,
+            "type": "text",
+            "weight": 800
+          },
+          {
+            "align": "center",
+            "color": "#0b0d12",
+            "font": "Avenir Next",
+            "id": "label28",
+            "opacity": {
+              "at": 0.66,
+              "dur": 0.3,
+              "ease": "power1.out",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              0,
+              164,
+              -6
+            ],
+            "size": 46,
+            "text": "FAST",
+            "three_d": true,
+            "type": "text",
+            "weight": 800
+          },
+          {
+            "align": "center",
+            "color": "#0b0d12",
+            "font": "Avenir Next",
+            "id": "label30",
+            "opacity": {
+              "at": 0.69,
+              "dur": 0.3,
+              "ease": "power1.out",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              472,
+              164,
+              -6
+            ],
+            "size": 46,
+            "text": "GO",
+            "three_d": true,
+            "type": "text",
+            "weight": 800
+          },
+          {
+            "align": "center",
+            "color": "#0b0d12",
+            "font": "Avenir Next",
+            "id": "label32",
+            "opacity": {
+              "at": 0.72,
+              "dur": 0.3,
+              "ease": "power1.out",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              -944,
+              328,
+              -6
+            ],
+            "size": 46,
+            "text": "FX",
+            "three_d": true,
+            "type": "text",
+            "weight": 800
+          },
+          {
+            "align": "center",
+            "color": "#0b0d12",
+            "font": "Avenir Next",
+            "id": "label33",
+            "opacity": {
+              "at": 0.75,
+              "dur": 0.3,
+              "ease": "power1.out",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              -708,
+              328,
+              -6
+            ],
+            "size": 46,
+            "text": "4K",
+            "three_d": true,
+            "type": "text",
+            "weight": 800
+          },
+          {
+            "align": "center",
+            "color": "#0b0d12",
+            "font": "Avenir Next",
+            "id": "label36",
+            "opacity": {
+              "at": 0.78,
+              "dur": 0.3,
+              "ease": "power1.out",
+              "from": 0,
+              "to": 1
+            },
+            "parent": "wall",
+            "pos": [
+              0,
+              328,
+              -6
+            ],
+            "size": 46,
+            "text": "3D",
+            "three_d": true,
+            "type": "text",
+            "weight": 800
+          }
+        ]
+      }
+    ]
+  },
+  "width": 1920
+}

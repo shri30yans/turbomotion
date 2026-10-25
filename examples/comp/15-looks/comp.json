@@ -1,0 +1,12 @@
+{
+  "width": 1280, "height": 720, "fps": 30, "dur": 4, "bg": "#0b1020",
+  "palette": {"accent": "#ffb066", "ink": "#f4efe6"},
+  "layers": [
+    {"type": "texture", "id": "backdrop", "shader": "gradient", "params": {"from": "#10203a", "to": "#2a1a38"}, "layout": "backdrop"},
+    {"type": "shape", "id": "disc", "items": [{"ellipse": [0, 0, 150, 150], "fill": "accent"}], "pos": [640, 330],
+     "fx": [{"effect": "bloom", "amount": 0.35, "radius": 40, "threshold": 0.7}, {"effect": "halation", "amount": 0.35}]},
+    {"type": "text", "id": "title", "text": "Looks, not tricks", "role": "display", "color": "ink", "align": "center", "pos": [640, 560],
+     "preset": "rise", "fx": [{"effect": "split_tone", "amount": 0.35}]},
+    {"type": "adjustment", "id": "world", "fx": [{"effect": "tilt_shift", "focus": 0.5, "band": 0.25, "blur": 10}]}
+  ]
+}

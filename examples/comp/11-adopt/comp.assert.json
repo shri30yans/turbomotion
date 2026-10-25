@@ -1,0 +1,13 @@
+[
+  {"visible_by": {"layer": "stage", "t": 0.8}},
+  {"hero": {"t": 2.4, "layers": ["stage"], "safe": 1}},
+  {"visible_by": {"layer": "claims", "t": 5.2}},
+  {"hero": {"t": 8.0, "layers": ["claims"], "safe": 1}},
+  {"visible_by": {"layer": "proof", "t": 11.2}},
+  {"hero": {"t": 13.2, "layers": ["proof"], "safe": 1}},
+  {"visible_by": {"layer": "holo", "t": 17.6}},
+  {"hero": {"t": 19.6, "layers": ["holo"], "safe": 1}},
+  {"visible_by": {"layer": "books", "t": 23.4}},
+  {"visible_by": {"layer": "clear", "t": 29.4}},
+  {"keeps_moving": {"window": 4.2}}
+]

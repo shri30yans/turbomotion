@@ -1,0 +1,111 @@
+{
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "dur": 12,
+  "bg": "#07090f",
+  "palette": {
+    "accent": "#e8402f",
+    "ink": "#f4f7ff",
+    "mute": "#9aa8c6",
+    "plate": "#10161f",
+    "gold": "#e8c48a"
+  },
+  "type": {
+    "display": {"size": 140, "font": "Avenir Next Condensed", "weight": 800, "color": "ink"},
+    "title": {"size": 48, "font": "Avenir Next", "weight": 700, "color": "ink"},
+    "body": {"size": 28, "font": "Avenir Next", "weight": 500, "color": "mute"}
+  },
+  "look": [{"effect": "grain", "amount": 0.08}, {"effect": "vignette", "strength": 0.32}],
+  "comps": {
+    "s1": {
+      "width": 1920, "height": 1080, "dur": 2.4,
+      "layers": [
+        {"type": "solid", "color": "#07090f"},
+        {"type": "text", "id": "kicker", "role": "body", "text": "FLASH", "weight": 700, "tracking": 10, "color": "gold",
+         "pos": [960, 88], "align": "center", "preset": {"name": "tracking_in", "at": 0.04}},
+        {"type": "text", "id": "hero", "role": "display", "fill": "metal", "text": "£827m", "weight": 800,
+         "pos": [960, 500], "align": "center", "preset": {"name": "reveal", "at": 0.12},
+         "fx": [{"effect": "anamorphic", "amount": {"from": 0.9, "to": 0.15, "at": 0.1, "dur": 1.0, "ease": "sine.out"}, "threshold": 0.4}]},
+        {"type": "adjustment", "fx": [
+          {"effect": "flash", "amount": {"from": 1, "to": 0, "at": 0.1, "dur": 0.7, "ease": "power3.in"}, "warmth": 0.18}
+        ]}
+      ]
+    },
+    "s2": {
+      "width": 1920, "height": 1080, "dur": 2.6,
+      "layers": [
+        {"type": "solid", "color": "#07090f"},
+        {"type": "texture", "shader": "haze", "params": {"amount": 0.45, "height": 0.7, "tint": "#6a88b0"}, "blend": "screen", "opacity": 0.55},
+        {"type": "text", "id": "kicker", "role": "body", "text": "LIGHTNING", "weight": 700, "tracking": 10, "color": "#c5dcff",
+         "pos": [960, 88], "align": "center", "preset": {"name": "tracking_in", "at": 0.04}},
+        {"type": "text", "id": "hero", "role": "display", "text": "THE STRIKE", "weight": 800,
+         "pos": [960, 500], "align": "center", "preset": {"name": "reveal", "at": 0.1}},
+        {"type": "texture", "shader": "bolt", "params": {"x": 0.52, "y": 0.0, "seed": 4, "thickness": 1.15, "tint": "#d7e8ff"},
+         "blend": "add", "opacity": {"from": 0, "to": 1, "at": 0.22, "dur": 0.04}},
+        {"type": "adjustment", "fx": [
+          {"effect": "lightning", "amount": [[0.2, 0], [0.22, 1], [0.28, 0.12], [0.31, 0.8], [0.42, 0]], "x": 0.52, "y": 0, "seed": 4}
+        ]}
+      ]
+    },
+    "s3": {
+      "width": 1920, "height": 1080, "dur": 2.4,
+      "layers": [
+        {"type": "solid", "color": "#07090f"},
+        {"type": "text", "id": "kicker", "role": "body", "text": "SHOCKWAVE", "weight": 700, "tracking": 10, "color": "accent",
+         "pos": [960, 88], "align": "center", "preset": {"name": "tracking_in", "at": 0.04}},
+        {"type": "precomp", "id": "hit", "block": "stamp", "pos": [960, 520], "start": 0.18,
+         "vars": {"text": "GONE"}},
+        {"type": "adjustment", "fx": [
+          {"effect": "shockwave", "progress": {"from": 0, "to": 1, "at": 0.22, "dur": 0.7, "ease": "expo.out"}, "amplitude": 28, "width": 0.05},
+          {"effect": "impact", "amount": {"from": 0.8, "to": 0, "at": 0.22, "dur": 0.35, "ease": "expo.out"}}
+        ]}
+      ]
+    },
+    "s4": {
+      "width": 1920, "height": 1080, "dur": 2.6,
+      "layers": [
+        {"type": "solid", "color": "#07090f"},
+        {"type": "texture", "shader": "shafts", "params": {"x": 0.72, "y": 0.08, "amount": 0.7, "spread": 0.85, "tint": "#c8d8f0"},
+         "blend": "screen", "opacity": 0.7},
+        {"type": "texture", "shader": "haze", "params": {"amount": 0.35, "tint": "#8aa0c0"}, "blend": "screen", "opacity": 0.4},
+        {"type": "text", "id": "kicker", "role": "body", "text": "OPTICAL", "weight": 700, "tracking": 10, "color": "#cfe4ff",
+         "pos": [960, 88], "align": "center", "preset": {"name": "tracking_in", "at": 0.04}},
+        {"type": "text", "id": "hero", "role": "display", "fill": "metal", "text": "THE ROOM", "weight": 800,
+         "pos": [960, 500], "align": "center", "preset": {"name": "reveal", "at": 0.1},
+         "fx": [{"effect": "anamorphic", "amount": 0.55, "threshold": 0.5}, {"effect": "prism", "amount": 0.35, "angle": 12}]}
+      ]
+    },
+    "s5": {
+      "width": 1920, "height": 1080, "dur": 2.8,
+      "layers": [
+        {"type": "solid", "color": "#07090f"},
+        {"type": "texture", "shader": "rain", "params": {"amount": 0.7, "speed": 1.1, "tint": "#b8c8dc"}, "blend": "screen", "opacity": 0.65},
+        {"type": "texture", "shader": "film_burn", "params": {"amount": 0.55, "x": 0.0, "tint": "#ff6a24"}, "blend": "add", "opacity": 0.45},
+        {"type": "text", "id": "kicker", "role": "body", "text": "ARCHIVE", "weight": 700, "tracking": 10, "color": "#ffb08a",
+         "pos": [960, 88], "align": "center", "preset": {"name": "tracking_in", "at": 0.04}},
+        {"type": "text", "id": "hero", "role": "display", "text": "THE TAPE", "weight": 800,
+         "pos": [960, 500], "align": "center", "preset": {"name": "reveal", "at": 0.1}},
+        {"type": "adjustment", "fx": [
+          {"effect": "dropout", "amount": 0.45, "density": 0.1, "rate": 11},
+          {"effect": "gate_weave", "amount": 0.35},
+          {"effect": "flicker", "amount": 0.18, "rate": 16},
+          {"effect": "bleach", "amount": 0.4}
+        ]}
+      ]
+    }
+  },
+  "layers": [
+    {"type": "solid", "color": "#07090f"},
+    {"type": "precomp", "id": "flash", "comp": "s1", "start": 0, "dur": 2.4,
+     "exit": {"preset": "fade", "dur": 0.25}},
+    {"type": "precomp", "id": "lightning", "comp": "s2", "start": 2.2, "dur": 2.6,
+     "enter": {"preset": "fade", "dur": 0.2}, "exit": {"preset": "fade", "dur": 0.25}},
+    {"type": "precomp", "id": "shock", "comp": "s3", "start": 4.6, "dur": 2.4,
+     "enter": {"preset": "fade", "dur": 0.2}, "exit": {"preset": "fade", "dur": 0.25}},
+    {"type": "precomp", "id": "optical", "comp": "s4", "start": 6.8, "dur": 2.6,
+     "enter": {"preset": "fade", "dur": 0.2}, "exit": {"preset": "fade", "dur": 0.25}},
+    {"type": "precomp", "id": "archive", "comp": "s5", "start": 9.2, "dur": 2.8,
+     "enter": {"preset": "fade", "dur": 0.2}}
+  ]
+}

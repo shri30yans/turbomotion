@@ -1,0 +1,114 @@
+{
+  "width": 1920, "height": 1080, "fps": 30, "dur": 27.4,
+  "bg": "#07090f",
+  "type": {"display": 160, "title": 52, "body": 28},
+  "fonts": {"display": "Avenir Next Condensed", "title": "Avenir Next"},
+  "look": [{"effect": "grain", "amount": 0.1}, {"effect": "vignette", "strength": 0.28}],
+  "comps": {
+    "s1": {
+      "width": 1920, "height": 1080, "dur": 4.4,
+      "layers": [
+        {"type": "solid", "color": "#07090f"},
+        {"type": "texture", "shader": "bokeh", "params": {"density": 0.42, "scale": 70, "brightness": 0.4, "tint": "#e8c48a", "seed": 2}, "blend": "screen", "opacity": 0.5},
+        {"type": "text", "id": "kicker", "role": "body", "text": "TYPE", "font": "title", "weight": 700, "tracking": 10, "color": "#ffd37a",
+         "pos": [960, 88], "align": "center", "preset": {"name": "tracking_in", "at": 0.05}},
+        {"type": "text", "id": "hero", "role": "display", "fill": "metal", "color": "#ffd37a", "text": "A FUTURE", "font": "display", "weight": 800, "tracking": 4,
+         "pos": [960, 400], "align": "center", "preset": {"name": "reveal", "at": 0.2},
+         "fx": [{"effect": "light_sweep", "position": {"from": -0.25, "to": 1.2, "at": 0.7, "dur": 1.5, "ease": "sine.inOut"}, "strength": 0.75}]},
+        {"type": "text", "id": "line", "role": "title", "text": "is a bet on a price", "font": "title", "weight": 700, "color": "#f4f7ff",
+         "pos": [960, 530], "align": "center", "mark": {"word": "bet", "at": 1.15, "dur": 0.45},
+         "preset": {"name": "reveal", "at": 0.55}},
+        {"type": "text", "id": "note", "role": "body", "text": "three sizes  ·  highlight the word  ·  metal on the number", "font": "title", "weight": 500, "color": "#9aa8c6",
+         "pos": [960, 620], "align": "center", "preset": {"name": "fade_up", "at": 1.5}},
+        {"type": "shape", "id": "rule", "pos": [960, 700],
+         "items": [{"rect": [-90, -1.5, 180, 3], "radius": 2, "fill": "#ffd37a"}],
+         "scale": {"from": [0, 1], "to": [1, 1], "at": 1.7, "dur": 0.55, "ease": "expo.out"}},
+        {"type": "precomp", "block": "icon_lock",  "pos": [360, 900], "start": 1.8, "scale": 0.85, "vars": {"accent": "#ffd37a"}},
+        {"type": "precomp", "block": "icon_bank",  "pos": [600, 900], "start": 1.92, "scale": 0.85, "vars": {"accent": "#ffd37a"}},
+        {"type": "precomp", "block": "icon_doc",   "pos": [840, 900], "start": 2.04, "scale": 0.85, "vars": {"accent": "#7cc7ff"}},
+        {"type": "precomp", "block": "icon_chart", "pos": [1080, 900], "start": 2.16, "scale": 0.85, "vars": {"accent": "#7cc7ff"}},
+        {"type": "precomp", "block": "icon_warn",  "pos": [1320, 900], "start": 2.28, "scale": 0.85, "vars": {"accent": "#ff6a3d"}},
+        {"type": "precomp", "block": "icon_arrow", "pos": [1560, 900], "start": 2.4, "scale": 0.85, "vars": {"accent": "#ffd37a"}}
+      ]
+    },
+    "s2": {
+      "width": 1920, "height": 1080, "dur": 7.0,
+      "layers": [
+        {"type": "solid", "color": "#07090f"},
+        {"type": "texture", "shader": "bokeh", "params": {"density": 0.48, "scale": 76, "brightness": 0.46, "tint": "#7ad4ff", "seed": 5}, "blend": "screen", "opacity": 0.5},
+        {"type": "text", "id": "kicker", "role": "body", "text": "HOLO", "font": "title", "weight": 700, "tracking": 10, "color": "#3dffe0",
+         "pos": [960, 88], "align": "center", "preset": {"name": "tracking_in", "at": 0.05}},
+        {"type": "precomp", "id": "pair", "block": "compare_two", "pos": [960, 560], "scale": {"from": 0.9, "to": 0.98, "dur": 6.6, "ease": "sine.inOut"}}
+      ]
+    },
+    "s3": {
+      "width": 1920, "height": 1080, "dur": 5.0,
+      "layers": [
+        {"type": "solid", "color": "#07090f"},
+        {"type": "texture", "shader": "bokeh", "params": {"density": 0.4, "scale": 64, "brightness": 0.38, "tint": "#e8c48a", "seed": 8}, "blend": "screen", "opacity": 0.48},
+        {"type": "text", "id": "kicker", "role": "body", "text": "DEFINITION", "font": "title", "weight": 700, "tracking": 10, "color": "#ffd37a",
+         "pos": [960, 88], "align": "center", "preset": {"name": "tracking_in", "at": 0.05}},
+        {"type": "precomp", "id": "define", "block": "definition", "pos": [960, 420], "scale": 1.18,
+         "vars": {"term": "A future", "meaning": "is a bet on a price at a date you agree now."}},
+        {"type": "precomp", "id": "note", "block": "callout", "pos": [960, 760], "start": 1.1, "scale": 1.15,
+         "vars": {"text": "The name comes last.", "mark": "last", "accent": "#ffd37a"}}
+      ]
+    },
+    "s4": {
+      "width": 1920, "height": 1080, "dur": 5.8,
+      "layers": [
+        {"type": "solid", "color": "#07090f"},
+        {"type": "texture", "shader": "bokeh", "params": {"density": 0.36, "scale": 60, "brightness": 0.34, "tint": "#e8c48a", "seed": 11}, "blend": "screen", "opacity": 0.42},
+        {"type": "text", "id": "kicker", "role": "body", "text": "STEPS", "font": "title", "weight": 700, "tracking": 10, "color": "#ffd37a",
+         "pos": [960, 88], "align": "center", "preset": {"name": "tracking_in", "at": 0.05}},
+        {"type": "text", "id": "line", "role": "title", "text": "How the bet pays", "font": "title", "weight": 800, "color": "#f4f7ff",
+         "pos": [960, 200], "align": "center", "preset": {"name": "reveal", "at": 0.15}},
+        {"type": "precomp", "id": "chain", "block": "step_chain", "pos": [960, 560], "scale": 1.08,
+         "vars": {"one": "The fee arrives", "two": "The risk sits", "three": "The market moves", "four": "Someone pays"}}
+      ]
+    },
+    "s5": {
+      "width": 1920, "height": 1080, "dur": 6.4,
+      "layers": [
+        {"type": "solid", "color": "#07090f"},
+        {"type": "texture", "shader": "bokeh", "params": {"density": 0.48, "scale": 80, "brightness": 0.48, "tint": "#ff8a4a", "seed": 13}, "blend": "screen", "opacity": 0.5},
+        {"type": "text", "id": "kicker", "role": "body", "text": "STAMP", "font": "title", "weight": 700, "tracking": 10, "color": "#ff6a3d",
+         "pos": [960, 88], "align": "center", "preset": {"name": "tracking_in", "at": 0.05}},
+        {"type": "precomp", "id": "hit", "block": "stamp", "pos": [960, 360], "start": 0.25,
+         "vars": {"text": "WRONG TRADE"}},
+        {"type": "precomp", "id": "loss", "block": "stat", "pos": [960, 780], "start": 0.7, "scale": 0.72,
+         "vars": {"to": 827, "prefix": "£", "suffix": "m", "label": "GONE", "count_time": 1.8}},
+        {"type": "adjustment", "fx": [{"effect": "grade", "sat": 1.06, "tint": [255, 90, 40], "tint_k": 0.1}, {"effect": "vignette", "strength": 0.2}]}
+      ]
+    }
+  },
+  "layers": [
+    {"type": "solid", "color": "#07090f"},
+    {"type": "texture", "id": "floor", "shader": "bokeh", "params": {"density": 0.46, "scale": 74, "brightness": 0.48, "tint": "#e8c48a", "seed": 5}, "blend": "screen", "opacity": 0.62},
+    {"type": "audio", "id": "music", "src": "../showcase/music.wav", "volume": 0.22, "fade_out": 1.4},
+    {"type": "audio", "src": "kit:reveal",  "start": 0.25, "volume": 0.55},
+    {"type": "audio", "src": "kit:card-in", "start": 4.1,  "volume": 0.7},
+    {"type": "audio", "src": "kit:reveal",  "start": 10.75, "volume": 0.5},
+    {"type": "audio", "src": "kit:card-in", "start": 15.35, "volume": 0.65},
+    {"type": "audio", "src": "kit:stamp",   "start": 20.85, "volume": 0.9},
+    {"type": "audio", "src": "kit:counter", "start": 21.3,  "volume": 0.65},
+    {"type": "audio", "src": "kit:loss",    "start": 21.4,  "volume": 0.75},
+    {"type": "precomp", "id": "type",  "comp": "s1", "start": 0,    "dur": 4.4,
+     "scale": {"from": 0.986, "to": 1.0, "dur": 4.4, "ease": "sine.out"},
+     "exit": {"preset": "fade", "dur": 0.4}},
+    {"type": "precomp", "id": "holo", "comp": "s2", "start": 4.0,  "dur": 7.0,
+     "scale": {"from": 0.988, "to": 1.0, "dur": 7.0, "ease": "sine.out"},
+     "enter": {"preset": "whip_left", "dur": 0.42}, "exit": {"preset": "fade", "dur": 0.4}},
+    {"type": "precomp", "id": "define","comp": "s3", "start": 10.6, "dur": 5.0,
+     "scale": {"from": 0.988, "to": 1.0, "dur": 5.0, "ease": "sine.out"},
+     "enter": {"preset": "whip_left", "dur": 0.42}, "exit": {"preset": "fade", "dur": 0.4}},
+    {"type": "precomp", "id": "steps", "comp": "s4", "start": 15.2, "dur": 5.8,
+     "scale": {"from": 0.988, "to": 1.0, "dur": 5.8, "ease": "sine.out"},
+     "enter": {"preset": "whip_left", "dur": 0.42}, "exit": {"preset": "fade", "dur": 0.4}},
+    {"type": "precomp", "id": "stamp", "comp": "s5", "start": 20.6, "dur": 6.4,
+     "scale": {"from": 0.988, "to": 1.0, "dur": 6.4, "ease": "sine.out"},
+     "enter": {"preset": "whip_left", "dur": 0.42}},
+    {"type": "solid", "id": "fadeout", "color": "#000000", "start": 26.2, "dur": 1.2,
+     "opacity": {"from": 0, "to": 1, "dur": 1.2, "ease": "none"}}
+  ]
+}

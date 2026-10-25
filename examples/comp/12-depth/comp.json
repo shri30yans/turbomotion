@@ -1,0 +1,19 @@
+{
+  "width": 1920, "height": 1080, "fps": 30, "dur": 8.0,
+  "bg": "#05070f",
+  "type": {"display": 140, "title": 48, "body": 28},
+  "fonts": {"display": "Avenir Next Condensed", "title": "Avenir Next"},
+  "look": [{"effect": "grain", "amount": 0.08}, {"effect": "vignette", "strength": 0.28}],
+  "layers": [
+    {"type": "solid", "color": "#05070f"},
+    {"type": "texture", "shader": "floor", "params": {"horizon": 0.58, "vanish": [0.5, 0.48], "cells": 8, "line": "#1a5e7a", "haze": "#05070f", "glow": 0.4}},
+    {"type": "texture", "shader": "dust", "params": {"tint": "#d9ecff", "density": 0.4, "speed": 0.12, "seed": 4}, "blend": "screen", "opacity": 0.35},
+    {"type": "text", "id": "kicker", "role": "body", "text": "DEPTH", "font": "title", "weight": 700, "tracking": 10, "color": "#e2c48a",
+     "pos": [960, 96], "align": "center", "preset": {"name": "tracking_in", "at": 0.05}},
+    {"type": "precomp", "id": "deck", "block": "deck_3d", "pos": [820, 540], "scale": 0.92,
+     "enter": {"preset": "fade", "dur": 0.3}},
+    {"type": "precomp", "id": "face", "block": "reaction", "pos": [1580, 420], "start": 0.6, "scale": 1.15,
+     "vars": {"glyph": "📉", "color": "#e2c48a"},
+     "enter": {"preset": "fade", "dur": 0.35}}
+  ]
+}

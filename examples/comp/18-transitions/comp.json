@@ -1,0 +1,19 @@
+{
+  "width": 1280, "height": 720, "fps": 30, "bg": "#0e0d14",
+  "timeline": {
+    "shots": [
+      {"id": "a", "dur": 2.0, "layers": [
+        {"type": "solid", "color": "#c8ff4a", "size": [1280, 720]},
+        {"type": "shape", "pos": [640, 360], "items": [{"rect": [-260, -160, 520, 320], "radius": 28, "fill": "#121014"}]},
+        {"type": "text", "text": "ONE", "pos": [640, 360], "size": 150, "color": "#c8ff4a", "weight": 800, "align": "center"}]},
+      {"id": "b", "dur": 2.0, "in": {"type": "window", "dur": 1.0, "portal": [0.5, 0.5, 0.36], "radius": 36}, "layers": [
+        {"type": "solid", "color": "#f2c8ff", "size": [1280, 720]},
+        {"type": "shape", "pos": [640, 360], "items": [{"ellipse": [0, 0, 190, 190], "fill": "#2a6cff"}]},
+        {"type": "text", "text": "TWO", "pos": [640, 360], "size": 150, "color": "#ffffff", "weight": 800, "align": "center"}]},
+      {"id": "c", "dur": 2.0, "in": {"type": "cross_zoom", "dur": 1.0}, "layers": [
+        {"type": "solid", "color": "#f08c6a", "size": [1280, 720]},
+        {"type": "shape", "pos": [640, 360], "items": [{"rect": [-300, -60, 600, 120], "radius": 60, "fill": "#121014"}]},
+        {"type": "text", "text": "THREE", "pos": [640, 360], "size": 120, "color": "#f08c6a", "weight": 800, "align": "center"}]}
+    ]
+  }
+}

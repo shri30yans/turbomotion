@@ -1,0 +1,8 @@
+[
+  {"visible_by": {"layer": "flash", "t": 0.4}},
+  {"visible_by": {"layer": "lightning", "t": 2.6}},
+  {"visible_by": {"layer": "shock", "t": 5.0}},
+  {"visible_by": {"layer": "optical", "t": 7.2}},
+  {"visible_by": {"layer": "archive", "t": 9.6}},
+  {"stays_in_frame": {"layer": "flash", "safe": 1.0}}
+]

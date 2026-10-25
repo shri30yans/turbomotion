@@ -1,0 +1,5 @@
+[
+  {"visible_by": {"layer": "deck", "t": 0.8}},
+  {"visible_by": {"layer": "face", "t": 1.2}},
+  {"keeps_moving": {"window": 2.5}}
+]

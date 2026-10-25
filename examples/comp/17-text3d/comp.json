@@ -1,0 +1,341 @@
+{
+ "width": 1920,
+ "height": 1080,
+ "fps": 30,
+ "dur": 4,
+ "bg": "#10131f",
+ "layers": [
+  {
+   "type": "camera",
+   "zoom": 1800,
+   "pos": [
+    "960+1800*sin(-0.25+0.125*time)",
+    "470-60*sin(time*0.8)",
+    "-1800*cos(-0.25+0.125*time)"
+   ],
+   "poi": [
+    960,
+    540,
+    0
+   ]
+  },
+  {
+   "type": "light",
+   "kind": "ambient",
+   "color": "#5a6a9a",
+   "intensity": 0.6
+  },
+  {
+   "type": "light",
+   "kind": "point",
+   "pos": [
+    420,
+    -200,
+    -900
+   ],
+   "color": "#ffd9a0",
+   "intensity": 1.7,
+   "radius": 2200,
+   "shine": 1.0
+  },
+  {
+   "type": "light",
+   "kind": "point",
+   "pos": [
+    1700,
+    300,
+    -700
+   ],
+   "color": "#6fa8ff",
+   "intensity": 0.7,
+   "radius": 2200,
+   "shine": 1.0
+  },
+  {
+   "type": "solid",
+   "id": "bg",
+   "color": "#10131f",
+   "size": [
+    4000,
+    2400
+   ],
+   "three_d": true,
+   "lit": false,
+   "pos": [
+    960,
+    540,
+    600
+   ]
+  },
+  {
+   "type": "mesh",
+   "id": "l0",
+   "three_d": true,
+   "color": "#e8402f",
+   "side": "#7a1710",
+   "material": {
+    "specular": 0.8,
+    "shininess": 40
+   },
+   "pos": [
+    331,
+    540,
+    0
+   ],
+   "rot_x": {
+    "from": 80,
+    "to": 0,
+    "at": 0.0,
+    "dur": 0.9,
+    "ease": "back.out(1.4)"
+   },
+   "rot_y": {
+    "from": -140,
+    "to": 0,
+    "at": 0.0,
+    "dur": 0.9,
+    "ease": "back.out(1.4)"
+   },
+   "opacity": {
+    "from": 0,
+    "to": 1,
+    "at": 0.0,
+    "dur": 0.12
+   },
+   "geometry": {
+    "kind": "text",
+    "text": "M",
+    "font": "Avenir Next",
+    "weight": 800,
+    "size": 300,
+    "depth": 80,
+    "bevel": 7
+   }
+  },
+  {
+   "type": "mesh",
+   "id": "l1",
+   "three_d": true,
+   "color": "#f58a1f",
+   "side": "#80420a",
+   "material": {
+    "specular": 0.8,
+    "shininess": 40
+   },
+   "pos": [
+    620,
+    540,
+    0
+   ],
+   "rot_x": {
+    "from": 80,
+    "to": 0,
+    "at": 0.12,
+    "dur": 0.9,
+    "ease": "back.out(1.4)"
+   },
+   "rot_y": {
+    "from": -140,
+    "to": 0,
+    "at": 0.12,
+    "dur": 0.9,
+    "ease": "back.out(1.4)"
+   },
+   "opacity": {
+    "from": 0,
+    "to": 1,
+    "at": 0.12,
+    "dur": 0.12
+   },
+   "geometry": {
+    "kind": "text",
+    "text": "O",
+    "font": "Avenir Next",
+    "weight": 800,
+    "size": 300,
+    "depth": 80,
+    "bevel": 7
+   }
+  },
+  {
+   "type": "mesh",
+   "id": "l2",
+   "three_d": true,
+   "color": "#f2c230",
+   "side": "#7d5f0a",
+   "material": {
+    "specular": 0.8,
+    "shininess": 40
+   },
+   "pos": [
+    864,
+    540,
+    0
+   ],
+   "rot_x": {
+    "from": 80,
+    "to": 0,
+    "at": 0.24,
+    "dur": 0.9,
+    "ease": "back.out(1.4)"
+   },
+   "rot_y": {
+    "from": -140,
+    "to": 0,
+    "at": 0.24,
+    "dur": 0.9,
+    "ease": "back.out(1.4)"
+   },
+   "opacity": {
+    "from": 0,
+    "to": 1,
+    "at": 0.24,
+    "dur": 0.12
+   },
+   "geometry": {
+    "kind": "text",
+    "text": "T",
+    "font": "Avenir Next",
+    "weight": 800,
+    "size": 300,
+    "depth": 80,
+    "bevel": 7
+   }
+  },
+  {
+   "type": "mesh",
+   "id": "l3",
+   "three_d": true,
+   "color": "#2fb8a6",
+   "side": "#0f5a50",
+   "material": {
+    "specular": 0.8,
+    "shininess": 40
+   },
+   "pos": [
+    1024,
+    540,
+    0
+   ],
+   "rot_x": {
+    "from": 80,
+    "to": 0,
+    "at": 0.36,
+    "dur": 0.9,
+    "ease": "back.out(1.4)"
+   },
+   "rot_y": {
+    "from": -140,
+    "to": 0,
+    "at": 0.36,
+    "dur": 0.9,
+    "ease": "back.out(1.4)"
+   },
+   "opacity": {
+    "from": 0,
+    "to": 1,
+    "at": 0.36,
+    "dur": 0.12
+   },
+   "geometry": {
+    "kind": "text",
+    "text": "I",
+    "font": "Avenir Next",
+    "weight": 800,
+    "size": 300,
+    "depth": 80,
+    "bevel": 7
+   }
+  },
+  {
+   "type": "mesh",
+   "id": "l4",
+   "three_d": true,
+   "color": "#3d7be8",
+   "side": "#16337a",
+   "material": {
+    "specular": 0.8,
+    "shininess": 40
+   },
+   "pos": [
+    1213,
+    540,
+    0
+   ],
+   "rot_x": {
+    "from": 80,
+    "to": 0,
+    "at": 0.48,
+    "dur": 0.9,
+    "ease": "back.out(1.4)"
+   },
+   "rot_y": {
+    "from": -140,
+    "to": 0,
+    "at": 0.48,
+    "dur": 0.9,
+    "ease": "back.out(1.4)"
+   },
+   "opacity": {
+    "from": 0,
+    "to": 1,
+    "at": 0.48,
+    "dur": 0.12
+   },
+   "geometry": {
+    "kind": "text",
+    "text": "O",
+    "font": "Avenir Next",
+    "weight": 800,
+    "size": 300,
+    "depth": 80,
+    "bevel": 7
+   }
+  },
+  {
+   "type": "mesh",
+   "id": "l5",
+   "three_d": true,
+   "color": "#9a5be0",
+   "side": "#41207a",
+   "material": {
+    "specular": 0.8,
+    "shininess": 40
+   },
+   "pos": [
+    1474,
+    540,
+    0
+   ],
+   "rot_x": {
+    "from": 80,
+    "to": 0,
+    "at": 0.6,
+    "dur": 0.9,
+    "ease": "back.out(1.4)"
+   },
+   "rot_y": {
+    "from": -140,
+    "to": 0,
+    "at": 0.6,
+    "dur": 0.9,
+    "ease": "back.out(1.4)"
+   },
+   "opacity": {
+    "from": 0,
+    "to": 1,
+    "at": 0.6,
+    "dur": 0.12
+   },
+   "geometry": {
+    "kind": "text",
+    "text": "N",
+    "font": "Avenir Next",
+    "weight": 800,
+    "size": 300,
+    "depth": 80,
+    "bevel": 7
+   }
+  }
+ ]
+}
