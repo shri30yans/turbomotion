@@ -3,6 +3,8 @@
 import { Layer, shape, text } from "../layers";
 import type { Timeline } from "../timeline";
 import { Part, THEME, Theme, alpha } from "./util";
+import { entrance } from "./appear";
+import type { AppearOpt } from "./appear";
 
 export interface Bar {
   label: string;
@@ -13,6 +15,8 @@ export interface Bar {
 }
 
 export interface BarRaceOpts {
+  /** An entrance for the whole component (an engine preset such as "fade" or "slide_up", or a spec); see `appear`. */
+  appear?: AppearOpt;
   tl: Timeline;
   bars: Bar[];
   at: number;
@@ -59,5 +63,5 @@ export function barRace(o: BarRaceOpts): Part {
     );
     if (sfx) tl.hit(at + i * 0.05, sfx, 0.5);
   });
-  return { layers, end };
+  return entrance({ layers, end }, o.appear, at);
 }

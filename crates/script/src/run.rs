@@ -4,6 +4,7 @@
 //! no timers, and the script is run exactly once. The same script and options always give the same bytes.
 
 use std::{
+    collections::BTreeMap,
     path::{Path, PathBuf},
     sync::{Arc, Mutex},
     time::{Duration, Instant},
@@ -56,8 +57,22 @@ const PRELUDE: &str = r#"
 })();
 "#;
 
+/// A built film plus what the run touched: every file it read, and (when asked) where each layer was created.
+pub struct Built {
+    pub film: Json,
+    /// Source files that, when edited, change the film: the script, its imports, `svgFile` reads and the chosen SDK tree.
+    pub files: Vec<PathBuf>,
+    /// Layer id -> `film.ts:LINE:COL` of the author's line that made it (only with `track_sites`).
+    pub sites: BTreeMap<String, String>,
+}
+
 /// Run `file` and return the composition it produces.
 pub fn build(file: &Path, options: &Options) -> Result<Json> {
+    Ok(build_full(file, options, false)?.film)
+}
+
+/// `build`, also reporting the files the run read and, with `track_sites`, the line that created every layer.
+pub fn build_full(file: &Path, options: &Options, track_sites: bool) -> Result<Built> {
     let source = std::fs::read_to_string(file).with_context(|| format!("reading {}", file.display()))?;
     let name = std::path::absolute(file).unwrap_or_else(|_| file.to_path_buf()).to_string_lossy().into_owned();
     let shared: Shared = Arc::new(Mutex::new(Registry::default()));
@@ -72,9 +87,10 @@ pub fn build(file: &Path, options: &Options) -> Result<Json> {
     let limit = options.time_limit;
     rt.set_interrupt_handler(Some(Box::new(move || started.elapsed() > limit)));
     let ctx = Context::full(&rt)?;
-    let text = ctx
-        .with(|ctx| -> std::result::Result<String, String> {
-            run_module(&ctx, &name, js, options).map_err(|e| report(&ctx, e, &shared, options))
+    let reads: crate::assets::Reads = Default::default();
+    let (text, raw_sites) = ctx
+        .with(|ctx| -> std::result::Result<(String, String), String> {
+            run_module(&ctx, &name, js, options, &reads, track_sites).map_err(|e| report(&ctx, e, &shared, options))
         })
         .map_err(|m| anyhow!(m))?;
     let mut json: Json = serde_json::from_str(&text).context("the film is not valid JSON")?;
@@ -87,12 +103,30 @@ pub fn build(file: &Path, options: &Options) -> Result<Json> {
         };
         object.insert("root".into(), Json::String(root.to_string_lossy().into_owned()));
     }
-    Ok(json)
+    let registry = shared.lock().unwrap();
+    let mut files: Vec<PathBuf> = registry.modules.keys().filter_map(|m| match m.strip_prefix("sdk:") {
+        Some(sdk) => options.sdk_dir.as_ref().map(|d| d.join(sdk).with_extension("ts")),
+        None => Some(PathBuf::from(m)),
+    }).collect();
+    files.extend(reads.lock().unwrap().iter().cloned());
+    files.sort();
+    files.dedup();
+    let sites: BTreeMap<String, String> = serde_json::from_str::<BTreeMap<String, String>>(&raw_sites).unwrap_or_default().into_iter()
+        .map(|(id, site)| (id, clean_site(&map_line(&site, &registry)))).collect();
+    Ok(Built { film: json, files, sites })
 }
 
-fn run_module<'js>(ctx: &Ctx<'js>, name: &str, js: String, options: &Options) -> std::result::Result<String, rquickjs::CaughtError<'js>> {
+/// `fn (film.ts:12:5)` or `film.ts:12:5` -> `film.ts:12:5`.
+fn clean_site(site: &str) -> String {
+    let inner = site.rsplit_once('(').map_or(site, |(_, rest)| rest.trim_end_matches(')'));
+    inner.to_string()
+}
+
+fn run_module<'js>(ctx: &Ctx<'js>, name: &str, js: String, options: &Options, reads: &crate::assets::Reads, track_sites: bool) -> std::result::Result<(String, String), rquickjs::CaughtError<'js>> {
     crate::animation::install(ctx).catch(ctx)?;
     crate::measure::install(ctx, Path::new(name).parent().unwrap()).catch(ctx)?;
+    crate::assets::install(ctx, Path::new(name).parent().unwrap(), reads.clone()).catch(ctx)?;
+    if track_sites { ctx.eval::<(), _>("globalThis.__tm_sites = {};").catch(ctx)?; }
     let print = Function::new(ctx.clone(), |line: String| eprintln!("{line}")).catch(ctx)?;
     ctx.globals().set("__print", print).catch(ctx)?;
     ctx.eval::<(), _>(PRELUDE.replace("__SEED__", &options.seed.to_string())).catch(ctx)?;
@@ -111,7 +145,7 @@ fn run_module<'js>(ctx: &Ctx<'js>, name: &str, js: String, options: &Options) ->
     }
     let text = ctx.json_stringify(film).catch(ctx)?;
     match text {
-        Some(t) => t.to_string().catch(ctx),
+        Some(t) => Ok((t.to_string().catch(ctx)?, ctx.eval::<String, _>("JSON.stringify(globalThis.__tm_sites || {})").catch(ctx)?)),
         None => Err(rquickjs::CaughtError::Error(rquickjs::Error::new_from_js_message("script", "film", "the default export cannot be turned into JSON"))),
     }
 }

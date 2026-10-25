@@ -1,13 +1,11 @@
 use std::{fs, path::{Path, PathBuf}, time::Duration};
 
+mod common;
+
 use turbomotion_script::{build, Options};
 
 /// A scratch folder per test, under cargo's own target tmp dir.
-fn dir(name: &str) -> PathBuf {
-    let d = Path::new(env!("CARGO_TARGET_TMPDIR")).join("sdk-tests").join(name);
-    fs::create_dir_all(&d).unwrap();
-    d
-}
+fn dir(name: &str) -> PathBuf { common::scratch("sdk-tests", name) }
 
 fn film(name: &str, files: &[(&str, &str)]) -> PathBuf {
     let d = dir(name);
@@ -76,26 +74,26 @@ fn tweens_on_one_property_merge_into_one_key_list() {
 
 #[test]
 fn from_tweens_and_stagger_offset_each_layer() {
-    let v = run("stagger", &format!("{HEAD}const ls = letters3d(\"ABC\", {{ pos: [640, 360, 0], size: 100 }});\nconst tl = timeline();\ntl.from(ls, {{ rot_x: -90, opacity: 0, z: -300, duration: 0.5, stagger: 0.1 }}, 0.2);\nfilm.add(ls);\nexport default film;\n"));
-    let ats: Vec<f64> = (0..3).map(|i| v["layers"][i]["rot_x"]["at"].as_f64().unwrap()).collect();
+    let v = run("stagger", &format!("{HEAD}const ls = letters3d(\"ABC\", {{ pos: [640, 360, 0], size: 100 }});\nconst tl = timeline();\ntl.from(ls, {{ rotation: [-90, null, null], opacity: 0, z: -300, duration: 0.5, stagger: 0.1 }}, 0.2);\nfilm.add(ls);\nexport default film;\n"));
+    let ats: Vec<f64> = (0..3).map(|i| v["layers"][i]["rotation"][0]["at"].as_f64().unwrap()).collect();
     assert_eq!(ats, vec![0.2, 0.3, 0.4]);
     let l = &v["layers"][1];
-    assert_eq!(l["rot_x"]["from"], -90);
-    assert_eq!(l["rot_x"]["to"], 0);
+    assert_eq!(l["rotation"][0]["from"], -90);
+    assert_eq!(l["rotation"][0]["to"], 0);
     assert_eq!(l["opacity"]["to"], 1);
     assert_eq!(l["pos"][2]["from"], -300);
     assert_eq!(l["pos"][2]["to"], 0);
     assert_eq!(l["ease"], serde_json::Value::Null);
-    assert_eq!(l["rot_x"]["ease"], "power1.out");
+    assert_eq!(l["rotation"][0]["ease"], "power1.out");
 }
 
 #[test]
 fn text3d_is_a_mesh_with_a_text_geometry() {
-    let v = run("t3d", &format!("{HEAD}film.add(text3d(\"Hi\", {{ font: \"Avenir Next\", weight: 800, size: 200, depth: 60, bevel: 4, color: \"#fff\", side: \"#a00\", pos: [1, 2, 3], rot_y: 20 }}));\nexport default film;\n"));
+    let v = run("t3d", &format!("{HEAD}film.add(text3d(\"Hi\", {{ font: \"Avenir Next\", weight: 800, size: 200, depth: 60, bevel: 4, color: \"#fff\", side: \"#a00\", pos: [1, 2, 3], rotation: [0, 20, 0] }}));\nexport default film;\n"));
     let t = v["layers"][0].as_object().unwrap();
     let mut keys: Vec<_> = t.keys().cloned().collect();
     keys.sort();
-    assert_eq!(keys, ["color", "geometry", "id", "pos", "rot_y", "side", "three_d", "type"]);
+    assert_eq!(keys, ["color", "geometry", "id", "pos", "rotation", "side", "three_d", "type"]);
     assert_eq!(t["type"], "mesh");
     assert_eq!(t["three_d"], true);
     let g = t["geometry"].as_object().unwrap();
@@ -104,11 +102,11 @@ fn text3d_is_a_mesh_with_a_text_geometry() {
 
 #[test]
 fn solids_and_a_turntable_build_valid_mesh_layers() {
-    let src = format!("{HEAD}import {{ box, sphere, torus, cylinder, extrude, spin }} from \"turbomotion\";\nfilm.add([box({{ size: 100, depth: 40 }}, {{ rot_y: spin(90, 20) }}), sphere({{ size: 80 }}), torus({{ size: 90 }}), cylinder({{ size: 60, height: 120, top: 0 }}), extrude({{ d: \"M0 0H10V10Z\", size: 90 }})]);\nexport default film;\n");
+    let src = format!("{HEAD}import {{ box, sphere, torus, cylinder, extrude, spin }} from \"turbomotion\";\nfilm.add([box({{ size: 100, depth: 40 }}, {{ rotation: [0, spin(90, 20), 0] }}), sphere({{ size: 80 }}), torus({{ size: 90 }}), cylinder({{ size: 60, height: 120, top: 0 }}), extrude({{ d: \"M0 0H10V10Z\", size: 90 }})]);\nexport default film;\n");
     let v = run("solids", &src);
     let kinds: Vec<_> = v["layers"].as_array().unwrap().iter().map(|l| l["geometry"]["kind"].as_str().unwrap().to_string()).collect();
     assert_eq!(kinds, ["box", "sphere", "torus", "cylinder", "extrude"]);
-    assert_eq!(v["layers"][0]["rot_y"], "20+time*90");
+    assert_eq!(v["layers"][0]["rotation"], serde_json::json!([0, "20+time*90", 0]));
     turbomotion_comp::plan::Plan::from_value(v, Path::new(".")).unwrap_or_else(|e| panic!("{e:#}"));
 }
 
@@ -165,4 +163,19 @@ fn the_launch_example_builds_and_loads_as_a_composition() {
     let v = build(&root, &Options::default()).unwrap_or_else(|e| panic!("{e:#}"));
     assert_eq!(v["timeline"]["shots"].as_array().unwrap().len(), 2);
     turbomotion_comp::plan::Plan::from_value(v, root.parent().unwrap()).unwrap_or_else(|e| panic!("{e:#}"));
+}
+
+#[test]
+fn a_rotation_names_the_axes_it_moves_and_leaves_the_rest_where_they_are() {
+    let v = run("rot-axes", &format!("{HEAD}const l = group({{ id: \"l\", three_d: true, rotation: [10, 0, 5] }});\nconst tl = timeline();\ntl.to(l, {{ rotation: [null, 90, null], duration: 1 }}, 0);\nfilm.add(l);\nexport default film;\n"));
+    let l = &v["layers"][0];
+    assert_eq!(l["rotation"][0], 10, "the X Rotation stays where it was");
+    assert_eq!(l["rotation"][2], 5, "the Z Rotation stays where it was");
+    assert_eq!(l["rotation"][1]["to"], 90, "only the Y Rotation is tweened");
+}
+
+#[test]
+fn a_rotation_left_half_given_keeps_the_axes_it_does_not_name() {
+    let v = run("rot-holes", &format!("{HEAD}film.add(group({{ id: \"l\", rotation: [null, 90, null] }}));\nexport default film;\n"));
+    assert_eq!(v["layers"][0]["rotation"], serde_json::json!([0, 90, 0]));
 }

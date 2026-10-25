@@ -3,11 +3,12 @@
 use std::{fs, path::{Path, PathBuf}};
 
 use serde_json::Value;
+mod common;
+
 use turbomotion_script::{build, Options};
 
 fn write(name: &str, src: &str) -> PathBuf {
-    let d = Path::new(env!("CARGO_TARGET_TMPDIR")).join("component-tests").join(name);
-    fs::create_dir_all(&d).unwrap();
+    let d = common::scratch("component-tests", name);
     fs::write(d.join("film.ts"), src).unwrap();
     d.join("film.ts")
 }

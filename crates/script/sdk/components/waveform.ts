@@ -4,8 +4,12 @@
 import { Layer, shape, rand } from "turbomotion";
 import type { Timeline } from "turbomotion";
 import { Part, THEME, Theme, r3 } from "./util";
+import { entrance } from "./appear";
+import type { AppearOpt } from "./appear";
 
 export interface WaveformOpts {
+  /** An entrance for the whole component (an engine preset such as "fade" or "slide_up", or a spec); see `appear`. */
+  appear?: AppearOpt;
   tl: Timeline;
   /** Seconds at which the bars start to grow (staggered across the row). */
   at: number;
@@ -48,5 +52,5 @@ export function waveform(o: WaveformOpts): Part {
       id: `${id}-${i}`, pos: [r3(pos[0] - w / 2 + i * step), pos[1]], parent: o.parent as any, scale: [1, `${grow} * ${level}`] as any,
     });
   });
-  return { layers, end: at + 0.55 + bars * 0.012 };
+  return entrance({ layers, end: at + 0.55 + bars * 0.012 }, o.appear, at);
 }

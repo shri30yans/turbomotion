@@ -19,8 +19,15 @@ pub const SDK: &[(&str, &str)] = &[
     ("film-types", include_str!("../sdk/film-types.ts")),
     ("types", include_str!("../sdk/types.ts")),
     ("measure", include_str!("../sdk/measure.ts")),
+    ("site", include_str!("../sdk/site.ts")),
+    ("relative", include_str!("../sdk/relative.ts")),
+    ("item-tweens", include_str!("../sdk/item-tweens.ts")),
+    ("vector-tweens", include_str!("../sdk/vector-tweens.ts")),
+    ("image-check", include_str!("../sdk/image-check.ts")),
+    ("assets", include_str!("../sdk/assets.ts")),
     ("motion", include_str!("../sdk/motion.ts")),
     ("layers", include_str!("../sdk/layers.ts")),
+    ("text-fx", include_str!("../sdk/text-fx.ts")),
     ("three", include_str!("../sdk/three.ts")),
     ("timeline", include_str!("../sdk/timeline.ts")),
     ("comp", include_str!("../sdk/comp.ts")),
@@ -40,6 +47,17 @@ pub const SDK: &[(&str, &str)] = &[
     ("components/waveform", include_str!("../sdk/components/waveform.ts")),
     ("components/textStack", include_str!("../sdk/components/textStack.ts")),
     ("components/cutout", include_str!("../sdk/components/cutout.ts")),
+    ("components/appear", include_str!("../sdk/components/appear.ts")),
+    ("components/cube", include_str!("../sdk/components/cube.ts")),
+    ("components/swarm", include_str!("../sdk/components/swarm.ts")),
+    ("components/flipTile", include_str!("../sdk/components/flipTile.ts")),
+    ("components/capsule", include_str!("../sdk/components/capsule.ts")),
+    ("components/hand", include_str!("../sdk/components/hand.ts")),
+    ("components/lens", include_str!("../sdk/components/lens.ts")),
+    ("components/blob", include_str!("../sdk/components/blob.ts")),
+    ("components/montage", include_str!("../sdk/components/montage.ts")),
+    ("components/dollyZoom", include_str!("../sdk/components/dollyZoom.ts")),
+    ("components/glassPanel", include_str!("../sdk/components/glassPanel.ts")),
 ];
 
 const SDK_PREFIX: &str = "sdk:";
@@ -124,7 +142,7 @@ impl Loader for Load {
                 if let Some(dir) = &self.sdk_dir {
                     let path = dir.join(m).with_extension("ts");
                     let source = std::fs::read_to_string(&path).map_err(|e| Error::new_loading_message(name,
-                        format!("cannot read SDK module {}: {e}; check --sdk-dir and its imports", path.display())))?;
+                        format!("check --sdk-dir and its imports: cannot read SDK module {}: {e}", path.display())))?;
                     (source, path.to_string_lossy().into_owned())
                 } else {
                 let found = SDK.iter().find(|(n, _)| *n == m).ok_or_else(|| Error::new_loading_message(name, format!("the SDK has no module \"{m}\"")))?;

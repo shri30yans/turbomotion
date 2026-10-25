@@ -1,11 +1,14 @@
-// A GSAP-style timeline. `tl.to(layer, { rot_y: 0, duration: 0.8 }, 0.2)` records tweens on the layer; when the layer
-// is written out, all tweens on one property merge into one key list in time order.
+// A GSAP-style timeline. `tl.to(layer, { rotation: [null, 90, null], duration: 0.8 }, 0.2)` records tweens on the layer;
+// when the layer is written out, all tweens on one property merge into one key list in time order.
 
 import { overwritten } from "./overwrite";
+import { flattenItems, isItemKey, itemBase, setItem } from "./item-tweens";
+import { relative } from "./relative";
+import type { Val } from "./relative";
+import { callSite } from "./site";
+import { flattenVector, isVectorKey, parseVectorKey, setVector, VECTORS, vectorBase } from "./vector-tweens";
 import { Layer, describe, list } from "./layers";
 import type { Animatable, Ease, Hit, Seconds, Stagger, TweenVars } from "./types";
-
-type Val = number | string | number[];
 
 export interface Tween {
   prop: string;
@@ -19,16 +22,27 @@ export interface Tween {
   overwrite?: "auto" | false;
 }
 
-const PROPS = ["x", "y", "z", "opacity", "rotation", "rot_x", "rot_y", "scale", "size", "intensity", "zoom", "color"];
+const PROPS = ["x", "y", "z", "opacity", "scale", "size", "intensity", "zoom", "color"];
+const VECTOR_PROPS = ["rotation", "orientation", "aim"];
 const CONTROLS = ["duration", "ease", "delay", "stagger", "sfx", "overwrite"];
-const DEFAULTS: Record<string, number> = { opacity: 1, scale: 1, rotation: 0, rot_x: 0, rot_y: 0, z: 0 };
+const DEFAULTS: Record<string, number> = { opacity: 1, scale: 1, z: 0 };
 const EPS = 1e-4;
-/** The first stack frame outside the SDK: the line of the author's script that made this call. */
-export function callSite(): string {
-  const frames = String(new Error().stack ?? "").split("\n").slice(1);
-  return (frames.find((f) => !f.includes("sdk:")) ?? "").trim().replace(/^at\s+/, "");
-}
 const r6 = (n: number): number => Math.round(n * 1e6) / 1e6;
+
+/** `pos: [x, y, z]` becomes x/y/z tweens, `items: { 0: {...} }` one per item property, and a vector one per component. */
+function flat(vars: Record<string, any>, where: string): Record<string, Val> {
+  const out: Record<string, Val> = {};
+  for (const [key, value] of Object.entries(vars)) {
+    if (key === "pos") {
+      if (!Array.isArray(value) || value.length < 2 || value.length > 3) throw new Error(`${where}: pos is [x, y] or [x, y, z]`);
+      if (["x", "y", "z"].some((a) => a in vars)) throw new Error(`${where}: give "pos" or x/y/z, not both`);
+      value.forEach((c, i) => { if (c !== null && c !== undefined) out["xyz"[i]] = c; });
+    } else if (key === "items") Object.assign(out, flattenItems(value, where));
+    else if (key in VECTORS) Object.assign(out, flattenVector(key, value, where));
+    else out[key] = value;
+  }
+  return out;
+}
 
 export type Position = number | string;
 type Target = Layer | Layer[] | unknown;
@@ -102,9 +116,12 @@ export class Timeline {
   private tween(target: Target, mode: "to" | "from" | "fromTo", fromVars: Animatable | undefined, vars: TweenVars, position?: Position): this {
     const layers = list(target, `tl.${mode === "fromTo" ? "fromTo" : mode}() target`);
     if (!layers.length) throw new Error(`tl.${mode}(): no layers to animate (is the array empty, or the variable undefined?)`);
-    const props = Object.keys(vars).filter((k) => !CONTROLS.includes(k));
-    for (const k of [...props, ...Object.keys(fromVars ?? {}).filter((k) => !CONTROLS.includes(k))]) {
-      if (!PROPS.includes(k)) throw new Error(`tl.${mode}(): "${k}" cannot be animated here; animatable: ${PROPS.join(", ")}`);
+    const where = `tl.${mode}()`;
+    const to = flat(vars, where);
+    const from = fromVars && fromVars !== vars ? flat(fromVars, where) : to;
+    const props = Object.keys(to).filter((k) => !CONTROLS.includes(k));
+    for (const k of [...props, ...Object.keys(from).filter((k) => !CONTROLS.includes(k))]) {
+      if (!PROPS.includes(k) && !isItemKey(k) && !isVectorKey(k)) throw new Error(`${where}: "${k}" cannot be animated here; animatable: ${[...PROPS, ...VECTOR_PROPS].join(", ")}, pos, items`);
     }
     if (vars.overwrite !== undefined && vars.overwrite !== false && vars.overwrite !== "auto") throw new Error('timeline overwrite must be "auto" or false');
     const dur = vars.duration ?? this.defaults.duration ?? 0.5;
@@ -119,13 +136,13 @@ export class Timeline {
       const at = r6(start + offsets[i]);
       if (sfx) this.hit(at, sfx.cue, sfx.volume);
       for (const prop of props) {
-        const v = (vars as Record<string, Val>)[prop];
+        const v = to[prop];
         const tw: Tween = { prop, at, dur: Math.max(dur, EPS), ease: dur === 0 ? "none" : ease, site, overwrite: vars.overwrite };
         if (mode === "to") tw.to = v;
         else if (mode === "from") tw.from = v;
         else {
           tw.to = v;
-          tw.from = (fromVars as Record<string, Val> | undefined)?.[prop];
+          tw.from = from[prop];
         }
         layer.tweens.push(tw);
         end = Math.max(end, at + dur);
@@ -155,12 +172,20 @@ export function compileTweens(out: Record<string, any>, tweens: Tween[], id: str
   const byProp = new Map<string, Tween[]>();
   for (const t of tweens) byProp.set(t.prop, [...(byProp.get(t.prop) ?? []), t]);
   const axes: Record<string, any> = {};
+  const vectors = new Map<string, Map<number, unknown>>();
   for (const [prop, list] of byProp) {
     const sorted = list.map((t, i) => ({ t, i })).sort((a, b) => a.t.at - b.t.at || a.i - b.i).map((x) => x.t);
     const value = mergeProp(sorted, baseOf(out, prop, id), id, prop);
     if (prop === "x" || prop === "y" || prop === "z") axes[prop] = value;
-    else out[prop] = value;
+    else if (isItemKey(prop)) setItem(out, prop, value);
+    else if (isVectorKey(prop)) {
+      const { name, index } = parseVectorKey(prop);
+      const parts = vectors.get(name) ?? new Map<number, unknown>();
+      parts.set(index, value);
+      vectors.set(name, parts);
+    } else out[prop] = value;
   }
+  for (const [name, parts] of vectors) setVector(out, name, parts);
   if (Object.keys(axes).length) {
     const pos = out.pos;
     if (pos !== undefined && !Array.isArray(pos)) throw new Error(`layer "${id}": cannot animate x/y/z when pos is not a list of numbers`);
@@ -174,11 +199,16 @@ export function compileTweens(out: Record<string, any>, tweens: Tween[], id: str
 }
 
 function baseOf(out: Record<string, any>, prop: string, id: string): Val | undefined {
+  if (isItemKey(prop)) return itemBase(out, prop, id);
   if (prop === "x" || prop === "y" || prop === "z") {
     const v = Array.isArray(out.pos) ? out.pos[{ x: 0, y: 1, z: 2 }[prop]!] : undefined;
     if (typeof v === "number") return v;
     if (prop === "z") return 0;
     return undefined;
+  }
+  if (isVectorKey(prop)) {
+    const { name, index } = parseVectorKey(prop);
+    return vectorBase(out, name, index, id);
   }
   const v = out[prop];
   if (v === undefined) return DEFAULTS[prop];
@@ -192,8 +222,10 @@ function mergeProp(tweens: Tween[], base: Val | undefined, id: string, prop: str
   let cur = base;
   let simple = true;
   for (const tw of tweens) {
-    const from = tw.from ?? cur;
-    const to = tw.to ?? base;
+    const where = `layer "${id}": "${prop}"`;
+    const from = tw.from === undefined ? cur : relative(tw.from, cur, where);
+    const end = tw.to === undefined ? base : tw.to;
+    const to = end === undefined ? end : relative(end, from, where);
     if (from === undefined || to === undefined) {
       throw new Error(`layer "${id}": cannot tween "${prop}" without a start and an end value; give the layer a starting "${prop}" (or use fromTo)`);
     }

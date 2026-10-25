@@ -6,9 +6,13 @@
 
 export { comp, shot, Film, Shot } from "./comp";
 export { Layer, text, solid, image, shape, rect, group, camera, light, raw } from "./layers";
+export { textOnPath, orbitText, wrapText, marquee, charFlip, decode, outlineText } from "./text-fx";
 export { mesh, box, sphere, torus, cylinder, extrude, text3d, letters3d, spin } from "./three";
 export { timeline, Timeline } from "./timeline";
-export { audio, hit } from "./sound";
+export { svg, svgFile, pixelSprite } from "./assets";
+export type { SvgOpts, PixelOpts } from "./assets";
+export { audio, hit, melody, drumPattern, scale, transpose } from "./sound";
+export type { MelodyOpts, DrumOpts, Step } from "./sound";
 export { stage, Stage } from "./stage";
 export type { Pose, GoOptions } from "./stage";
 export * from "./components/index";

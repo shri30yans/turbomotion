@@ -8,6 +8,7 @@
 //   shot({ layers: [hand] });                 // pos, scale, rotation and opacity of `hand.root` are yours to move
 
 import { Layer, group, image, raw, shape } from "../layers";
+import { mergeProps } from "./util";
 import type { Part } from "./util";
 
 /** A looping wave: one full cycle every `period` seconds, offset by `phase` (0..1 of a cycle). */
@@ -58,22 +59,23 @@ export function cutout(o: CutoutOpts): Part {
   if (typeof o.src === "string" && !o.size) throw new Error(`cutout "${id}": an image needs size: [w, h]`);
   const pivotY = o.pivot === "base" ? h / 2 : o.pivot === "top" ? -h / 2 : 0;
   // an image measures its anchor from its top-left corner; a built layer (shapes) from its own centre
-  const anchor = typeof o.src === "string" ? [w / 2, h / 2 + pivotY] : [0, pivotY];
+  const anchor: [number, number] = typeof o.src === "string" ? [w / 2, h / 2 + pivotY] : [0, pivotY];
 
   const float = idle.float ? `${-idle.float.amp}*${wave(idle.float)}` : "0";
-  const bodyProps = {
-    id: `${id}-body`,
-    pos: [idle.drift ? `${idle.drift.amp}*${wave(idle.drift)}` : 0, idle.float ? float : 0],
-    ...(idle.sway ? { rotation: `${idle.sway.deg}*${wave(idle.sway)}`, anchor } : {}),
-    ...(idle.breathe ? { scale: `1+${idle.breathe.amount}*${wave(idle.breathe)}` } : {}),
-    ...(idle.tilt ? {
-      three_d: true,
-      rot_x: `${idle.tilt.x}*${wave(idle.tilt)}`,
-      rot_y: `${idle.tilt.y}*sin((time/${idle.tilt.period}+${(idle.tilt.phase ?? 0) + 0.25})*tau)`,
-    } : {}),
-    ...(o.fx ? { fx: o.fx } : {}),
-  };
-  const body = typeof o.src === "string" ? image(o.src, { ...bodyProps, size: [w, h], fit: "contain" }) : o.src.set(bodyProps);
+  // X and Y Rotation (tilt) and Z Rotation (sway) are three numbers of ONE property, so they are folded into one value
+  const tiltX = idle.tilt ? `${idle.tilt.x}*${wave(idle.tilt)}` : 0;
+  const tiltY = idle.tilt ? `${idle.tilt.y}*sin((time/${idle.tilt.period}+${(idle.tilt.phase ?? 0) + 0.25})*tau)` : 0;
+  const swayZ = idle.sway ? `${idle.sway.deg}*${wave(idle.sway)}` : 0;
+  const rotation = idle.tilt ? [tiltX, tiltY, swayZ] : idle.sway ? swayZ : undefined;
+  const bodyProps = mergeProps(`cutout "${id}"`,
+    { id: `${id}-body`, pos: [idle.drift ? `${idle.drift.amp}*${wave(idle.drift)}` : 0, idle.float ? float : 0] },
+    rotation !== undefined ? { rotation } : {},
+    idle.sway ? { anchor } : {},
+    idle.breathe ? { scale: `1+${idle.breathe.amount}*${wave(idle.breathe)}` } : {},
+    idle.tilt ? { three_d: true } : {},
+    o.fx ? { fx: o.fx } : {},
+  );
+  const body = typeof o.src === "string" ? image(o.src, mergeProps(`cutout "${id}"`, bodyProps, { size: [w, h], fit: "contain" })) : o.src.set(bodyProps);
 
   const parts: Layer[] = [];
   let shadow: Layer | undefined;

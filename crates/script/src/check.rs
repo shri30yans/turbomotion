@@ -7,7 +7,22 @@ use serde_json::json;
 use crate::loader::{sdk_directory, SDK};
 
 static NEXT_CONFIG: AtomicU64 = AtomicU64::new(0);
-pub struct Report { pub success: bool, pub diagnostics: String }
+pub struct Report { pub success: bool, pub diagnostics: String, pub mode: &'static str }
+
+pub const TSC_MODE: &str = "tsc (strict TypeScript compiler)";
+
+/// Type check with `compiler` (or `tsc` from PATH); with no compiler installed, fall back to validating the film's output
+/// against the engine. `schema_only` skips the compiler. An explicit `compiler` that cannot run is an error, never a fallback.
+pub fn auto(file: &Path, sdk: Option<&Path>, compiler: Option<&Path>, schema_only: bool) -> Result<Report> {
+    if !schema_only {
+        match compiler {
+            Some(path) => return check(file, sdk, path),
+            None if Command::new("tsc").arg("--version").output().is_ok() => return check(file, sdk, Path::new("tsc")),
+            None => {}
+        }
+    }
+    crate::fallback::schema(file, sdk)
+}
 
 pub fn check(file: &Path, sdk: Option<&Path>, compiler: &Path) -> Result<Report> {
     let file = fs::canonicalize(file).with_context(|| format!("reading film {}", file.display()))?;
@@ -30,7 +45,7 @@ pub fn check(file: &Path, sdk: Option<&Path>, compiler: &Path) -> Result<Report>
         .output().with_context(|| format!("running TypeScript compiler {}; install TypeScript locally or pass --tsc <path-to-tsc-or-tsc.js>; no packages are downloaded automatically", compiler.display()))?;
     let diagnostics = format!("{}{}", String::from_utf8_lossy(&output.stdout), String::from_utf8_lossy(&output.stderr));
     ensure!(output.status.success() || !diagnostics.trim().is_empty(), "TypeScript compiler exited {} without diagnostics; check --tsc", output.status);
-    Ok(Report { success: output.status.success(), diagnostics })
+    Ok(Report { success: output.status.success(), diagnostics, mode: TSC_MODE })
 }
 
 /// Write the SDK compiled into this binary to `target`, so `tsc` checks the same sources the film will run against.

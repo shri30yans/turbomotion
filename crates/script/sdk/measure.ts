@@ -28,3 +28,5 @@ export function measure(text: string, options: MeasureOptions = {}): Measured {
   if (typeof text !== "string") throw new Error("measure(text, options): text must be a string");
   return JSON.parse(__tm_measure(JSON.stringify({ ...options, text }), JSON.stringify(fonts), root));
 }
+/** The asset root the latest comp() declared (relative to the script's folder). */
+export const filmRoot = (): string => root;

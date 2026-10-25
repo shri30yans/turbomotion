@@ -6,7 +6,7 @@ use anyhow::{Context, Result};
 use clap::{Args, Subcommand};
 use turbomotion_comp::cli as comp;
 
-use crate::run::{build, summary, Options};
+use crate::run::{build_full, summary, Options};
 
 #[derive(Args)]
 pub struct Script {
@@ -27,11 +27,39 @@ pub enum Command {
         file: PathBuf,
         #[arg(long)]
         sdk_dir: Option<PathBuf>,
-        /// Installed tsc executable or tsc.js; never downloads packages
-        #[arg(long, default_value = "tsc")]
-        tsc: PathBuf,
+        /// Installed tsc executable or tsc.js (default: `tsc` on PATH); never downloads packages
+        #[arg(long)]
+        tsc: Option<PathBuf>,
+        /// Skip the compiler: run the film and validate every layer it emits against the engine
+        #[arg(long)]
+        schema: bool,
         #[arg(long)]
         json: bool,
+    },
+    /// Evaluate a film at a time and print one layer's state (`--layer shot/layer` reaches inside shots)
+    Inspect {
+        #[command(flatten)]
+        script: Script,
+        #[arg(long)]
+        t: f64,
+        #[arg(long)]
+        layer: Option<String>,
+    },
+    /// Re-render a contact sheet whenever the script or anything it imports changes
+    Watch {
+        #[command(flatten)]
+        script: Script,
+        #[arg(long)]
+        sheet: PathBuf,
+        /// Sheet times in seconds (shot-local with `--shot`); default: eight evenly spread moments
+        #[arg(long, value_delimiter = ',')]
+        times: Vec<f64>,
+        /// Milliseconds between checks for edits
+        #[arg(long, default_value_t = 400)]
+        interval_ms: u64,
+        /// Render once and exit
+        #[arg(long)]
+        once: bool,
     },
     /// Run a script and write the composition JSON it produces
     Build {
@@ -62,14 +90,30 @@ pub enum Command {
 }
 
 pub fn build_to(script: &Script, out: Option<PathBuf>) -> Result<PathBuf> {
+    build_written(script, out).map(|(path, _)| path)
+}
+
+/// Write the composition JSON; also return every source file the build read.
+pub fn build_written(script: &Script, out: Option<PathBuf>) -> Result<(PathBuf, Vec<PathBuf>)> {
     let options = Options { sdk_dir: script.sdk_dir.clone(), ..Options::default() };
-    let mut film = build(&script.file, &options)?;
+    let built = build_full(&script.file, &options, false)?;
+    let (mut film, files) = (built.film, built.files);
     if let Some(id) = &script.shot { crate::shot::isolate(&mut film, id)?; }
     let path = out.unwrap_or_else(|| script.file.with_extension(if script.shot.is_some() { "shot.comp.json" } else { "comp.json" }));
     relativize_root(&mut film, &path)?;
     fs::write(&path, serde_json::to_string_pretty(&film)?).with_context(|| format!("writing {}", path.display()))?;
     println!("{}: {} -> {}", script.file.display(), summary(&film), path.display());
-    Ok(path)
+    Ok((path, files))
+}
+
+/// A contact sheet of `times` (default: eight even moments), drawn through the library.
+pub fn write_sheet(comp_file: &std::path::Path, out: &std::path::Path, times: &[f64]) -> Result<()> {
+    let plan = turbomotion_comp::plan::Plan::load(comp_file)?;
+    let times: Vec<f64> = if times.is_empty() { (0..8).map(|i| plan.root().dur * (f64::from(i) + 0.5) / 8.0).collect() } else { times.to_vec() };
+    let mut renderer = turbomotion_comp::render::Renderer::new(&plan)?;
+    fs::write(out, renderer.sheet(&times, 4, 480)?).with_context(|| format!("writing {}", out.display()))?;
+    println!("sheet of {} moments -> {}", times.len(), out.display());
+    Ok(())
 }
 
 /// `build` resolves the film root to an absolute folder; a file on disk records it relative to itself, so a project can
@@ -92,22 +136,36 @@ fn relativize_root(film: &mut serde_json::Value, written: &std::path::Path) -> R
 
 pub fn run(command: Command) -> Result<()> {
     match command {
-        Command::Check { file, sdk_dir, tsc, json } => {
-            let report = crate::check::check(&file, sdk_dir.as_deref(), &tsc)?;
+        Command::Check { file, sdk_dir, tsc, schema, json } => {
+            let report = crate::check::auto(&file, sdk_dir.as_deref(), tsc.as_deref(), schema)?;
             if json {
-                println!("{}", serde_json::json!({"ok":report.success,"file":file,"diagnostics":report.diagnostics}));
-            } else if report.success { println!("{}: type check passed", file.display()); }
-            else { eprint!("{}", report.diagnostics); }
-            anyhow::ensure!(report.success, "type check failed; fix the diagnostics and run sdk check again");
+                println!("{}", serde_json::json!({"ok":report.success,"file":file,"mode":report.mode,"diagnostics":report.diagnostics}));
+            } else {
+                println!("sdk check mode: {}", report.mode);
+                if report.success { println!("{}: check passed", file.display()); if !report.diagnostics.is_empty() { print!("{}", report.diagnostics); } }
+                else { eprint!("{}", report.diagnostics); }
+            }
+            anyhow::ensure!(report.success, "check failed; fix the diagnostics and run sdk check again");
             Ok(())
         }
+        Command::Inspect { script, t, layer } => {
+            let options = Options { sdk_dir: script.sdk_dir.clone(), ..Options::default() };
+            let mut film = build_full(&script.file, &options, false)?.film;
+            if let Some(id) = &script.shot { crate::shot::isolate(&mut film, id)?; }
+            let dir = fs::canonicalize(&script.file)?.parent().map(PathBuf::from).unwrap_or_default();
+            println!("{}", serde_json::to_string_pretty(&turbomotion_comp::api::inspect(film, &dir, t, layer.as_deref())?)?);
+            Ok(())
+        }
+        Command::Watch { script, sheet, times, interval_ms, once } => crate::watch::run(&crate::watch::Watch {
+            script: &script, sheet: &sheet, times: &times, interval: std::time::Duration::from_millis(interval_ms.max(50)), max_renders: once.then_some(1),
+        }),
         Command::Build { script, out } => build_to(&script, out).map(|_| ()),
         Command::Render { script, out, sheet, times, sheet_only, workers } => {
             // The recorded film root preserves asset paths independently of the output location.
             let comp_file = build_to(&script, None)?;
             let source = comp::Source { file: comp_file };
             if let Some(sheet) = sheet {
-                comp::run(comp::Command::Sheet { source: comp::Source { file: source.file.clone() }, out: sheet, times, cols: 4, thumb: 480 })?;
+                write_sheet(&source.file, &sheet, &times)?;
             }
             if !sheet_only {
                 let out = out.unwrap_or_else(|| script.file.with_extension(if script.shot.is_some() { "shot.mp4" } else { "mp4" }));

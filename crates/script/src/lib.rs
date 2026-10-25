@@ -3,14 +3,17 @@
 
 pub mod cli;
 pub mod check;
+mod assets;
+mod fallback;
 mod loader;
 mod measure;
 mod animation;
 pub mod shot;
 pub mod run;
 pub mod strip;
+pub mod watch;
 
-pub use run::{build, Options};
+pub use run::{build, build_full, Built, Options};
 
 /// The SDK's TypeScript sources as `(module name, source)`, for tools that document it.
 pub fn sdk_sources() -> &'static [(&'static str, &'static str)] {

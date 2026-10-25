@@ -3,11 +3,9 @@ use std::{fs, path::{Path, PathBuf}};
 use serde_json::json;
 use turbomotion_script::{build, Options};
 
-fn folder(name: &str) -> PathBuf {
-    let path = Path::new(env!("CARGO_TARGET_TMPDIR")).join("authoring").join(name);
-    fs::create_dir_all(&path).unwrap();
-    path
-}
+mod common;
+
+fn folder(name: &str) -> PathBuf { common::scratch("authoring", name) }
 fn script(name: &str, source: &str) -> PathBuf {
     let path = folder(name).join("film.ts");
     fs::write(&path, source).unwrap();
@@ -157,7 +155,7 @@ fn a_written_composition_records_its_root_relative_to_itself() {
     let v: serde_json::Value = serde_json::from_slice(&fs::read(out).unwrap()).unwrap();
     let root = v["root"].as_str().unwrap();
     assert!(!Path::new(root).is_absolute(), "{root}");
-    assert!(root.ends_with("relative-root/assets"), "{root}");
+    assert!(root.ends_with("/assets") && root.contains("relative-root-"), "{root}");
 }
 
 #[test]
@@ -185,4 +183,37 @@ export default film;
     assert_eq!(body["parent"], "p");
     assert!(by("p-shadow")["scale"].as_str().unwrap().contains("sin("));
     assert_eq!(by("p-ring")["parent"], "p");
+}
+
+#[test]
+fn a_cutout_with_sway_and_tilt_keeps_both_in_one_rotation_triple() {
+    let path = script("cutout-both", r#"
+import {comp, cutout} from 'turbomotion';
+const film = comp({width: 400, height: 600, fps: 30, dur: 2});
+film.add(cutout({id: 'p', src: 'a.png', size: [200, 300],
+  idle: {sway: {deg: 4, period: 3}, tilt: {x: 6, y: 8, period: 5}}}));
+export default film;
+"#);
+    let v = build(&path, &Options::default()).unwrap();
+    let body = v["layers"].as_array().unwrap().iter().find(|l| l["id"] == "p-body").unwrap().clone();
+    let r = body["rotation"].as_array().unwrap_or_else(|| panic!("rotation is one triple: {}", body["rotation"]));
+    assert_eq!(r.len(), 3);
+    assert!(r[0].as_str().unwrap().starts_with("6*"), "X from tilt.x: {r:?}");
+    assert!(r[1].as_str().unwrap().starts_with("8*"), "Y from tilt.y: {r:?}");
+    assert!(r[2].as_str().unwrap().starts_with("4*"), "Z from sway.deg, not lost: {r:?}");
+    assert_eq!(body["three_d"], true);
+}
+
+#[test]
+fn merging_props_with_a_duplicate_key_throws() {
+    let path = script("merge-props", r#"
+import {mergeProps} from 'turbomotion';
+const ok = mergeProps('ok', {a: 1}, {b: 2});
+let msg = '';
+try { mergeProps('clash', {rotation: 1}, {rotation: [0, 0, 1]}); } catch (e) { msg = String(e); }
+export default {ok, msg};
+"#);
+    let v = build(&path, &Options::default()).unwrap();
+    assert_eq!(v["ok"], json!({"a": 1, "b": 2}));
+    assert!(v["msg"].as_str().unwrap().contains("\"rotation\" is set twice"), "{}", v["msg"]);
 }

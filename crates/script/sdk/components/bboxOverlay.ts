@@ -4,6 +4,8 @@
 import { Layer, group, rect, text } from "../layers";
 import type { Timeline } from "../timeline";
 import { Part, THEME, Theme } from "./util";
+import { entrance } from "./appear";
+import type { AppearOpt } from "./appear";
 
 export type BoxState = "ok" | "clash" | "fixed";
 
@@ -19,6 +21,8 @@ export interface Box {
 }
 
 export interface BboxOverlayOpts {
+  /** An entrance for the whole component (an engine preset such as "fade" or "slide_up", or a spec); see `appear`. */
+  appear?: AppearOpt;
   tl: Timeline;
   boxes: Box[];
   at: number;
@@ -66,5 +70,5 @@ export function bboxOverlay(o: BboxOverlayOpts): Part {
     layers.push(g, ...parts);
     end = Math.max(end, t + 0.3);
   });
-  return { layers, end };
+  return entrance({ layers, end }, o.appear, at);
 }

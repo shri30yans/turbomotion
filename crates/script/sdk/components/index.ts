@@ -2,7 +2,7 @@
 // timeline you pass in. Put one straight into `shot({ layers: [component] })`.
 
 export type { Part, Theme } from "./util";
-export { THEME, monoWidth, MONO_ADVANCE } from "./util";
+export { THEME, monoWidth, MONO_ADVANCE, mergeProps } from "./util";
 export { promptBox } from "./promptBox";
 export type { PromptBoxOpts } from "./promptBox";
 export { codePanel, highlight } from "./codePanel";
@@ -27,3 +27,25 @@ export { textStack } from "./textStack";
 export type { StackItem, StackRole, TextStackOpts } from "./textStack";
 export { cutout } from "./cutout";
 export type { CutoutOpts, Idle, Wave } from "./cutout";
+export { appear, entrance } from "./appear";
+export type { AppearOpt, AppearPreset, AppearSpec } from "./appear";
+export { cube, puzzleCube, letterCube, CUBE_COLORS } from "./cube";
+export type { CubeOpts, CubeFace, CubePart, Items, PuzzleCubeOpts, PuzzleCubePart, LetterCubeOpts } from "./cube";
+export { swarm } from "./swarm";
+export type { SwarmOpts, SwarmPart } from "./swarm";
+export { flipTile } from "./flipTile";
+export type { FlipTileOpts, FlipTilePart, TileFace } from "./flipTile";
+export { capsule, capsulePath } from "./capsule";
+export type { CapsuleOpts } from "./capsule";
+export { hand } from "./hand";
+export type { HandOpts } from "./hand";
+export { lens } from "./lens";
+export type { LensOpts, LensPart } from "./lens";
+export { blob, blobPath } from "./blob";
+export type { BlobOpts, BlobPart } from "./blob";
+export { montage } from "./montage";
+export type { Montage, MontageItem, MontageOpts } from "./montage";
+export { dollyZoom } from "./dollyZoom";
+export type { DollyZoomOpts } from "./dollyZoom";
+export { glassPanel } from "./glassPanel";
+export type { GlassPanelOpts, GlassPanelPart } from "./glassPanel";

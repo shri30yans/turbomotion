@@ -1,4 +1,5 @@
 // Interrupted properties retain their exact easing via the engine's scalar expression form.
+import { relative } from "./relative";
 import type { Tween } from "./timeline";
 declare const __tm_ease: (ease: string, progress: number) => number;
 declare const __tm_color: (value: string) => string;
@@ -24,8 +25,10 @@ export function overwritten(tweens: Tween[], base: Value | undefined, id: string
     const previous = segments[segments.length - 1];
     const overlap = previous && tween.at < previous.end - 1e-9;
     if (overlap && tween.overwrite !== "auto") throw new Error(`layer "${id}": two tweens of "${prop}" overlap; set overwrite: "auto" on the later tween or change its start`);
-    const fromValue = tween.from ?? (previous ? at(previous, tween.at) : base);
-    const toValue = tween.to ?? base;
+    const live = previous ? at(previous, tween.at) : base;
+    const where = `layer "${id}": "${prop}"`;
+    const fromValue = tween.from === undefined ? live : relative(tween.from, live, where);
+    const toValue = tween.to === undefined || fromValue === undefined ? base : relative(tween.to, fromValue, where);
     if (fromValue === undefined || toValue === undefined) throw new Error(`layer "${id}": "${prop}" needs start and end values`);
     let from = Array.isArray(fromValue) && previous && tween.from === undefined ? fromValue : numeric(fromValue, color);
     let to = numeric(toValue, color);

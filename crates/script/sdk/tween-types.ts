@@ -1,19 +1,47 @@
-import type { Color, Ease, Seconds, Vec2 } from "./types";
+import type { Color, Ease, Seconds } from "./types";
 
-/** Properties a tween can animate. `x`/`y`/`z` move `pos`. */
+/** A number, or one relative to the property when the tween starts: `"+=40"`, `"-=0.5"`. */
+export type Num = number | `+=${number}` | `-=${number}`;
+
+/** What an item of a shape layer lets a tween change (`tl.to(layer, { items: { 0: { trim_end: 1 } } })`). A rect's size and radius are fixed; animate `scale` instead. */
+export interface ItemVars {
+  trim_start?: Num;
+  trim_end?: Num;
+  trim_offset?: Num;
+  offset?: [Num, Num];
+  rotation?: Num;
+  scale?: Num | [Num, Num];
+  opacity?: Num;
+  morph?: Num;
+  stroke_width?: Num;
+  stroke_opacity?: Num;
+  dash_offset?: Num;
+  stroke_color?: Color;
+  fill_opacity?: Num;
+  fill_color?: Color;
+}
+
+/** Properties a tween can animate. `x`/`y`/`z` move `pos`; `pos: [x, y, z]` moves several at once. */
 export interface Animatable {
-  x?: number;
-  y?: number;
-  z?: number;
-  opacity?: number;
-  rotation?: number;
-  rot_x?: number;
-  rot_y?: number;
-  scale?: number | Vec2;
-  size?: number;
-  intensity?: number;
-  zoom?: number;
+  x?: Num;
+  y?: Num;
+  z?: Num;
+  /** `[x, y]` or `[x, y, z]`; a `null` entry leaves that axis alone. */
+  pos?: [Num | null, Num | null] | [Num | null, Num | null, Num | null];
+  opacity?: Num;
+  /** After Effects' X, Y and Z Rotation: one number is the Z Rotation, three turn it about each axis. */
+  rotation?: Num | [Num | null, Num | null, Num | null];
+  /** After Effects' X, Y and Z Orientation: the layer's own pose. */
+  orientation?: [Num | null, Num | null, Num | null];
+  /** The point the layer's face turns toward, in the parent's space. */
+  aim?: [Num | null, Num | null, Num | null];
+  scale?: Num | [Num, Num];
+  size?: Num;
+  intensity?: Num;
+  zoom?: Num;
   color?: Color;
+  /** Shape items by number: `{ 0: { trim_end: 1, stroke_width: 6 } }`. */
+  items?: Record<number, ItemVars>;
 }
 
 export type Stagger = number | { each: number; from?: "start" | "end" | "center" };

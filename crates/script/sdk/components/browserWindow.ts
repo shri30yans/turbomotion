@@ -3,8 +3,12 @@
 import { Layer, group, shape, text } from "../layers";
 import type { Timeline } from "../timeline";
 import { Part, THEME, Theme, alpha, shadow } from "./util";
+import { entrance } from "./appear";
+import type { AppearOpt } from "./appear";
 
 export interface BrowserWindowOpts {
+  /** An entrance for the whole component (an engine preset such as "fade" or "slide_up", or a spec); see `appear`. */
+  appear?: AppearOpt;
   tl: Timeline;
   url?: string;
   at?: number;
@@ -44,5 +48,5 @@ export function browserWindow(o: BrowserWindowOpts): Part {
   ], "page");
   tl.from(root, { y: pos[1] + slide, duration: 0.7, ease: "expo.out" }, at);
   tl.from([body, head, dots, pill, address, spin, page], { opacity: 0, duration: 0.4 }, at);
-  return { layers: [root, body, head, dots, pill, address, spin, page], end: at + 0.7, root, spinner: spin, size: [w, h] };
+  return entrance({ layers: [root, body, head, dots, pill, address, spin, page], end: at + 0.7, root, spinner: spin, size: [w, h] }, o.appear, at);
 }

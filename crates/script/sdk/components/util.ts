@@ -49,3 +49,18 @@ export function alpha(hex: string, a: number): string {
 /** A drop shadow effect. */
 export const shadow = (blur = 40, dy = 24, opacity = 0.2, color: [number, number, number] = [11, 12, 16]): Record<string, unknown> =>
   ({ effect: "shadow", blur, dx: 0, dy, opacity, color });
+
+/**
+ * Merge prop objects into one, and THROW when two of them set the same key. Object spread keeps the last writer and
+ * drops the others without a word, which is how two idle motions on one `rotation` used to cancel each other.
+ */
+export function mergeProps(where: string, ...parts: Array<Record<string, unknown>>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const part of parts) {
+    for (const [key, value] of Object.entries(part)) {
+      if (key in out) throw new Error(`${where}: "${key}" is set twice; fold the two into one value`);
+      out[key] = value;
+    }
+  }
+  return out;
+}

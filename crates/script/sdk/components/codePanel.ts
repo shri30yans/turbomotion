@@ -5,8 +5,12 @@ import { Layer, group, rect, text } from "../layers";
 import type { Timeline } from "../timeline";
 import type { TextRun } from "../types";
 import { Part, THEME, Theme, alpha, monoWidth, shadow } from "./util";
+import { entrance } from "./appear";
+import type { AppearOpt } from "./appear";
 
 export interface CodePanelOpts {
+  /** An entrance for the whole component (an engine preset such as "fade" or "slide_up", or a spec); see `appear`. */
+  appear?: AppearOpt;
   tl: Timeline;
   lines: string[];
   /** Seconds at which the first line starts. */
@@ -80,5 +84,5 @@ export function codePanel(o: CodePanelOpts): Part {
     layers.push(gutter, code);
   });
   tl.from(root, { y: pos[1] + 50, duration: 0.6, ease: "expo.out" }, Math.max(0, at - 0.6));
-  return { layers, end: at + lines.length * perLine, bar, times };
+  return entrance({ layers, end: at + lines.length * perLine, bar, times }, o.appear, at);
 }

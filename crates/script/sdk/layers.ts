@@ -1,8 +1,11 @@
 // Layers as builders. A layer holds its static properties and the tweens a timeline attached to it; `toJSON()` turns
 // both into one composition layer.
 
+import { checkImage } from "./image-check";
+import { noteSite } from "./site";
 import { compileTweens } from "./timeline";
 import type { Tween } from "./timeline";
+import { checkVectors, fillVector, vectorComponents } from "./vector-tweens";
 import type {
   CameraOpts, Color, CounterSpec, ImageOpts, LayerOpts, LightOpts, RectOpts, ShapeOpts, SolidOpts, TextOpts,
 } from "./types";
@@ -30,6 +33,8 @@ export class Layer {
     for (const k of Object.keys(this.props)) if (this.props[k] === undefined) delete this.props[k];
     this.id = this.props.id ?? `${kind}${++counter}`;
     this.props.id = this.id;
+    this.settleRotation();
+    noteSite(this.id);
   }
 
   /** Make this layer a child of another (it follows the parent's transform). */
@@ -40,8 +45,17 @@ export class Layer {
 
   /** Change static properties after creation. */
   set(vars: Record<string, unknown>): this {
+    const base = Array.isArray(this.props.rotation) ? vectorComponents(this.props, "rotation") : undefined;
     Object.assign(this.props, vars);
+    this.settleRotation(base);
     return this;
+  }
+
+  /** A partial rotation leaves the axes it does not name where they are. */
+  private settleRotation(base?: Array<number | string>): void {
+    const value = this.props.rotation;
+    if (!Array.isArray(value)) return;
+    this.props.rotation = fillVector(base ?? [0, 0, 0], value);
   }
 
   /** This layer and everything parented under it, parents first. */
@@ -55,6 +69,7 @@ export class Layer {
 
   toJSON(): Record<string, unknown> {
     const out: Record<string, any> = { type: this.kind, ...this.props };
+    checkVectors(out, this.id);
     compileTweens(out, this.tweens, this.id);
     return out;
   }
@@ -86,7 +101,7 @@ export const text = (content: string | CounterSpec, o: TextOpts = {}): Layer => 
 export const solid = (color: Color, o: SolidOpts = {}): Layer => new Layer("solid", { color, ...o });
 
 /** A picture: `image("photo.jpg", { fit, focus, camera, parallax })`. */
-export const image = (src: string, o: ImageOpts = {}): Layer => new Layer("image", { src, ...o });
+export const image = (src: string, o: ImageOpts = {}): Layer => new Layer("image", { src: checkImage(src, o), ...o });
 
 /** A vector shape from raw items: `{rect: [x, y, w, h], radius, fill, stroke}`, `{ellipse: [...]}`, `{d: "M..."}`. */
 export const shape = (items: Array<Record<string, unknown>>, o: ShapeOpts = {}): Layer => {

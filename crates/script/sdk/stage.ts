@@ -21,17 +21,41 @@ export interface Pose {
   y?: number;
   z?: number;
   scale?: number;
-  rotation?: number;
-  rot_x?: number;
-  rot_y?: number;
+  /** After Effects' X, Y and Z Rotation: one number is the Z Rotation, three turn it about each axis. */
+  rotation?: number | [number, number, number];
   opacity?: number;
   size?: number;
   color?: string;
+  /** After Effects' X, Y and Z Orientation: the layer's own pose. */
+  orientation?: [number, number, number];
+  /** The point the layer's face turns toward, in the parent's space. */
+  aim?: [number, number, number];
 }
 type PoseProp = keyof Pose;
-const POSE_PROPS: PoseProp[] = ["x", "y", "z", "scale", "rotation", "rot_x", "rot_y", "opacity", "size", "color"];
+const POSE_PROPS: PoseProp[] = ["x", "y", "z", "scale", "rotation", "opacity", "size", "color", "orientation", "aim"];
 /** What an unset property means, so a pose can leave out anything that is at rest. */
-const REST: Partial<Pose> = { scale: 1, rotation: 0, rot_x: 0, rot_y: 0, opacity: 1 };
+const REST: Partial<Pose> = { scale: 1, rotation: 0, opacity: 1 };
+
+/** A pose's rotation as the three axes the engine keeps: a lone number is the Z Rotation. */
+function axes(rotation: Pose["rotation"]): [number, number, number] | undefined {
+  if (rotation === undefined) return undefined;
+  return typeof rotation === "number" ? [0, 0, rotation] : rotation;
+}
+
+/** Is the pose's value for `key` different from where the layer is now? */
+function differs(key: PoseProp, target: Pose, from: Pose): boolean {
+  const want = target[key];
+  if (want === undefined) return false;
+  if (key === "rotation") {
+    const to = axes(want);
+    const have = axes(from.rotation) ?? [0, 0, 0];
+    if (!to) return false;
+    return to.some((v, i) => v !== have[i]);
+  }
+  const have = from[key];
+  if (Array.isArray(want)) return want.some((v, i) => v !== (Array.isArray(have) ? have[i] : undefined));
+  return (want ?? REST[key]) !== (have ?? REST[key]);
+}
 
 export interface GoOptions {
   /** Seconds, in the timeline's clock, at which the glide starts. */
@@ -67,7 +91,7 @@ export class Stage {
         if (p.z !== undefined) pos.push(p.z);
         props.pos = pos;
       }
-      for (const k of ["scale", "rotation", "rot_x", "rot_y", "opacity", "size", "color"] as const) if (p[k] !== undefined) props[k] = p[k];
+      for (const k of ["scale", "rotation", "opacity", "size", "color", "orientation", "aim"] as const) if (p[k] !== undefined) props[k] = p[k];
       const { opacity, ...own } = props;
       layer.set(own);
       if (opacity !== undefined) for (const l of fadeTargets(layer)) l.set({ opacity });
@@ -86,7 +110,7 @@ export class Stage {
       const from = this.now.get(name);
       if (!from) throw new Error(`stage.go("${pose}"): layer "${name}" has no starting pose; call start() with a pose that places it first`);
       const target = members[name];
-      const changed = POSE_PROPS.filter((k) => target[k] !== undefined && (target[k] ?? REST[k]) !== (from[k] ?? REST[k]));
+      const changed = POSE_PROPS.filter((k) => differs(k, target, from));
       const at = o.at + (o.stagger ?? 0) * i;
       for (const [ease, props] of groupByEase(changed, o.ease)) {
         const vars: Record<string, unknown> = { duration: dur, ease };

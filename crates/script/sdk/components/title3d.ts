@@ -29,7 +29,7 @@ export function title3d(word: string, o: Title3DOpts): Part {
   const letters = letters3d(word, {
     font: th.display, weight: 800, size: 240, depth: 70, bevel: 6, color: th.paper, ...rest, material, pos,
   });
-  tl.from(letters, { rot_x: -100, rot_y: 60, opacity: 0, z: pos[2] - 400, duration, ease, stagger, sfx }, at);
+  tl.from(letters, { rotation: [-100, 60, null], opacity: 0, z: pos[2] - 400, duration, ease, stagger, sfx }, at);
   const lastAt = at + (letters.length - 1) * stagger;
   return { layers: letters, end: lastAt + duration, letters, lastAt, landed: lastAt + duration * 0.7 };
 }

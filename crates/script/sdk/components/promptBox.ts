@@ -4,8 +4,12 @@
 import { Layer, group, rect, shape, text } from "../layers";
 import type { Timeline } from "../timeline";
 import { Part, THEME, Theme, alpha, monoWidth, shadow } from "./util";
+import { entrance } from "./appear";
+import type { AppearOpt } from "./appear";
 
 export interface PromptBoxOpts {
+  /** An entrance for the whole component (an engine preset such as "fade" or "slide_up", or a spec); see `appear`. */
+  appear?: AppearOpt;
   tl: Timeline;
   text: string;
   /** Seconds (shot-local) at which the first character is typed. */
@@ -90,5 +94,5 @@ export function promptBox(o: PromptBoxOpts): Part {
     tl.to(dot, { scale: 1, duration: 0.2, ease: "back.out(2)" }, enterAt);
   }
   const layers: Layer[] = [root, card, rim, glyph, body, caret, dot];
-  return { layers, end, caret, dot, root, card, enterAt: enterAt ?? null, caretEnd: [pos[0] + caretEnd, pos[1]] };
+  return entrance({ layers, end, caret, dot, root, card, enterAt: enterAt ?? null, caretEnd: [pos[0] + caretEnd, pos[1]] }, o.appear, at);
 }

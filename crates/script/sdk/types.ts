@@ -36,9 +36,14 @@ export interface LayerOpts {
   z?: number;
   anchor?: Vec2 | Vec3;
   scale?: Prop | [Prop, Prop];
-  rotation?: Prop;
-  rot_x?: Prop;
-  rot_y?: Prop;
+  /** After Effects' X, Y and Z Rotation: the route the layer takes. One number is the Z Rotation, three turn it about each axis. */
+  rotation?: Prop | [Prop, Prop, Prop];
+  /** After Effects' X, Y and Z Orientation: the layer's own pose, `[x, y, z]`. */
+  orientation?: [Prop, Prop, Prop];
+  /** The point the layer's face turns toward, in the parent's space. */
+  aim?: [Prop, Prop, Prop];
+  /** Which side of a 3D layer is hidden. After Effects draws both sides. */
+  cull?: "none" | "front" | "back";
   opacity?: Prop;
   three_d?: boolean;
   material?: Material;
@@ -75,6 +80,129 @@ export interface TextOpts extends LayerOpts {
   runs?: TextRun[];
   /** A highlighter swept behind a word: `{ word, at, color }` (see `comp catalogue`). */
   mark?: Record<string, unknown>;
+  /** Per-character, word or line animations: build them with `charFlip`, `decode` or write `{ by, props, stagger | selector }`. */
+  animators?: TextAnimator[];
+  stroke?: { color: Color; width: number };
+  /** Paint only the stroke (2 px in the text colour when `stroke` is not given). */
+  outline_only?: boolean;
+  /** Draw only `[start, end]` (0..1) of the outline length: animate `end` from 0 to 1 and the letters write themselves. */
+  stroke_trim?: [Prop, Prop];
+  /** Trim each glyph's own outline instead of the whole line's. */
+  stroke_trim_each?: boolean;
+  /** Lay the text along a path: see `textOnPath`. */
+  path?: TextPathOpts;
+  /** Wrap the text on a cylinder or sphere: see `wrapText`. */
+  surface?: TextSurfaceOpts;
+  /** A seamlessly scrolling row: see `marquee`. */
+  marquee?: MarqueeOpts;
+  /** Viewer distance in px for per-character 3D on a flat layer, or `"orthographic"`. Default: the default camera's zoom, width / 0.72. */
+  perspective?: number | "orthographic";
+}
+
+/** What a text animator does to a unit at full weight. Rotations share the layer's `rotation: [x, y, z]` axes and signs. */
+export interface TextUnitProps {
+  x?: number;
+  y?: number;
+  /** Added to the scale: `-1` shrinks to nothing, `1` doubles. */
+  scale?: number;
+  /** Degrees, clockwise (the same as `rotation_z`; the two add). */
+  rotation?: number;
+  opacity?: number;
+  blur?: number;
+  tracking?: number;
+  color?: Color;
+  skew?: number;
+  /** Pixels away from the viewer (the layer's z convention). */
+  z?: number;
+  rotation_x?: number;
+  rotation_y?: number;
+  rotation_z?: number;
+  scale_z?: number;
+  /** Degrees added to the fill's hue. */
+  fill_hue?: number;
+  fill_saturation?: number;
+  fill_brightness?: number;
+  /** Pixels added to the stroke width. */
+  stroke_width?: number;
+}
+
+export interface TextSelector {
+  start?: Prop;
+  end?: Prop;
+  offset?: Prop;
+  shape?: "square" | "ramp_up" | "ramp_down" | "triangle" | "round" | "smooth";
+  smooth?: number;
+  random?: boolean;
+  seed?: number;
+}
+
+/** Where a cipher's random characters come from: a name, or any string of characters. */
+export type CipherCharset = "auto" | "upper" | "lower" | "digits" | "alnum" | "hex" | "binary" | "symbols" | "matrix" | (string & {});
+
+export interface CipherOpts {
+  charset?: CipherCharset;
+  /** Changes per second (24). */
+  rate?: number;
+  seed?: number;
+  /** A unit locks on to its real character when its weight falls to this or below (0..1; 0). */
+  settle?: number;
+}
+
+export interface TextAnimator {
+  by?: "chars" | "words" | "lines";
+  props?: TextUnitProps;
+  at?: Seconds;
+  dur?: Seconds;
+  ease?: Ease;
+  direction?: "in" | "out";
+  stagger?: { each?: Seconds; from?: "start" | "end" | "center" | "edges" | "random"; seed?: number; ease?: Ease };
+  selector?: TextSelector;
+  mask?: boolean;
+  count_spaces?: boolean;
+  cipher?: CipherOpts;
+}
+
+/** Text along a path. Exactly one geometry (`d`, `points`, `ellipse`, `rect`, `polygon`, `star`) or `layer`. */
+export interface TextPathOpts {
+  d?: string;
+  points?: Vec2[];
+  closed?: boolean;
+  smooth?: boolean;
+  ellipse?: [number, number, number, number];
+  rect?: [number, number, number, number];
+  polygon?: [number, number, number, number];
+  star?: [number, number, number, number, number];
+  /** Borrow the first shape item of the layer with this id. */
+  layer?: string;
+  reverse?: boolean;
+  /** Turn each character to the tangent (true). */
+  perpendicular?: boolean;
+  force_align?: boolean;
+  first_margin?: Prop;
+  last_margin?: Prop;
+  /** Fractions of the path length added to `first_margin`; 0 to 1 is one exact lap of a closed path. */
+  travel?: Prop;
+}
+
+export interface TextSurfaceOpts {
+  kind?: "cylinder" | "sphere";
+  /** Pixels; the text's width over pi when left out. */
+  radius?: Prop;
+  /** Degrees the surface has turned; animate it to scroll the text round. */
+  turn?: Prop;
+  /** Draw the characters that face away (mirrored). */
+  back?: boolean;
+}
+
+export interface MarqueeOpts {
+  /** Pixels per second; negative scrolls left (-120). */
+  speed?: number;
+  /** Pixels between copies (80). */
+  gap?: number;
+  /** Copies; enough to cover the composition width when left out. */
+  repeat?: number;
+  /** Pixels already travelled at time 0. */
+  offset?: number;
 }
 
 export interface TextRun {
@@ -116,7 +244,18 @@ export interface ImageOpts extends LayerOpts {
   sampling?: "nearest" | "linear";
   fit?: "cover" | "contain" | "fill" | "none";
   size?: Vec2;
+  /** The point kept when cropping, as fractions of the image (0..1). */
   focus?: Vec2;
+  /** A Ken Burns move between two framings. */
+  camera?: { from: Framing; to: Framing; at?: Seconds; dur?: Seconds; ease?: Ease };
+  /** 2.5D: displace by a depth map (white = near). */
+  parallax?: { depth: string; strength: Prop; look?: Vec2 | Array<Prop> };
+}
+
+/** One end of an image's Ken Burns move: `zoom` 1 is the fitted image; `center` is a fraction of the image. */
+export interface Framing {
+  zoom?: number;
+  center?: Vec2;
 }
 
 export interface RectOpts extends ShapeOpts {

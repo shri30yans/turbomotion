@@ -6,8 +6,12 @@ import { grid, rand } from "../motion";
 import type { Timeline } from "../timeline";
 import type { Material } from "../types";
 import { Part, THEME, Theme } from "./util";
+import { entrance } from "./appear";
+import type { AppearOpt } from "./appear";
 
 export interface CardWallOpts {
+  /** An entrance for the whole component (an engine preset such as "fade" or "slide_up", or a spec); see `appear`. */
+  appear?: AppearOpt;
   tl: Timeline;
   cols?: number;
   rows?: number;
@@ -46,7 +50,7 @@ export function cardWall(o: CardWallOpts): Part {
   const id = o.id ?? "wall";
   const paint = rand(seed);
   const material = o.material ?? { specular: 0.8, shininess: 40 };
-  const wall = group({ id, three_d: true, pos, rot_x: tilt.x, rot_y: tilt.y });
+  const wall = group({ id, three_d: true, pos, rotation: [tilt.x, tilt.y, 0] });
   const tiles = grid(cols, rows, cell);
   const centre = tiles[heroIndex];
   const cells = tiles.map((c) => ({ ...c, x: c.x - centre.x, y: c.y - centre.y }));
@@ -64,9 +68,9 @@ export function cardWall(o: CardWallOpts): Part {
         pos: [c.x, c.y, c.i === heroIndex ? -146 : -6], parent: wall,
       }),
     );
-  tl.from(cards, { scale: 0, opacity: 0, rot_y: 70, duration: 0.55, ease: "back.out(1.7)", stagger: { each: 0.03, from: "center" } }, at);
+  tl.from(cards, { scale: 0, opacity: 0, rotation: [null, 70, null], duration: 0.55, ease: "back.out(1.7)", stagger: { each: 0.03, from: "center" } }, at);
   tl.from(labels, { opacity: 0, duration: 0.3, stagger: { each: 0.03, from: "center" } }, at + 0.5);
   if (sfx) tl.hit(at, sfx);
   const layers: Layer[] = [wall, ...cards, ...labels];
-  return { layers, end: at + 0.85 + cards.length * 0.03 / 2, wall, cards, labels, hero: cards[heroIndex] };
+  return entrance({ layers, end: at + 0.85 + cards.length * 0.03 / 2, wall, cards, labels, hero: cards[heroIndex] }, o.appear, at);
 }

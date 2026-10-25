@@ -3,8 +3,12 @@
 import { Layer, text } from "../layers";
 import type { Timeline } from "../timeline";
 import { Part, THEME, Theme } from "./util";
+import { entrance } from "./appear";
+import type { AppearOpt } from "./appear";
 
 export interface StatCounterOpts {
+  /** An entrance for the whole component (an engine preset such as "fade" or "slide_up", or a spec); see `appear`. */
+  appear?: AppearOpt;
   tl: Timeline;
   value: number;
   suffix?: string;
@@ -40,5 +44,5 @@ export function statCounter(o: StatCounterOpts): Part {
   tl.from(caption, { y: pos[1] + size * 0.62 + 16, duration: 0.5, ease: "expo.out" }, slam);
   if (sfx) tl.hit(slam, sfx);
   const layers: Layer[] = [num, caption];
-  return { layers, end: slam + 0.45, num, caption, slam };
+  return entrance({ layers, end: slam + 0.45, num, caption, slam }, o.appear, at);
 }

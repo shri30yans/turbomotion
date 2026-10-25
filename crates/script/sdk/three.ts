@@ -11,7 +11,7 @@ export function mesh(geometry: Geometry, o: MeshOpts = {}): Layer {
   return new Layer("mesh", { three_d: true, geometry, ...o });
 }
 
-/** A box: `box({ size, height?, depth? }, { color, side, pos, rot_y })`. */
+/** A box: `box({ size, height?, depth? }, { color, side, pos, rotation })`. */
 export const box = (g: Omit<BoxGeometry, "kind">, o?: MeshOpts): Layer => mesh({ kind: "box", ...g }, o);
 /** A sphere of diameter `size`. */
 export const sphere = (g: Omit<SphereGeometry, "kind">, o?: MeshOpts): Layer => mesh({ kind: "sphere", ...g }, o);
@@ -49,8 +49,9 @@ export function letters3d(word: string, o: Letters3DOpts = {}): Layer[] {
 }
 
 /**
- * A turntable: the angle of a steady turn as an expression, for `rot_y` (or `rot_x` / `rotation`) of a 3D object.
- * `box({ size: 200 }, { rot_y: spin(90) })` makes a full turn in four seconds; `from` is the starting angle.
+ * A turntable: the angle of a steady turn as an expression, for the Z Rotation of a 3D object
+ * (`rotation`), or any of the three axes (`rotation: [0, spin(90), 0]`). `box({ size: 200 }, { rotation: spin(90) })`
+ * makes a full turn in four seconds; `from` is the starting angle.
  */
 export function spin(degreesPerSecond: number, from = 0): string {
   return `${from}+time*${degreesPerSecond}`;
