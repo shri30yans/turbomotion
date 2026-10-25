@@ -6,6 +6,7 @@ description = "The platform under every turbomotion renderer: GPU context, video
 
 [dependencies]
 anyhow.workspace = true
+flate2.workspace = true
 metal.workspace = true
 serde.workspace = true
 serde_json.workspace = true

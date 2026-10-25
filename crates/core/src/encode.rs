@@ -15,15 +15,41 @@ pub enum Codec {
     Hardware { bitrate: String },
     /// libx264 on the CPU: quality is set by CRF, speed by the preset.
     Software { crf: u32, preset: String },
+    /// ProRes 4444 with an alpha channel, for overlays, lower thirds and mattes an editor places over other footage.
+    /// Frames must be straight (un-premultiplied) alpha; see [`unpremultiply`].
+    Alpha,
 }
 
 impl Codec {
+    /// Whether the output keeps transparency.
+    pub fn has_alpha(&self) -> bool {
+        matches!(self, Self::Alpha)
+    }
+
+    fn pix_fmt(&self) -> &'static str {
+        if self.has_alpha() { "yuva444p10le" } else { "yuv420p" }
+    }
+
     fn args(&self) -> Vec<String> {
         match self {
             Self::Hardware { bitrate } => ["-c:v", "h264_videotoolbox", "-allow_sw", "0", "-b:v", bitrate].map(String::from).to_vec(),
             Self::Software { crf, preset } => {
                 ["-c:v", "libx264", "-crf", &crf.to_string(), "-preset", preset].map(String::from).to_vec()
             }
+            Self::Alpha => ["-c:v", "prores_ks", "-profile:v", "4444", "-vendor", "apl0"].map(String::from).to_vec(),
+        }
+    }
+}
+
+/// Convert premultiplied BGRA (what the GPU surface holds) to straight alpha in place, as ffmpeg's `bgra` input expects.
+pub fn unpremultiply(bgra: &mut [u8]) {
+    for px in bgra.chunks_exact_mut(4) {
+        let a = u32::from(px[3]);
+        if a == 0 || a == 255 {
+            continue;
+        }
+        for c in &mut px[..3] {
+            *c = ((u32::from(*c) * 255 + a / 2) / a).min(255) as u8;
         }
     }
 }
@@ -48,7 +74,7 @@ impl Encoder {
             .args(["-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "bgra"])
             .args(["-s", &format!("{width}x{height}"), "-r", &fps.to_string(), "-i", "-"])
             .args(codec.args())
-            .args(["-pix_fmt", "yuv420p", "-an"])
+            .args(["-pix_fmt", codec.pix_fmt(), "-an"])
             .arg(out)
             .stdin(Stdio::piped())
             .spawn()
@@ -94,4 +120,24 @@ pub fn concat(parts: &[PathBuf], out: &Path) -> Result<()> {
         bail!("ffmpeg concat exited with {status}");
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn unpremultiply_restores_straight_colour() {
+        let mut px = [64, 32, 16, 128, 9, 9, 9, 0, 10, 20, 30, 255];
+        unpremultiply(&mut px);
+        assert_eq!(&px[..4], &[128, 64, 32, 128]);
+        assert_eq!(&px[4..8], &[9, 9, 9, 0]);
+        assert_eq!(&px[8..], &[10, 20, 30, 255]);
+    }
+
+    #[test]
+    fn alpha_codec_keeps_alpha() {
+        assert!(Codec::Alpha.has_alpha() && !Codec::Hardware { bitrate: "1M".into() }.has_alpha());
+        assert_eq!(Codec::Alpha.pix_fmt(), "yuva444p10le");
+    }
 }

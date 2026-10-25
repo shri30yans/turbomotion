@@ -19,7 +19,9 @@ pub fn split(frames: Range<u32>, parts: u32) -> Vec<Range<u32>> {
 pub fn render<T: Send>(frames: Range<u32>, workers: u32, out: &Path, segment: impl Fn(Range<u32>, &Path) -> Result<T> + Sync) -> Result<Vec<T>> {
     ensure!(frames.start < frames.end, "frame range {frames:?} is empty");
     let ranges = split(frames, workers);
-    let parts: Vec<PathBuf> = (0..ranges.len()).map(|i| out.with_extension(format!("part{i}.mp4"))).collect();
+    // Parts share the output's container: an alpha ProRes film is a .mov, and mp4 cannot hold ProRes.
+    let ext = out.extension().and_then(|e| e.to_str()).unwrap_or("mp4");
+    let parts: Vec<PathBuf> = (0..ranges.len()).map(|i| out.with_extension(format!("part{i}.{ext}"))).collect();
     let results = thread::scope(|scope| {
         let handles: Vec<_> = ranges.iter().zip(&parts).map(|(range, part)| scope.spawn(|| segment(range.clone(), part))).collect();
         handles.into_iter().map(|h| h.join().expect("render worker panicked")).collect::<Result<Vec<T>>>()
