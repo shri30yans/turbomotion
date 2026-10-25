@@ -123,9 +123,10 @@ pub fn expand(root: &mut Value) -> Result<()> {
     if let Some(stage) = tl.get("stage") {
         layers.push(json!({"type": "solid", "id": "timeline_stage", "color": stage, "dur": round(end), "layout": "backdrop"}));
     }
+    let mut used = std::collections::HashMap::new();
     for (i, shot) in shots.iter().enumerate() {
         let next = shots.get(i + 1).and_then(|n| n.into.as_ref());
-        layers.extend(shot_layers(shot, next, &frame, &mut comps, &mut audio).with_context(|| format!("shot {:?}", shot.id))?);
+        layers.extend(shot_layers(shot, next, &frame, &mut comps, &mut audio, &mut used).with_context(|| format!("shot {:?}", shot.id))?);
     }
     let frame_facts = json!({"width": o.get("width"), "height": o.get("height"), "letterbox": o.get("letterbox")});
     layers.extend(super::letterbox::of_root(&frame_facts)?.unwrap_or_default());
@@ -142,7 +143,7 @@ pub fn expand(root: &mut Value) -> Result<()> {
 
 /// A shot's precomp layer with its exit (toward `next`) and entrance, the helper layers of its transition, and the
 /// transition's sound.
-fn shot_layers(shot: &Shot, next: Option<&Trans>, f: &Frame, comps: &mut Vec<(String, Value)>, audio: &mut Vec<Value>) -> Result<Vec<Value>> {
+fn shot_layers(shot: &Shot, next: Option<&Trans>, f: &Frame, comps: &mut Vec<(String, Value)>, audio: &mut Vec<Value>, used: &mut std::collections::HashMap<String, usize>) -> Result<Vec<Value>> {
     let mut layer = shot_layer(shot, f.w, f.h, f.fps, comps)?;
     if f.mblur {
         layer.insert("mblur".into(), json!(true));
@@ -159,7 +160,7 @@ fn shot_layers(shot: &Shot, next: Option<&Trans>, f: &Frame, comps: &mut Vec<(St
     if let Some(enter) = enter_of(t, f.w, f.h) {
         layer.insert("enter".into(), enter);
     }
-    if let Some(sound) = f.sfx_volume.and_then(|v| t.sound(shot.start, v)) {
+    if let Some(sound) = f.sfx_volume.and_then(|v| t.sound(shot.start, v, used)) {
         audio.push(sound);
     }
     let (mut out, after) = t.helpers(shot.start, f.w, f.h);

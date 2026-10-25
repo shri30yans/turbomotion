@@ -1,5 +1,5 @@
-//! What happens to a painted layer before it lands: blur from transitions, effects, masks, track matte; and the
-//! adjustment layer, which applies the same machinery to everything composited below it.
+//! The stages a layer's picture goes through, one function each: painting, masks, mattes, the wipe and the floor
+//! reflection, and the two halves of an adjustment layer. The frame graph (`graph/`) decides the order and what feeds what.
 
 use anyhow::{Context, Result};
 use skia_safe::{color_filters, image_filters, AlphaType, BlendMode, Canvas, ColorType, ISize, ImageInfo, Paint, PaintStyle, Path, PathFillType, Rect, Surface, TileMode};
@@ -12,15 +12,18 @@ use crate::{
     schema::{MaskMode, MatteMode},
 };
 
-fn blank(like: &Canvas, w: i32, h: i32) -> Result<Surface> {
+pub fn blank(like: &Canvas, w: i32, h: i32) -> Result<Surface> {
     let info = ImageInfo::new(ISize::new(w, h), ColorType::RGBAF16, AlphaType::Premul, None);
     let mut s = like.new_surface(&info, None).with_context(|| format!("no GPU memory for a {w}x{h} layer"))?;
     s.canvas().clear(skia_safe::Color::TRANSPARENT);
     Ok(s)
 }
 
-/// The layer fully processed except for its opacity and blend: content, effects, masks and its own matte.
-pub fn layer_image(ctx: &Ctx, like: &Canvas, frame: &Frame, comp: &CompPlan, i: usize) -> Result<Layer> {
+/// A transition's motion smear runs along the frame's x axis (degrees).
+const HORIZONTAL: f64 = 0.0;
+
+/// The layer's own picture before its effects: content, lighting, and the blur or smear a transition adds.
+pub fn paint_stage(ctx: &Ctx, like: &Canvas, frame: &Frame, comp: &CompPlan, i: usize) -> Result<Layer> {
     let st = &frame.layers[i];
     let lp = &comp.layers[i];
     let mut img = Layer::try_render(like, frame.width as i32, frame.height as i32, |c| paint_content(ctx, c, frame, comp, st, lp))?;
@@ -31,37 +34,13 @@ pub fn layer_image(ctx: &Ctx, like: &Canvas, frame: &Frame, comp: &CompPlan, i: 
         img = img.blurred(like, st.extra_blur)?;
     }
     if st.extra_smear > 0.3 {
-        let e: effects::Effect = serde_json::from_value(serde_json::json!({"effect": "directional_blur", "distance": st.extra_smear, "angle": 0}))?;
-        img = effects::apply(ctx.shaders, like, img, &[e], st.local_t)?;
-    }
-    if !lp.fx.is_empty() {
-        img = super::fx::chain(ctx, like, img, &lp.fx, &st.fx, st.local_t)?;
-    }
-    if !lp.masks.is_empty() {
-        let cov = mask_coverage(like, frame, comp, st)?;
-        img = multiply_by(like, frame, &img, &cov)?;
-    }
-    if let Some(src) = lp.clip_to {
-        let m = layer_image(ctx, like, frame, comp, src)?;
-        let cov = matte_coverage(like, frame, &m, MatteMode::Alpha, frame.layers[src].opacity)?;
-        img = multiply_by(like, frame, &img, &cov)?;
-    }
-    if let Some((src, mode)) = lp.matte {
-        let m = layer_image(ctx, like, frame, comp, src)?;
-        let cov = matte_coverage(like, frame, &m, mode, frame.layers[src].opacity)?;
-        img = multiply_by(like, frame, &img, &cov)?;
-    }
-    if let (Some(r), Some(b)) = (st.reflect, st.bounds) {
-        img = floor_reflect(like, img, b, r)?;
-    }
-    if let (Some(clip), Some(b)) = (st.clip, st.bounds) {
-        img = apply_clip(like, frame, &img, b, clip)?;
+        img = effects::smear(&effects::Ctx { shaders: ctx.shaders, like, t: st.local_t }, &img, st.extra_smear, HORIZONTAL)?;
     }
     Ok(img)
 }
 
 /// A wipe / iris, in the layer's screen-space box.
-fn apply_clip(like: &Canvas, frame: &Frame, img: &Layer, bounds: [f64; 4], clip: Clip) -> Result<Layer> {
+pub fn apply_clip(like: &Canvas, frame: &Frame, img: &Layer, bounds: [f64; 4], clip: Clip) -> Result<Layer> {
     let (x0, y0, x1, y1) = (bounds[0], bounds[1], bounds[2], bounds[3]);
     let (w, h) = ((x1 - x0).max(1.0), (y1 - y0).max(1.0));
     Layer::render(like, frame.width as i32, frame.height as i32, |c| {
@@ -89,7 +68,7 @@ fn apply_clip(like: &Canvas, frame: &Frame, img: &Layer, bounds: [f64; 4], clip:
 }
 
 /// A faded, softened mirror of the layer's pixels, drawn on the floor beneath its bounding box.
-fn floor_reflect(like: &Canvas, img: Layer, bounds: [f64; 4], r: crate::eval::ReflectState) -> Result<Layer> {
+pub fn floor_reflect(like: &Canvas, img: Layer, bounds: [f64; 4], r: crate::eval::ReflectState) -> Result<Layer> {
     if r.strength <= 0.01 {
         return Ok(img);
     }
@@ -129,7 +108,7 @@ fn floor_reflect(like: &Canvas, img: Layer, bounds: [f64; 4], r: crate::eval::Re
 }
 
 /// `img` where `cov` has alpha.
-fn multiply_by(like: &Canvas, frame: &Frame, img: &Layer, cov: &Layer) -> Result<Layer> {
+pub fn multiply_by(like: &Canvas, frame: &Frame, img: &Layer, cov: &Layer) -> Result<Layer> {
     let mut out = blank(like, frame.width as i32, frame.height as i32)?;
     out.canvas().draw_image(img.image(), (0, 0), None);
     let mut keep = Paint::default();
@@ -139,7 +118,7 @@ fn multiply_by(like: &Canvas, frame: &Frame, img: &Layer, cov: &Layer) -> Result
 }
 
 /// The union of a layer's masks as an alpha coverage layer.
-fn mask_coverage(like: &Canvas, frame: &Frame, comp: &CompPlan, st: &LayerState) -> Result<Layer> {
+pub fn mask_coverage(like: &Canvas, frame: &Frame, comp: &CompPlan, st: &LayerState) -> Result<Layer> {
     let lp = &comp.layers[st.index];
     let (w, h) = (frame.width as i32, frame.height as i32);
     let mut cov = blank(like, w, h)?;
@@ -182,7 +161,7 @@ fn mask_coverage(like: &Canvas, frame: &Frame, comp: &CompPlan, st: &LayerState)
 }
 
 /// A track matte's alpha or brightness as an alpha coverage layer.
-fn matte_coverage(like: &Canvas, frame: &Frame, matte: &Layer, mode: MatteMode, matte_opacity: f64) -> Result<Layer> {
+pub fn matte_coverage(like: &Canvas, frame: &Frame, matte: &Layer, mode: MatteMode, matte_opacity: f64) -> Result<Layer> {
     let (w, h) = (frame.width as i32, frame.height as i32);
     let mut cov = blank(like, w, h)?;
     let mut paint = Paint::default();
@@ -210,13 +189,10 @@ fn matte_coverage(like: &Canvas, frame: &Frame, matte: &Layer, mode: MatteMode, 
     Ok(Layer::from_image(cov.image_snapshot()))
 }
 
-/// An adjustment layer: what is composited so far becomes `lerp(below, effects(below), coverage × opacity)`.
-pub fn adjust(ctx: &Ctx, like: &Canvas, acc: &mut Surface, frame: &Frame, comp: &CompPlan, st: &LayerState) -> Result<()> {
+/// What an adjustment layer reaches: its masks (or everywhere) times its opacity.
+pub fn adjust_coverage(like: &Canvas, frame: &Frame, comp: &CompPlan, st: &LayerState) -> Result<Layer> {
     let lp = &comp.layers[st.index];
     let (w, h) = (frame.width as i32, frame.height as i32);
-    let below = Layer::from_image(acc.image_snapshot());
-    let changed = super::fx::chain(ctx, like, Layer::from_image(below.image().clone()), &lp.fx, &st.fx, st.local_t)?;
-    // coverage: the masks (or everywhere) times the layer's opacity
     let mut cov = if lp.masks.is_empty() {
         let mut s = blank(like, w, h)?;
         s.canvas().clear(skia_safe::Color::WHITE);
@@ -231,12 +207,17 @@ pub fn adjust(ctx: &Ctx, like: &Canvas, acc: &mut Surface, frame: &Frame, comp: 
         s.canvas().draw_image(cov.image(), (0, 0), Some(&p));
         cov = Layer::from_image(s.image_snapshot());
     }
-    let mut keep = blank(like, w, h)?;
+    Ok(cov)
+}
+
+/// An adjustment layer's result: `acc` becomes `lerp(below, changed, coverage)`.
+pub fn adjust_mix(like: &Canvas, frame: &Frame, acc: &mut Surface, below: &Layer, changed: &Layer, cov: &Layer) -> Result<()> {
+    let mut keep = blank(like, frame.width as i32, frame.height as i32)?;
     keep.canvas().draw_image(below.image(), (0, 0), None);
     let mut out_of = Paint::default();
     out_of.set_blend_mode(BlendMode::DstOut);
     keep.canvas().draw_image(cov.image(), (0, 0), Some(&out_of));
-    let inside = multiply_by(like, frame, &changed, &cov)?;
+    let inside = multiply_by(like, frame, changed, cov)?;
     let mut plus = Paint::default();
     plus.set_blend_mode(BlendMode::Plus);
     keep.canvas().draw_image(inside.image(), (0, 0), Some(&plus));

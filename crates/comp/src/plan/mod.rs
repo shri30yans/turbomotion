@@ -1,6 +1,7 @@
 //! The plan: the composition after every name has been resolved and every impossible thing rejected, once, with a
 //! path to the mistake. Evaluation and rendering never look at a file or a string id again.
 
+mod fx_inputs;
 pub mod geometry;
 
 use std::{
@@ -15,7 +16,7 @@ use serde_json::Value;
 use crate::{
     anim::prop::ColorProp,
     media::probe::{self, ImageInfo, VideoInfo},
-    schema::{self, Fx, Kind, Layer, Marker, MatteMode, MotionBlur},
+    schema::{self, Fx, Kind, Layer, Marker, MatteMode, MotionBlur, PathSource},
 };
 use crate::fxlib::{Kind as FxKind, Library, PlanFx, PluginPlan};
 use geometry::PathGeo;
@@ -70,11 +71,17 @@ pub struct LayerPlan {
     pub along: Option<PathGeo>,
     /// GSAP Flip source, if this layer has `"flip": {"from": "id"}`.
     pub flip_from: Option<usize>,
+    /// The layer stands in the composition's shared 3D space: it is 3D itself, or one of its parents is.
+    /// After Effects sorts the layers of that space by depth; a 2D layer between two of them is a wall
+    /// that stops them sorting against each other.
+    pub in_3d: bool,
     pub media: Media,
     /// The layer's effect chain, in order.
     pub fx: Vec<PlanFx>,
     /// A texture layer's generator and parameters.
     pub texture: Option<PluginPlan>,
+    /// The path a text layer sets its text on, whether written out or borrowed from another layer's first shape item.
+    pub text_path: Option<skia_safe::Path>,
 }
 
 /// A layer's media file, probed at plan time.
@@ -82,7 +89,9 @@ pub enum Media {
     None,
     Image { path: PathBuf, info: ImageInfo, depth: Option<(PathBuf, ImageInfo)> },
     Video { path: PathBuf, info: VideoInfo },
-    Audio { path: PathBuf, dur: f64 },
+    /// `rate` and `gain` are 1 for ordinary files; a sound-kit cue that varies (or a note) sets them, and `kit` names the
+    /// exact `family/variant` that was chosen.
+    Audio { path: PathBuf, dur: f64, rate: f64, gain: f64, kit: Option<String> },
 }
 
 impl Plan {
@@ -106,9 +115,11 @@ impl Plan {
         schema::blocks::expand(&mut value, dir).context("expanding blocks")?;
         schema::extrude::expand(&mut value).context("extrude")?;
         schema::time::preprocess(&mut value).context("resolving times and variables")?;
-        schema::tokens::apply(&mut value).context("tokens")?;
+        // the library comes first: which fields of an effect are colours is its own declaration, and the tokens need it
+        let fx_path: Vec<String> = value.get("fx_path").map_or(Ok(vec![]), |v| serde_json::from_value(v.clone())).context("fx_path is a list of folders")?;
+        let fx = Library::load_with(dir, &fx_path)?;
+        schema::tokens::apply(&mut value, &|name| fx.colour_params(name)).context("tokens")?;
         let root: schema::Composition = serde_json::from_value(value).map_err(|e| anyhow!("{e}")).context("the composition")?;
-        let fx = Library::load_with(dir, &root.fx_path)?;
         let mut comps = BTreeMap::new();
         for (name, c) in &root.comps {
             ensure!(!name.is_empty(), "a nested composition needs a name");
@@ -172,15 +183,16 @@ impl CompPlan {
         ensure!(c.width > 0 && c.height > 0, "width and height must be positive");
         ensure!(c.dur > 0.0, "dur (seconds) must be positive");
         let mut layers = Vec::with_capacity(c.layers.len());
+        let (kit_order, spread_seed) = kit_spread(name, c);
         for (i, v) in c.layers.iter().enumerate() {
             let def = schema::parse_layer(i, v)?;
             let ty = v.get("type").and_then(Value::as_str).unwrap_or("?");
             let label = format!("layer {i} ({ty}{})", def.common.id.as_deref().map_or(String::new(), |id| format!(" {id:?}")));
             let start = def.common.start;
-            let media = probe_media(&def.kind, dir).with_context(|| label.clone())?;
+            let media = probe_media(&def.kind, dir, kit_order.get(&i).map(|&o| (o, spread_seed))).with_context(|| label.clone())?;
             let natural = match (&media, &def.kind) {
                 (Media::Video { info, .. }, Kind::Video(v)) if !v.looping => Some((info.dur - v.src_in).max(0.0) / v.speed.max(1e-6)),
-                (Media::Audio { dur, .. }, Kind::Audio(a)) => Some((dur - a.src_in).max(0.0) / a.speed.max(1e-6)),
+                (Media::Audio { dur, rate, .. }, Kind::Audio(a)) => Some((dur - a.src_in).max(0.0) / (a.speed * rate).max(1e-6)),
                 _ => None,
             };
             let end = match (def.common.dur, &def.kind) {
@@ -197,6 +209,9 @@ impl CompPlan {
                 _ => vec![],
             };
             let masks = def.common.masks.iter().enumerate().map(|(k, m)| PathGeo::build(&m.path).with_context(|| format!("mask {k}"))).collect::<Result<_>>().with_context(|| label.clone())?;
+            if def.common.aim.is_some() && def.common.along.as_ref().is_some_and(|a| a.orient) {
+                bail!("{label}: \"aim\" and \"along.orient\" both decide where the layer faces; use one");
+            }
             let along = def.common.along.as_ref().map(|a| PathGeo::build(&a.path)).transpose().context("along").with_context(|| label.clone())?;
             if let Kind::Pack(pk) = &def.kind {
                 crate::pack::check(&pk.name, &pk.params).with_context(|| label.clone())?;
@@ -210,7 +225,7 @@ impl CompPlan {
                 }
                 _ => None,
             };
-            layers.push(LayerPlan { index: i, label, def, start, end, parent: None, matte: None, is_matte_source: false, clip_to: None, shapes, masks, along, flip_from: None, media, fx, texture });
+            layers.push(LayerPlan { index: i, label, def, start, end, parent: None, matte: None, is_matte_source: false, clip_to: None, shapes, masks, along, flip_from: None, in_3d: false, media, fx, texture, text_path: None });
         }
         // names → indices
         let mut ids: HashMap<String, usize> = HashMap::new();
@@ -242,6 +257,24 @@ impl CompPlan {
             }
         }
         for i in 0..layers.len() {
+            let Kind::Text(tx) = &layers[i].def.kind else { continue };
+            let label = layers[i].label.clone();
+            tx.validate().with_context(|| label.clone())?;
+            let path = match tx.path.as_ref().map(|p| &p.source) {
+                None => None,
+                Some(PathSource::Geometry(spec)) => Some(PathGeo::build(spec).context("text path").with_context(|| label.clone())?.path),
+                Some(PathSource::Layer(id)) => {
+                    let &si = ids.get(id).ok_or_else(|| anyhow!("{label}: text path layer {id:?} does not exist; layer ids are {}", known()))?;
+                    let shape = layers[si].shapes.first().ok_or_else(|| anyhow!("{label}: text path layer {id:?} has no shape item to follow"))?;
+                    Some(shape.path.clone())
+                }
+            };
+            if let Some(path) = &path {
+                crate::text::place::ensure_walkable(path).with_context(|| format!("{label}: text path"))?;
+            }
+            layers[i].text_path = path;
+        }
+        for i in 0..layers.len() {
             if let Some((m, _)) = layers[i].matte {
                 layers[m].is_matte_source = true;
             }
@@ -252,6 +285,21 @@ impl CompPlan {
             let mut at = Some(i);
             while let Some(a) = at {
                 ensure!(seen.insert(a), "{}: parents form a loop", layers[i].label);
+                at = layers[a].parent;
+            }
+        }
+        // the shared 3D space: a layer stands in it when it is 3D itself or when one of its parents is
+        for i in 0..layers.len() {
+            let mut seen = HashSet::new();
+            let mut at = Some(i);
+            while let Some(a) = at {
+                if !seen.insert(a) {
+                    break;
+                }
+                if layers[a].def.common.three_d {
+                    layers[i].in_3d = true;
+                    break;
+                }
                 at = layers[a].parent;
             }
         }
@@ -295,18 +343,21 @@ impl CompPlan {
                 layers[ci].end += delay;
             }
         }
+        let mut look = c.look.iter().enumerate().map(|(i, f)| Fx::parse(f).and_then(|f| lib.plan_fx(&f)).with_context(|| format!("look {i}"))).collect::<Result<Vec<_>>>()?;
+        fx_inputs::resolve(&mut layers, &mut look, &ids, lib)?;
         Ok(CompPlan {
             name: name.to_string(),
             width: c.width,
             height: c.height,
             dur: c.dur,
             bg: c.bg.as_ref().map(|b| b.0.clone()),
-            bpm: c.bpm,
-            beat_offset: c.beat_offset,
+            // a nested comp without its own tempo keeps the film's, so beat() works inside shots and blocks
+            bpm: c.bpm.or(if name.is_empty() { None } else { root.bpm }),
+            beat_offset: if c.bpm.is_none() && !name.is_empty() && root.bpm.is_some() { root.beat_offset } else { c.beat_offset },
             markers: c.markers.clone(),
             mblur: c.mblur,
             layout: c.layout,
-            look: c.look.iter().enumerate().map(|(i, f)| Fx::parse(f).and_then(|f| lib.plan_fx(&f)).with_context(|| format!("look {i}"))).collect::<Result<_>>()?,
+            look,
             layers,
             type_scale: match &c.type_scale {
                 Some(t) => t.resolved(f64::from(c.height)),
@@ -317,7 +368,25 @@ impl CompPlan {
     }
 }
 
-fn probe_media(kind: &Kind, dir: &Path) -> Result<Media> {
+/// For each `kit:` audio layer in a composition, how many earlier layers (by start time) use the same cue, so a cue
+/// that names a family walks through its variants in time order; and a seed that differs between compositions.
+fn kit_spread(comp: &str, c: &schema::Composition) -> (HashMap<usize, usize>, u64) {
+    let mut by_cue: HashMap<String, Vec<(f64, usize)>> = HashMap::new();
+    for (i, v) in c.layers.iter().enumerate() {
+        let Some(src) = v.get("src").and_then(Value::as_str).filter(|s| s.starts_with("kit:") && v.get("type").and_then(Value::as_str) == Some("audio")) else { continue };
+        if let Ok(def) = schema::parse_layer(i, v) {
+            by_cue.entry(src.to_string()).or_default().push((def.common.start, i));
+        }
+    }
+    let mut order = HashMap::new();
+    for list in by_cue.values_mut() {
+        list.sort_by(|a, b| a.0.total_cmp(&b.0).then(a.1.cmp(&b.1)));
+        order.extend(list.iter().enumerate().map(|(k, (_, i))| (*i, k)));
+    }
+    (order, comp.bytes().fold(0x9e37_79b9u64, |h, b| (h ^ u64::from(b)).wrapping_mul(0x100_0000_01b3)))
+}
+
+fn probe_media(kind: &Kind, dir: &Path, spread: Option<(usize, u64)>) -> Result<Media> {
     Ok(match kind {
         Kind::Image(i) => {
             let path = probe::absolute(dir, &i.src);
@@ -335,9 +404,17 @@ fn probe_media(kind: &Kind, dir: &Path) -> Result<Media> {
             Media::Video { path, info }
         }
         Kind::Audio(a) => {
+            if let Some(cue) = a.src.strip_prefix("kit:") {
+                let (order, seed) = spread.unwrap_or((0, 0));
+                let pick = crate::media::kit::kit().pick(cue, order, seed).map_err(|e| e.context(format!("audio {:?}", a.src)))?;
+                if !pick.path.exists() {
+                    return Err(probe::missing(&pick.path, &a.src));
+                }
+                return Ok(Media::Audio { dur: probe::audio(&pick.path, &a.src)?, path: pick.path, rate: pick.rate, gain: pick.gain, kit: Some(pick.cue) });
+            }
             let path = probe::absolute(dir, &a.src);
             let dur = probe::audio(&path, &a.src)?;
-            Media::Audio { path, dur }
+            Media::Audio { path, dur, rate: 1.0, gain: 1.0, kit: None }
         }
         _ => Media::None,
     })
@@ -350,6 +427,16 @@ mod tests {
 
     fn plan(v: Value) -> Result<Plan> {
         Plan::from_value(v, Path::new("."))
+    }
+
+    #[test]
+    fn nested_comps_inherit_the_films_tempo_unless_they_set_their_own() {
+        let p = plan(json!({"dur": 4, "bpm": 120, "beat_offset": 0.25, "comps": {
+            "plain": {"dur": 2, "layers": []}, "own": {"dur": 2, "bpm": 90, "layers": []}},
+            "layers": [{"type": "precomp", "comp": "plain"}, {"type": "precomp", "comp": "own"}]}))
+        .unwrap();
+        assert_eq!((p.comps["plain"].bpm, p.comps["plain"].beat_offset), (Some(120.0), 0.25));
+        assert_eq!((p.comps["own"].bpm, p.comps["own"].beat_offset), (Some(90.0), 0.0));
     }
 
     #[test]

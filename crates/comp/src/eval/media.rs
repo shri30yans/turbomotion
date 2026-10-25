@@ -96,8 +96,8 @@ pub fn image_state(ev: &Evaluator, c: &CompPlan, l: &LayerPlan, im: &Image, t: f
     let parallax = match (&im.parallax, depth) {
         (Some(p), Some(_)) => {
             let env = |salt: u32| LayerEnv::new(ev, c, l.index, t, 0).with_salt(salt);
-            let strength = p.strength.0.at(lt, &env(80))?;
-            let look = p.look.as_ref().map_or(Ok(vec![0.0, 0.0]), |v| v.0.at(lt, &env(81)))?;
+            let strength = p.strength.0.at(lt, &env(super::salt::PARALLAX_STRENGTH))?;
+            let look = p.look.as_ref().map_or(Ok(vec![0.0, 0.0]), |v| v.0.at(lt, &env(super::salt::PARALLAX_LOOK)))?;
             let k = strength * size[0];
             Some(ParallaxState { shift: [look[0] * k, look.get(1).copied().unwrap_or(0.0) * k] })
         }

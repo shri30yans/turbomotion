@@ -4,13 +4,14 @@ use anyhow::{anyhow, ensure, Result};
 use serde_json::{json, Value};
 
 use super::{catalogue::CAMERA_MOVES, round};
+use crate::schema::default_camera_zoom;
 
 pub fn camera_layer(c: &Value, dur: f64, w: f64, h: f64) -> Result<Value> {
     let o = c.as_object().ok_or_else(|| anyhow!("camera is {{\"move\": \"orbit\", ...}}"))?;
     let kind = o.get("move").and_then(Value::as_str).ok_or_else(|| anyhow!("camera needs \"move\""))?;
     ensure!(CAMERA_MOVES.iter().any(|m| m.0 == kind), "unknown camera move {kind:?}; moves are {}", CAMERA_MOVES.iter().map(|m| m.0).collect::<Vec<_>>().join(", "));
     let ease = o.get("ease").and_then(Value::as_str).unwrap_or("sine.inOut");
-    let z = 1.5 * w;
+    let z = default_camera_zoom(w);
     let (cx, cy) = (w / 2.0, h / 2.0);
     let amount = o.get("amount").and_then(Value::as_f64);
     let tw = |from: f64, to: f64| json!({"from": round(from), "to": round(to), "at": 0, "dur": round(dur), "ease": ease});

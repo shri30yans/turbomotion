@@ -35,8 +35,8 @@ pub fn missing(path: &Path, as_written: &str) -> anyhow::Error {
         .map(|rd| rd.filter_map(Result::ok).map(|e| e.file_name().to_string_lossy().to_string()).filter(|n| n.to_lowercase().ends_with(&ext) && !ext.is_empty()).take(8).collect())
         .unwrap_or_default();
     near.sort();
-    if as_written.starts_with("kit:") {
-        return anyhow!("{as_written:?} is not a sound-kit cue; cues are {}", kit_cues().join(", "));
+    if let Some(cue) = as_written.strip_prefix("kit:") {
+        return super::kit::kit().pick(cue, 0, 0).err().unwrap_or_else(|| anyhow!("{as_written:?}: the sound-kit file {} is missing; rebuild it with `python3 -m sfx.build` in assets/sound", path.display()));
     }
     anyhow!(
         "{as_written:?} not found at {}{}",
@@ -92,15 +92,18 @@ pub fn audio(path: &Path, as_written: &str) -> Result<f64> {
     j["format"]["duration"].as_str().and_then(|d| d.parse().ok()).ok_or_else(|| anyhow!("{as_written:?} has no duration"))
 }
 
+/// Where a path in a composition lives. `kit:<cue>` is the cue's first pick from the built-in kit (the planner resolves
+/// kit cues itself, with their spread; this is for callers that only need some file). An unknown cue yields a
+/// path that does not exist, which [`missing`] explains.
 pub fn absolute(dir: &Path, rel: &str) -> PathBuf {
-    if let Some(name) = rel.strip_prefix("kit:") {
-        return Path::new(env!("CARGO_MANIFEST_DIR")).join("assets/sound").join(format!("{name}.wav"));
+    if let Some(cue) = rel.strip_prefix("kit:") {
+        return super::kit::kit().pick(cue, 0, 0).map_or_else(|_| super::kit::dir().join(format!("{cue}.wav")), |p| p.path);
     }
     let p = Path::new(rel);
     if p.is_absolute() { p.to_path_buf() } else { dir.join(p) }
 }
 
-/// Cue names shipped in `assets/sound/`.
-pub fn kit_cues() -> &'static [&'static str] {
-    &["card-in", "stamp", "counter", "loss", "reveal", "whoosh", "swish", "sweep", "riser", "pop", "click", "tick", "glitch", "boom", "type"]
+/// Cue names that work after `kit:` without a slash: the families, the older names and the curated pools.
+pub fn kit_cues() -> Vec<String> {
+    super::kit::kit().cues()
 }

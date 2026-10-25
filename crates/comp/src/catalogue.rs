@@ -6,7 +6,6 @@ mod property_examples;
 
 use serde::Serialize;
 use serde_json::{json, Value};
-use turbomotion_core::effects;
 
 use crate::eval::transit;
 
@@ -23,7 +22,7 @@ pub fn layers() -> Vec<Entry> {
         Entry { name: "solid", summary: "A flat rectangle: backgrounds, flashes, mattes. Size defaults to the composition.", example: json!({"type": "solid", "color": "#101828"}) },
         Entry {
             name: "text",
-            summary: "Text with real shaping. `font` is a family or a file; `align` left|center|right (the layer's pos is the alignment edge, vertically centred); `width` wraps. Characters the designed font does not have take a fallback face and are painted in the same colour as the rest of the line. `preset` is a named per-character animation (see `text_presets`); `animators` build your own (GSAP staggers or After Effects range selectors). `text` can also be a counter {from, to, at, dur, ease, decimals, sep, prefix, suffix}.",
+            summary: "Text with real shaping. `font` is a family or a file; `align` left|center|right (the layer's pos is the alignment edge, vertically centred); `width` wraps. Characters the designed font does not have take a fallback face and are painted in the same colour as the rest of the line. `preset` is a named per-character animation (see `text_presets`); `animators` build your own (GSAP staggers or After Effects range selectors). `text` can also be a counter {from, to, at, dur, ease, decimals, sep, prefix, suffix}. Animator props include per-character 3D (`z`, `rotation_x|y|z`, `scale_z`, seen through `perspective`), `fill_hue|saturation|brightness` and `stroke_width`; an animator's `cipher` {charset, rate, seed, settle} decodes noise into the real characters. `path` {an ellipse/points/d/... geometry or a `layer` id, reverse, perpendicular, force_align, first_margin, last_margin, travel} sets the text along a path (`travel` 0..1 is one exact lap of a closed path); `surface` {kind: cylinder|sphere, radius, turn, back} wraps it on a drum or ball; `marquee` {speed, gap, repeat} scrolls a seamless row; `outline_only` with `stroke_trim` [start, end] draws the glyph outlines on.",
             example: json!({"type": "text", "text": "Make it move\nlike you mean it", "font": "Avenir Next", "weight": 800, "role": "title", "color": "#ffffff", "pos": [960, 540], "align": "center", "preset": {"name": "reveal", "at": 0.3}, "mark": {"word": "move", "at": 1.0}}),
         },
         Entry {
@@ -43,16 +42,18 @@ pub fn layers() -> Vec<Entry> {
         },
         Entry {
             name: "mesh",
-            summary: "A solid: a triangle mesh from a `geometry` generator, lit by the composition's lights (ambient, point, spot, directional; `material` sets specular and shininess) and drawn through its camera. Needs \"three_d\": true. Geometry kinds: `text` (glyph outlines extruded, with an optional chamfer; one layer per letter to stagger a word), `box`, `sphere`, `torus`, `cylinder` (`top: 0` makes a cone) and `extrude` (an SVG path pushed into depth). It turns about its own middle, so `rot_x` / `rot_y` / `rotation` tumble or spin it (`\"rot_y\": \"time*90\"` is a turntable). `color` is the front and a curved skin, `side` the walls, `back` the back; `side` defaults to a darkened `color`.",
+            summary: "A solid: a triangle mesh from a `geometry` generator, lit by the composition's lights (ambient, point, spot, directional; `material` sets specular and shininess) and drawn through its camera. Needs \"three_d\": true. Geometry kinds: `text` (glyph outlines extruded, with an optional chamfer; one layer per letter to stagger a word), `box`, `sphere`, `torus`, `cylinder` (`top: 0` makes a cone) and `extrude` (an SVG path pushed into depth). It turns about its own middle, so `rotation` tumbles or spins it (`\"rotation\": [0, \"time*90\", 0]` is a turntable). `color` is the front and a curved skin, `side` the walls, `back` the back; `side` defaults to a darkened `color`.",
             example: json!({"type": "mesh", "three_d": true, "geometry": {"kind": "text", "text": "M", "font": "Avenir Next", "weight": 800, "size": 300, "depth": 60, "bevel": 6}, "color": "#e8402f", "side": "#8a2017",
-                "material": {"specular": 0.8, "shininess": 40}, "pos": [960, 540, 0], "rot_x": 20, "rot_y": {"from": -90, "to": 0, "dur": 0.8, "ease": "back.out(1.4)"}}),
+                "material": {"specular": 0.8, "shininess": 40}, "pos": [960, 540, 0], "rotation": [20, {"from": -90, "to": 0, "dur": 0.8, "ease": "back.out(1.4)"}, 0]}),
         },
         Entry {
             name: "shape",
-            summary: "Vector shapes with fill, gradient, stroke, dashes, trim (draw-on), morph and repeat. Geometry: rect, ellipse, polygon, star, d (SVG path), points.",
+            summary: "Vector shapes with fill, gradient, stroke, dashes, trim (draw-on), morph and repeat. Geometry: rect, ellipse, polygon, star, d (SVG path), points. A fill is a colour or a gradient (linear {from, to}, radial {center, radius}). Every item animates its own properties (`trim`, `rotation`, `scale`, `opacity`, rect/ellipse sizes); `anchor` is the item's pivot for rotation and scale, in the item's own units from the shape's origin.",
             example: json!({"type": "shape", "pos": [960, 540], "items": [
                 {"rect": [-200, -120, 400, 240], "radius": 24, "fill": {"gradient": {"type": "linear", "from": [0, -120], "to": [0, 120], "stops": [[0, "#ff8a00"], [1, "#e52e71"]]}}},
-                {"ellipse": [0, 0, 90, 90], "stroke": {"color": "#ffffff", "width": 8, "cap": "round"}, "trim": {"end": {"from": 0, "to": 1, "at": 0.3, "dur": 1, "ease": "power3.inOut"}}}
+                {"ellipse": [0, 0, 90, 90], "stroke": {"color": "#ffffff", "width": 8, "cap": "round"}, "trim": {"end": {"from": 0, "to": 1, "at": 0.3, "dur": 1, "ease": "power3.inOut"}}},
+                {"ellipse": [300, 0, 160, 160], "fill": {"gradient": {"type": "radial", "center": [0, 0], "radius": 90, "stops": [[0, "#ffe9a8"], [0.6, "#ff8a00"], [1, "#e52e71"]]}}},
+                {"rect": [-60, 200, 120, 40], "anchor": [60, 20], "rotation": {"from": -20, "to": 20, "dur": 1.2, "ease": "sine.inOut"}, "fill": "#8be9fd"}
             ]}),
         },
         Entry {
@@ -72,7 +73,7 @@ pub fn layers() -> Vec<Entry> {
         },
         Entry {
             name: "texture",
-            summary: "Paints a generator shader over the layer (noise, clouds, cells, stripes, grid, gradient, light_leak, bokeh, floor, or your own `effects/<name>.sksl` with `@kind generator`). Use it as a background, a matte, or blended over footage. `comp fx list` shows each one's parameters.",
+            summary: "Paints a generator shader over the layer (noise, clouds, cells, stripes, grid, gradient, aura (a soft multi-point mesh-gradient backdrop with animatable point positions and colours), light_leak, bokeh, floor, or your own `effects/<name>.sksl` with `@kind generator`). Use it as a background, a matte, or blended over footage. `comp fx list` shows each one's parameters.",
             example: json!({"type": "texture", "shader": "clouds", "params": {"scale": 300, "high": "#9aa7c7"}, "blend": "screen", "opacity": 0.6}),
         },
         Entry {
@@ -122,13 +123,9 @@ pub fn expression_functions() -> Value {
     })
 }
 
-pub fn effects_catalogue() -> Vec<effects::Entry> {
-    effects::catalogue()
-}
-
-fn shader_plugins() -> Value {
-    let lib = crate::fxlib::Library::load(std::path::Path::new("")).expect("the built-in pack compiles");
-    Value::Array(lib.defs().map(|d| json!({"name": d.name, "kind": d.kind, "summary": d.summary, "params": d.params.iter().map(|p| format!("{} {:?} = {:?}", p.name, p.ty, p.default)).collect::<Vec<_>>()})).collect())
+/// Every effect and generator as its descriptor: the platform's own, then the shipped plugins.
+fn effects() -> Vec<crate::fxlib::Descriptor> {
+    crate::fxlib::Library::builtin().expect("the built-in pack compiles").descriptors()
 }
 
 pub fn all() -> Value {
@@ -137,8 +134,8 @@ pub fn all() -> Value {
         "enter_exit_presets": transitions(),
         "eases": eases(),
         "expressions": expression_functions(),
-        "effects": effects_catalogue(),
-        "shader_plugins": shader_plugins(),
+        "effects": effects(),
+        "effect_composite": crate::fxlib::composite::catalogue(),
         "text_presets": ["rise", "reveal", "rise_words", "fade_up", "blur_in", "pop", "slam", "drop", "typewriter", "scramble", "tracking_in", "wave_in", "spin_in", "elastic", "fade_out", "rise_out"],
         "tokens": {
             "palette": "Named colours any kind can use: {\"accent\": \"#e2c48a\", \"ink\": \"#f4f7ff\", \"plate\": \"#10161f\"}. Write \"color\": \"accent\" or \"$accent\".",
@@ -155,22 +152,12 @@ pub fn all() -> Value {
                 ]
             }
         },
-        "sound_kit": {"src": "kit:<cue>", "cues": [
-            {"cue": "card-in", "timbre": "soft whoosh and a muted wood tick"},
-            {"cue": "stamp", "timbre": "heavy low impact with grit"},
-            {"cue": "counter", "timbre": "bright metallic ping"},
-            {"cue": "loss", "timbre": "detuned low brass, beating"},
-            {"cue": "reveal", "timbre": "rising shimmer"},
-            {"cue": "whoosh", "timbre": "air past the lens"}, {"cue": "swish", "timbre": "a fast whip"},
-            {"cue": "sweep", "timbre": "a long pass"}, {"cue": "riser", "timbre": "a build into a hit"},
-            {"cue": "pop", "timbre": "a soft bubble"}, {"cue": "click", "timbre": "a UI click"}, {"cue": "tick", "timbre": "a dry tick"},
-            {"cue": "glitch", "timbre": "crushed digital bursts"}, {"cue": "boom", "timbre": "a sub drop"}, {"cue": "type", "timbre": "one keystroke"}
-        ]},
+        "sound_kit": crate::media::kit::kit().catalogue(),
         "timeline": timeline(),
-        "extrude": {"summary": "Depth for a three_d text, shape or solid layer: copies stepping back in z, coloured from `color` to `far`. Show it with a camera move or rot_y.",
-            "example": {"type": "text", "text": "88888", "three_d": true, "pos": [960, 540], "rot_y": 18, "extrude": {"depth": 60, "color": "#7a1d14"}}},
+        "extrude": {"summary": "Depth for a three_d text, shape or solid layer: copies stepping back in z, coloured from `color` to `far`. Show it with a camera move or a Y Rotation.",
+            "example": {"type": "text", "text": "88888", "three_d": true, "pos": [960, 540], "rotation": [0, 18, 0], "extrude": {"depth": 60, "color": "#7a1d14"}}},
         "packs": crate::pack::catalogue().into_iter().map(|(n, s)| json!({"name": n, "summary": s})).collect::<Vec<_>>(),
-        "make_a_new_effect": "Write effects/<name>.sksl beside comp.json: header comments `// @effect name`, `// @kind effect|generator`, `// @summary ...`, `// @param name float|vec2|color default [min max] -- doc`, then `half4 main(float2 xy)`. You get `image` (effects), `resolution`, `time` and a library (hash21, vnoise, fbm, worley, rot2, luma, hsv2rgb, straight, premul). Try it with `comp fx test <name> --out sheet.png`; then use it like any effect: {\"effect\": \"name\", \"param\": value}.",
+        "make_a_new_effect": "Write effects/<name>.sksl beside comp.json: header comments `// @effect name`, `// @kind effect|generator`, `// @summary ...`, `// @param name float|vec2|color default [min max] -- doc`, `// @param name choice default a,b,c -- doc` (written as a name), `// @input name layer` (another layer's picture, named by id in the use), `// @input name history=N [depth=D]` (the effect's own output N frames ago), `// @pass name [scale=S]` (several passes, each sees the earlier ones by name), `// @example {json}`, then `half4 main(float2 xy)`. You get `image` (effects), `resolution`, `time` and a library (hash21, vnoise, fbm, worley, rot2, luma, hsv2rgb, straight, premul). Try it with `comp fx test <name> --out sheet.png`; then use it like any effect: {\"effect\": \"name\", \"param\": value}.",
         "time_literals": ["1.5s", "45f", "beat:8", "bar:2", "marker:drop", "title.end", "title.start", "prev.end", "comp.end", "any of those followed by +0.25 or -3f"],
         "runnable_property_examples": property_examples::examples(),
         "property_forms": {
@@ -179,7 +166,21 @@ pub fn all() -> Value {
             "keys": [[0, 0], [0.6, 100, "expo.out"], [2, 100]],
             "tween": {"from": 0, "to": 100, "at": 1, "dur": 0.6, "ease": "back.out(1.4)"},
             "loop": {"keys": [[0, 0], [1, 360, "none"]], "loop": "cycle"},
-            "keys_plus_expression": {"value": [[0, 0], [1, 100]], "expr": "value + wiggle(3, 5)"}
+            "keys_plus_expression": {"value": [[0, 0], [1, 100]], "expr": "value + wiggle(3, 5)"},
+            "vector": "pos, scale, anchor, effect and texture vec2 parameters are vectors. Four spellings, all runnable under runnable_property_examples:",
+            "vector_constant": [960, 540],
+            "vector_per_axis": [{"from": 0.8, "to": 1.2, "at": 0, "dur": 1}, {"keys": [[0, 1], [1, 0.6, "expo.out"]]}],
+            "vector_tween": {"from": [0.8, 1.2], "to": [1.2, 0.8], "at": 0, "dur": 1, "ease": "sine.inOut"},
+            "vector_keys": {"keys": [[0, [100, 200]], [1, [400, 200], "expo.out"], [2, [400, 500]]]},
+            "colour_tween": {"from": "#2040ff", "to": "#ff5030", "at": 0, "dur": 1, "ease": "none"},
+            "colour_keys": {"keys": [[0, "#2040ff"], [1, "#ff5030", "none"], [2, "#ffffff", "sine.inOut"]]},
+            "shape_item": "Items in a shape take the same forms: {\"rect\": [x, y, w, h], \"anchor\": [cx, cy], \"rotation\": {tween}, \"scale\": [vector], \"trim\": {\"end\": {tween}}, \"fill\": colour-or-animated-colour}",
+            "common_mistakes": {
+                "a list of tween objects as keys": "WRONG: \"opacity\": [{\"from\": 0, \"to\": 1}, {\"from\": 1, \"to\": 0, \"at\": 1}]. RIGHT: one tween, or keys: [[0, 0], [0.5, 1], [1, 0]]",
+                "vector keys without the wrapper": "WRONG: \"pos\": [[0, [0, 0]], [1, [100, 50]]]. RIGHT: \"pos\": {\"keys\": [[0, [0, 0]], [1, [100, 50]]]}",
+                "a vector given to a scalar": "rotation, opacity and size are single numbers; give them keys of numbers, not of vectors",
+                "keys out of order": "key times must not decrease; a later tween on the same property starts where the earlier one ends"
+            }
         },
         "colour_forms": ["#rrggbb", "#rrggbbaa", "#rgb", "white", "accent (a palette token)", [255, 128, 0], [255, 128, 0, 0.5], {"from": "#000", "to": "#f00", "dur": 1}],
     })
@@ -230,6 +231,21 @@ mod tests {
                 continue;
             }
             load(vec![e.example.clone()]).unwrap_or_else(|err| panic!("{}: {err:#}", e.name));
+        }
+    }
+
+    #[test]
+    fn every_vector_and_colour_form_in_the_catalogue_parses() {
+        use crate::anim::prop::{ColorProp, VecProp};
+        let forms = all()["property_forms"].clone();
+        for k in ["vector_constant", "vector_per_axis", "vector_tween", "vector_keys"] {
+            VecProp::parse(&forms[k], 2..=3).unwrap_or_else(|e| panic!("{k}: {e:#}"));
+        }
+        for k in ["colour_tween", "colour_keys"] {
+            ColorProp::parse(&forms[k]).unwrap_or_else(|e| panic!("{k}: {e:#}"));
+        }
+        for (what, bad) in forms["common_mistakes"].as_object().unwrap() {
+            assert!(bad.as_str().unwrap().contains("RIGHT") || bad.as_str().unwrap().len() > 20, "{what}");
         }
     }
 

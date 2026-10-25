@@ -3,7 +3,7 @@
 use anyhow::Result;
 use skia_safe::{Canvas, Paint, Rect};
 
-use super::{color4f, comp_layer, media, shape, text, Ctx};
+use super::{color4f, graph::comp_picture, media, shape, text, Ctx};
 use crate::{
     eval::{Content, Frame, LayerState},
     plan::{CompPlan, LayerPlan},
@@ -28,7 +28,7 @@ pub fn paint_content(ctx: &Ctx, c: &Canvas, _frame: &Frame, _comp: &CompPlan, st
         Content::Image { view, parallax } => media::paint_image(ctx, c, lp, view, parallax),
         Content::Video { view, src_time } => paint_video(ctx, c, lp, view, *src_time),
         Content::Precomp { frame: Some(inner) } => {
-            let layer = comp_layer(ctx, c, inner)?;
+            let layer = comp_picture(ctx, c, inner)?;
             let mut p = Paint::default();
             p.set_anti_alias(true);
             let sampling = match &lp.def.kind {
@@ -69,7 +69,7 @@ fn paint_mesh(c: &Canvas, frame: &Frame, st: &LayerState, t: &crate::eval::mesh:
     let view = crate::mesh::draw::View {
         world: &st.world,
         screen: &st.screen,
-        eye: if st.three_d { frame.camera.as_ref().map(|k| k.pos) } else { None },
+        eye: if st.in_3d { frame.camera.as_ref().map(|k| k.pos) } else { None },
         lights: &frame.lights,
         material: t.material,
         colors: [rgb(t.color), rgb(t.back), rgb(t.side)],

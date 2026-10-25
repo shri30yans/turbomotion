@@ -34,12 +34,12 @@ pub struct MeshState {
 pub fn state(ev: &Evaluator, c: &CompPlan, l: &LayerPlan, m: &MeshLayer, t: f64) -> Result<MeshState> {
     let lt = t - l.start;
     let env = |salt: u32| LayerEnv::new(ev, c, l.index, t, 0).with_salt(salt);
-    let color = m.color.as_ref().map_or(Ok([255.0, 255.0, 255.0, 1.0]), |p| p.0.at(lt, &env(63)))?;
+    let color = m.color.as_ref().map_or(Ok([255.0, 255.0, 255.0, 1.0]), |p| p.0.at(lt, &env(super::salt::MESH_COLOR)))?;
     let side = match &m.side {
-        Some(p) => p.0.at(lt, &env(64))?,
+        Some(p) => p.0.at(lt, &env(super::salt::MESH_SIDE))?,
         None => [color[0] * 0.55, color[1] * 0.55, color[2] * 0.55, color[3]],
     };
-    let back = m.back.as_ref().map_or(Ok(side), |p| p.0.at(lt, &env(65)))?;
+    let back = m.back.as_ref().map_or(Ok(side), |p| p.0.at(lt, &env(super::salt::MESH_BACK)))?;
     let (name, mesh) = mesh_for(ev, &m.geometry, m.segments.unwrap_or(primitives::DEFAULT_SEGMENTS), lt, &env)?;
     let extent = [mesh.min[0], mesh.min[1], mesh.min[2], mesh.max[0], mesh.max[1], mesh.max[2]];
     Ok(MeshState { geometry: name, color, side, back, extent, material: l.def.common.material.unwrap_or_default(), mesh })

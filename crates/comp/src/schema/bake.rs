@@ -3,7 +3,7 @@
 //! This turns those forms into dense plain keys (120 per second), so the curve the author asked for is the curve drawn.
 
 use anyhow::Result;
-use serde_json::{json, Value};
+use serde_json::{json, Map, Value};
 
 use crate::anim::{
     expr::{Arg, Env},
@@ -45,13 +45,9 @@ fn span(v: &Value) -> Option<(f64, f64)> {
     }
 }
 
-/// Replace every eased or tweened parameter of effect `fx` with dense `[seconds, value]` keys, in place.
-pub fn bake(fx: &mut Value) -> Result<()> {
-    let Some(o) = fx.as_object_mut() else { return Ok(()) };
-    for (k, v) in o.iter_mut() {
-        if k == "effect" {
-            continue;
-        }
+/// Replace every eased or tweened parameter of an effect with dense `[seconds, value]` keys, in place.
+pub fn bake(params: &mut Map<String, Value>) -> Result<()> {
+    for v in params.values_mut() {
         let Some((t0, t1)) = span(v) else { continue };
         let prop = Prop::parse(v)?;
         let n = (((t1 - t0) / STEP).ceil() as usize).max(1);
@@ -70,9 +66,13 @@ pub fn bake(fx: &mut Value) -> Result<()> {
 mod tests {
     use super::*;
 
+    fn params(v: Value) -> Map<String, Value> {
+        v.as_object().expect("an object").clone()
+    }
+
     #[test]
     fn a_tween_becomes_dense_keys_that_follow_its_ease() {
-        let mut fx = json!({"effect": "blur", "radius": {"from": 8, "to": 0, "at": 1, "dur": 0.5, "ease": "expo.out"}});
+        let mut fx = params(json!({"radius": {"from": 8, "to": 0, "at": 1, "dur": 0.5, "ease": "expo.out"}}));
         bake(&mut fx).unwrap();
         let keys = fx["radius"].as_array().unwrap();
         assert_eq!(keys.first().unwrap(), &json!([1.0, 8.0]));
@@ -83,17 +83,17 @@ mod tests {
 
     #[test]
     fn plain_numbers_and_unkeyed_arrays_are_left_alone() {
-        let mut fx = json!({"effect": "blur", "radius": 8});
+        let mut fx = params(json!({"radius": 8}));
         bake(&mut fx).unwrap();
         assert_eq!(fx["radius"], json!(8));
-        let mut fx = json!({"effect": "blur", "radius": [[0, 1], [2, 3]]});
+        let mut fx = params(json!({"radius": [[0, 1], [2, 3]]}));
         bake(&mut fx).unwrap();
         assert_eq!(fx["radius"], json!([[0, 1], [2, 3]]));
     }
 
     #[test]
     fn eased_keys_are_baked() {
-        let mut fx = json!({"effect": "blur", "radius": [[0, 7], [1, 7], [1.5, 0, "expo.out"]]});
+        let mut fx = params(json!({"radius": [[0, 7], [1, 7], [1.5, 0, "expo.out"]]}));
         bake(&mut fx).unwrap();
         assert!(fx["radius"].as_array().unwrap().len() > 30);
     }

@@ -1,0 +1,26 @@
+// The coverage a composite mask takes from an effect's input: its outlines, from a Sobel filter over brightness and over
+// alpha (so the border of a shape on nothing counts). Alpha only.
+uniform shader source;
+// 1 draws the sharpest possible edge at full coverage
+uniform float strength;
+// distance between the filter's taps, px
+uniform float width;
+
+const half3 LUMA = half3(0.2126, 0.7152, 0.0722);
+// the Sobel response to a step from 0 to 1
+const float SOBEL_STEP = 4.0;
+
+// brightness (over black) and alpha at a point
+float2 tone(float2 p) {
+    half4 c = source.eval(p);
+    return float2(dot(c.rgb, LUMA), c.a);
+}
+
+half4 main(float2 xy) {
+    float2 dx = float2(width, 0.0);
+    float2 dy = float2(0.0, width);
+    float2 gx = -tone(xy - dx - dy) - 2.0 * tone(xy - dx) - tone(xy - dx + dy) + tone(xy + dx - dy) + 2.0 * tone(xy + dx) + tone(xy + dx + dy);
+    float2 gy = -tone(xy - dx - dy) - 2.0 * tone(xy - dy) - tone(xy + dx - dy) + tone(xy - dx + dy) + 2.0 * tone(xy + dy) + tone(xy + dx + dy);
+    float edge = max(length(float2(gx.x, gy.x)), length(float2(gx.y, gy.y))) / SOBEL_STEP;
+    return half4(0.0, 0.0, 0.0, half(clamp(edge * strength, 0.0, 1.0)));
+}

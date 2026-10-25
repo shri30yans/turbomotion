@@ -25,7 +25,7 @@ fn shots_overlap_by_their_transition_and_pair_enter_with_exit() {
     assert_eq!(shots[2]["start"], 4.5);
     assert!(shots[1].get("exit").is_none() && shots[2].get("enter").is_none());
     assert_eq!(v["dur"], 6.5);
-    assert!(ls.iter().any(|l| l["src"] == "kit:sweep"));
+    assert!(ls.iter().any(|l| l["src"].as_str().is_some_and(|s| s.starts_with("kit:sweep/"))), "pan_out sounds are a sweep variant");
     assert_eq!(v["markers"][1]["name"], "b");
 }
 

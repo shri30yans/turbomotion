@@ -1,0 +1,54 @@
+// @effect aura
+// @kind generator
+// @summary Soft mesh-gradient light: up to six coloured points blended into one smooth, band-free field.
+// @param base color #0a0c18 -- ground colour where no point reaches
+// @param c1 color #5b3df5 -- colour of point 1 (alpha 0 turns a point off)
+// @param p1 vec2 0.22,0.28 -- position of point 1, share of the frame (0..1)
+// @param c2 color #1fb5e0 -- colour of point 2
+// @param p2 vec2 0.78,0.24 -- position of point 2
+// @param c3 color #ff5f9e -- colour of point 3
+// @param p3 vec2 0.7,0.78 -- position of point 3
+// @param c4 color #ffb35a -- colour of point 4
+// @param p4 vec2 0.2,0.82 -- position of point 4
+// @param c5 color #000000 -- colour of point 5 (off by default; set alpha above 0)
+// @param p5 vec2 0.5,0.5 -- position of point 5
+// @param c6 color #000000 -- colour of point 6 (off by default; set alpha above 0)
+// @param p6 vec2 0.5,0.5 -- position of point 6
+// @param softness float 0.46 0.05 2 -- how far each point spreads, share of the frame height
+// @param ground float 0.01 0 0.6 -- how much of the ground colour shows far from every point (0 fills the frame with point colours)
+// @param drift float 0 0 1 -- idle wander of every point, cycles per second (0 holds still)
+// @param swirl float 0.06 0 0.3 -- how far a wandering point strays, share of the frame
+// @param glow float 0.25 0 1 -- extra brightness where several points overlap
+// @param vivid float 0.15 0 1 -- pushes the blend away from grey, so opposite hues stay clean
+// Weight of one point at `q`, which also adds its colour to `acc`.
+float aura_point(float2 q, float aspect, float2 p, float4 c, float k, float t, float s2, inout float3 acc) {
+    float ph = k * 2.399963;
+    p += swirl * float2(sin(t + ph), cos(t * 0.83 + ph * 1.7));
+    float2 d = q - float2(p.x * aspect, p.y);
+    float w = exp(-dot(d, d) / s2) * c.a;
+    acc += c.rgb * w;
+    return w;
+}
+half4 main(float2 xy) {
+    float aspect = resolution.x / max(resolution.y, 1.0);
+    float2 uv = xy / max(resolution, float2(1.0, 1.0));
+    float2 q = float2(uv.x * aspect, uv.y);
+    float t = time * drift * 6.2831853;
+    float s2 = max(softness * softness, 1e-4);
+    float3 acc = float3(0.0);
+    float wsum = aura_point(q, aspect, p1, c1, 0.0, t, s2, acc);
+    wsum += aura_point(q, aspect, p2, c2, 1.0, t, s2, acc);
+    wsum += aura_point(q, aspect, p3, c3, 2.0, t, s2, acc);
+    wsum += aura_point(q, aspect, p4, c4, 3.0, t, s2, acc);
+    wsum += aura_point(q, aspect, p5, c5, 4.0, t, s2, acc);
+    wsum += aura_point(q, aspect, p6, c6, 5.0, t, s2, acc);
+    // Normalised Gaussian blend: smooth everywhere, with the ground colour as one more, constant, weight.
+    float3 mixed = (acc + base.rgb * ground) / max(wsum + ground, 1e-5);
+    mixed *= 1.0 + glow * wsum * wsum / (1.0 + wsum * wsum);
+    float grey = dot(mixed, float3(0.299, 0.587, 0.114));
+    mixed = max(float3(grey) + (mixed - float3(grey)) * (1.0 + vivid), float3(0.0));
+    float3 rgb = mixed;
+    // Triangular dither at one 8-bit step removes banding without visible grain.
+    rgb += (hash21(xy) + hash21(xy + 17.31) - 1.0) * (1.0 / 255.0);
+    return premul(clamp(rgb, 0.0, 1.0), 1.0);
+}

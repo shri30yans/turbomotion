@@ -1,0 +1,3058 @@
+{
+ "version": 1,
+ "sample_rate": 48000,
+ "families": {
+  "whoosh": {
+   "desc": "air moving past: short, bright, dark, long, airy and reversed",
+   "jitter": {
+    "pitch": 0.5,
+    "gain": 1.0
+   },
+   "variants": {
+    "short-01": {
+     "dur": 0.42,
+     "peak": 0.15,
+     "desc": "tight pass, mid air",
+     "tags": [
+      "short",
+      "mid"
+     ],
+     "channels": 2,
+     "rms_db": -24.7,
+     "centroid": 2990
+    },
+    "short-02": {
+     "dur": 0.35,
+     "peak": 0.13,
+     "desc": "very quick bright pass, right to left",
+     "tags": [
+      "short",
+      "bright"
+     ],
+     "channels": 2,
+     "rms_db": -22.7,
+     "centroid": 5353
+    },
+    "bright-01": {
+     "dur": 0.598,
+     "peak": 0.235,
+     "desc": "hissy high pass",
+     "tags": [
+      "bright",
+      "hiss"
+     ],
+     "channels": 2,
+     "rms_db": -24.1,
+     "centroid": 9154
+    },
+    "bright-02": {
+     "dur": 0.738,
+     "peak": 0.3,
+     "desc": "very bright, thin, glassy",
+     "tags": [
+      "bright",
+      "thin"
+     ],
+     "channels": 2,
+     "rms_db": -24.0,
+     "centroid": 12596
+    },
+    "dark-01": {
+     "dur": 0.788,
+     "peak": 0.31,
+     "desc": "low rumbling pass with sub",
+     "tags": [
+      "dark",
+      "sub"
+     ],
+     "channels": 2,
+     "rms_db": -21.4,
+     "centroid": 109
+    },
+    "dark-02": {
+     "dur": 0.986,
+     "peak": 0.355,
+     "desc": "dark, hollow, resonant",
+     "tags": [
+      "dark",
+      "hollow"
+     ],
+     "channels": 2,
+     "rms_db": -22.0,
+     "centroid": 790
+    },
+    "long-01": {
+     "dur": 1.469,
+     "peak": 0.59,
+     "desc": "slow wide pass left to right",
+     "tags": [
+      "long",
+      "wide"
+     ],
+     "channels": 2,
+     "rms_db": -24.0,
+     "centroid": 2281
+    },
+    "long-02": {
+     "dur": 1.8,
+     "peak": 0.9,
+     "desc": "long swell and fade, right to left",
+     "tags": [
+      "long",
+      "swell"
+     ],
+     "channels": 2,
+     "rms_db": -23.0,
+     "centroid": 2946
+    },
+    "airy-01": {
+     "dur": 1.204,
+     "peak": 0.415,
+     "desc": "breathy pass with a soft room",
+     "tags": [
+      "airy",
+      "reverb"
+     ],
+     "channels": 2,
+     "rms_db": -23.9,
+     "centroid": 4124
+    },
+    "airy-02": {
+     "dur": 1.292,
+     "peak": 0.47,
+     "desc": "whispered, vowel-like air",
+     "tags": [
+      "airy",
+      "vocal"
+     ],
+     "channels": 2,
+     "rms_db": -19.9,
+     "centroid": 2264
+    },
+    "reverse-01": {
+     "dur": 1.5,
+     "peak": 1.415,
+     "desc": "a splash played backwards: sucks in then stops",
+     "tags": [
+      "reverse",
+      "suck"
+     ],
+     "channels": 2,
+     "rms_db": -28.4,
+     "centroid": 1643
+    },
+    "reverse-02": {
+     "dur": 2.0,
+     "peak": 1.895,
+     "desc": "dark reversed thud-swell",
+     "tags": [
+      "reverse",
+      "dark"
+     ],
+     "channels": 2,
+     "rms_db": -27.1,
+     "centroid": 477
+    }
+   }
+  },
+  "swish": {
+   "desc": "fast whips and cloth flicks",
+   "jitter": {
+    "pitch": 0.7,
+    "gain": 1.0
+   },
+   "variants": {
+    "whip-01": {
+     "dur": 0.18,
+     "peak": 0.075,
+     "desc": "fast whip through the air rising",
+     "tags": [
+      "whip",
+      "fast"
+     ],
+     "channels": 2,
+     "rms_db": -22.3,
+     "centroid": 7012
+    },
+    "whip-02": {
+     "dur": 0.22,
+     "peak": 0.085,
+     "desc": "fast whip through the air falling",
+     "tags": [
+      "whip",
+      "fast"
+     ],
+     "channels": 2,
+     "rms_db": -22.3,
+     "centroid": 3963
+    },
+    "whip-03": {
+     "dur": 0.26,
+     "peak": 0.125,
+     "desc": "fast whip through the air rising",
+     "tags": [
+      "whip",
+      "fast"
+     ],
+     "channels": 2,
+     "rms_db": -21.9,
+     "centroid": 5246
+    },
+    "whip-04": {
+     "dur": 0.16,
+     "peak": 0.06,
+     "desc": "fast whip through the air falling",
+     "tags": [
+      "whip",
+      "fast"
+     ],
+     "channels": 2,
+     "rms_db": -21.9,
+     "centroid": 4750
+    },
+    "flick-01": {
+     "dur": 0.2,
+     "peak": 0.155,
+     "desc": "cloth flick with a snap at the end",
+     "tags": [
+      "flick",
+      "cloth"
+     ],
+     "channels": 2,
+     "rms_db": -22.3,
+     "centroid": 3277
+    },
+    "flick-02": {
+     "dur": 0.28,
+     "peak": 0.215,
+     "desc": "cloth flick with a snap at the end",
+     "tags": [
+      "flick",
+      "cloth"
+     ],
+     "channels": 2,
+     "rms_db": -24.1,
+     "centroid": 2418
+    },
+    "flick-03": {
+     "dur": 0.24,
+     "peak": 0.185,
+     "desc": "cloth flick with a snap at the end",
+     "tags": [
+      "flick",
+      "cloth"
+     ],
+     "channels": 2,
+     "rms_db": -21.8,
+     "centroid": 4218
+    },
+    "flick-04": {
+     "dur": 0.3,
+     "peak": 0.23,
+     "desc": "cloth flick with a snap at the end",
+     "tags": [
+      "flick",
+      "cloth"
+     ],
+     "channels": 2,
+     "rms_db": -25.9,
+     "centroid": 2915
+    }
+   }
+  },
+  "sweep": {
+   "desc": "long filter passes: noise, tonal, flanged, radio",
+   "jitter": {
+    "pitch": 0.4,
+    "gain": 1.0
+   },
+   "variants": {
+    "noise-up-01": {
+     "dur": 1.5,
+     "peak": 1.04,
+     "desc": "narrow noise band climbing",
+     "tags": [
+      "noise",
+      "resonant"
+     ],
+     "channels": 2,
+     "rms_db": -22.7,
+     "centroid": 2032
+    },
+    "noise-down-01": {
+     "dur": 1.458,
+     "peak": 0.355,
+     "desc": "narrow noise band falling",
+     "tags": [
+      "noise",
+      "resonant"
+     ],
+     "channels": 2,
+     "rms_db": -23.8,
+     "centroid": 2439
+    },
+    "tonal-up-01": {
+     "dur": 1.596,
+     "peak": 0.965,
+     "desc": "detuned saws through an opening filter",
+     "tags": [
+      "tonal",
+      "synth"
+     ],
+     "channels": 2,
+     "rms_db": -17.8,
+     "centroid": 719
+    },
+    "tonal-down-01": {
+     "dur": 1.586,
+     "peak": 0.75,
+     "desc": "detuned saws through an opening filter",
+     "tags": [
+      "tonal",
+      "synth"
+     ],
+     "channels": 2,
+     "rms_db": -23.9,
+     "centroid": 738
+    },
+    "flange-01": {
+     "dur": 1.354,
+     "peak": 0.6,
+     "desc": "noise through a deep flanger",
+     "tags": [
+      "flange",
+      "jet"
+     ],
+     "channels": 2,
+     "rms_db": -23.7,
+     "centroid": 6414
+    },
+    "flange-02": {
+     "dur": 1.466,
+     "peak": 0.495,
+     "desc": "ringing comb pass, pipe-like",
+     "tags": [
+      "comb",
+      "metallic"
+     ],
+     "channels": 2,
+     "rms_db": -24.4,
+     "centroid": 3136
+    },
+    "phase-01": {
+     "dur": 1.671,
+     "peak": 0.805,
+     "desc": "slow phaser wash",
+     "tags": [
+      "phase",
+      "slow"
+     ],
+     "channels": 2,
+     "rms_db": -22.7,
+     "centroid": 2741
+    },
+    "radio-01": {
+     "dur": 1.272,
+     "peak": 0.515,
+     "desc": "tuning across a radio dial",
+     "tags": [
+      "radio",
+      "lofi"
+     ],
+     "channels": 2,
+     "rms_db": -18.4,
+     "centroid": 1687
+    }
+   }
+  },
+  "riser": {
+   "desc": "builds to a moment: noise, tonal, Shepard, pulses",
+   "jitter": {
+    "pitch": 0.0,
+    "gain": 1.0
+   },
+   "variants": {
+    "noise-01": {
+     "dur": 1.975,
+     "peak": 1.91,
+     "desc": "white noise opening upward",
+     "tags": [
+      "noise",
+      "classic"
+     ],
+     "channels": 2,
+     "rms_db": -27.5,
+     "centroid": 4839
+    },
+    "noise-02": {
+     "dur": 2.385,
+     "peak": 2.18,
+     "desc": "noise with an accelerating tremolo",
+     "tags": [
+      "noise",
+      "pulse"
+     ],
+     "channels": 2,
+     "rms_db": -24.1,
+     "centroid": 7399
+    },
+    "noise-03": {
+     "dur": 1.49,
+     "peak": 1.395,
+     "desc": "narrow whistling band climbing two octaves",
+     "tags": [
+      "noise",
+      "whistle"
+     ],
+     "channels": 2,
+     "rms_db": -24.3,
+     "centroid": 3940
+    },
+    "tonal-01": {
+     "dur": 2.181,
+     "peak": 2.105,
+     "desc": "detuned saw stack rising two octaves",
+     "tags": [
+      "tonal",
+      "synth"
+     ],
+     "channels": 2,
+     "rms_db": -21.0,
+     "centroid": 611
+    },
+    "tonal-02": {
+     "dur": 1.78,
+     "peak": 1.75,
+     "desc": "square and fifth sliding up",
+     "tags": [
+      "tonal",
+      "hollow"
+     ],
+     "channels": 1,
+     "rms_db": -17.5,
+     "centroid": 770
+    },
+    "tonal-03": {
+     "dur": 2.888,
+     "peak": 2.525,
+     "desc": "cinematic FM growl climbing to a scream",
+     "tags": [
+      "tonal",
+      "cinematic"
+     ],
+     "channels": 2,
+     "rms_db": -18.4,
+     "centroid": 2750
+    },
+    "shepard-01": {
+     "dur": 2.949,
+     "peak": 2.89,
+     "desc": "endless rising Shepard-Risset tone",
+     "tags": [
+      "shepard",
+      "endless"
+     ],
+     "channels": 2,
+     "rms_db": -16.3,
+     "centroid": 1202
+    },
+    "shepard-02": {
+     "dur": 1.968,
+     "peak": 1.92,
+     "desc": "quicker Shepard rise",
+     "tags": [
+      "shepard",
+      "quick"
+     ],
+     "channels": 2,
+     "rms_db": -19.2,
+     "centroid": 1476
+    },
+    "pulse-01": {
+     "dur": 1.977,
+     "peak": 1.835,
+     "desc": "accelerating ticks over rising noise",
+     "tags": [
+      "pulse",
+      "tension"
+     ],
+     "channels": 2,
+     "rms_db": -32.4,
+     "centroid": 11542
+    },
+    "pulse-02": {
+     "dur": 1.527,
+     "peak": 1.455,
+     "desc": "snare-roll style burst rate climbing",
+     "tags": [
+      "pulse",
+      "roll"
+     ],
+     "channels": 2,
+     "rms_db": -29.2,
+     "centroid": 13062
+    },
+    "quick-01": {
+     "dur": 0.8,
+     "peak": 0.76,
+     "desc": "short build for a transition: noise",
+     "tags": [
+      "quick",
+      "noise"
+     ],
+     "channels": 2,
+     "rms_db": -23.6,
+     "centroid": 3450
+    },
+    "quick-02": {
+     "dur": 1.0,
+     "peak": 0.795,
+     "desc": "short build for a transition: tonal",
+     "tags": [
+      "quick",
+      "tonal"
+     ],
+     "channels": 2,
+     "rms_db": -20.9,
+     "centroid": 1417
+    },
+    "quick-03": {
+     "dur": 0.9,
+     "peak": 0.86,
+     "desc": "short build for a transition: shepard",
+     "tags": [
+      "quick",
+      "shepard"
+     ],
+     "channels": 2,
+     "rms_db": -17.1,
+     "centroid": 1507
+    },
+    "drone-01": {
+     "dur": 2.998,
+     "peak": 2.735,
+     "desc": "low drone rising an octave with a hiss on top",
+     "tags": [
+      "drone",
+      "low"
+     ],
+     "channels": 2,
+     "rms_db": -16.5,
+     "centroid": 458
+    }
+   },
+   "default": [
+    "quick",
+    "noise-03",
+    "pulse-02"
+   ]
+  },
+  "downer": {
+   "desc": "falls away: plunges, closing filters, tape stop",
+   "jitter": {
+    "pitch": 0.0,
+    "gain": 1.0
+   },
+   "variants": {
+    "drop-01": {
+     "dur": 0.9,
+     "peak": 0.025,
+     "desc": "sine plunging nine octaves",
+     "tags": [
+      "sine",
+      "plunge"
+     ],
+     "channels": 1,
+     "rms_db": -14.9,
+     "centroid": 215
+    },
+    "drop-02": {
+     "dur": 1.2,
+     "peak": 0.005,
+     "desc": "saw falling into the floor",
+     "tags": [
+      "saw",
+      "fall"
+     ],
+     "channels": 1,
+     "rms_db": -16.0,
+     "centroid": 305
+    },
+    "drop-03": {
+     "dur": 1.0,
+     "peak": 0.04,
+     "desc": "FM bleep falling and calming",
+     "tags": [
+      "fm",
+      "fall"
+     ],
+     "channels": 2,
+     "rms_db": -19.0,
+     "centroid": 768
+    },
+    "noise-01": {
+     "dur": 0.943,
+     "peak": 0.04,
+     "desc": "bright noise sliding down",
+     "tags": [
+      "noise",
+      "slide"
+     ],
+     "channels": 2,
+     "rms_db": -26.7,
+     "centroid": 3684
+    },
+    "noise-02": {
+     "dur": 1.6,
+     "peak": 0.03,
+     "desc": "noise filter closing into a rumble",
+     "tags": [
+      "noise",
+      "close"
+     ],
+     "channels": 1,
+     "rms_db": -19.6,
+     "centroid": 466
+    },
+    "shepard-01": {
+     "dur": 2.2,
+     "peak": 0.005,
+     "desc": "Shepard tone sinking forever",
+     "tags": [
+      "shepard",
+      "sink"
+     ],
+     "channels": 2,
+     "rms_db": -16.7,
+     "centroid": 1197
+    },
+    "tapestop-01": {
+     "dur": 1.389,
+     "peak": 0.04,
+     "desc": "a chord on a tape that is switched off",
+     "tags": [
+      "tape",
+      "stop"
+     ],
+     "channels": 1,
+     "rms_db": -16.6,
+     "centroid": 1593
+    }
+   }
+  },
+  "swell": {
+   "desc": "pads, strings, choir and cymbal blooms",
+   "jitter": {
+    "pitch": 0.0,
+    "gain": 1.0
+   },
+   "variants": {
+    "pad-cm": {
+     "dur": 2.709,
+     "peak": 1.41,
+     "desc": "C minor pad blooming and fading",
+     "tags": [
+      "pad",
+      "cmin"
+     ],
+     "channels": 2,
+     "rms_db": -19.3,
+     "centroid": 528
+    },
+    "pad-fm": {
+     "dur": 2.499,
+     "peak": 1.225,
+     "desc": "F major pad",
+     "tags": [
+      "pad",
+      "fmaj"
+     ],
+     "channels": 2,
+     "rms_db": -19.6,
+     "centroid": 449
+    },
+    "strings-01": {
+     "dur": 2.258,
+     "peak": 1.25,
+     "desc": "bowed-string swell with vibrato (C minor 7)",
+     "tags": [
+      "strings",
+      "cmin"
+     ],
+     "channels": 2,
+     "rms_db": -19.2,
+     "centroid": 890
+    },
+    "choir-01": {
+     "dur": 2.68,
+     "peak": 1.175,
+     "desc": "vowel-filtered 'ah' choir on C minor",
+     "tags": [
+      "choir",
+      "vocal"
+     ],
+     "channels": 2,
+     "rms_db": -18.9,
+     "centroid": 815
+    },
+    "cymbal-01": {
+     "dur": 1.8,
+     "peak": 1.73,
+     "desc": "reverse cymbal",
+     "tags": [
+      "cymbal",
+      "reverse"
+     ],
+     "channels": 2,
+     "rms_db": -23.0,
+     "centroid": 14138
+    },
+    "cymbal-02": {
+     "dur": 2.4,
+     "peak": 2.32,
+     "desc": "slower swelling noise wash",
+     "tags": [
+      "cymbal",
+      "wash"
+     ],
+     "channels": 2,
+     "rms_db": -24.1,
+     "centroid": 7011
+    }
+   }
+  },
+  "impact": {
+   "desc": "hits: sub booms, punches, struck metal, wood, glass and cinematic slams",
+   "jitter": {
+    "pitch": 0.0,
+    "gain": 1.0
+   },
+   "variants": {
+    "sub-01": {
+     "dur": 2.05,
+     "peak": 0.05,
+     "desc": "deep sub boom, long body",
+     "tags": [
+      "sub",
+      "boom"
+     ],
+     "channels": 2,
+     "rms_db": -12.3,
+     "centroid": 48
+    },
+    "sub-02": {
+     "dur": 2.887,
+     "peak": 0.015,
+     "desc": "deep sub boom, long body",
+     "tags": [
+      "sub",
+      "boom"
+     ],
+     "channels": 2,
+     "rms_db": -9.7,
+     "centroid": 36
+    },
+    "punch-01": {
+     "dur": 0.45,
+     "peak": 0.015,
+     "desc": "tight kick-like punch",
+     "tags": [
+      "punch",
+      "tight"
+     ],
+     "channels": 1,
+     "rms_db": -9.9,
+     "centroid": 69
+    },
+    "punch-02": {
+     "dur": 0.628,
+     "peak": 0.085,
+     "desc": "fat punch with a body knock",
+     "tags": [
+      "punch",
+      "fat"
+     ],
+     "channels": 2,
+     "rms_db": -12.0,
+     "centroid": 55
+    },
+    "metal-01": {
+     "dur": 1.067,
+     "peak": 0.005,
+     "desc": "struck metal plate with a ring",
+     "tags": [
+      "metal",
+      "ring"
+     ],
+     "channels": 2,
+     "rms_db": -21.7,
+     "centroid": 195
+    },
+    "metal-02": {
+     "dur": 1.169,
+     "peak": 0.0,
+     "desc": "struck metal plate with a ring",
+     "tags": [
+      "metal",
+      "ring"
+     ],
+     "channels": 2,
+     "rms_db": -21.7,
+     "centroid": 345
+    },
+    "wood-01": {
+     "dur": 0.271,
+     "peak": 0.005,
+     "desc": "wooden knock",
+     "tags": [
+      "wood",
+      "knock"
+     ],
+     "channels": 2,
+     "rms_db": -19.3,
+     "centroid": 74
+    },
+    "wood-02": {
+     "dur": 0.536,
+     "peak": 0.02,
+     "desc": "hollow wooden thud",
+     "tags": [
+      "wood",
+      "knock"
+     ],
+     "channels": 2,
+     "rms_db": -19.8,
+     "centroid": 87
+    },
+    "glass-01": {
+     "dur": 0.643,
+     "peak": 0.0,
+     "desc": "glass strike with a few shards",
+     "tags": [
+      "glass",
+      "shatter"
+     ],
+     "channels": 2,
+     "rms_db": -25.7,
+     "centroid": 5064
+    },
+    "glass-02": {
+     "dur": 0.694,
+     "peak": 0.0,
+     "desc": "glass strike with a few shards",
+     "tags": [
+      "glass",
+      "shatter"
+     ],
+     "channels": 2,
+     "rms_db": -24.7,
+     "centroid": 7229
+    },
+    "cine-01": {
+     "dur": 4.144,
+     "peak": 0.52,
+     "desc": "cinematic slam: reverse suck-in, sub, metal and a 2 s tail",
+     "tags": [
+      "cinematic",
+      "tail"
+     ],
+     "channels": 2,
+     "rms_db": -20.0,
+     "centroid": 42
+    },
+    "cine-02": {
+     "dur": 3.349,
+     "peak": 0.15,
+     "desc": "low brass-like blast over a sub",
+     "tags": [
+      "cinematic",
+      "brass"
+     ],
+     "channels": 2,
+     "rms_db": -18.3,
+     "centroid": 88
+    }
+   }
+  },
+  "stinger": {
+   "desc": "tonal chord hits in C minor (cmin) and F major (fmaj)",
+   "jitter": {
+    "pitch": 0.0,
+    "gain": 1.0
+   },
+   "variants": {
+    "cmin-01": {
+     "dur": 1.248,
+     "peak": 0.075,
+     "desc": "C minor brass-like stab",
+     "tags": [
+      "cmin",
+      "brass"
+     ],
+     "channels": 2,
+     "rms_db": -18.0,
+     "centroid": 663
+    },
+    "cmin-02": {
+     "dur": 2.279,
+     "peak": 0.07,
+     "desc": "C minor strummed pluck chord",
+     "tags": [
+      "cmin",
+      "pluck"
+     ],
+     "channels": 2,
+     "rms_db": -21.7,
+     "centroid": 707
+    },
+    "cmin-03": {
+     "dur": 2.688,
+     "peak": 0.055,
+     "desc": "C minor bell chord that rings out",
+     "tags": [
+      "cmin",
+      "bell"
+     ],
+     "channels": 2,
+     "rms_db": -21.6,
+     "centroid": 487
+    },
+    "cmin-04": {
+     "dur": 2.13,
+     "peak": 0.375,
+     "desc": "C minor soft pad hit with a long bloom",
+     "tags": [
+      "cmin",
+      "pad"
+     ],
+     "channels": 2,
+     "rms_db": -19.9,
+     "centroid": 620
+    },
+    "cmin-05": {
+     "dur": 1.972,
+     "peak": 0.065,
+     "desc": "C minor low drone hit",
+     "tags": [
+      "cmin",
+      "low",
+      "dark"
+     ],
+     "channels": 2,
+     "rms_db": -12.4,
+     "centroid": 81
+    },
+    "cmin-06": {
+     "dur": 2.368,
+     "peak": 0.03,
+     "desc": "C minor electric-piano chord",
+     "tags": [
+      "cmin",
+      "keys",
+      "fm"
+     ],
+     "channels": 2,
+     "rms_db": -18.1,
+     "centroid": 356
+    },
+    "fmaj-01": {
+     "dur": 1.249,
+     "peak": 0.01,
+     "desc": "F major brass-like stab",
+     "tags": [
+      "fmaj",
+      "brass"
+     ],
+     "channels": 2,
+     "rms_db": -17.7,
+     "centroid": 504
+    },
+    "fmaj-02": {
+     "dur": 2.277,
+     "peak": 0.07,
+     "desc": "F major strummed pluck chord",
+     "tags": [
+      "fmaj",
+      "pluck"
+     ],
+     "channels": 2,
+     "rms_db": -19.2,
+     "centroid": 779
+    },
+    "fmaj-03": {
+     "dur": 2.773,
+     "peak": 0.065,
+     "desc": "F major bell chord that rings out",
+     "tags": [
+      "fmaj",
+      "bell"
+     ],
+     "channels": 2,
+     "rms_db": -22.0,
+     "centroid": 308
+    },
+    "fmaj-04": {
+     "dur": 2.233,
+     "peak": 0.385,
+     "desc": "F major soft pad hit with a long bloom",
+     "tags": [
+      "fmaj",
+      "pad"
+     ],
+     "channels": 2,
+     "rms_db": -17.6,
+     "centroid": 471
+    },
+    "fmaj-05": {
+     "dur": 2.04,
+     "peak": 0.025,
+     "desc": "F major low drone hit",
+     "tags": [
+      "fmaj",
+      "low",
+      "dark"
+     ],
+     "channels": 2,
+     "rms_db": -11.0,
+     "centroid": 74
+    },
+    "fmaj-06": {
+     "dur": 2.31,
+     "peak": 0.165,
+     "desc": "F major electric-piano chord",
+     "tags": [
+      "fmaj",
+      "keys",
+      "fm"
+     ],
+     "channels": 2,
+     "rms_db": -17.2,
+     "centroid": 296
+    }
+   }
+  },
+  "ui": {
+   "desc": "interface clicks, taps, toggles, hovers, notifications, success and error",
+   "jitter": {
+    "pitch": 0.5,
+    "gain": 1.5
+   },
+   "variants": {
+    "click-01": {
+     "dur": 0.05,
+     "peak": 0.0,
+     "desc": "crisp interface click",
+     "tags": [
+      "click"
+     ],
+     "channels": 1,
+     "rms_db": -17.5,
+     "centroid": 420
+    },
+    "click-02": {
+     "dur": 0.038,
+     "peak": 0.0,
+     "desc": "soft interface click",
+     "tags": [
+      "click"
+     ],
+     "channels": 1,
+     "rms_db": -20.5,
+     "centroid": 2672
+    },
+    "click-03": {
+     "dur": 0.06,
+     "peak": 0.0,
+     "desc": "round interface click",
+     "tags": [
+      "click"
+     ],
+     "channels": 1,
+     "rms_db": -16.7,
+     "centroid": 1293
+    },
+    "tap-01": {
+     "dur": 0.12,
+     "peak": 0.0,
+     "desc": "soft fingertip tap",
+     "tags": [
+      "tap"
+     ],
+     "channels": 1,
+     "rms_db": -14.2,
+     "centroid": 219
+    },
+    "tap-02": {
+     "dur": 0.12,
+     "peak": 0.0,
+     "desc": "low knuckle tap",
+     "tags": [
+      "tap"
+     ],
+     "channels": 1,
+     "rms_db": -13.4,
+     "centroid": 150
+    },
+    "toggle-on": {
+     "dur": 0.16,
+     "peak": 0.045,
+     "desc": "switch on: two quick blips rising",
+     "tags": [
+      "toggle"
+     ],
+     "channels": 1,
+     "rms_db": -17.0,
+     "centroid": 1641
+    },
+    "toggle-off": {
+     "dur": 0.16,
+     "peak": 0.045,
+     "desc": "switch off: two quick blips falling",
+     "tags": [
+      "toggle"
+     ],
+     "channels": 1,
+     "rms_db": -16.9,
+     "centroid": 889
+    },
+    "hover-01": {
+     "dur": 0.05,
+     "peak": 0.005,
+     "desc": "barely-there high blip",
+     "tags": [
+      "hover"
+     ],
+     "channels": 1,
+     "rms_db": -16.7,
+     "centroid": 2600
+    },
+    "hover-02": {
+     "dur": 0.05,
+     "peak": 0.005,
+     "desc": "airy tick",
+     "tags": [
+      "hover"
+     ],
+     "channels": 1,
+     "rms_db": -17.5,
+     "centroid": 5466
+    },
+    "notify-01": {
+     "dur": 0.95,
+     "peak": 0.115,
+     "desc": "two-note chime up a fourth",
+     "tags": [
+      "notify"
+     ],
+     "channels": 2,
+     "rms_db": -17.1,
+     "centroid": 1073
+    },
+    "notify-02": {
+     "dur": 1.005,
+     "peak": 0.18,
+     "desc": "three-note rising chime",
+     "tags": [
+      "notify"
+     ],
+     "channels": 2,
+     "rms_db": -17.1,
+     "centroid": 1115
+    },
+    "notify-03": {
+     "dur": 0.95,
+     "peak": 0.135,
+     "desc": "high glassy ping-ping",
+     "tags": [
+      "notify"
+     ],
+     "channels": 2,
+     "rms_db": -17.1,
+     "centroid": 1846
+    },
+    "success-01": {
+     "dur": 1.032,
+     "peak": 0.18,
+     "desc": "rising C major arpeggio of bells",
+     "tags": [
+      "success"
+     ],
+     "channels": 2,
+     "rms_db": -17.2,
+     "centroid": 929
+    },
+    "success-02": {
+     "dur": 1.367,
+     "peak": 0.145,
+     "desc": "two-note lift into a sparkle",
+     "tags": [
+      "success"
+     ],
+     "channels": 2,
+     "rms_db": -17.6,
+     "centroid": 1096
+    },
+    "error-01": {
+     "dur": 0.4,
+     "peak": 0.005,
+     "desc": "low double-buzz, a polite no",
+     "tags": [
+      "error"
+     ],
+     "channels": 1,
+     "rms_db": -14.8,
+     "centroid": 560
+    },
+    "error-02": {
+     "dur": 0.49,
+     "peak": 0.0,
+     "desc": "wooden thunk and a falling tritone",
+     "tags": [
+      "error"
+     ],
+     "channels": 1,
+     "rms_db": -17.5,
+     "centroid": 460
+    }
+   }
+  },
+  "key": {
+   "desc": "keyboard keys (each different), space, enter and mouse clicks",
+   "jitter": {
+    "pitch": 0.5,
+    "gain": 1.5
+   },
+   "variants": {
+    "key-01": {
+     "dur": 0.1,
+     "peak": 0.005,
+     "desc": "keyboard key, thock 381 Hz",
+     "tags": [
+      "key",
+      "typing"
+     ],
+     "channels": 1,
+     "rms_db": -15.3,
+     "centroid": 416
+    },
+    "key-02": {
+     "dur": 0.091,
+     "peak": 0.0,
+     "desc": "keyboard key, thock 200 Hz",
+     "tags": [
+      "key",
+      "typing"
+     ],
+     "channels": 1,
+     "rms_db": -15.7,
+     "centroid": 239
+    },
+    "key-03": {
+     "dur": 0.1,
+     "peak": 0.0,
+     "desc": "keyboard key, thock 725 Hz",
+     "tags": [
+      "key",
+      "typing"
+     ],
+     "channels": 1,
+     "rms_db": -16.1,
+     "centroid": 842
+    },
+    "key-04": {
+     "dur": 0.1,
+     "peak": 0.01,
+     "desc": "keyboard key, thock 307 Hz",
+     "tags": [
+      "key",
+      "typing"
+     ],
+     "channels": 1,
+     "rms_db": -16.4,
+     "centroid": 389
+    },
+    "key-05": {
+     "dur": 0.085,
+     "peak": 0.0,
+     "desc": "keyboard key, thock 585 Hz",
+     "tags": [
+      "key",
+      "typing"
+     ],
+     "channels": 1,
+     "rms_db": -18.0,
+     "centroid": 393
+    },
+    "key-06": {
+     "dur": 0.1,
+     "peak": 0.0,
+     "desc": "keyboard key, thock 247 Hz",
+     "tags": [
+      "key",
+      "typing"
+     ],
+     "channels": 1,
+     "rms_db": -18.9,
+     "centroid": 313
+    },
+    "key-07": {
+     "dur": 0.1,
+     "peak": 0.0,
+     "desc": "keyboard key, thock 900 Hz",
+     "tags": [
+      "key",
+      "typing"
+     ],
+     "channels": 1,
+     "rms_db": -17.2,
+     "centroid": 742
+    },
+    "key-08": {
+     "dur": 0.084,
+     "peak": 0.0,
+     "desc": "keyboard key, thock 472 Hz",
+     "tags": [
+      "key",
+      "typing"
+     ],
+     "channels": 1,
+     "rms_db": -19.3,
+     "centroid": 311
+    },
+    "space-01": {
+     "dur": 0.22,
+     "peak": 0.0,
+     "desc": "wide space bar, deeper with a rattle",
+     "tags": [
+      "key",
+      "space"
+     ],
+     "channels": 1,
+     "rms_db": -18.0,
+     "centroid": 186
+    },
+    "enter-01": {
+     "dur": 0.16,
+     "peak": 0.0,
+     "desc": "enter key, firm thock",
+     "tags": [
+      "key",
+      "enter"
+     ],
+     "channels": 1,
+     "rms_db": -18.0,
+     "centroid": 291
+    },
+    "mouse-01": {
+     "dur": 0.127,
+     "peak": 0.0,
+     "desc": "mouse button press and release",
+     "tags": [
+      "mouse",
+      "click"
+     ],
+     "channels": 1,
+     "rms_db": -24.0,
+     "centroid": 3346
+    },
+    "mouse-02": {
+     "dur": 0.126,
+     "peak": 0.0,
+     "desc": "mouse button press and release",
+     "tags": [
+      "mouse",
+      "click"
+     ],
+     "channels": 1,
+     "rms_db": -24.7,
+     "centroid": 2883
+    }
+   }
+  },
+  "pop": {
+   "desc": "bubbles, lip pops, water plops",
+   "jitter": {
+    "pitch": 1.0,
+    "gain": 1.5
+   },
+   "variants": {
+    "bubble-01": {
+     "dur": 0.2,
+     "peak": 0.005,
+     "desc": "water bubble, big",
+     "tags": [
+      "bubble"
+     ],
+     "channels": 1,
+     "rms_db": -16.1,
+     "centroid": 744
+    },
+    "bubble-02": {
+     "dur": 0.2,
+     "peak": 0.005,
+     "desc": "water bubble, medium",
+     "tags": [
+      "bubble"
+     ],
+     "channels": 1,
+     "rms_db": -16.7,
+     "centroid": 1209
+    },
+    "bubble-03": {
+     "dur": 0.2,
+     "peak": 0.005,
+     "desc": "water bubble, small",
+     "tags": [
+      "bubble"
+     ],
+     "channels": 1,
+     "rms_db": -17.1,
+     "centroid": 1766
+    },
+    "pop-01": {
+     "dur": 0.111,
+     "peak": 0.0,
+     "desc": "lip pop, round",
+     "tags": [
+      "pop"
+     ],
+     "channels": 1,
+     "rms_db": -16.7,
+     "centroid": 517
+    },
+    "pop-02": {
+     "dur": 0.115,
+     "peak": 0.0,
+     "desc": "lip pop, deep",
+     "tags": [
+      "pop"
+     ],
+     "channels": 1,
+     "rms_db": -16.3,
+     "centroid": 371
+    },
+    "pop-03": {
+     "dur": 0.113,
+     "peak": 0.0,
+     "desc": "lip pop, bright",
+     "tags": [
+      "pop"
+     ],
+     "channels": 1,
+     "rms_db": -17.1,
+     "centroid": 668
+    },
+    "plop-01": {
+     "dur": 0.275,
+     "peak": 0.0,
+     "desc": "water drop plop",
+     "tags": [
+      "plop"
+     ],
+     "channels": 2,
+     "rms_db": -17.6,
+     "centroid": 1381
+    },
+    "plop-02": {
+     "dur": 0.27,
+     "peak": 0.0,
+     "desc": "water drop plop",
+     "tags": [
+      "plop"
+     ],
+     "channels": 2,
+     "rms_db": -17.1,
+     "centroid": 858
+    },
+    "blip-01": {
+     "dur": 0.12,
+     "peak": 0.0,
+     "desc": "soft rising blip",
+     "tags": [
+      "blip"
+     ],
+     "channels": 1,
+     "rms_db": -15.7,
+     "centroid": 744
+    }
+   }
+  },
+  "glitch": {
+   "desc": "digital stutters, chirps and data bursts",
+   "jitter": {
+    "pitch": 0.5,
+    "gain": 1.5
+   },
+   "variants": {
+    "stutter-01": {
+     "dur": 0.328,
+     "peak": 0.0,
+     "desc": "a sliced note repeated with a bitcrusher",
+     "tags": [
+      "stutter",
+      "crush"
+     ],
+     "channels": 1,
+     "rms_db": -16.3,
+     "centroid": 1707
+    },
+    "stutter-02": {
+     "dur": 0.324,
+     "peak": 0.0,
+     "desc": "a sliced note repeated with a bitcrusher",
+     "tags": [
+      "stutter",
+      "crush"
+     ],
+     "channels": 1,
+     "rms_db": -19.1,
+     "centroid": 2287
+    },
+    "stutter-03": {
+     "dur": 0.342,
+     "peak": 0.07,
+     "desc": "a sliced note repeated with a bitcrusher",
+     "tags": [
+      "stutter",
+      "crush"
+     ],
+     "channels": 1,
+     "rms_db": -15.3,
+     "centroid": 825
+    },
+    "chirp-01": {
+     "dur": 0.249,
+     "peak": 0.01,
+     "desc": "FM chirps, crushed",
+     "tags": [
+      "chirp",
+      "fm"
+     ],
+     "channels": 1,
+     "rms_db": -17.5,
+     "centroid": 5408
+    },
+    "chirp-02": {
+     "dur": 0.335,
+     "peak": 0.265,
+     "desc": "FM chirps, crushed",
+     "tags": [
+      "chirp",
+      "fm"
+     ],
+     "channels": 1,
+     "rms_db": -17.5,
+     "centroid": 7251
+    },
+    "chirp-03": {
+     "dur": 0.419,
+     "peak": 0.18,
+     "desc": "FM chirps, crushed",
+     "tags": [
+      "chirp",
+      "fm"
+     ],
+     "channels": 1,
+     "rms_db": -17.6,
+     "centroid": 8252
+    },
+    "data-01": {
+     "dur": 0.399,
+     "peak": 0.335,
+     "desc": "bursts of data",
+     "tags": [
+      "data",
+      "burst"
+     ],
+     "channels": 1,
+     "rms_db": -17.6,
+     "centroid": 3297
+    },
+    "data-02": {
+     "dur": 0.351,
+     "peak": 0.0,
+     "desc": "bursts of data",
+     "tags": [
+      "data",
+      "burst"
+     ],
+     "channels": 1,
+     "rms_db": -17.6,
+     "centroid": 5691
+    },
+    "data-03": {
+     "dur": 0.356,
+     "peak": 0.3,
+     "desc": "bursts of data",
+     "tags": [
+      "data",
+      "burst"
+     ],
+     "channels": 1,
+     "rms_db": -17.2,
+     "centroid": 1627
+    }
+   }
+  },
+  "shimmer": {
+   "desc": "sparkle clouds, glints, shimmering beds and harp glissandi",
+   "jitter": {
+    "pitch": 0.0,
+    "gain": 1.5
+   },
+   "variants": {
+    "sparkle-01": {
+     "dur": 1.588,
+     "peak": 0.49,
+     "desc": "a handful of high pentatonic pings rising",
+     "tags": [
+      "sparkle",
+      "pentatonic"
+     ],
+     "channels": 2,
+     "rms_db": -17.7,
+     "centroid": 1998
+    },
+    "sparkle-02": {
+     "dur": 1.995,
+     "peak": 0.605,
+     "desc": "a handful of high pentatonic pings dense",
+     "tags": [
+      "sparkle",
+      "pentatonic"
+     ],
+     "channels": 2,
+     "rms_db": -17.3,
+     "centroid": 1785
+    },
+    "sparkle-03": {
+     "dur": 1.297,
+     "peak": 0.085,
+     "desc": "a handful of high pentatonic pings short",
+     "tags": [
+      "sparkle",
+      "pentatonic"
+     ],
+     "channels": 2,
+     "rms_db": -17.4,
+     "centroid": 1407
+    },
+    "shimmer-01": {
+     "dur": 1.899,
+     "peak": 0.76,
+     "desc": "a bright, slowly beating cluster",
+     "tags": [
+      "shimmer",
+      "pad"
+     ],
+     "channels": 2,
+     "rms_db": -19.6,
+     "centroid": 1886
+    },
+    "shimmer-02": {
+     "dur": 1.954,
+     "peak": 0.895,
+     "desc": "a bright, slowly beating cluster",
+     "tags": [
+      "shimmer",
+      "pad"
+     ],
+     "channels": 2,
+     "rms_db": -17.4,
+     "centroid": 1103
+    },
+    "shimmer-03": {
+     "dur": 1.732,
+     "peak": 0.585,
+     "desc": "granular cloud of bell grains",
+     "tags": [
+      "shimmer",
+      "granular"
+     ],
+     "channels": 2,
+     "rms_db": -21.9,
+     "centroid": 2215
+    },
+    "glint-01": {
+     "dur": 0.551,
+     "peak": 0.005,
+     "desc": "a single star-like ting in a big room",
+     "tags": [
+      "glint",
+      "ting"
+     ],
+     "channels": 2,
+     "rms_db": -20.5,
+     "centroid": 3752
+    },
+    "glint-02": {
+     "dur": 0.575,
+     "peak": 0.005,
+     "desc": "a single star-like ting in a big room",
+     "tags": [
+      "glint",
+      "ting"
+     ],
+     "channels": 2,
+     "rms_db": -21.2,
+     "centroid": 5201
+    },
+    "gliss-01": {
+     "dur": 1.275,
+     "peak": 0.135,
+     "desc": "pentatonic harp glissando up",
+     "tags": [
+      "gliss",
+      "harp"
+     ],
+     "channels": 2,
+     "rms_db": -20.2,
+     "centroid": 1839
+    },
+    "gliss-02": {
+     "dur": 0.802,
+     "peak": 0.135,
+     "desc": "pentatonic harp glissando down",
+     "tags": [
+      "gliss",
+      "harp"
+     ],
+     "channels": 2,
+     "rms_db": -24.1,
+     "centroid": 4271
+    }
+   }
+  },
+  "paper": {
+   "desc": "paper rustles, cloth brushes, page flips, crumples and tears",
+   "jitter": {
+    "pitch": 0.0,
+    "gain": 1.5
+   },
+   "variants": {
+    "rustle-01": {
+     "dur": 0.694,
+     "peak": 0.27,
+     "desc": "dry paper rustle",
+     "tags": [
+      "rustle",
+      "paper"
+     ],
+     "channels": 2,
+     "rms_db": -37.7,
+     "centroid": 5710
+    },
+    "rustle-02": {
+     "dur": 0.853,
+     "peak": 0.27,
+     "desc": "dry paper rustle",
+     "tags": [
+      "rustle",
+      "paper"
+     ],
+     "channels": 2,
+     "rms_db": -37.7,
+     "centroid": 4703
+    },
+    "rustle-03": {
+     "dur": 0.561,
+     "peak": 0.24,
+     "desc": "dry paper rustle",
+     "tags": [
+      "rustle",
+      "paper"
+     ],
+     "channels": 2,
+     "rms_db": -33.3,
+     "centroid": 6925
+    },
+    "cloth-01": {
+     "dur": 0.35,
+     "peak": 0.12,
+     "desc": "fabric brushing past (medium)",
+     "tags": [
+      "cloth",
+      "fabric"
+     ],
+     "channels": 2,
+     "rms_db": -23.8,
+     "centroid": 644
+    },
+    "cloth-02": {
+     "dur": 0.5,
+     "peak": 0.2,
+     "desc": "fabric brushing past (slow, heavy)",
+     "tags": [
+      "cloth",
+      "fabric"
+     ],
+     "channels": 2,
+     "rms_db": -21.7,
+     "centroid": 474
+    },
+    "cloth-03": {
+     "dur": 0.28,
+     "peak": 0.08,
+     "desc": "fabric brushing past (light, fast)",
+     "tags": [
+      "cloth",
+      "fabric"
+     ],
+     "channels": 2,
+     "rms_db": -22.2,
+     "centroid": 910
+    },
+    "flip-01": {
+     "dur": 0.22,
+     "peak": 0.09,
+     "desc": "a page turned over",
+     "tags": [
+      "flip",
+      "page"
+     ],
+     "channels": 2,
+     "rms_db": -21.7,
+     "centroid": 7019
+    },
+    "flip-02": {
+     "dur": 0.3,
+     "peak": 0.135,
+     "desc": "a page turned over",
+     "tags": [
+      "flip",
+      "page"
+     ],
+     "channels": 2,
+     "rms_db": -21.5,
+     "centroid": 5285
+    },
+    "crumple-01": {
+     "dur": 0.9,
+     "peak": 0.17,
+     "desc": "paper balled up",
+     "tags": [
+      "crumple",
+      "dense"
+     ],
+     "channels": 2,
+     "rms_db": -21.9,
+     "centroid": 5264
+    },
+    "tear-01": {
+     "dur": 0.55,
+     "peak": 0.185,
+     "desc": "a ripping tear",
+     "tags": [
+      "tear"
+     ],
+     "channels": 2,
+     "rms_db": -23.1,
+     "centroid": 6783
+    }
+   }
+  },
+  "mech": {
+   "desc": "camera shutters, servos, switches, ratchets and clock ticks",
+   "jitter": {
+    "pitch": 0.5,
+    "gain": 1.5
+   },
+   "variants": {
+    "shutter-01": {
+     "dur": 0.115,
+     "peak": 0.0,
+     "desc": "camera shutter, two clicks",
+     "tags": [
+      "shutter",
+      "camera"
+     ],
+     "channels": 1,
+     "rms_db": -22.7,
+     "centroid": 2313
+    },
+    "shutter-02": {
+     "dur": 0.122,
+     "peak": 0.0,
+     "desc": "camera shutter, two clicks",
+     "tags": [
+      "shutter",
+      "camera"
+     ],
+     "channels": 1,
+     "rms_db": -20.7,
+     "centroid": 2564
+    },
+    "shutter-03": {
+     "dur": 0.12,
+     "peak": 0.0,
+     "desc": "camera shutter, two clicks and a mirror slap",
+     "tags": [
+      "shutter",
+      "camera"
+     ],
+     "channels": 1,
+     "rms_db": -18.5,
+     "centroid": 1659
+    },
+    "servo-01": {
+     "dur": 0.7,
+     "peak": 0.475,
+     "desc": "small motor spinning up and down",
+     "tags": [
+      "servo",
+      "motor"
+     ],
+     "channels": 1,
+     "rms_db": -15.4,
+     "centroid": 542
+    },
+    "servo-02": {
+     "dur": 0.9,
+     "peak": 0.66,
+     "desc": "small motor spinning up and down",
+     "tags": [
+      "servo",
+      "motor"
+     ],
+     "channels": 1,
+     "rms_db": -16.2,
+     "centroid": 753
+    },
+    "servo-03": {
+     "dur": 0.8,
+     "peak": 0.57,
+     "desc": "small motor spinning up and down",
+     "tags": [
+      "servo",
+      "motor"
+     ],
+     "channels": 1,
+     "rms_db": -15.6,
+     "centroid": 522
+    },
+    "switch-01": {
+     "dur": 0.123,
+     "peak": 0.0,
+     "desc": "click-clack toggle switch",
+     "tags": [
+      "switch",
+      "toggle"
+     ],
+     "channels": 1,
+     "rms_db": -22.3,
+     "centroid": 344
+    },
+    "switch-02": {
+     "dur": 0.131,
+     "peak": 0.0,
+     "desc": "click-clack toggle switch",
+     "tags": [
+      "switch",
+      "toggle"
+     ],
+     "channels": 1,
+     "rms_db": -22.5,
+     "centroid": 630
+    },
+    "ratchet-01": {
+     "dur": 0.817,
+     "peak": 0.385,
+     "desc": "a ratchet slowing down",
+     "tags": [
+      "ratchet",
+      "clicks"
+     ],
+     "channels": 1,
+     "rms_db": -26.4,
+     "centroid": 4264
+    },
+    "ratchet-02": {
+     "dur": 0.725,
+     "peak": 0.27,
+     "desc": "a ratchet speeding up",
+     "tags": [
+      "ratchet",
+      "clicks"
+     ],
+     "channels": 1,
+     "rms_db": -24.2,
+     "centroid": 4337
+    },
+    "tick-01": {
+     "dur": 0.059,
+     "peak": 0.0,
+     "desc": "dry clock tick",
+     "tags": [
+      "tick",
+      "clock"
+     ],
+     "channels": 1,
+     "rms_db": -22.6,
+     "centroid": 456
+    },
+    "tick-02": {
+     "dur": 0.285,
+     "peak": 0.0,
+     "desc": "tick then a lower tock",
+     "tags": [
+      "tick",
+      "clock"
+     ],
+     "channels": 1,
+     "rms_db": -25.1,
+     "centroid": 1500
+    }
+   }
+  },
+  "pluck": {
+   "desc": "Karplus-Strong plucked string (pitched: use pluck/C4 ... notes)",
+   "jitter": {
+    "pitch": 0.0,
+    "gain": 0.5
+   },
+   "variants": {
+    "C3": {
+     "dur": 1.4,
+     "peak": 0.005,
+     "desc": "Karplus-Strong plucked string, root C3",
+     "tags": [
+      "pluck",
+      "pitched"
+     ],
+     "channels": 1,
+     "rms_db": -16.2,
+     "centroid": 896
+    },
+    "D#3": {
+     "dur": 1.4,
+     "peak": 0.0,
+     "desc": "Karplus-Strong plucked string, root D#3",
+     "tags": [
+      "pluck",
+      "pitched"
+     ],
+     "channels": 1,
+     "rms_db": -20.0,
+     "centroid": 847
+    },
+    "F#3": {
+     "dur": 1.4,
+     "peak": 0.005,
+     "desc": "Karplus-Strong plucked string, root F#3",
+     "tags": [
+      "pluck",
+      "pitched"
+     ],
+     "channels": 1,
+     "rms_db": -18.8,
+     "centroid": 1020
+    },
+    "A3": {
+     "dur": 1.4,
+     "peak": 0.005,
+     "desc": "Karplus-Strong plucked string, root A3",
+     "tags": [
+      "pluck",
+      "pitched"
+     ],
+     "channels": 1,
+     "rms_db": -19.5,
+     "centroid": 911
+    },
+    "C4": {
+     "dur": 1.4,
+     "peak": 0.0,
+     "desc": "Karplus-Strong plucked string, root C4",
+     "tags": [
+      "pluck",
+      "pitched"
+     ],
+     "channels": 1,
+     "rms_db": -20.5,
+     "centroid": 937
+    },
+    "D#4": {
+     "dur": 1.4,
+     "peak": 0.0,
+     "desc": "Karplus-Strong plucked string, root D#4",
+     "tags": [
+      "pluck",
+      "pitched"
+     ],
+     "channels": 1,
+     "rms_db": -21.4,
+     "centroid": 578
+    },
+    "F#4": {
+     "dur": 1.4,
+     "peak": 0.005,
+     "desc": "Karplus-Strong plucked string, root F#4",
+     "tags": [
+      "pluck",
+      "pitched"
+     ],
+     "channels": 1,
+     "rms_db": -20.4,
+     "centroid": 1022
+    },
+    "A4": {
+     "dur": 1.4,
+     "peak": 0.005,
+     "desc": "Karplus-Strong plucked string, root A4",
+     "tags": [
+      "pluck",
+      "pitched"
+     ],
+     "channels": 1,
+     "rms_db": -20.4,
+     "centroid": 984
+    },
+    "C5": {
+     "dur": 0.92,
+     "peak": 0.0,
+     "desc": "Karplus-Strong plucked string, root C5",
+     "tags": [
+      "pluck",
+      "pitched"
+     ],
+     "channels": 1,
+     "rms_db": -24.6,
+     "centroid": 1509
+    }
+   },
+   "pitched": {
+    "lo": 48,
+    "hi": 72
+   }
+  },
+  "bell": {
+   "desc": "inharmonic struck bell with an FM glint (pitched: use pluck/C4 ... notes)",
+   "jitter": {
+    "pitch": 0.0,
+    "gain": 0.5
+   },
+   "variants": {
+    "C4": {
+     "dur": 2.0,
+     "peak": 0.01,
+     "desc": "inharmonic struck bell with an FM glint, root C4",
+     "tags": [
+      "bell",
+      "pitched"
+     ],
+     "channels": 1,
+     "rms_db": -17.0,
+     "centroid": 193
+    },
+    "D#4": {
+     "dur": 2.0,
+     "peak": 0.02,
+     "desc": "inharmonic struck bell with an FM glint, root D#4",
+     "tags": [
+      "bell",
+      "pitched"
+     ],
+     "channels": 1,
+     "rms_db": -18.3,
+     "centroid": 253
+    },
+    "F#4": {
+     "dur": 2.0,
+     "peak": 0.01,
+     "desc": "inharmonic struck bell with an FM glint, root F#4",
+     "tags": [
+      "bell",
+      "pitched"
+     ],
+     "channels": 1,
+     "rms_db": -18.3,
+     "centroid": 324
+    },
+    "A4": {
+     "dur": 2.0,
+     "peak": 0.0,
+     "desc": "inharmonic struck bell with an FM glint, root A4",
+     "tags": [
+      "bell",
+      "pitched"
+     ],
+     "channels": 1,
+     "rms_db": -19.9,
+     "centroid": 384
+    },
+    "C5": {
+     "dur": 2.0,
+     "peak": 0.01,
+     "desc": "inharmonic struck bell with an FM glint, root C5",
+     "tags": [
+      "bell",
+      "pitched"
+     ],
+     "channels": 1,
+     "rms_db": -19.5,
+     "centroid": 364
+    },
+    "D#5": {
+     "dur": 2.0,
+     "peak": 0.005,
+     "desc": "inharmonic struck bell with an FM glint, root D#5",
+     "tags": [
+      "bell",
+      "pitched"
+     ],
+     "channels": 1,
+     "rms_db": -20.5,
+     "centroid": 518
+    },
+    "F#5": {
+     "dur": 2.0,
+     "peak": 0.015,
+     "desc": "inharmonic struck bell with an FM glint, root F#5",
+     "tags": [
+      "bell",
+      "pitched"
+     ],
+     "channels": 1,
+     "rms_db": -19.5,
+     "centroid": 689
+    },
+    "A5": {
+     "dur": 2.0,
+     "peak": 0.025,
+     "desc": "inharmonic struck bell with an FM glint, root A5",
+     "tags": [
+      "bell",
+      "pitched"
+     ],
+     "channels": 1,
+     "rms_db": -20.7,
+     "centroid": 861
+    },
+    "C6": {
+     "dur": 2.0,
+     "peak": 0.005,
+     "desc": "inharmonic struck bell with an FM glint, root C6",
+     "tags": [
+      "bell",
+      "pitched"
+     ],
+     "channels": 1,
+     "rms_db": -20.6,
+     "centroid": 886
+    }
+   },
+   "pitched": {
+    "lo": 60,
+    "hi": 84
+   }
+  },
+  "marimba": {
+   "desc": "tuned wooden bar (pitched: use pluck/C4 ... notes)",
+   "jitter": {
+    "pitch": 0.0,
+    "gain": 0.5
+   },
+   "variants": {
+    "C3": {
+     "dur": 0.321,
+     "peak": 0.0,
+     "desc": "tuned wooden bar, root C3",
+     "tags": [
+      "marimba",
+      "pitched"
+     ],
+     "channels": 1,
+     "rms_db": -19.2,
+     "centroid": 133
+    },
+    "D#3": {
+     "dur": 0.308,
+     "peak": 0.0,
+     "desc": "tuned wooden bar, root D#3",
+     "tags": [
+      "marimba",
+      "pitched"
+     ],
+     "channels": 1,
+     "rms_db": -17.8,
+     "centroid": 158
+    },
+    "F#3": {
+     "dur": 0.311,
+     "peak": 0.0,
+     "desc": "tuned wooden bar, root F#3",
+     "tags": [
+      "marimba",
+      "pitched"
+     ],
+     "channels": 1,
+     "rms_db": -19.2,
+     "centroid": 184
+    },
+    "A3": {
+     "dur": 0.289,
+     "peak": 0.0,
+     "desc": "tuned wooden bar, root A3",
+     "tags": [
+      "marimba",
+      "pitched"
+     ],
+     "channels": 1,
+     "rms_db": -19.9,
+     "centroid": 221
+    },
+    "C4": {
+     "dur": 0.287,
+     "peak": 0.0,
+     "desc": "tuned wooden bar, root C4",
+     "tags": [
+      "marimba",
+      "pitched"
+     ],
+     "channels": 1,
+     "rms_db": -20.0,
+     "centroid": 261
+    },
+    "D#4": {
+     "dur": 0.277,
+     "peak": 0.0,
+     "desc": "tuned wooden bar, root D#4",
+     "tags": [
+      "marimba",
+      "pitched"
+     ],
+     "channels": 1,
+     "rms_db": -19.6,
+     "centroid": 311
+    },
+    "F#4": {
+     "dur": 0.264,
+     "peak": 0.0,
+     "desc": "tuned wooden bar, root F#4",
+     "tags": [
+      "marimba",
+      "pitched"
+     ],
+     "channels": 1,
+     "rms_db": -18.9,
+     "centroid": 369
+    },
+    "A4": {
+     "dur": 0.231,
+     "peak": 0.0,
+     "desc": "tuned wooden bar, root A4",
+     "tags": [
+      "marimba",
+      "pitched"
+     ],
+     "channels": 1,
+     "rms_db": -21.4,
+     "centroid": 449
+    },
+    "C5": {
+     "dur": 0.251,
+     "peak": 0.0,
+     "desc": "tuned wooden bar, root C5",
+     "tags": [
+      "marimba",
+      "pitched"
+     ],
+     "channels": 1,
+     "rms_db": -19.5,
+     "centroid": 525
+    }
+   },
+   "pitched": {
+    "lo": 48,
+    "hi": 72
+   }
+  },
+  "stab": {
+   "desc": "detuned saw stab with a closing filter (pitched: use pluck/C4 ... notes)",
+   "jitter": {
+    "pitch": 0.0,
+    "gain": 0.5
+   },
+   "variants": {
+    "C3": {
+     "dur": 0.5,
+     "peak": 0.005,
+     "desc": "detuned saw stab with a closing filter, root C3",
+     "tags": [
+      "stab",
+      "pitched"
+     ],
+     "channels": 1,
+     "rms_db": -17.5,
+     "centroid": 319
+    },
+    "D#3": {
+     "dur": 0.5,
+     "peak": 0.005,
+     "desc": "detuned saw stab with a closing filter, root D#3",
+     "tags": [
+      "stab",
+      "pitched"
+     ],
+     "channels": 1,
+     "rms_db": -14.3,
+     "centroid": 286
+    },
+    "F#3": {
+     "dur": 0.5,
+     "peak": 0.005,
+     "desc": "detuned saw stab with a closing filter, root F#3",
+     "tags": [
+      "stab",
+      "pitched"
+     ],
+     "channels": 1,
+     "rms_db": -16.1,
+     "centroid": 284
+    },
+    "A3": {
+     "dur": 0.5,
+     "peak": 0.01,
+     "desc": "detuned saw stab with a closing filter, root A3",
+     "tags": [
+      "stab",
+      "pitched"
+     ],
+     "channels": 1,
+     "rms_db": -15.5,
+     "centroid": 290
+    },
+    "C4": {
+     "dur": 0.5,
+     "peak": 0.03,
+     "desc": "detuned saw stab with a closing filter, root C4",
+     "tags": [
+      "stab",
+      "pitched"
+     ],
+     "channels": 1,
+     "rms_db": -15.2,
+     "centroid": 472
+    },
+    "D#4": {
+     "dur": 0.5,
+     "peak": 0.005,
+     "desc": "detuned saw stab with a closing filter, root D#4",
+     "tags": [
+      "stab",
+      "pitched"
+     ],
+     "channels": 1,
+     "rms_db": -16.1,
+     "centroid": 639
+    },
+    "F#4": {
+     "dur": 0.5,
+     "peak": 0.005,
+     "desc": "detuned saw stab with a closing filter, root F#4",
+     "tags": [
+      "stab",
+      "pitched"
+     ],
+     "channels": 1,
+     "rms_db": -17.9,
+     "centroid": 718
+    },
+    "A4": {
+     "dur": 0.5,
+     "peak": 0.005,
+     "desc": "detuned saw stab with a closing filter, root A4",
+     "tags": [
+      "stab",
+      "pitched"
+     ],
+     "channels": 1,
+     "rms_db": -16.2,
+     "centroid": 773
+    },
+    "C5": {
+     "dur": 0.5,
+     "peak": 0.005,
+     "desc": "detuned saw stab with a closing filter, root C5",
+     "tags": [
+      "stab",
+      "pitched"
+     ],
+     "channels": 1,
+     "rms_db": -19.9,
+     "centroid": 861
+    }
+   },
+   "pitched": {
+    "lo": 48,
+    "hi": 72
+   }
+  },
+  "bass": {
+   "desc": "round sub bass with a saw edge (pitched: use pluck/C4 ... notes)",
+   "jitter": {
+    "pitch": 0.0,
+    "gain": 0.5
+   },
+   "variants": {
+    "C2": {
+     "dur": 0.8,
+     "peak": 0.01,
+     "desc": "round sub bass with a saw edge, root C2",
+     "tags": [
+      "bass",
+      "pitched"
+     ],
+     "channels": 1,
+     "rms_db": -8.1,
+     "centroid": 81
+    },
+    "D#2": {
+     "dur": 0.8,
+     "peak": 0.07,
+     "desc": "round sub bass with a saw edge, root D#2",
+     "tags": [
+      "bass",
+      "pitched"
+     ],
+     "channels": 1,
+     "rms_db": -8.6,
+     "centroid": 94
+    },
+    "F#2": {
+     "dur": 0.8,
+     "peak": 0.02,
+     "desc": "round sub bass with a saw edge, root F#2",
+     "tags": [
+      "bass",
+      "pitched"
+     ],
+     "channels": 1,
+     "rms_db": -9.5,
+     "centroid": 110
+    },
+    "A2": {
+     "dur": 0.8,
+     "peak": 0.045,
+     "desc": "round sub bass with a saw edge, root A2",
+     "tags": [
+      "bass",
+      "pitched"
+     ],
+     "channels": 1,
+     "rms_db": -10.3,
+     "centroid": 128
+    },
+    "C3": {
+     "dur": 0.8,
+     "peak": 0.09,
+     "desc": "round sub bass with a saw edge, root C3",
+     "tags": [
+      "bass",
+      "pitched"
+     ],
+     "channels": 1,
+     "rms_db": -11.3,
+     "centroid": 150
+    },
+    "D#3": {
+     "dur": 0.8,
+     "peak": 0.08,
+     "desc": "round sub bass with a saw edge, root D#3",
+     "tags": [
+      "bass",
+      "pitched"
+     ],
+     "channels": 1,
+     "rms_db": -12.1,
+     "centroid": 176
+    },
+    "F#3": {
+     "dur": 0.8,
+     "peak": 0.085,
+     "desc": "round sub bass with a saw edge, root F#3",
+     "tags": [
+      "bass",
+      "pitched"
+     ],
+     "channels": 1,
+     "rms_db": -13.0,
+     "centroid": 208
+    },
+    "A3": {
+     "dur": 0.8,
+     "peak": 0.09,
+     "desc": "round sub bass with a saw edge, root A3",
+     "tags": [
+      "bass",
+      "pitched"
+     ],
+     "channels": 1,
+     "rms_db": -13.7,
+     "centroid": 244
+    },
+    "C4": {
+     "dur": 0.8,
+     "peak": 0.06,
+     "desc": "round sub bass with a saw edge, root C4",
+     "tags": [
+      "bass",
+      "pitched"
+     ],
+     "channels": 1,
+     "rms_db": -14.4,
+     "centroid": 285
+    }
+   },
+   "pitched": {
+    "lo": 36,
+    "hi": 60
+   }
+  },
+  "kick": {
+   "desc": "kick drums: 808, punchy, soft, techno, sub, distorted",
+   "jitter": {
+    "pitch": 0.5,
+    "gain": 1.0
+   },
+   "variants": {
+    "808-01": {
+     "dur": 1.2,
+     "peak": 0.045,
+     "desc": "long 808 boom kick",
+     "tags": [
+      "808",
+      "long"
+     ],
+     "channels": 1,
+     "rms_db": -6.7,
+     "centroid": 49
+    },
+    "punchy-01": {
+     "dur": 0.45,
+     "peak": 0.01,
+     "desc": "tight punchy kick",
+     "tags": [
+      "punchy"
+     ],
+     "channels": 1,
+     "rms_db": -9.0,
+     "centroid": 61
+    },
+    "soft-01": {
+     "dur": 0.5,
+     "peak": 0.005,
+     "desc": "soft round kick",
+     "tags": [
+      "soft"
+     ],
+     "channels": 1,
+     "rms_db": -11.3,
+     "centroid": 54
+    },
+    "techno-01": {
+     "dur": 0.3,
+     "peak": 0.01,
+     "desc": "short hard techno kick",
+     "tags": [
+      "techno",
+      "hard"
+     ],
+     "channels": 1,
+     "rms_db": -9.1,
+     "centroid": 65
+    },
+    "sub-01": {
+     "dur": 0.9,
+     "peak": 0.01,
+     "desc": "pure sub thump",
+     "tags": [
+      "sub"
+     ],
+     "channels": 1,
+     "rms_db": -11.4,
+     "centroid": 42
+    },
+    "dist-01": {
+     "dur": 0.5,
+     "peak": 0.025,
+     "desc": "overdriven, crushed kick",
+     "tags": [
+      "distorted"
+     ],
+     "channels": 1,
+     "rms_db": -8.5,
+     "centroid": 66
+    }
+   }
+  },
+  "snare": {
+   "desc": "snares: tight, fat, electro, snappy, brush, gated",
+   "jitter": {
+    "pitch": 0.5,
+    "gain": 1.0
+   },
+   "variants": {
+    "tight-01": {
+     "dur": 0.25,
+     "peak": 0.0,
+     "desc": "short, tight snare",
+     "tags": [
+      "tight"
+     ],
+     "channels": 1,
+     "rms_db": -17.6,
+     "centroid": 4175
+    },
+    "fat-01": {
+     "dur": 0.537,
+     "peak": 0.005,
+     "desc": "fat snare with a room",
+     "tags": [
+      "fat"
+     ],
+     "channels": 2,
+     "rms_db": -19.7,
+     "centroid": 4023
+    },
+    "electro-01": {
+     "dur": 0.35,
+     "peak": 0.005,
+     "desc": "synthetic electro snare",
+     "tags": [
+      "electro"
+     ],
+     "channels": 1,
+     "rms_db": -16.4,
+     "centroid": 12049
+    },
+    "snap-01": {
+     "dur": 0.37,
+     "peak": 0.01,
+     "desc": "bright rimmy snare",
+     "tags": [
+      "snappy"
+     ],
+     "channels": 2,
+     "rms_db": -19.4,
+     "centroid": 5710
+    },
+    "brush-01": {
+     "dur": 0.3,
+     "peak": 0.115,
+     "desc": "brush swish",
+     "tags": [
+      "brush",
+      "soft"
+     ],
+     "channels": 1,
+     "rms_db": -17.3,
+     "centroid": 4180
+    },
+    "gated-01": {
+     "dur": 0.505,
+     "peak": 0.03,
+     "desc": "gated-reverb snare",
+     "tags": [
+      "gated",
+      "80s"
+     ],
+     "channels": 2,
+     "rms_db": -21.7,
+     "centroid": 2604
+    }
+   }
+  },
+  "clap": {
+   "desc": "hand claps",
+   "jitter": {
+    "pitch": 0.5,
+    "gain": 1.0
+   },
+   "variants": {
+    "clap-01": {
+     "dur": 0.308,
+     "peak": 0.035,
+     "desc": "hand clap with 4 layers",
+     "tags": [
+      "clap"
+     ],
+     "channels": 2,
+     "rms_db": -20.2,
+     "centroid": 2616
+    },
+    "clap-02": {
+     "dur": 0.392,
+     "peak": 0.06,
+     "desc": "hand clap with 5 layers",
+     "tags": [
+      "clap"
+     ],
+     "channels": 2,
+     "rms_db": -20.5,
+     "centroid": 1942
+    },
+    "clap-03": {
+     "dur": 0.231,
+     "peak": 0.025,
+     "desc": "hand clap with 3 layers",
+     "tags": [
+      "clap"
+     ],
+     "channels": 2,
+     "rms_db": -18.7,
+     "centroid": 3294
+    },
+    "clap-04": {
+     "dur": 0.42,
+     "peak": 0.09,
+     "desc": "hand clap with 6 layers",
+     "tags": [
+      "clap"
+     ],
+     "channels": 2,
+     "rms_db": -19.4,
+     "centroid": 2350
+    }
+   }
+  },
+  "hat": {
+   "desc": "hi-hats: closed, open, pedal",
+   "jitter": {
+    "pitch": 0.5,
+    "gain": 1.0
+   },
+   "variants": {
+    "closed-01": {
+     "dur": 0.114,
+     "peak": 0.0,
+     "desc": "tight closed hat",
+     "tags": [
+      "closed"
+     ],
+     "channels": 1,
+     "rms_db": -20.7,
+     "centroid": 12044
+    },
+    "closed-02": {
+     "dur": 0.15,
+     "peak": 0.0,
+     "desc": "slightly longer, brighter closed hat",
+     "tags": [
+      "closed",
+      "bright"
+     ],
+     "channels": 1,
+     "rms_db": -21.3,
+     "centroid": 14356
+    },
+    "closed-03": {
+     "dur": 0.091,
+     "peak": 0.0,
+     "desc": "very short dark tick hat",
+     "tags": [
+      "closed",
+      "dark"
+     ],
+     "channels": 1,
+     "rms_db": -22.1,
+     "centroid": 6694
+    },
+    "open-01": {
+     "dur": 0.6,
+     "peak": 0.0,
+     "desc": "open hat that rings",
+     "tags": [
+      "open"
+     ],
+     "channels": 1,
+     "rms_db": -18.8,
+     "centroid": 11087
+    },
+    "open-02": {
+     "dur": 0.9,
+     "peak": 0.025,
+     "desc": "long sizzling open hat",
+     "tags": [
+      "open",
+      "long"
+     ],
+     "channels": 1,
+     "rms_db": -18.8,
+     "centroid": 13551
+    },
+    "pedal-01": {
+     "dur": 0.14,
+     "peak": 0.0,
+     "desc": "soft pedal hat chick",
+     "tags": [
+      "pedal",
+      "soft"
+     ],
+     "channels": 1,
+     "rms_db": -18.8,
+     "centroid": 6813
+    }
+   }
+  },
+  "rim": {
+   "desc": "rim shots, side-sticks and clave",
+   "jitter": {
+    "pitch": 0.5,
+    "gain": 1.0
+   },
+   "variants": {
+    "rim-01": {
+     "dur": 0.106,
+     "peak": 0.0,
+     "desc": "rim shot click",
+     "tags": [
+      "rimshot"
+     ],
+     "channels": 1,
+     "rms_db": -19.5,
+     "centroid": 222
+    },
+    "rim-02": {
+     "dur": 0.088,
+     "peak": 0.0,
+     "desc": "metallic side-stick",
+     "tags": [
+      "sidestick",
+      "metal"
+     ],
+     "channels": 1,
+     "rms_db": -23.4,
+     "centroid": 803
+    },
+    "clave-01": {
+     "dur": 0.2,
+     "peak": 0.0,
+     "desc": "wooden clave",
+     "tags": [
+      "clave",
+      "wood"
+     ],
+     "channels": 1,
+     "rms_db": -17.1,
+     "centroid": 2507
+    }
+   }
+  },
+  "tom": {
+   "desc": "toms from floor to high",
+   "jitter": {
+    "pitch": 0.5,
+    "gain": 1.0
+   },
+   "variants": {
+    "floor-01": {
+     "dur": 0.92,
+     "peak": 0.01,
+     "desc": "tom around 78 Hz",
+     "tags": [
+      "tom"
+     ],
+     "channels": 2,
+     "rms_db": -12.9,
+     "centroid": 78
+    },
+    "low-01": {
+     "dur": 0.92,
+     "peak": 0.01,
+     "desc": "tom around 110 Hz",
+     "tags": [
+      "tom"
+     ],
+     "channels": 2,
+     "rms_db": -14.1,
+     "centroid": 111
+    },
+    "mid-01": {
+     "dur": 0.62,
+     "peak": 0.015,
+     "desc": "tom around 150 Hz",
+     "tags": [
+      "tom"
+     ],
+     "channels": 2,
+     "rms_db": -14.4,
+     "centroid": 152
+    },
+    "high-01": {
+     "dur": 0.62,
+     "peak": 0.01,
+     "desc": "tom around 210 Hz",
+     "tags": [
+      "tom"
+     ],
+     "channels": 2,
+     "rms_db": -14.7,
+     "centroid": 214
+    }
+   }
+  }
+ },
+ "aliases": {
+  "card-in": [
+   "swish/flick",
+   "paper/flip"
+  ],
+  "stamp": [
+   "impact/punch",
+   "impact/wood"
+  ],
+  "counter": [
+   "ui/notify",
+   "shimmer/glint"
+  ],
+  "loss": [
+   "downer/drop",
+   "impact/sub"
+  ],
+  "reveal": [
+   "shimmer/sparkle",
+   "shimmer/shimmer",
+   "swell/cymbal"
+  ],
+  "click": [
+   "ui/click",
+   "key/mouse"
+  ],
+  "tick": [
+   "mech/tick"
+  ],
+  "boom": [
+   "impact/sub",
+   "impact/cine"
+  ],
+  "type": [
+   "key/key"
+  ],
+  "fast-pass": [
+   "whoosh/short",
+   "whoosh/bright",
+   "swish/flick"
+  ],
+  "soft-pass": [
+   "whoosh/airy",
+   "whoosh/long",
+   "paper/cloth"
+  ],
+  "heavy-pass": [
+   "whoosh/dark",
+   "whoosh/long",
+   "downer/noise"
+  ],
+  "wipe-pass": [
+   "swish/whip",
+   "whoosh/bright",
+   "paper/flip"
+  ],
+  "pull-back": [
+   "whoosh/reverse",
+   "downer/noise",
+   "sweep/noise-down"
+  ]
+ }
+}

@@ -1,0 +1,23 @@
+// @effect turbulent_displace
+// @summary Wobbles the layer by a noise layer, like After Effects' Turbulent Displace; drive the noise to animate it.
+// @input noise layer -- a noise picture, for example a `noise` texture layer (hidden); its brightness is the field
+// @param amount float 24 0 400 -- the most a pixel moves, px, in each direction
+// @param outside choice pin pin,wrap -- beyond the frame: the edge pixels stretch (pin), or the picture repeats (wrap)
+// @example {"effect": "turbulent_displace", "noise": "noise_layer", "amount": 40}
+const float NEUTRAL = 0.5;
+const int EDGE_WRAP = 1;
+
+float field(float2 p) {
+    half4 raw = noise.eval(p);
+    return raw.a > 0.0 ? luma(raw.rgb / raw.a) : 0.0;
+}
+
+half4 main(float2 xy) {
+    // one noise picture gives one number per pixel: x reads it here, y at the point mirrored through the centre, so they do not move together
+    float2 push = (float2(field(xy), field(resolution - xy)) - NEUTRAL) * 2.0 * amount;
+    float2 from = xy - push;
+    if (int(outside + 0.5) == EDGE_WRAP) {
+        from = mod(from, resolution);
+    }
+    return image.eval(from);
+}

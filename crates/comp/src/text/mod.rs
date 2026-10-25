@@ -4,4 +4,8 @@
 pub mod animate;
 pub mod layout;
 pub mod measure;
+pub mod place;
 pub mod presets;
+
+#[cfg(test)]
+mod tests;

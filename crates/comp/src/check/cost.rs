@@ -1,7 +1,7 @@
 //! A transparent effect-work estimate, not a GPU benchmark or an invented render-time prediction.
 use anyhow::Result;
 use serde::Serialize;
-use crate::{eval::Evaluator, fxlib::PlanFx, plan::Plan};
+use crate::{eval::Evaluator, fxlib::{FxOp, PlanFx}, plan::Plan};
 
 /// Megapixels is a presentation unit, not a performance weighting coefficient.
 const PIXELS_PER_MEGAPIXEL: f64 = 1_000_000.0;
@@ -20,7 +20,7 @@ pub struct CompositionCost {
     pub glow_surface_mpx: f64,
 }
 fn glows(effects: &[PlanFx]) -> usize {
-    effects.iter().filter(|fx| matches!(fx, PlanFx::Builtin(effect) if effect.name() == "glow")).count()
+    effects.iter().filter(|fx| matches!(&fx.op, FxOp::Builtin(effect) if effect.name() == "glow")).count()
 }
 /// Sum each effect stage's largest visible surface from five deterministic local-time samples.
 /// Reports every nested composition separately so shot costs do not disappear into a root precomp.

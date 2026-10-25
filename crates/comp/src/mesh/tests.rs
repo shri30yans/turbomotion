@@ -80,7 +80,7 @@ fn a_mesh_layer_has_bounds_and_renders_pixels() {
         json!({"width": 640, "height": 360, "dur": 1, "bg": "#000", "layers": [
             {"type": "camera", "zoom": 800},
             {"type": "light", "kind": "ambient", "intensity": 0.8},
-            {"type": "mesh", "id": "m", "three_d": true, "geometry": {"kind": "text", "text": "M", "size": 200, "bevel": 4}, "color": "#ff4030", "rot_y": 30, "pos": [320, 180, 0]}
+            {"type": "mesh", "id": "m", "three_d": true, "geometry": {"kind": "text", "text": "M", "size": 200, "bevel": 4}, "color": "#ff4030", "rotation": [0, 30, 0], "pos": [320, 180, 0]}
         ]}),
         std::path::Path::new("."),
     )

@@ -1,0 +1,18 @@
+// @effect datamosh
+// @summary Blocks stop updating and keep their old pixels, smearing along a drifting vector, like video that lost its keyframes.
+// @input prev history=1 depth=12 -- the effect's own picture one frame ago; a block can hold at most `depth` frames
+// @param block float 32 8 256 -- block size in px
+// @param hold float 0.35 0 1 -- the share of blocks that keep their old pixels
+// @param smear float 12 0 120 -- px a held block's old pixels drift each frame, along a direction chosen per block
+// @param rate float 3 0.25 30 -- how many times a second the blocks choose again whether to hold
+// @example {"effect": "datamosh", "block": 48, "hold": 0.4, "smear": 16, "rate": 2}
+// each choice period reads a different part of the hash, and the direction a different part from the decision
+const float2 PERIOD_STRIDE = float2(13.7, 7.3);
+const float2 DIRECTION_SALT = float2(101.0, 53.0);
+
+half4 main(float2 xy) {
+    float2 cell = floor(xy / block) + floor(time * rate) * PERIOD_STRIDE;
+    bool held = hash21(cell) < hold;
+    float2 drift = (hash22(cell + DIRECTION_SALT) * 2.0 - 1.0) * smear;
+    return held ? prev.eval(xy - drift) : image.eval(xy);
+}

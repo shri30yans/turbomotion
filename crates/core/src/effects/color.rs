@@ -4,7 +4,7 @@ use anyhow::Result;
 use serde::Deserialize;
 
 use super::{
-    param::{value, Param},
+    param::Param,
     pass::{run, Ctx},
 };
 use crate::{grade::uniforms as grade_uniforms, layer::Layer, color::Rgb, grade::Grade, shader::Uniforms};
@@ -29,42 +29,41 @@ fn adjust(ctx: &Ctx, layer: &Layer, a: Adjust) -> Result<Layer> {
     run(ctx, layer, &ctx.shaders.effects.color, u, &[])
 }
 
+/// Effects with one `amount` that sets one field of the shader's neutral values.
 macro_rules! single_value_effects {
-    ($( $name:ident / $func:ident: $doc:literal, default $default:expr, sets $field:ident[$idx:expr]; )*) => {$(
+    ($( $name:ident / $func:ident: sets $field:ident[$idx:expr]; )*) => {$(
         #[derive(Debug, Deserialize, Clone)]
         #[serde(deny_unknown_fields)]
         pub struct $name {
-            #[doc = $doc]
-            pub amount: Option<Param>,
+            pub amount: Param,
         }
 
         pub fn $func(ctx: &Ctx, e: &$name, layer: &Layer) -> Result<Layer> {
             let mut a = Adjust::default();
-            a.$field[$idx] = value(&e.amount, ctx.t, $default);
+            a.$field[$idx] = e.amount.at(ctx.t);
             adjust(ctx, layer, a)
         }
     )*};
 }
 
 single_value_effects! {
-    Brightness / brightness: "Added to every channel (0..1 scale): 0.2 is a clear lift, negative darkens.", default 0.0, sets tone[0];
-    Contrast / contrast: "1 leaves the layer alone, 0 is flat grey, 2 is punchy.", default 1.0, sets tone[1];
-    Saturation / saturation: "1 leaves the layer alone, 0 is black and white, 2 is vivid.", default 1.0, sets tone[2];
-    Exposure / exposure: "Photographic stops: +1 doubles the light, -1 halves it.", default 0.0, sets curve[0];
-    Gamma / gamma: "Mid-tone curve: above 1 lightens the mid-tones, below 1 darkens them.", default 1.0, sets curve[1];
-    Invert / invert: "How far to the negative: 1 fully inverts, 0.5 is flat grey.", default 1.0, sets curve[2];
+    Brightness / brightness: sets tone[0];
+    Contrast / contrast: sets tone[1];
+    Saturation / saturation: sets tone[2];
+    Exposure / exposure: sets curve[0];
+    Gamma / gamma: sets curve[1];
+    Invert / invert: sets curve[2];
 }
 
 #[derive(Debug, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct Hue {
-    /// Degrees around the colour wheel.
-    pub degrees: Option<Param>,
+    pub degrees: Param,
 }
 
 pub fn hue(ctx: &Ctx, e: &Hue, layer: &Layer) -> Result<Layer> {
     let mut a = Adjust::default();
-    a.tone[3] = value(&e.degrees, ctx.t, 0.0).to_radians();
+    a.tone[3] = e.degrees.at(ctx.t).to_radians();
     adjust(ctx, layer, a)
 }
 
@@ -72,13 +71,12 @@ pub fn hue(ctx: &Ctx, e: &Hue, layer: &Layer) -> Result<Layer> {
 #[serde(deny_unknown_fields)]
 pub struct Tint {
     pub color: Rgb,
-    /// 0 keeps the layer's colours, 1 paints it all in `color` (the alpha shape stays).
-    pub amount: Option<Param>,
+    pub amount: Param,
 }
 
 pub fn tint(ctx: &Ctx, e: &Tint, layer: &Layer) -> Result<Layer> {
     let mut a = Adjust::default();
-    a.curve[3] = value(&e.amount, ctx.t, 1.0);
+    a.curve[3] = e.amount.at(ctx.t);
     a.tint = e.color;
     adjust(ctx, layer, a)
 }

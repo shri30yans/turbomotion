@@ -80,11 +80,16 @@ impl Env for LayerEnv<'_> {
                             "x" => p.pos[0],
                             "y" => p.pos[1],
                             "z" => p.pos[2],
-                            "rotation" => p.rotation,
+                            "rotation" => p.pose.rotation[2],
+                            "rotation_x" => p.pose.rotation[0],
+                            "rotation_y" => p.pose.rotation[1],
+                            "orientation_x" => p.pose.orientation.to_orientation()[0],
+                            "orientation_y" => p.pose.orientation.to_orientation()[1],
+                            "orientation_z" => p.pose.orientation.to_orientation()[2],
                             "opacity" => p.opacity,
                             "scale" | "sx" => p.scale[0],
                             "sy" => p.scale[1],
-                            other => bail!("{name}(): unknown property {other:?}; use x, y, z, rotation, opacity, scale, sx, sy"),
+                            other => bail!("{name}(): unknown property {other:?}; use x, y, z, rotation, rotation_x, rotation_y, orientation_x, orientation_y, orientation_z, opacity, scale, sx, sy"),
                         })
                     };
                     if name == "ref" {

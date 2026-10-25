@@ -22,11 +22,6 @@ impl Param {
     }
 }
 
-/// The value of an optional parameter at `t`, or `default` when the plan leaves it out.
-pub fn value(param: &Option<Param>, t: f64, default: f64) -> f64 {
-    param.as_ref().map_or(default, |p| p.at(t))
-}
-
 impl<'de> Deserialize<'de> for Param {
     fn deserialize<D: Deserializer<'de>>(de: D) -> Result<Self, D::Error> {
         struct Visitor;

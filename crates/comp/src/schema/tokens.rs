@@ -148,9 +148,9 @@ fn ease_name(role: &str) -> &'static str {
 }
 
 /// Replace type tokens, palette names, surface recipes and image defaults so the strict parse sees numbers and hex.
-pub fn apply(root: &mut Value) -> Result<()> {
+pub fn apply(root: &mut Value, colours: ColourParams) -> Result<()> {
     let palette = palette_of(root);
-    resolve_color_tokens(root, &palette)?;
+    resolve_color_tokens(root, &palette, colours)?;
     let space = root.get("space").and_then(Value::as_object).cloned().unwrap_or_default();
     resolve_space_tokens(root, &space);
     let motion = root.get("motion").cloned();
@@ -239,28 +239,53 @@ fn reserved_color(s: &str) -> bool {
     matches!(s, "metal" | "white" | "black" | "transparent" | "none" | "red" | "green" | "blue" | "yellow" | "gold") || s.starts_with('#')
 }
 
-fn resolve_color_tokens(v: &mut Value, palette: &Map<String, Value>) -> Result<()> {
+/// Which parameters of the effect or generator called `name` are colours; none when nothing has that name.
+pub type ColourParams<'a> = &'a dyn Fn(&str) -> Option<Vec<String>>;
+
+/// Replace the palette name written in field `k` of `o` by its colour; a name that is not in the palette is an error.
+fn resolve_color_field(o: &mut Map<String, Value>, k: &str, palette: &Map<String, Value>) -> Result<()> {
+    let Some(s) = o.get(k).and_then(Value::as_str) else { return Ok(()) };
+    if reserved_color(s) {
+        return Ok(());
+    }
+    if let Some(c) = resolve_name(s, palette) {
+        o.insert(k.to_string(), json!(c));
+    } else if !s.starts_with('$') {
+        bail!("{k} {s:?} is not in palette ({}); use a hex, a name like white, or a palette token", names(palette));
+    }
+    Ok(())
+}
+
+/// The parameters of an effect or generator are named by its own declaration, not by the field names layers share, so
+/// only the ones it declares as colours are looked up in the palette (a choice called `edge` is not a colour).
+fn resolve_declared_colors(o: &mut Map<String, Value>, declared: &[String], palette: &Map<String, Value>) -> Result<()> {
+    declared.iter().try_for_each(|k| resolve_color_field(o, k, palette))
+}
+
+fn resolve_color_tokens(v: &mut Value, palette: &Map<String, Value>, colours: ColourParams) -> Result<()> {
     match v {
         Value::Object(o) => {
+            if let Some(declared) = o.get("effect").and_then(Value::as_str).and_then(colours) {
+                return resolve_declared_colors(o, &declared, palette);
+            }
+            let generator = o.get("shader").and_then(Value::as_str).and_then(colours);
             let keys: Vec<String> = o.keys().cloned().collect();
             for k in keys {
-                if COLOR_FIELDS.contains(&k.as_str()) {
-                    if let Some(s) = o.get(&k).and_then(Value::as_str) {
-                        if !reserved_color(s) {
-                            if let Some(c) = resolve_name(s, palette) {
-                                o.insert(k.clone(), json!(c));
-                            } else if !s.starts_with('$') {
-                                bail!("{k} {s:?} is not in palette ({}); use a hex, a name like white, or a palette token", names(palette));
-                            }
-                        }
+                if let (Some(declared), "params") = (&generator, k.as_str()) {
+                    if let Some(Value::Object(params)) = o.get_mut("params") {
+                        resolve_declared_colors(params, declared, palette)?;
                     }
+                    continue;
+                }
+                if COLOR_FIELDS.contains(&k.as_str()) {
+                    resolve_color_field(o, &k, palette)?;
                 }
                 if let Some(child) = o.get_mut(&k) {
-                    resolve_color_tokens(child, palette)?;
+                    resolve_color_tokens(child, palette, colours)?;
                 }
             }
         }
-        Value::Array(a) => a.iter_mut().try_for_each(|x| resolve_color_tokens(x, palette))?,
+        Value::Array(a) => a.iter_mut().try_for_each(|x| resolve_color_tokens(x, palette, colours))?,
         _ => {}
     }
     Ok(())
@@ -473,6 +498,32 @@ fn treat_to_fx(v: &Value) -> Result<Value> {
 mod tests {
     use super::*;
     use serde_json::json;
+
+    /// Tokens with an effect library in which `tint` has the colour `color` and `grid` has the colour `line`.
+    fn apply(v: &mut Value) -> Result<()> {
+        super::apply(v, &|name| match name {
+            "tint" => Some(vec!["color".to_string()]),
+            "grid" => Some(vec!["line".to_string()]),
+            "wipe" => Some(vec![]),
+            _ => None,
+        })
+    }
+
+    #[test]
+    fn an_effect_parameter_is_a_colour_only_where_the_effect_declares_one() {
+        let mut v = json!({"palette": {"accent": "#e2c48a"}, "layers": [
+            {"type": "solid", "color": "accent", "fx": [
+                {"effect": "tint", "color": "accent"},
+                {"effect": "wipe", "edge": "soft", "line": "sharp"}]},
+            {"type": "texture", "shader": "grid", "params": {"line": "accent", "edge": "pin"}}]});
+        apply(&mut v).unwrap();
+        assert_eq!(v["layers"][0]["color"], "#e2c48a");
+        assert_eq!(v["layers"][0]["fx"][0]["color"], "#e2c48a");
+        assert_eq!(v["layers"][0]["fx"][1], json!({"effect": "wipe", "edge": "soft", "line": "sharp"}), "a choice named like a colour field is left alone");
+        assert_eq!(v["layers"][1]["params"], json!({"line": "#e2c48a", "edge": "pin"}));
+        let mut bad = json!({"layers": [{"type": "solid", "fx": [{"effect": "tint", "color": "nope"}]}]});
+        assert!(apply(&mut bad).unwrap_err().to_string().contains("color \"nope\" is not in palette"));
+    }
 
     #[test]
     fn size_tokens_and_roles_become_pixels() {

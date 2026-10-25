@@ -6,11 +6,16 @@ pub mod env;
 pub mod fx;
 pub mod mat4;
 pub mod particles;
+pub mod pose;
+pub mod salt;
 pub mod media;
 pub mod shape;
 pub mod text;
 pub mod mesh;
 pub mod transit;
+
+#[cfg(test)]
+mod tests;
 
 use anyhow::{anyhow, Context, Result};
 use serde::Serialize;
@@ -52,7 +57,6 @@ pub struct CameraState {
     pub pos: [f64; 3],
     pub poi: [f64; 3],
     pub zoom: f64,
-    pub roll: f64,
     pub dof: Option<[f64; 2]>,
     #[serde(skip)]
     pub view_proj: Mat4,
@@ -76,6 +80,8 @@ pub struct LayerState {
     pub index: usize,
     pub id: Option<String>,
     pub label: String,
+    /// The kind of layer: `"solid"`, `"text"`, `"camera"`, `"light"`, ...
+    pub kind: &'static str,
     /// Inside its start..end at this time.
     pub active: bool,
     /// Will be drawn (active, not hidden, not only a matte, in front of the camera).
@@ -94,7 +100,8 @@ pub struct LayerState {
     pub screen: Mat4,
     #[serde(skip)]
     pub world: Mat4,
-    pub three_d: bool,
+    /// The layer stands in the composition's shared 3D space.
+    pub in_3d: bool,
     /// Blur from an entrance or exit preset, px.
     pub extra_blur: f64,
     pub extra_smear: f64,
@@ -186,7 +193,7 @@ impl<'p> Evaluator<'p> {
             .find_map(|c| c.layers.iter().find(|l| l.def.common.id.as_deref() == Some(id)).map(|l| (c, l)))
             .ok_or_else(|| anyhow!("no audio or video layer with id {id:?} to analyse"))?;
         let (path, src_in, speed, start) = match (&l.def.kind, &l.media) {
-            (Kind::Audio(a), crate::plan::Media::Audio { path, .. }) => (path, a.src_in, a.speed, l.start),
+            (Kind::Audio(a), crate::plan::Media::Audio { path, rate, .. }) => (path, a.src_in, a.speed * rate, l.start),
             (Kind::Video(v), crate::plan::Media::Video { path, .. }) => (path, v.src_in, v.speed, l.start),
             _ => return Err(anyhow!("layer {id:?} is not an audio or video layer")),
         };
@@ -210,13 +217,13 @@ impl<'p> Evaluator<'p> {
         let cm = &l.def.common;
         let (cw, ch) = (f64::from(c.width), f64::from(c.height));
         let env = |salt: u32| LayerEnv::new(self, c, l.index, t, depth).with_salt(salt);
-        let vec = |p: &Option<crate::schema::Pos>, default: Vec<f64>, salt: u32| -> Result<Vec<f64>> {
+        let vec = |p: &Option<crate::schema::Pos>, default: Vec<f64>, property: u32| -> Result<Vec<f64>> {
             match p {
                 None => Ok(default),
                 Some(p) => {
                     let mut v = Vec::new();
                     for (i, c) in p.0 .0.iter().enumerate() {
-                        v.push(c.at(lt, &env(salt + i as u32))?);
+                        v.push(c.at(lt, &env(salt::axis(property, i)))?);
                     }
                     Ok(v)
                 }
@@ -224,9 +231,9 @@ impl<'p> Evaluator<'p> {
         };
         let raster = matches!(l.def.kind, Kind::Solid(_) | Kind::Image(_) | Kind::Video(_) | Kind::Texture(_) | Kind::Precomp(_) | Kind::Pack(_));
         let default_pos = if raster || matches!(l.def.kind, Kind::Mesh(_)) { vec![cw / 2.0, ch / 2.0, 0.0] } else { vec![0.0, 0.0, 0.0] };
-        let mut pos = vec(&cm.pos, default_pos, 10)?;
+        let mut pos = vec(&cm.pos, default_pos, salt::POS)?;
         pos.resize(3, 0.0);
-        let mut anchor = vec(&cm.anchor, vec![], 20)?;
+        let mut anchor = vec(&cm.anchor, vec![], salt::ANCHOR)?;
         let size = self.layer_size_at(c, l, t);
         if anchor.is_empty() {
             if let Kind::Text(tx) = &l.def.kind {
@@ -242,7 +249,7 @@ impl<'p> Evaluator<'p> {
             Some(s) => {
                 let mut v = Vec::new();
                 for (i, c) in s.0 .0.iter().enumerate() {
-                    v.push(c.at(lt, &env(30 + i as u32))?);
+                    v.push(c.at(lt, &env(salt::axis(salt::SCALE, i)))?);
                 }
                 v
             }
@@ -251,14 +258,28 @@ impl<'p> Evaluator<'p> {
             scale.push(1.0);
         }
         let prop = |p: &Option<crate::schema::P>, d: f64, salt: u32| -> Result<f64> { p.as_ref().map_or(Ok(d), |p| p.0.at(lt, &env(salt))) };
-        let mut rotation = prop(&cm.rotation, 0.0, 40)?;
+        let mut pose = pose::pose_at(cm, lt, &env)?;
+        let mut aim = match &cm.aim {
+            None => None,
+            Some(p) => {
+                let mut v = [0.0; 3];
+                for (i, c) in p.0 .0.iter().enumerate().take(3) {
+                    v[i] = c.at(lt, &env(salt::axis(salt::AIM, i)))?;
+                }
+                Some(Aim::Point(v))
+            }
+        };
         if let (Some(a), Some(geo)) = (&cm.along, &l.along) {
-            let u = a.t.0.at(lt, &env(45))?;
+            let u = a.t.0.at(lt, &env(salt::ALONG_T))?;
             let (p, ang) = shape::point_on(&geo.path, u);
             pos[0] += p[0];
             pos[1] += p[1];
             if a.orient {
-                rotation += ang;
+                if l.in_3d {
+                    aim = Some(Aim::Travel([ang.to_radians().cos(), ang.to_radians().sin(), 0.0]));
+                } else {
+                    pose.heading = ang;
+                }
             }
         }
         if let Some(w) = &cm.wrap {
@@ -279,11 +300,10 @@ impl<'p> Evaluator<'p> {
             pos: [pos[0], pos[1], pos[2]],
             anchor: [anchor[0], anchor[1], anchor[2]],
             scale: [scale[0], scale[1], scale[2]],
-            rotation,
-            rot_x: prop(&cm.rot_x, 0.0, 41)?,
-            rot_y: prop(&cm.rot_y, 0.0, 42)?,
-            skew: prop(&cm.skew, 0.0, 44)?,
-            opacity: prop(&cm.opacity, 1.0, 43)?.clamp(0.0, 1.0),
+            pose,
+            aim,
+            skew: prop(&cm.skew, 0.0, salt::SKEW)?,
+            opacity: prop(&cm.opacity, 1.0, salt::OPACITY)?.clamp(0.0, 1.0),
         })
     }
 
@@ -314,14 +334,31 @@ impl<'p> Evaluator<'p> {
         }
     }
 
-    fn local_matrix(p: &Props) -> Mat4 {
-        Mat4::translate(p.pos[0], p.pos[1], p.pos[2])
-            .mul(&Mat4::rot_z(p.rotation))
-            .mul(&Mat4::rot_y(p.rot_y))
-            .mul(&Mat4::rot_x(p.rot_x))
+    /// The matrix of a layer inside its parent: `T(pos) · pose · skew · scale · T(-anchor)`.
+    ///
+    /// `parent` is the parent's world matrix, needed only by `Aim::Point`, which is in composition (world) space
+    /// like After Effects' auto-orient toward the point of interest: it is brought into the parent's space through
+    /// the parent's inverse, so the layer faces that world point whatever its parent does.
+    fn local_matrix(p: &Props, parent: Option<&Mat4>) -> Result<Mat4> {
+        let facing = match p.aim {
+            None => Mat4::IDENTITY,
+            Some(Aim::Point(target)) => {
+                let t = match parent {
+                    Some(w) => {
+                        let a = w.inverse().ok_or_else(|| anyhow!("a layer aims at a point, but its parent is collapsed (a zero scale) so the point has no place in it"))?.apply(target[0], target[1], target[2]);
+                        [a[0], a[1], a[2]]
+                    }
+                    None => target,
+                };
+                Mat4::face([t[0] - p.pos[0], t[1] - p.pos[1], t[2] - p.pos[2]])
+            }
+            Some(Aim::Travel(dir)) => Mat4::face([-dir[0], -dir[1], -dir[2]]),
+        };
+        Ok(Mat4::translate(p.pos[0], p.pos[1], p.pos[2])
+            .mul(&p.pose.matrix(&facing))
             .mul(&Mat4::skew_x(p.skew))
             .mul(&Mat4::scale(p.scale[0], p.scale[1], p.scale[2]))
-            .mul(&Mat4::translate(-p.anchor[0], -p.anchor[1], -p.anchor[2]))
+            .mul(&Mat4::translate(-p.anchor[0], -p.anchor[1], -p.anchor[2])))
     }
 
     /// World matrix of a layer (through its parents) and its own transform props.
@@ -330,9 +367,10 @@ impl<'p> Evaluator<'p> {
             return Ok(w);
         }
         let l = &c.layers[i];
-        let local = Self::local_matrix(&self.local_props(c, l, t, 0)?);
-        let rest = match l.parent {
-            Some(p) => self.world(c, p, t, cache)?.mul(&local),
+        let parent = l.parent.map(|p| self.world(c, p, t, cache)).transpose()?;
+        let local = Self::local_matrix(&self.local_props(c, l, t, 0)?, parent.as_ref())?;
+        let rest = match parent {
+            Some(pw) => pw.mul(&local),
             None => local,
         };
         cache[i] = Some((rest, local));
@@ -387,9 +425,9 @@ impl<'p> Evaluator<'p> {
         } else {
             Mat4::IDENTITY
         };
-        let world = if cm.three_d || m == transit::Mod::NONE { world.mul(&pre) } else { pre.mul(&world) };
+        let world = if l.in_3d || m == transit::Mod::NONE { world.mul(&pre) } else { pre.mul(&world) };
 
-        let (screen, depth) = match (cm.three_d, camera) {
+        let (screen, depth) = match (l.in_3d, camera) {
             (true, Some(cam)) => {
                 // depth of the layer's anchor point (where `pos` puts it), not of its corner
                 let a = world.apply(props.anchor[0], props.anchor[1], props.anchor[2]);
@@ -401,16 +439,21 @@ impl<'p> Evaluator<'p> {
 
         let (content, local_bounds) = self.content(c, l, t, lt, size, active)?;
         // depth of field: a 3D layer away from the focal distance softens in proportion to how far off it is
-        let dof_blur = match (cm.three_d, camera.and_then(|c| c.dof)) {
+        let dof_blur = match (l.in_3d, camera.and_then(|c| c.dof)) {
             (true, Some([focus, blur])) if focus > 1.0 => blur * (depth - focus).abs() / focus,
             _ => 0.0,
         };
-        let lit = if any_lights && cm.three_d && cm.lit.unwrap_or(true) && !matches!(l.def.kind, Kind::Camera(_) | Kind::Light(_) | Kind::Null | Kind::Adjustment | Kind::Audio(_) | Kind::Mesh(_)) {
+        let lit = if any_lights && l.in_3d && cm.lit.unwrap_or(true) && !matches!(l.def.kind, Kind::Camera(_) | Kind::Light(_) | Kind::Null | Kind::Adjustment | Kind::Audio(_) | Kind::Mesh(_)) {
             lit_state(&world, &screen, cm.material.unwrap_or_default())
         } else {
             None
         };
         let mut visible = active && !cm.hidden && !l.is_matte_source && !matches!(l.def.kind, Kind::Camera(_) | Kind::Light(_) | Kind::Null | Kind::Audio(_));
+        if visible && l.in_3d && cm.cull.unwrap_or_default() != crate::schema::Cull::None {
+            if let Some(cam) = camera {
+                visible = !culled(&world, cam, cm.cull.unwrap_or_default());
+            }
+        }
         let origin = screen.project(0.0, 0.0, 0.0).map_or([f64::NAN, f64::NAN], |p| [p[0], p[1]]);
         let mut bounds = match &content {
             Content::Mesh(t) => mesh::bounds(&screen, t, &mut visible),
@@ -440,6 +483,7 @@ impl<'p> Evaluator<'p> {
             index: l.index,
             id: cm.id.clone(),
             label: l.label.clone(),
+            kind: l.def.kind.name(),
             active,
             visible,
             local_t: lt,
@@ -451,7 +495,7 @@ impl<'p> Evaluator<'p> {
             blend_mode: cm.blend,
             screen,
             world,
-            three_d: cm.three_d,
+            in_3d: l.in_3d,
             extra_blur: m.blur + dof_blur,
             extra_smear: m.smear,
             clip: m.clip,
@@ -490,7 +534,7 @@ impl<'p> Evaluator<'p> {
             }
             Kind::Text(tx) => {
                 let st = text::state(self, c, l, tx, t)?;
-                let b = [0.0, 0.0, f64::from(st.width), f64::from(st.height)];
+                let b = st.placed_bounds.unwrap_or([0.0, 0.0, f64::from(st.width), f64::from(st.height)]);
                 (Content::Text(st), Some(b))
             }
             Kind::Mesh(m) => (Content::Mesh(mesh::state(self, c, l, m, t)?), None),
@@ -511,7 +555,7 @@ impl<'p> Evaluator<'p> {
             }
             Kind::Texture(_) => {
                 let plan = l.texture.as_ref().ok_or_else(|| anyhow!("texture layer without a planned shader"))?;
-                (Content::Texture { size, shader: fx::plugin(self, c, l.index, plan, t, lt, 40)? }, Some([0.0, 0.0, size[0], size[1]]))
+                (Content::Texture { size, shader: fx::plugin(self, c, l.index, plan, t, lt, salt::TEXTURE_PLUGIN)? }, Some([0.0, 0.0, size[0], size[1]]))
             }
             _ => (Content::None, None),
         })
@@ -522,57 +566,61 @@ impl<'p> Evaluator<'p> {
         let env = |salt: u32| LayerEnv::new(self, c, l.index, t, 0).with_salt(salt);
         let (w, h) = (f64::from(c.width), f64::from(c.height));
         let zoom = match (&cam.zoom, &cam.fov) {
-            (Some(z), _) => z.0.at(lt, &env(1))?,
-            (None, Some(f)) => (w / 2.0) / (f.0.at(lt, &env(2))?.to_radians() / 2.0).tan(),
-            (None, None) => 1.5 * w,
+            (Some(z), _) => z.0.at(lt, &env(salt::CAMERA_ZOOM))?,
+            (None, Some(f)) => (w / 2.0) / (f.0.at(lt, &env(salt::CAMERA_FOV))?.to_radians() / 2.0).tan(),
+            (None, None) => crate::schema::default_camera_zoom(w),
         }
         .max(1.0);
-        let vec3 = |p: &Option<crate::schema::Pos>, d: [f64; 3], salt: u32| -> Result<[f64; 3]> {
+        let vec3 = |p: &Option<crate::schema::Pos>, d: [f64; 3], property: u32| -> Result<[f64; 3]> {
             match p {
                 None => Ok(d),
                 Some(p) => {
                     let mut v = [d[0], d[1], d[2]];
                     for (i, comp) in p.0 .0.iter().enumerate().take(3) {
-                        v[i] = comp.at(lt, &env(salt + i as u32))?;
+                        v[i] = comp.at(lt, &env(salt::axis(property, i)))?;
                     }
                     Ok(v)
                 }
             }
         };
-        let pos = vec3(&l.def.common.pos, [w / 2.0, h / 2.0, -zoom], 10)?;
-        let poi = vec3(&cam.poi, [w / 2.0, h / 2.0, 0.0], 20)?;
-        let roll = cam.roll.as_ref().map_or(Ok(0.0), |r| r.0.at(lt, &env(30)))?;
-        let dof = cam.dof.as_ref().map(|d| Ok::<_, anyhow::Error>([d.focus.0.at(lt, &env(31))?, d.blur.0.at(lt, &env(32))?])).transpose()?;
-        let view = Mat4::look_at(pos, poi, roll);
+        let pos = vec3(&l.def.common.pos, [w / 2.0, h / 2.0, -zoom], salt::POS)?;
+        let poi = vec3(&cam.poi, [w / 2.0, h / 2.0, 0.0], salt::CAMERA_POI)?;
+        let dof = cam.dof.as_ref().map(|d| Ok::<_, anyhow::Error>([d.focus.0.at(lt, &env(salt::CAMERA_DOF_FOCUS))?, d.blur.0.at(lt, &env(salt::CAMERA_DOF_BLUR))?])).transpose()?;
+        // The Point of Interest aims the camera; its Orientation and X, Y and Z Rotation turn it about its own
+        // position, inside that aim. That is the layer's own pose, evaluated by the same function: the Z Rotation
+        // is the roll.
+        let pose = pose::pose_at(&l.def.common, lt, &env)?;
+        let facing = Mat4::look_at(pos, poi).transpose_rotation();
+        let view = pose.inverse(&facing).mul(&Mat4::translate(-pos[0], -pos[1], -pos[2]));
         let view_proj = Mat4::pinhole(zoom, w / 2.0, h / 2.0).mul(&view);
-        Ok(CameraState { pos, poi, zoom, roll, dof, view_proj, view })
+        Ok(CameraState { pos, poi, zoom, dof, view_proj, view })
     }
 
     fn light(&self, c: &CompPlan, l: &LayerPlan, light: &crate::schema::Light, t: f64) -> Result<LightState> {
         let lt = t - l.start;
         let env = |salt: u32| LayerEnv::new(self, c, l.index, t, 0).with_salt(salt);
         let (w, h) = (f64::from(c.width), f64::from(c.height));
-        let vec3 = |p: &Option<crate::schema::Pos>, d: [f64; 3], salt: u32| -> Result<[f64; 3]> {
+        let vec3 = |p: &Option<crate::schema::Pos>, d: [f64; 3], property: u32| -> Result<[f64; 3]> {
             match p {
                 None => Ok(d),
                 Some(p) => {
                     let mut v = [d[0], d[1], d[2]];
                     for (i, comp) in p.0 .0.iter().enumerate().take(3) {
-                        v[i] = comp.at(lt, &env(salt + i as u32))?;
+                        v[i] = comp.at(lt, &env(salt::axis(property, i)))?;
                     }
                     Ok(v)
                 }
             }
         };
-        let pos = vec3(&l.def.common.pos, [w / 2.0, h / 2.0, -600.0], 10)?;
-        let target = vec3(&light.target, [w / 2.0, h / 2.0, 0.0], 20)?;
+        let pos = vec3(&l.def.common.pos, [w / 2.0, h / 2.0, -600.0], salt::POS)?;
+        let target = vec3(&light.target, [w / 2.0, h / 2.0, 0.0], salt::LIGHT_TARGET)?;
         let dir = {
             let d = [target[0] - pos[0], target[1] - pos[1], target[2] - pos[2]];
             let n = (d[0] * d[0] + d[1] * d[1] + d[2] * d[2]).sqrt().max(1e-9);
             [d[0] / n, d[1] / n, d[2] / n]
         };
-        let col = light.color.as_ref().map_or(Ok([255.0, 255.0, 255.0, 1.0]), |c| c.0.at(lt, &env(30)).map(|c| c.map(f64::from)))?;
-        let intensity = light.intensity.as_ref().map_or(Ok(1.0), |i| i.0.at(lt, &env(31)))?.max(0.0);
+        let col = light.color.as_ref().map_or(Ok([255.0, 255.0, 255.0, 1.0]), |c| c.0.at(lt, &env(salt::LIGHT_COLOR)).map(|c| c.map(f64::from)))?;
+        let intensity = light.intensity.as_ref().map_or(Ok(1.0), |i| i.0.at(lt, &env(salt::LIGHT_INTENSITY)))?.max(0.0);
         Ok(LightState {
             kind: format!("{:?}", light.kind).to_lowercase(),
             pos,
@@ -582,6 +630,23 @@ impl<'p> Evaluator<'p> {
             cone: light.cone.unwrap_or(40.0),
             shine: light.shine.unwrap_or(0.0),
         })
+    }
+}
+
+/// Whether the camera sees the side of a layer that `cull` hides.
+///
+/// The layer's readable side is its local `-z`, so the camera is on it when it lies against the layer's local
+/// `+z` axis.
+fn culled(world: &Mat4, cam: &CameraState, cull: crate::schema::Cull) -> bool {
+    let w = &world.0;
+    let normal = [w[2], w[6], w[10]];
+    let origin = [w[3], w[7], w[11]];
+    let to_camera = [cam.pos[0] - origin[0], cam.pos[1] - origin[1], cam.pos[2] - origin[2]];
+    let towards = normal[0] * to_camera[0] + normal[1] * to_camera[1] + normal[2] * to_camera[2];
+    match cull {
+        crate::schema::Cull::None => false,
+        crate::schema::Cull::Front => towards < 0.0,
+        crate::schema::Cull::Back => towards > 0.0,
     }
 }
 
@@ -611,15 +676,25 @@ fn lit_state(world: &Mat4, screen: &Mat4, mat: crate::schema::Material) -> Optio
     Some(LitState { origin, axis_u, axis_v, normal: [cross[0] / n, cross[1] / n, cross[2] / n], material: [mat.ambient, mat.diffuse, mat.specular, mat.shininess.max(1.0)], inverse })
 }
 
+/// What turns a layer's face.
+#[derive(Debug, Clone, Copy, Serialize)]
+pub enum Aim {
+    /// Face a point in composition (world) space: the layer's `aim`.
+    Point([f64; 3]),
+    /// A 3D layer on a path with `along.orient`: its depth axis (local +z) runs along this direction of travel,
+    /// in the parent's space. (A flat layer just turns by the path's heading, see `Pose::heading`.)
+    Travel([f64; 3]),
+}
+
 /// The evaluated transform properties of one layer.
 #[derive(Debug, Clone, Copy, Serialize)]
 pub struct Props {
     pub pos: [f64; 3],
     pub anchor: [f64; 3],
     pub scale: [f64; 3],
-    pub rotation: f64,
-    pub rot_x: f64,
-    pub rot_y: f64,
+    /// Orientation, X, Y and Z Rotation, and the path heading.
+    pub pose: pose::Pose,
+    pub aim: Option<Aim>,
     pub skew: f64,
     pub opacity: f64,
 }

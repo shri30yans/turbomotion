@@ -1,0 +1,38 @@
+// @effect displacement_map
+// @summary Moves the layer's pixels by the colours of another layer, as After Effects' Displacement Map does.
+// @input map layer -- the layer whose colours steer the pixels; hide it to use it only as a map
+// @param horizontal choice red off,red,green,blue,alpha,luma -- the map channel that moves pixels along x (off: none)
+// @param vertical choice green off,red,green,blue,alpha,luma -- the map channel that moves pixels along y (off: none)
+// @param max_x float 20 -400 400 -- px a channel at full strength moves pixels right (negative: left); half strength stands still
+// @param max_y float 20 -400 400 -- px a channel at full strength moves pixels down (negative: up)
+// @param outside choice pin pin,wrap -- beyond the frame: the edge pixels stretch (pin), or the picture repeats (wrap)
+// @example {"effect": "displacement_map", "map": "ripples", "horizontal": "luma", "vertical": "off", "max_x": 30, "outside": "wrap"}
+const float NEUTRAL = 0.5;
+const int CH_OFF = 0;
+const int CH_RED = 1;
+const int CH_GREEN = 2;
+const int CH_BLUE = 3;
+const int CH_ALPHA = 4;
+const int EDGE_WRAP = 1;
+
+// the map channel as 0..1; "off" reads as the value that moves nothing
+float channel(float4 m, float which) {
+    int w = int(which + 0.5);
+    if (w == CH_RED) return m.r;
+    if (w == CH_GREEN) return m.g;
+    if (w == CH_BLUE) return m.b;
+    if (w == CH_ALPHA) return m.a;
+    if (w == CH_OFF) return NEUTRAL;
+    return luma(m.rgb);
+}
+
+half4 main(float2 xy) {
+    half4 raw = map.eval(xy);
+    float4 m = float4(raw.a > 0.0 ? raw.rgb / raw.a : float3(0.0), raw.a);
+    float2 push = (float2(channel(m, horizontal), channel(m, vertical)) - NEUTRAL) * 2.0 * float2(max_x, max_y);
+    float2 from = xy - push;
+    if (int(outside + 0.5) == EDGE_WRAP) {
+        from = mod(from, resolution);
+    }
+    return image.eval(from);
+}

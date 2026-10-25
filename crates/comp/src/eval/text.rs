@@ -9,10 +9,11 @@ use super::{CompPlan, Evaluator, LayerEnv};
 use crate::{
     anim::{ease::Ease, prop::Rgba},
     plan::LayerPlan,
-    schema::{self, Animator, Text, TextSource},
+    schema::{self, Animator, Perspective, Text, TextSource, P},
     text::{
         animate::{glyph_states, GlyphState, Resolved},
         layout::{Layout, RunSpec, Spec},
+        place::{self, Margins, OnPath, OnSurface, Placement, Row},
         presets,
     },
 };
@@ -31,6 +32,13 @@ pub struct TextState {
     pub height: f32,
     pub anchor: [f32; 2],
     pub glyphs: Vec<GlyphState>,
+    /// Paint the stroke only.
+    pub outline_only: bool,
+    /// `[start, end]` fractions of the outline length that are drawn.
+    pub trim: Option<[f64; 2]>,
+    pub trim_each: bool,
+    /// Where the glyphs really are (layout space `[l, t, r, b]`) when a path, surface or marquee moved them.
+    pub placed_bounds: Option<[f64; 4]>,
     #[serde(skip)]
     pub layout: Option<Rc<Layout>>,
 }
@@ -43,6 +51,18 @@ pub struct MarkState {
     pub color: Rgba,
     pub rough: bool,
 }
+
+/// Expression seeds of the animated properties of trim, path and surface, kept clear of the animators' (70 and up) and masks' (400 and up).
+const SALT_TRIM_START: u32 = 200;
+const SALT_TRIM_END: u32 = 201;
+const SALT_FIRST_MARGIN: u32 = 202;
+const SALT_LAST_MARGIN: u32 = 203;
+const SALT_TRAVEL: u32 = 204;
+const SALT_RADIUS: u32 = 205;
+const SALT_TURN: u32 = 206;
+
+/// Stroke width of outline-only type that names no stroke of its own, px.
+const OUTLINE_WIDTH: f64 = 2.0;
 
 /// GSAP TextPlugin: type `to` from the start after `at`, showing `from` until then.
 pub fn swap_string(s: &schema::TextSwap, t: f64) -> Result<String> {
@@ -163,23 +183,61 @@ pub fn state(ev: &Evaluator, c: &CompPlan, l: &LayerPlan, tx: &Text, t: f64) -> 
     }
     let resolved: Vec<Resolved> = resolved.into_iter().map(|(anim, start, end, offset, color)| Resolved { anim, start, end, offset, color }).collect();
     let inks = run_colors(tx, &text, layout.glyphs.len(), lt, &env)?;
-    let glyphs = glyph_states(&layout, &resolved, lt, color, size, &inks)?;
+    let placement = placement_of(c, l, tx, &layout, lt, &env)?;
+    let glyphs = glyph_states(&layout, &resolved, lt, color, &inks, &placement)?;
+    let placed_bounds = if placement.moves_glyphs() { place::bounds(&layout, &glyphs) } else { None };
     let span = Some(([0.0, 0.0], [layout.width as f64 * 0.12, layout.height as f64]));
     let fill = tx.fill.as_ref().map(|f| super::shape::fill_state(f, lt, &env, span)).transpose()?;
     let mark = tx.mark.as_ref().map(|m| mark_state(m, &layout, &text, lt, &env)).transpose()?.flatten();
+    let stroke = match (&tx.stroke, tx.outline_only) {
+        (Some(s), _) => Some((s.color.0.at(lt, &env(63))?, s.width)),
+        (None, true) => Some((color, OUTLINE_WIDTH)),
+        (None, false) => None,
+    };
+    let trim = tx.stroke_trim.as_ref().map(|[a, b]| Ok::<_, anyhow::Error>([a.0.at(lt, &env(SALT_TRIM_START))?.clamp(0.0, 1.0), b.0.at(lt, &env(SALT_TRIM_END))?.clamp(0.0, 1.0)])).transpose()?;
     Ok(TextState {
         text,
         size,
         color,
-        stroke: tx.stroke.as_ref().map(|s| Ok::<_, anyhow::Error>((s.color.0.at(lt, &env(63))?, s.width))).transpose()?,
+        stroke,
         fill,
         mark,
         width: layout.width,
         height: layout.height,
         anchor: layout.anchor,
         glyphs,
+        outline_only: tx.outline_only,
+        trim,
+        trim_each: tx.stroke_trim_each,
+        placed_bounds,
         layout: Some(layout),
     })
+}
+
+/// Path, surface, marquee and perspective for this text at this instant.
+fn placement_of<'a>(c: &CompPlan, l: &LayerPlan, tx: &Text, layout: &Layout, lt: f64, env: &dyn Fn(u32) -> LayerEnv<'a>) -> Result<Placement> {
+    let mut pl = Placement::default();
+    if let (Some(tp), Some(path)) = (&tx.path, &l.text_path) {
+        let margin = |p: &Option<P>, salt: u32| p.as_ref().map_or(Ok(0.0), |p| p.0.at(lt, &env(salt)));
+        let margins = Margins { first: margin(&tp.first_margin, SALT_FIRST_MARGIN)?, last: margin(&tp.last_margin, SALT_LAST_MARGIN)?, travel: margin(&tp.travel, SALT_TRAVEL)? };
+        pl.path = Some(OnPath::new(path, tp, margins, tx.align).context("text path has no length")?);
+    }
+    if let Some(sf) = &tx.surface {
+        let radius = sf.radius.as_ref().map_or(Ok(f64::from(layout.width) / std::f64::consts::PI), |p| p.0.at(lt, &env(SALT_RADIUS)))?;
+        anyhow::ensure!(radius > 0.0, "surface radius is above 0 pixels, not {radius}");
+        let turn = sf.turn.as_ref().map_or(Ok(0.0), |p| p.0.at(lt, &env(SALT_TURN)))?;
+        pl.surface = Some(OnSurface { kind: sf.kind, radius, turn, back: sf.back });
+    }
+    if let Some(m) = &tx.marquee {
+        pl.row = Some(Row::new(m, layout, lt, f64::from(c.width)));
+    }
+    // a three_d layer is seen through the composition camera; a flat one gets its own viewer
+    pl.perspective = match (l.in_3d, tx.perspective) {
+        (true, _) | (false, Some(Perspective::Orthographic)) => None,
+        (false, Some(Perspective::Distance(d))) => Some(d),
+        (false, None) => Some(schema::default_camera_zoom(f64::from(c.width))),
+    };
+    Ok(pl)
 }
 
 fn mark_state<'a>(m: &schema::Mark, layout: &Layout, text: &str, lt: f64, env: &dyn Fn(u32) -> LayerEnv<'a>) -> Result<Option<MarkState>> {

@@ -1,6 +1,7 @@
 //! After Effects-style compositions: schema → plan → eval → render (see docs/ARCHITECTURE.md).
 
 pub mod anim;
+pub mod api;
 pub mod audio;
 pub mod check;
 pub mod eval;

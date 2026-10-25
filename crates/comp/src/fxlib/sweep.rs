@@ -6,9 +6,16 @@ use std::path::Path;
 use anyhow::{ensure, Result};
 use serde_json::{json, Map, Value};
 
-use super::{Def, Kind, Ty};
+use super::{Def, InputKind, Kind, Ty};
 
 pub const STEPS: usize = 5;
+
+/// The generator a swept effect's layer inputs read, so a map-driven effect has something to be driven by.
+const SWEEP_MAP: &str = "noise";
+
+fn map_id(input: &str) -> String {
+    format!("{input}_sweep_map")
+}
 
 pub struct Sweep {
     /// The composition to render; sample it at `times`.
@@ -54,8 +61,7 @@ pub fn build(def: &Def, on: Option<&Path>) -> Result<Sweep> {
                     }
                     json!(x)
                 }
-                Ty::Vec2 => json!(p.default),
-                Ty::Color => json!(format!("#{:02x}{:02x}{:02x}", p.default[0] as u8, p.default[1] as u8, p.default[2] as u8)),
+                Ty::Vec2 | Ty::Choice | Ty::Color => p.default_json(),
             };
             let mut cur = std::mem::take(&mut keys[k]);
             keys[k] = held(slot, v, Some(&mut cur));
@@ -66,7 +72,14 @@ pub fn build(def: &Def, on: Option<&Path>) -> Result<Sweep> {
     }
     let mut params = Map::new();
     for (k, p) in def.params.iter().enumerate() {
-        params.insert(p.name.clone(), Value::Array(std::mem::take(&mut keys[k])));
+        let list = Value::Array(std::mem::take(&mut keys[k]));
+        // a vector's keys hold whole vectors, which need the {"keys"} wrapper
+        let value = match p.ty {
+            Ty::Vec2 => json!({"keys": list}),
+            Ty::Choice => p.default_json(),
+            Ty::Float | Ty::Color => list,
+        };
+        params.insert(p.name.clone(), value);
     }
     let (w, h) = (640, 360);
     let layers = match def.kind {
@@ -74,6 +87,10 @@ pub fn build(def: &Def, on: Option<&Path>) -> Result<Sweep> {
         Kind::Effect => {
             let mut fx = params.clone();
             fx.insert("effect".into(), json!(def.name));
+            let maps: Vec<Value> = def.inputs.iter().filter(|i| i.kind == InputKind::Layer).map(|i| json!({"type": "texture", "shader": SWEEP_MAP, "id": map_id(&i.name), "hidden": true})).collect();
+            for i in def.inputs.iter().filter(|i| i.kind == InputKind::Layer) {
+                fx.insert(i.name.clone(), json!(map_id(&i.name)));
+            }
             let subject = match on {
                 Some(p) => {
                     let abs = std::fs::canonicalize(p).map_err(|e| anyhow::anyhow!("{}: {e}", p.display()))?;
@@ -82,9 +99,11 @@ pub fn build(def: &Def, on: Option<&Path>) -> Result<Sweep> {
                 None => test_card(),
             };
             ensure!(subject.is_array(), "internal: test card is a list of layers");
+            let mut layers = vec![json!({"type": "precomp", "comp": "subject", "fx": [Value::Object(fx)]})];
+            layers.extend(maps);
             return Ok(Sweep {
                 comp: json!({"width": w, "height": h, "fps": 30, "dur": slots, "bg": "#0b0b10", "comps": {"subject": {"width": w, "height": h, "dur": slots, "layers": subject}},
-                    "layers": [{"type": "precomp", "comp": "subject", "fx": [Value::Object(fx)]}]}),
+                    "layers": layers}),
                 times: (0..slots).map(|s| s as f64 + 0.5).collect(),
                 legend,
             });

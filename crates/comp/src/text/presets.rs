@@ -94,6 +94,7 @@ pub fn expand(spec: &Value, facts: TextFacts) -> Result<Vec<Animator>> {
             mask: o.and_then(|o| o.get("mask")).and_then(Value::as_bool).unwrap_or(mask),
             scramble: None,
             count_spaces: false,
+            cipher: None,
         })
     };
     let up = |k: f64| UnitProps { y: Some(dist.unwrap_or(size * k)), ..UnitProps::default() };

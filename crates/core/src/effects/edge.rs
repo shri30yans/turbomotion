@@ -4,33 +4,28 @@ use anyhow::{Context, Result};
 use serde::Deserialize;
 use skia_safe::{image_filters, Paint, TileMode};
 
-use super::{
-    param::{value, Param},
-    pass::Ctx,
-};
+use super::{param::Param, pass::Ctx};
 use crate::{
-    layer::{solid_color, Layer},
     color::Rgb,
+    layer::{solid_color, Layer},
 };
 
 #[derive(Debug, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct Shadow {
-    /// Offset in pixels.
-    pub dx: Option<Param>,
-    pub dy: Option<Param>,
-    /// Gaussian sigma of the shadow's edge.
-    pub blur: Option<Param>,
-    pub color: Option<Rgb>,
-    pub opacity: Option<Param>,
+    pub dx: Param,
+    pub dy: Param,
+    pub blur: Param,
+    pub color: Rgb,
+    pub opacity: Param,
 }
 
 pub fn shadow(ctx: &Ctx, e: &Shadow, layer: &Layer) -> Result<Layer> {
-    let blur = value(&e.blur, ctx.t, 16.0) as f32;
+    let blur = e.blur.at(ctx.t) as f32;
     let mut paint = Paint::default();
-    paint.set_color_filter(solid_color(e.color.unwrap_or([0, 0, 0]), value(&e.opacity, ctx.t, 0.5) as f32));
+    paint.set_color_filter(solid_color(e.color, e.opacity.at(ctx.t) as f32));
     paint.set_image_filter(image_filters::blur((blur, blur), TileMode::Decal, None, None));
-    let offset = (value(&e.dx, ctx.t, 0.0) as f32, value(&e.dy, ctx.t, 12.0) as f32);
+    let offset = (e.dx.at(ctx.t) as f32, e.dy.at(ctx.t) as f32);
     Layer::render(ctx.like, layer.width(), layer.height(), |c| {
         c.draw_image(layer.image(), offset, Some(&paint));
         c.draw_image(layer.image(), (0, 0), None);
@@ -40,16 +35,15 @@ pub fn shadow(ctx: &Ctx, e: &Shadow, layer: &Layer) -> Result<Layer> {
 #[derive(Debug, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct Outline {
-    /// Thickness in pixels.
-    pub width: Option<Param>,
-    pub color: Option<Rgb>,
-    pub opacity: Option<Param>,
+    pub width: Param,
+    pub color: Rgb,
+    pub opacity: Param,
 }
 
 pub fn outline(ctx: &Ctx, e: &Outline, layer: &Layer) -> Result<Layer> {
-    let width = value(&e.width, ctx.t, 4.0).max(0.0) as f32;
+    let width = e.width.at(ctx.t) as f32;
     let mut paint = Paint::default();
-    paint.set_color_filter(solid_color(e.color.unwrap_or([255, 255, 255]), value(&e.opacity, ctx.t, 1.0) as f32));
+    paint.set_color_filter(solid_color(e.color, e.opacity.at(ctx.t) as f32));
     paint.set_image_filter(image_filters::dilate((width, width), None, None).context("outline filter")?);
     Layer::render(ctx.like, layer.width(), layer.height(), |c| {
         c.draw_image(layer.image(), (0, 0), Some(&paint));

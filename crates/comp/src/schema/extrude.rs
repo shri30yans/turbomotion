@@ -1,7 +1,7 @@
 //! Extrusion: a flat 3D text, shape or solid layer gains depth. `"extrude": {"depth": 60, "color": "#3a2a10"}` on a
 //! `three_d` layer adds copies of it stepping back in z, coloured from `color` (near) to `far` (default: `color` at
 //! 55 % brightness), behind the face. Copies keep the layer's animation, enter and exit, so the solid moves as one;
-//! under a camera move or a `rot_y` the sides show. This is the slice method After Effects plug-ins used before
+//! under a camera move or a Y Rotation the sides show. This is the slice method After Effects plug-ins used before
 //! its ray-traced renderer: cheap, exact in silhouette, and it lights like the face does.
 
 use anyhow::{anyhow, bail, ensure, Context, Result};

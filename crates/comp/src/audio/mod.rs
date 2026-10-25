@@ -29,8 +29,12 @@ struct Clip {
     to: f64,
     src_in: f64,
     speed: f64,
+    /// Fixed gain from a sound-kit pick (its spread variation); 1 for other files.
+    gain: f64,
     fade_in: f64,
     fade_out: f64,
+    /// `family/variant` when the sound came from the built-in kit.
+    kit: Option<String>,
     /// Where in `comp` this clip's layer lives, to evaluate its volume.
     comp: String,
     layer: usize,
@@ -46,9 +50,12 @@ fn collect(plan: &Plan, comp: &str, map: (f64, f64), window: (f64, f64), out: &m
             continue;
         }
         match (&l.def.kind, &l.media) {
-            (Kind::Audio(a), Media::Audio { path, .. }) => out.push(Clip { path: path.clone(), from, to, src_in: a.src_in + (from - (map.0 * l.start + map.1)) / map.0 * a.speed, speed: a.speed, fade_in: a.fade_in, fade_out: a.fade_out, comp: comp.to_string(), layer: l.index, map }),
+            (Kind::Audio(a), Media::Audio { path, rate, gain, kit, .. }) => {
+                let speed = a.speed * rate;
+                out.push(Clip { path: path.clone(), from, to, src_in: a.src_in + (from - (map.0 * l.start + map.1)) / map.0 * speed, speed, gain: *gain, kit: kit.clone(), fade_in: a.fade_in, fade_out: a.fade_out, comp: comp.to_string(), layer: l.index, map })
+            }
             (Kind::Video(v), Media::Video { path, info }) if !v.mute && info.has_audio => {
-                out.push(Clip { path: path.clone(), from, to, src_in: v.src_in + (from - (map.0 * l.start + map.1)) / map.0 * v.speed, speed: v.speed, fade_in: 0.0, fade_out: 0.0, comp: comp.to_string(), layer: l.index, map })
+                out.push(Clip { path: path.clone(), from, to, src_in: v.src_in + (from - (map.0 * l.start + map.1)) / map.0 * v.speed, speed: v.speed, gain: 1.0, kit: None, fade_in: 0.0, fade_out: 0.0, comp: comp.to_string(), layer: l.index, map })
             }
             (Kind::Precomp(p), _) => {
                 // inner time = (comp time - start) * speed + offset  =>  comp time = (inner - offset)/speed + start
@@ -83,10 +90,23 @@ pub fn mix(plan: &Plan, dur: f64, wav: &Path) -> Result<Option<()>> {
     mix_range(plan, 0.0..dur, wav)
 }
 
+/// One line per sound-kit clip on the timeline, in time order: when, which exact variant was chosen, its rate and gain.
+pub fn sound_log(plan: &Plan) -> Vec<String> {
+    let mut clips = vec![];
+    collect(plan, ROOT, (1.0, 0.0), (0.0, plan.root().dur), &mut clips);
+    clips.sort_by(|a, b| a.from.total_cmp(&b.from));
+    clips.iter().filter_map(|c| Some(format!("{:7.3}s  {:<24} rate {:.3}  gain {:+.1} dB", c.from, c.kit.as_deref()?, c.speed, 20.0 * c.gain.log10()))).collect()
+}
+
 /// Mix a film-time interval into a zero-based WAV; preserve the source time, automation and fades.
 pub fn mix_range(plan: &Plan, range: std::ops::Range<f64>, wav: &Path) -> Result<Option<()>> {
     ensure!(range.start.is_finite() && range.end.is_finite() && range.start >= 0.0 && range.end > range.start,
         "audio range must have finite seconds with 0 <= start < end");
+    if range.start == 0.0 {
+        for line in sound_log(plan) {
+            eprintln!("sound {line}");
+        }
+    }
     let mut clips = vec![];
     collect(plan, ROOT, (1.0, 0.0), (0.0, plan.root().dur), &mut clips);
     clips.retain(|clip| clip.to > range.start && clip.from < range.end);
@@ -123,7 +143,7 @@ pub fn mix_range(plan: &Plan, range: std::ops::Range<f64>, wav: &Path) -> Result
             if clip.fade_out > 0.0 {
                 g *= (left / clip.fade_out).clamp(0.0, 1.0);
             }
-            Ok(g.max(0.0))
+            Ok((g * clip.gain).max(0.0))
         };
         let mut i = first;
         while i < last {

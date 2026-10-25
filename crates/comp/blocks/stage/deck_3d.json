@@ -92,13 +92,16 @@
         360,
         0
       ],
-      "rot_y": {
-        "from": -14,
-        "to": 10,
-        "dur": 7.2,
-        "ease": "sine.inOut"
-      },
-      "rot_x": 6
+      "rotation": [
+        6,
+        {
+          "from": -14,
+          "to": 10,
+          "dur": 7.2,
+          "ease": "sine.inOut"
+        },
+        0
+      ]
     },
     {
       "type": "shape",
@@ -110,7 +113,11 @@
         12,
         36
       ],
-      "rot_y": -16,
+      "rotation": [
+        0,
+        -16,
+        0
+      ],
       "fx": [
         {
           "effect": "glow",
@@ -195,7 +202,11 @@
         0,
         0
       ],
-      "rot_y": 0,
+      "rotation": [
+        0,
+        0,
+        0
+      ],
       "fx": [
         {
           "effect": "glow",
@@ -280,7 +291,11 @@
         12,
         36
       ],
-      "rot_y": 16,
+      "rotation": [
+        0,
+        16,
+        0
+      ],
       "fx": [
         {
           "effect": "glow",

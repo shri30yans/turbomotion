@@ -6,7 +6,7 @@ use anyhow::{ensure, Context, Result};
 use clap::{Args, Subcommand, ValueEnum};
 use turbomotion_core::encode::Codec;
 
-use crate::{catalogue, check, eval::Evaluator, plan::{Plan, ROOT}, render};
+use crate::{catalogue, check, eval::Evaluator, media::refframe::{Crop, RefVideo}, plan::{Plan, ROOT}, render};
 
 #[derive(Args)]
 pub struct Source {
@@ -95,6 +95,14 @@ pub enum Command {
         #[arg(long)]
         layer: Option<String>,
     },
+    /// How a moment is drawn: the render graph's passes and the images each reads and writes
+    Graph {
+        #[command(flatten)]
+        source: Source,
+        /// Seconds into the composition
+        #[arg(long, default_value_t = 0.0)]
+        t: f64,
+    },
     /// Write PNGs of chosen moments
     Still {
         #[command(flatten)]
@@ -116,9 +124,18 @@ pub enum Command {
         times: Vec<f64>,
         #[arg(long, default_value_t = 4)]
         cols: u32,
-        /// Width of each thumbnail in pixels
+        /// Width of each thumbnail in pixels (with --ref, at most 2 pairs per row)
         #[arg(long, default_value_t = 480)]
         thumb: u32,
+        /// A reference video: its frame at each time is drawn beside ours, labelled REF / OURS
+        #[arg(long = "ref")]
+        reference: Option<PathBuf>,
+        /// Crop the reference to `x,y,w,h` (its own pixels), to remove letterbox bars
+        #[arg(long, requires = "reference")]
+        crop: Option<String>,
+        /// Seconds added to every time when reading the reference (if it starts earlier or later than the film)
+        #[arg(long, default_value_t = 0.0, requires = "reference")]
+        ref_offset: f64,
     },
     /// Wrap a composition for another aspect ratio (16:9 film to 9:16 short) without editing it; writes a new comp file
     Reframe {
@@ -223,6 +240,11 @@ pub fn run(command: Command) -> Result<()> {
             Ok(())
         }
         Command::Fx { command } => fx(command),
+        Command::Graph { source, t } => {
+            let plan = Plan::load(&source.file)?;
+            print!("{}", render::graph::describe(&plan, &Evaluator::new(&plan), t)?);
+            Ok(())
+        }
         Command::Check { source, assert, json, cost, strict, determinism, layout } => {
             let plan = Plan::load(&source.file)?;
             let root = plan.root();
@@ -383,11 +405,18 @@ pub fn run(command: Command) -> Result<()> {
             }
             Ok(())
         }
-        Command::Sheet { source, out, times, cols, thumb } => {
+        Command::Sheet { source, out, times, cols, thumb, reference, crop, ref_offset } => {
+            let reference = reference
+                .map(|path| -> Result<RefVideo> {
+                    RefVideo::exists(&path)?;
+                    Ok(RefVideo { path, crop: crop.as_deref().map(Crop::parse).transpose()?, offset: ref_offset })
+                })
+                .transpose()?;
             let plan = Plan::load(&source.file)?;
             let times = if times.is_empty() { (0..8).map(|i| plan.root().dur * (f64::from(i) + 0.5) / 8.0).collect() } else { times };
             let mut renderer = render::Renderer::new(&plan)?;
-            fs::write(&out, renderer.sheet(&times, cols.max(1), thumb.max(64))?).with_context(|| format!("writing {}", out.display()))?;
+            let cols = if reference.is_some() { cols.min(2) } else { cols };
+            fs::write(&out, renderer.sheet_against(&times, cols.max(1), thumb.max(64), reference.as_ref())?).with_context(|| format!("writing {}", out.display()))?;
             println!("sheet of {} moments -> {}", times.len(), out.display());
             Ok(())
         }
@@ -449,10 +478,7 @@ fn fx(command: FxCommand) -> Result<()> {
     match command {
         FxCommand::List { dir } => {
             let lib = crate::fxlib::Library::load(&dir)?;
-            let all: Vec<_> = lib
-                .defs()
-                .map(|d| serde_json::json!({"name": d.name, "kind": d.kind, "summary": d.summary, "origin": d.origin, "params": d.params}))
-                .collect();
+            let all: Vec<_> = lib.defs().map(crate::fxlib::Def::descriptor).collect();
             println!("{}", serde_json::to_string_pretty(&all)?);
             Ok(())
         }

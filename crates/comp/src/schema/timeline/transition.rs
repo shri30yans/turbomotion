@@ -5,7 +5,7 @@ use anyhow::{anyhow, bail, ensure, Result};
 use serde_json::{json, Map, Value};
 
 use super::{
-    catalogue::{cue_peak, TRANSITIONS},
+    catalogue::{resolve_cue, TRANSITIONS},
     round, time,
 };
 
@@ -142,9 +142,15 @@ impl Trans {
     }
 
     /// The transition's sound, placed so the cue's loudest moment lands on the transition's midpoint.
-    pub fn sound(&self, s: f64, volume: f64) -> Option<Value> {
+    ///
+    /// `used` counts how often each cue has been used so far in the film, so a cue that names a family or a pool steps
+    /// through its variants and consecutive transitions sound different.
+    pub fn sound(&self, s: f64, volume: f64, used: &mut std::collections::HashMap<String, usize>) -> Option<Value> {
         let cue = self.sfx.as_ref()?;
-        let at = (s + self.dur / 2.0 - cue_peak(cue)).max(0.0);
-        Some(json!({"type": "audio", "src": format!("kit:{cue}"), "start": round(at), "volume": volume}))
+        let n = used.entry(cue.clone()).or_insert(0);
+        let (exact, peak) = resolve_cue(cue, *n);
+        *n += 1;
+        let at = (s + self.dur / 2.0 - peak).max(0.0);
+        Some(json!({"type": "audio", "src": format!("kit:{exact}"), "start": round(at), "volume": volume}))
     }
 }

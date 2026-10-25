@@ -85,18 +85,21 @@
         280,
         0
       ],
-      "rot_y": {
-        "from": "$tilt",
-        "to": "$rest",
-        "dur": 1.8,
-        "ease": "expo.out"
-      },
-      "rot_x": {
-        "from": 8,
-        "to": 3.2,
-        "dur": 1.8,
-        "ease": "expo.out"
-      }
+      "rotation": [
+        {
+          "from": 8,
+          "to": 3.2,
+          "dur": 1.8,
+          "ease": "expo.out"
+        },
+        {
+          "from": "$tilt",
+          "to": "$rest",
+          "dur": 1.8,
+          "ease": "expo.out"
+        },
+        0
+      ]
     },
     {
       "type": "shape",
@@ -133,7 +136,11 @@
         0,
         26
       ],
-      "rot_y": 90,
+      "rotation": [
+        0,
+        90,
+        0
+      ],
       "fx": [
         {
           "effect": "glow",
@@ -165,7 +172,11 @@
         0,
         26
       ],
-      "rot_y": 90,
+      "rotation": [
+        0,
+        90,
+        0
+      ],
       "fx": [
         {
           "effect": "glow",
@@ -197,7 +208,11 @@
         -180,
         26
       ],
-      "rot_x": 90,
+      "rotation": [
+        90,
+        0,
+        0
+      ],
       "fx": [
         {
           "effect": "glow",

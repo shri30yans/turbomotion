@@ -1,0 +1,28 @@
+// The coverage a composite mask takes from an effect's input: where its brightness lies in a band. Alpha only.
+uniform shader source;
+uniform float lo;
+uniform float hi;
+// width of the soft edge of each end of the band, in brightness units, centred on the end
+uniform float softness;
+// 1 flips the band
+uniform float invert;
+
+const half3 LUMA = half3(0.2126, 0.7152, 0.0722);
+
+// a band end at or beyond the range of brightness (lo <= 0, hi >= 1) is no cut at all
+float rise(float x, float edge) {
+    if (edge <= 0.0) return 1.0;
+    return softness <= 0.0 ? step(edge, x) : smoothstep(edge - 0.5 * softness, edge + 0.5 * softness, x);
+}
+
+float fall(float x, float edge) {
+    if (edge >= 1.0) return 1.0;
+    return softness <= 0.0 ? step(x, edge) : 1.0 - smoothstep(edge - 0.5 * softness, edge + 0.5 * softness, x);
+}
+
+half4 main(float2 xy) {
+    half4 c = source.eval(xy);
+    float l = c.a > 0.0 ? float(dot(c.rgb / c.a, LUMA)) : 0.0;
+    float inside = rise(l, lo) * fall(l, hi);
+    return half4(0.0, 0.0, 0.0, half(mix(inside, 1.0 - inside, invert)));
+}

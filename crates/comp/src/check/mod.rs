@@ -4,6 +4,7 @@
 
 pub mod assertions;
 pub mod cost;
+pub mod cover;
 pub mod layout;
 pub mod lint;
 

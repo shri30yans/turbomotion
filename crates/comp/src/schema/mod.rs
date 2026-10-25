@@ -25,9 +25,9 @@ pub use kinds::*;
 pub use path::PathSpec;
 pub use shape::{Fill, Gradient, Metal, Repeat, ShapeItem, Stroke, Trim};
 pub use text::TextRun;
-pub use text::{Align, Animator, Counter, Direction, Mark, Role, Selector, Stagger, StaggerFrom, TextSource, TextStroke, TextSwap, Unit, UnitProps, Verdict};
+pub use text::{Align, Animator, Charset, Cipher, Counter, Marquee, PathSource, Perspective, SelectorShape, SurfaceKind, TextPath, TextSurface, Direction, Mark, Role, Selector, Stagger, StaggerFrom, TextSource, TextStroke, TextSwap, Unit, UnitProps, Verdict};
 pub use tokens::TypeScale;
-pub use wrap::{Col, Pos, Scale, P};
+pub use wrap::{Col, Orient, Pos, Rot, Scale, P};
 
 /// A nested composition or the root. Only the root uses `fps`, `comps`, `fonts` and `audio`.
 #[derive(Debug, Deserialize, Clone)]
@@ -119,26 +119,38 @@ impl Default for MotionBlur {
     }
 }
 
-/// An effect on a layer: one from the platform library, or a shader plugin from `effects/`.
+/// An effect on a layer: what it is, and how its result is laid over its input (see `fxlib::composite`).
 #[derive(Debug, Clone)]
-pub enum Fx {
+pub struct Fx {
+    pub op: FxOp,
+    /// The effect's `"composite"` options as written; parsed when the plan is made, where animated values and layer ids resolve.
+    pub composite: Option<Value>,
+}
+
+/// One from the platform library, or a shader plugin from `effects/`.
+#[derive(Debug, Clone)]
+pub enum FxOp {
     Builtin(Box<Effect>),
     Plugin { name: String, params: Map<String, Value> },
 }
+
+/// The key that carries the composite options on any effect.
+pub const COMPOSITE_KEY: &str = "composite";
 
 impl Fx {
     pub fn parse(v: &Value) -> Result<Fx> {
         let o = v.as_object().ok_or_else(|| anyhow!("an effect is an object like {{\"effect\": \"blur\", \"radius\": 8}}"))?;
         let name = o.get("effect").and_then(Value::as_str).ok_or_else(|| anyhow!("an effect needs \"effect\": \"<name>\""))?;
-        if effects::catalogue().iter().any(|e| e.effect == name) {
-            let mut baked = v.clone();
-            bake::bake(&mut baked).map_err(|e| anyhow!("effect {name:?}: {e:#}"))?;
-            Ok(Fx::Builtin(Box::new(serde_json::from_value(baked).map_err(|e| anyhow!("effect {name:?}: {e}"))?)))
+        let mut own = o.clone();
+        let composite = own.remove(COMPOSITE_KEY);
+        own.remove("effect");
+        let op = if effects::entry(name).is_some() {
+            bake::bake(&mut own).map_err(|e| anyhow!("effect {name:?}: {e:#}"))?;
+            FxOp::Builtin(Box::new(Effect::build(name, &own)?))
         } else {
-            let mut params = o.clone();
-            params.remove("effect");
-            Ok(Fx::Plugin { name: name.to_string(), params })
-        }
+            FxOp::Plugin { name: name.to_string(), params: own }
+        };
+        Ok(Fx { op, composite })
     }
 }
 
@@ -238,6 +250,20 @@ pub struct Material {
     pub shininess: f64,
 }
 
+/// Which side of a 3D layer is hidden. After Effects draws both sides of a layer; a plane seen from behind shows
+/// its content mirrored.
+#[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum Cull {
+    /// Draw both sides.
+    #[default]
+    None,
+    /// Hide the side the layer is read from, so it shows only from behind.
+    Front,
+    /// Hide the far side, so the layer shows only from the front.
+    Back,
+}
+
 /// A faded, softened mirror of the layer, drawn on the floor beneath it.
 #[derive(Debug, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
@@ -327,10 +353,19 @@ pub struct Common {
     pub pos: Option<Pos>,
     pub anchor: Option<Pos>,
     pub scale: Option<Scale>,
-    /// Degrees, clockwise.
-    pub rotation: Option<P>,
-    pub rot_x: Option<P>,
-    pub rot_y: Option<P>,
+    /// Degrees, clockwise: the layer's route through space (After Effects' X, Y and Z Rotation). One number
+    /// spins the layer about the z axis; three numbers turn it about each axis in turn, inside its orientation.
+    pub rotation: Option<Rot>,
+    /// The layer's own orientation in degrees (After Effects' Orientation): `[x, y, z]`.
+    /// `x` tips the layer's face down, `y` turns its face to the left, `z` spins it clockwise in its own plane.
+    /// After Effects stores it as a quaternion: keys interpolate along the shortest turn (see `eval::pose`).
+    pub orientation: Option<Orient>,
+    /// The point the layer's face turns toward, in composition (world) space, as After Effects' auto-orient toward
+    /// the point of interest does, even when the layer has a parent.
+    /// The face is the side the layer is read from; the layer's own `orientation` is applied on top of it.
+    pub aim: Option<Pos>,
+    /// Which side of a 3D layer is hidden. Both sides by default.
+    pub cull: Option<Cull>,
     /// Shear in degrees (GSAP `skewX`). Positive leans the top to the right.
     pub skew: Option<P>,
     pub opacity: Option<P>,
@@ -365,7 +400,7 @@ pub struct Layer {
 }
 
 const COMMON_KEYS: &[&str] = &[
-    "id", "start", "dur", "parent", "hidden", "three_d", "lit", "material", "pos", "anchor", "scale", "rotation", "rot_x", "rot_y", "skew", "opacity", "wrap", "stagger", "flip", "blend", "fx", "masks", "matte", "clip_to", "mblur", "layout", "along", "enter", "exit", "reflect",
+    "id", "start", "dur", "parent", "hidden", "three_d", "lit", "material", "pos", "anchor", "scale", "rotation", "orientation", "aim", "cull", "skew", "opacity", "wrap", "stagger", "flip", "blend", "fx", "masks", "matte", "clip_to", "mblur", "layout", "along", "enter", "exit", "reflect",
 ];
 
 /// Parse layer number `index` of a composition.

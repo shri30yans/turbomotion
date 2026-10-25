@@ -57,6 +57,11 @@ impl Prop {
         self.expr.as_ref()
     }
 
+    /// Plain keys: no expression and no loop, so the value is exactly what `base` says at any time.
+    pub fn is_plain(&self) -> bool {
+        self.expr.is_none() && self.looping == Loop::None
+    }
+
     /// The keyframed value at `t`, before any expression.
     pub fn base(&self, t: f64) -> f64 {
         let (first, last) = (self.keys[0], self.keys[self.keys.len() - 1]);
@@ -159,10 +164,14 @@ fn parse_keys(v: &Value) -> Result<Vec<Key>> {
             match item {
                 Value::Array(a) => {
                     ensure!((2..=3).contains(&a.len()), "a key is [seconds, value] or [seconds, value, ease]");
+                    ensure!(!a[1].is_array(), "a key's value here is one number, not {}. A vector animates as {VECTOR_FORMS}", a[1]);
                     let ease = a.get(2).map_or(Ok(Ease::default()), |e| Ease::parse(e.as_str().ok_or_else(|| anyhow!("the ease of a key is text like \"expo.out\""))?))?;
                     Ok(Key { t: num(&a[0])?, v: num(&a[1])?, ease })
                 }
                 Value::Object(o) => {
+                    if !o.contains_key("t") && ["from", "to", "dur", "at"].iter().any(|k| o.contains_key(*k)) {
+                        bail!("keys are [seconds, value, ease?] (or {{\"t\", \"v\"}}); this looks like a tween object, and a list of tweens is not keys. Use one tween per property ({{\"from\": 0, \"to\": 1, \"at\": 0.5, \"dur\": 0.4}}), or keys such as [[0, 0], [0.5, 1, \"expo.out\"]]");
+                    }
                     let ease = o.get("ease").map_or(Ok(Ease::default()), |e| Ease::parse(e.as_str().unwrap_or("")))?;
                     Ok(Key { t: num(o.get("t").ok_or_else(|| anyhow!("key needs \"t\""))?)?, v: num(o.get("v").ok_or_else(|| anyhow!("key needs \"v\""))?)?, ease })
                 }
@@ -195,6 +204,14 @@ impl Env for WithValue<'_> {
     }
 }
 
+/// The ways to write a vector, for errors.
+const VECTOR_FORMS: &str = "[x, y] (each part any property: [{\"from\": 1, \"to\": 2, \"dur\": 1}, 0.5]), {\"from\": [0, 0], \"to\": [100, 50], \"at\": 1, \"dur\": 0.5} or {\"keys\": [[0, [0, 0]], [1, [100, 50], \"expo.out\"]]}";
+
+/// `[[t, [x, y]], ..]` written without the `{"keys": ..}` wrapper.
+fn looks_like_vector_keys(parts: &[Value]) -> bool {
+    !parts.is_empty() && parts.iter().all(|p| p.as_array().is_some_and(|k| k.len() >= 2 && k[0].is_number() && k[1].is_array()))
+}
+
 /// Two or three properties moving together: positions, scales, anchors.
 #[derive(Debug, Clone)]
 pub struct VecProp(pub Vec<Prop>);
@@ -210,13 +227,14 @@ impl VecProp {
         let what = || format!("{}-{} numbers", len.start(), len.end());
         match v {
             Value::Array(parts) => {
-                ensure!(len.contains(&parts.len()), "expected {}, found {}", what(), parts.len());
+                ensure!(!looks_like_vector_keys(parts), "keys of vectors need the {{\"keys\"}} wrapper. A vector is {VECTOR_FORMS}; found {v}");
+                ensure!(len.contains(&parts.len()), "expected {} as {VECTOR_FORMS}; found {} items", what(), parts.len());
                 Ok(VecProp(parts.iter().enumerate().map(|(i, p)| Prop::parse(p).with_context(|| format!("component {i}"))).collect::<Result<_>>()?))
             }
             Value::Object(o) => {
                 if let Some(keys) = o.get("keys") {
                     let list = keys.as_array().ok_or_else(|| anyhow!("keys must be a list"))?;
-                    let n = list.first().and_then(|k| k.as_array()).and_then(|k| k.get(1)).and_then(Value::as_array).map(Vec::len).ok_or_else(|| anyhow!("vector keys look like [seconds, [x, y], ease?]"))?;
+                    let n = list.first().and_then(|k| k.as_array()).and_then(|k| k.get(1)).and_then(Value::as_array).map(Vec::len).ok_or_else(|| anyhow!("vector keys look like [seconds, [x, y], ease?] inside {{\"keys\": ..}}; a vector is {VECTOR_FORMS}"))?;
                     ensure!(len.contains(&n), "expected {}, found {n}", what());
                     let mut comps = vec![];
                     for c in 0..n {
@@ -251,10 +269,10 @@ impl VecProp {
                     }
                     Ok(VecProp(comps))
                 } else {
-                    bail!("a vector is [x, y], {{\"from\": [..], \"to\": [..]}} or {{\"keys\": [[t, [x, y]], ..]}}")
+                    bail!("a vector is {VECTOR_FORMS}; found {v}")
                 }
             }
-            other => bail!("expected {}, found {other}", what()),
+            other => bail!("expected a vector ({}), found {other}. A vector is {VECTOR_FORMS}", what()),
         }
     }
 
@@ -469,6 +487,21 @@ mod tests {
         let c = ColorProp::parse(&json!({"from": "#000000", "to": "#ff0000", "dur": 1, "ease": "none"})).unwrap();
         assert_eq!(c.at(0.5, &E).unwrap()[0], 127.5);
         assert_eq!(parse_color_static(&json!("#f80")).unwrap(), [255.0, 136.0, 0.0, 1.0]);
+    }
+
+    #[test]
+    fn misplaced_vector_and_tween_lists_explain_both_forms() {
+        let e = format!("{:#}", VecProp::parse(&json!([[0, [0, 0]], [1, [10, 20]], [2, [5, 5]]]), 2..=3).unwrap_err());
+        assert!(e.contains("\"keys\"") && e.contains("\"from\""), "{e}");
+        let e = format!("{:#}", VecProp::parse(&json!([[0, [0, 0]], [1, [10, 20]]]), 2..=2).unwrap_err());
+        assert!(e.contains("wrapper"), "{e}");
+        let e = format!("{:#}", Prop::parse(&json!([{"from": 0, "to": 1, "dur": 1}, {"from": 1, "to": 0, "at": 1}])).unwrap_err());
+        assert!(e.contains("tween object") && !e.contains("needs \"t\""), "{e}");
+        let e = format!("{:#}", Prop::parse(&json!([[0, [1, 2]], [1, [3, 4]]])).unwrap_err());
+        assert!(e.contains("one number") && e.contains("keys"), "{e}");
+        // per-axis tweens stay valid
+        let v = VecProp::parse(&json!([{"from": 0, "to": 100, "dur": 1, "ease": "none"}, 5]), 2..=2).unwrap();
+        assert_eq!(v.at(0.5, &E).unwrap(), vec![50.0, 5.0]);
     }
 
     #[test]

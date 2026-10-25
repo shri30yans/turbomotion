@@ -8,6 +8,7 @@ turbomotion comp catalogue                     everything a composition can cont
 turbomotion comp check comp.json               validate, lint, run comp.assert.json, (--determinism) prove frames repeat
 turbomotion comp inspect comp.json --t 1.2     what is true at 1.2 s: every layer's bounds, opacity, glyphs, lights
 turbomotion comp sheet comp.json --out s.png   a labelled contact sheet of moments (eyes, after the numbers)
+turbomotion comp sheet comp.json --out s.png --ref ref.mp4 [--crop x,y,w,h]   the reference frame beside ours at each time
 turbomotion comp still comp.json --out dir --times 0.5,2
 turbomotion comp render comp.json --out out.mp4   segment-parallel; audio is mixed and muxed
 turbomotion comp fx list | fx test <name> --out sheet.png      shader plugins and their knobs
@@ -72,8 +73,8 @@ A root `"timeline"` writes a film as tracks: `shots` (each a comp, layers, a pic
 read, so `inspect`, `check` and the layout gate see every transition. 29 transitions (push, slide over, whip pan,
 pan out to the next shot, zoom through, flood, iris, wipes, dips, glitch) move the outgoing and incoming shots as
 one strip and carry a kit sound timed to their midpoint; `speed` keys become a time remap (ramps, freezes); `move`
-and `camera` give 2D frame moves and 3D camera moves (orbit, dolly zoom, crane, truck). `mesh` is the one 3D object layer: its `geometry` is `text`, `box`, `sphere`, `torus`, `cylinder` or `extrude`, and `rot_x`/`rot_y` turn it
-about its middle (`"rot_y": "time*90"` is a turntable; `examples/comp/19-solids`). `extrude` on a text layer gives flat 3D-ish depth. `comp catalogue | jq .timeline` lists it all; `examples/comp/16-timeline` uses every family.
+and `camera` give 2D frame moves and 3D camera moves (orbit, dolly zoom, crane, truck). `mesh` is the one 3D object layer: its `geometry` is `text`, `box`, `sphere`, `torus`, `cylinder` or `extrude`, and `rotation` turns it
+about its middle (`"rotation": [0, "time*90", 0]` is a turntable; `examples/comp/19-solids`). `extrude` on a text layer gives flat 3D-ish depth. `comp catalogue | jq .timeline` lists it all; `examples/comp/16-timeline` uses every family.
 
 ## Tools that rewrite or produce composition JSON
 

@@ -32,6 +32,27 @@ pub enum Kind {
 
 impl Kind {
     pub const NAMES: &'static [&'static str] = &["solid", "shape", "text", "mesh", "image", "video", "audio", "precomp", "null", "camera", "light", "adjustment", "particles", "texture", "pack"];
+
+    /// The kind's name, as it is written in a composition file.
+    pub fn name(&self) -> &'static str {
+        match self {
+            Kind::Solid(_) => "solid",
+            Kind::Shape(_) => "shape",
+            Kind::Text(_) => "text",
+            Kind::Mesh(_) => "mesh",
+            Kind::Image(_) => "image",
+            Kind::Video(_) => "video",
+            Kind::Audio(_) => "audio",
+            Kind::Precomp(_) => "precomp",
+            Kind::Null => "null",
+            Kind::Camera(_) => "camera",
+            Kind::Light(_) => "light",
+            Kind::Adjustment => "adjustment",
+            Kind::Particles(_) => "particles",
+            Kind::Texture(_) => "texture",
+            Kind::Pack(_) => "pack",
+        }
+    }
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -93,6 +114,31 @@ pub struct Text {
     pub width: Option<f64>,
     #[serde(default)]
     pub stroke: Option<TextStroke>,
+    /// Outline-only type: the fill is not painted, only the stroke (the layer's colour at 2 px when no `stroke` is given).
+    #[serde(default)]
+    pub outline_only: bool,
+    /// Draw only the part of the glyph outlines between fractions `[start, end]` (0..1) of their total length, in reading
+    /// order: animate `end` from 0 to 1 and the letters write themselves. Needs a stroke (or `outline_only`).
+    #[serde(default)]
+    pub stroke_trim: Option<[P; 2]>,
+    /// With `stroke_trim`, trim each glyph's own outline instead of the whole line's.
+    #[serde(default)]
+    pub stroke_trim_each: bool,
+    /// Lay the text along a path (After Effects' Path Options).
+    #[serde(default)]
+    pub path: Option<super::text::TextPath>,
+    /// Wrap the text on a cylinder or a sphere.
+    #[serde(default)]
+    pub surface: Option<super::text::TextSurface>,
+    /// A seamlessly repeating, scrolling row of the text.
+    #[serde(default)]
+    pub marquee: Option<super::text::Marquee>,
+    /// How per-character 3D (animator `z` / `rotation_*`, and `surface`) is seen on a flat layer: a viewer distance in
+    /// pixels (smaller is stronger foreshortening) or `"orthographic"`. Default the default camera's zoom
+    /// (`default_camera_zoom`). A `three_d` layer is seen through the composition camera instead and ignores this. The vanishing point
+    /// is the layer's `pos`.
+    #[serde(default)]
+    pub perspective: Option<super::text::Perspective>,
     #[serde(default)]
     pub animators: Vec<Animator>,
     /// A named animation from the catalogue, expanded into animators: `"rise"` or `{"name": "rise", "by": "words"}`.
@@ -100,8 +146,26 @@ pub struct Text {
     pub preset: Option<Value>,
 }
 
+impl Text {
+    /// The rules a text layer's fields must keep together, checked once when the composition is planned.
+    pub fn validate(&self) -> anyhow::Result<()> {
+        use anyhow::ensure;
+        ensure!(self.path.is_none() || self.surface.is_none(), "text takes a `path` or a `surface`, not both");
+        ensure!(self.stroke_trim.is_none() || self.stroke.is_some() || self.outline_only, "`stroke_trim` trims the stroke: give the text a `stroke` or `outline_only`");
+        if let Some(m) = &self.marquee {
+            ensure!(m.speed.is_finite() && m.offset.is_finite(), "marquee speed and offset are finite numbers");
+            ensure!(m.gap >= 0.0, "marquee gap is 0 or more pixels, not {}", m.gap);
+        }
+        for c in self.animators.iter().filter_map(|a| a.cipher.as_ref()) {
+            ensure!(c.rate > 0.0, "cipher rate is above 0 changes per second, not {}", c.rate);
+            ensure!((0.0..1.0).contains(&c.settle), "cipher settle is 0 up to 1, not {}", c.settle);
+        }
+        Ok(())
+    }
+}
+
 /// A solid: a triangle mesh made by one of the `geometry` generators, lit by the composition's lights and seen through
-/// its camera. Rotate it with the common `rot_x` / `rot_y` / `rotation`; it turns about its own middle. `text3d` is the
+/// its camera. Rotate it with the common `rotation`; it turns about its own middle. `text3d` is the
 /// same layer with a text geometry written flat.
 #[derive(Debug, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
@@ -325,10 +389,22 @@ pub struct Precomp {
     pub vars: Map<String, Value>,
 }
 
+/// The default camera sees this fraction of the composition's width per unit of zoom: 36 mm of film over a 50 mm lens.
+///
+/// Source: py-aep's `default_camera_zoom`, measured in After Effects 2026 (the 50 mm preset): the default
+/// camera's zoom in pixels is `width / 0.72`. After Effects scales that by the pixel aspect; this engine has no
+/// pixel aspect (every pixel is square), so it is 1.
+pub const DEFAULT_CAMERA_FRAME_WIDTH: f64 = 0.72;
+
+/// The zoom (camera distance to the 1:1 plane, pixels) of a camera that sets none, for a composition `width` wide.
+pub fn default_camera_zoom(width: f64) -> f64 {
+    width / DEFAULT_CAMERA_FRAME_WIDTH
+}
+
 #[derive(Debug, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct Camera {
-    /// Distance in pixels from the camera to the plane that draws 1:1. Default `1.5 * width`.
+    /// Distance in pixels from the camera to the plane that draws 1:1. Default `width / 0.72`, After Effects' 50 mm camera.
     #[serde(default)]
     pub zoom: Option<P>,
     /// Alternatively a horizontal field of view in degrees.
@@ -337,9 +413,6 @@ pub struct Camera {
     /// Point of interest the camera looks at. Default: the middle of the composition.
     #[serde(default)]
     pub poi: Option<Pos>,
-    /// Roll in degrees.
-    #[serde(default)]
-    pub roll: Option<P>,
     /// Depth of field: blur grows with distance from `focus`.
     #[serde(default)]
     pub dof: Option<Dof>,

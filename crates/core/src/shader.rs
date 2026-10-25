@@ -50,9 +50,9 @@ pub struct Program {
 }
 
 impl Program {
-    /// An instance whose uniforms are given by name: each value is written at the offset the compiler chose, so the
-    /// caller never counts bytes. Every uniform of the program must be given, with exactly its number of floats.
-    pub fn instance_named(&self, values: &[(&str, &[f32])], children: &[Shader]) -> Result<Shader> {
+    /// The uniform bytes for values given by name: each is written at the offset the compiler chose, so the caller never
+    /// counts bytes. Every uniform of the program must be given, with exactly its number of floats.
+    fn pack(&self, values: &[(&str, &[f32])]) -> Result<Data> {
         let mut data = vec![0u8; self.effect.uniform_size()];
         for u in self.effect.uniforms() {
             let (_, v) = values.iter().find(|(n, _)| *n == u.name()).ok_or_else(|| anyhow!("{}: no value for uniform {:?}", self.name, u.name()))?;
@@ -61,8 +61,28 @@ impl Program {
                 data[u.offset() + i * 4..u.offset() + i * 4 + 4].copy_from_slice(&f.to_ne_bytes());
             }
         }
+        Ok(Data::new_copy(&data))
+    }
+
+    /// An instance whose uniforms are given by name (see [`Program::pack`]) and whose child shaders are in declaration order.
+    pub fn instance_named(&self, values: &[(&str, &[f32])], children: &[Shader]) -> Result<Shader> {
         let kids: Vec<ChildPtr> = children.iter().cloned().map(ChildPtr::Shader).collect();
-        self.effect.make_shader(Data::new_copy(&data), &kids, None::<&Matrix>).ok_or_else(|| anyhow!("{}: could not make a shader instance", self.name))
+        self.effect.make_shader(self.pack(values)?, &kids, None::<&Matrix>).ok_or_else(|| anyhow!("{}: could not make a shader instance", self.name))
+    }
+
+    /// As [`Program::instance_named`] with child shaders given by the name they are declared under (`uniform shader map;`).
+    /// A child the program does not declare is ignored; one it declares and the caller did not give is an error.
+    pub fn instance_with(&self, values: &[(&str, &[f32])], children: &[(&str, Shader)]) -> Result<Shader> {
+        let kids = self
+            .effect
+            .children()
+            .iter()
+            .map(|c| {
+                let (_, s) = children.iter().find(|(n, _)| *n == c.name()).ok_or_else(|| anyhow!("{}: no shader for child {:?}", self.name, c.name()))?;
+                Ok(ChildPtr::Shader(s.clone()))
+            })
+            .collect::<Result<Vec<_>>>()?;
+        self.effect.make_shader(self.pack(values)?, &kids, None::<&Matrix>).ok_or_else(|| anyhow!("{}: could not make a shader instance", self.name))
     }
 
     /// Names of the program's uniforms (for checking a manifest against the compiled code).

@@ -6,7 +6,7 @@ use anyhow::Result;
 use serde::Deserialize;
 
 use super::{
-    param::{value, Param},
+    param::Param,
     pass::{run, Ctx},
 };
 use crate::{layer::Layer, shader::Uniforms};
@@ -15,8 +15,8 @@ const WAVE: f64 = 0.0;
 const TWIRL: f64 = 1.0;
 const BULGE: f64 = 2.0;
 
-fn centre(ctx: &Ctx, layer: &Layer, x: &Option<Param>, y: &Option<Param>) -> (f64, f64) {
-    (value(x, ctx.t, 0.5) * f64::from(layer.width()), value(y, ctx.t, 0.5) * f64::from(layer.height()))
+fn centre(ctx: &Ctx, layer: &Layer, x: &Param, y: &Param) -> (f64, f64) {
+    (x.at(ctx.t) * f64::from(layer.width()), y.at(ctx.t) * f64::from(layer.height()))
 }
 
 fn distort(ctx: &Ctx, layer: &Layer, mode: f64, shape: [f64; 4], at: (f64, f64)) -> Result<Layer> {
@@ -26,64 +26,57 @@ fn distort(ctx: &Ctx, layer: &Layer, mode: f64, shape: [f64; 4], at: (f64, f64))
 #[derive(Debug, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct Wave {
-    /// How far pixels move, in pixels.
-    pub amplitude: Option<Param>,
-    /// Distance between crests in pixels.
-    pub wavelength: Option<Param>,
-    /// Crests travelling past per second (negative reverses).
-    pub speed: Option<Param>,
-    /// Direction the wave travels in degrees (0 = left to right); pixels move across it.
-    pub angle: Option<Param>,
+    pub amplitude: Param,
+    pub wavelength: Param,
+    pub speed: Param,
+    pub angle: Param,
 }
 
 pub fn wave(ctx: &Ctx, e: &Wave, layer: &Layer) -> Result<Layer> {
-    let shape = [value(&e.amplitude, ctx.t, 12.0), value(&e.wavelength, ctx.t, 160.0).max(1.0), TAU * value(&e.speed, ctx.t, 0.5) * ctx.t, value(&e.angle, ctx.t, 0.0).to_radians()];
+    let shape = [e.amplitude.at(ctx.t), e.wavelength.at(ctx.t), TAU * e.speed.at(ctx.t) * ctx.t, e.angle.at(ctx.t).to_radians()];
     distort(ctx, layer, WAVE, shape, (0.0, 0.0))
 }
 
 #[derive(Debug, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct Twirl {
-    /// Turn at the centre in degrees (it eases to nothing at the radius).
-    pub angle: Option<Param>,
-    /// Reach in pixels.
-    pub radius: Option<Param>,
-    /// Centre as fractions of the frame.
-    pub x: Option<Param>,
-    pub y: Option<Param>,
+    pub angle: Param,
+    pub radius: Param,
+    pub x: Param,
+    pub y: Param,
 }
 
 pub fn twirl(ctx: &Ctx, e: &Twirl, layer: &Layer) -> Result<Layer> {
-    let shape = [value(&e.angle, ctx.t, 90.0).to_radians(), value(&e.radius, ctx.t, 300.0).max(1.0), 0.0, 0.0];
+    let shape = [e.angle.at(ctx.t).to_radians(), e.radius.at(ctx.t), 0.0, 0.0];
     distort(ctx, layer, TWIRL, shape, centre(ctx, layer, &e.x, &e.y))
 }
 
 #[derive(Debug, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct Bulge {
-    /// 0.5 magnifies the centre, negative pinches it in.
-    pub strength: Option<Param>,
-    /// Reach in pixels.
-    pub radius: Option<Param>,
-    pub x: Option<Param>,
-    pub y: Option<Param>,
+    pub strength: Param,
+    pub radius: Param,
+    pub x: Param,
+    pub y: Param,
 }
 
 pub fn bulge(ctx: &Ctx, e: &Bulge, layer: &Layer) -> Result<Layer> {
-    let shape = [value(&e.strength, ctx.t, 0.5), value(&e.radius, ctx.t, 300.0).max(1.0), 0.0, 0.0];
+    let shape = [e.strength.at(ctx.t), e.radius.at(ctx.t), 0.0, 0.0];
     distort(ctx, layer, BULGE, shape, centre(ctx, layer, &e.x, &e.y))
 }
 
 #[derive(Debug, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct Pixelate {
-    /// Block size in pixels.
-    pub size: Option<Param>,
+    pub size: Param,
 }
 
 pub fn pixelate(ctx: &Ctx, e: &Pixelate, layer: &Layer) -> Result<Layer> {
-    run(ctx, layer, &ctx.shaders.effects.pixelate, Uniforms::new().f(value(&e.size, ctx.t, 16.0).max(1.0)), &[])
+    run(ctx, layer, &ctx.shaders.effects.pixelate, Uniforms::new().f(e.size.at(ctx.t)), &[])
 }
+
+/// Below this separation the layer is left alone.
+const MIN_FRINGE: f64 = 0.05;
 
 fn fringe(ctx: &Ctx, layer: &Layer, shift: (f64, f64), radial: f64) -> Result<Layer> {
     let (w, h) = (f64::from(layer.width()), f64::from(layer.height()));
@@ -93,13 +86,12 @@ fn fringe(ctx: &Ctx, layer: &Layer, shift: (f64, f64), radial: f64) -> Result<La
 #[derive(Debug, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct ChromaticAberration {
-    /// Red/blue separation in pixels at the frame corners (zero at the centre).
-    pub amount: Option<Param>,
+    pub amount: Param,
 }
 
 pub fn chromatic_aberration(ctx: &Ctx, e: &ChromaticAberration, layer: &Layer) -> Result<Layer> {
-    let amount = value(&e.amount, ctx.t, 6.0);
-    if amount.abs() < 0.05 {
+    let amount = e.amount.at(ctx.t);
+    if amount.abs() < MIN_FRINGE {
         return Ok(Layer::from_image(layer.image().clone()));
     }
     fringe(ctx, layer, (0.0, 0.0), amount)
@@ -108,14 +100,12 @@ pub fn chromatic_aberration(ctx: &Ctx, e: &ChromaticAberration, layer: &Layer) -
 #[derive(Debug, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct RgbSplit {
-    /// Red and blue part ways by this many pixels (green stays).
-    pub distance: Option<Param>,
-    /// Direction in degrees (0 = horizontal).
-    pub angle: Option<Param>,
+    pub distance: Param,
+    pub angle: Param,
 }
 
 pub fn rgb_split(ctx: &Ctx, e: &RgbSplit, layer: &Layer) -> Result<Layer> {
-    let distance = value(&e.distance, ctx.t, 8.0);
-    let (sin, cos) = value(&e.angle, ctx.t, 0.0).to_radians().sin_cos();
+    let distance = e.distance.at(ctx.t);
+    let (sin, cos) = e.angle.at(ctx.t).to_radians().sin_cos();
     fringe(ctx, layer, (cos * distance, sin * distance), 0.0)
 }
