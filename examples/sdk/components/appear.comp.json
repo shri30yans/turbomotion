@@ -1,0 +1,311 @@
+{
+  "bg": "#0b0d12",
+  "dur": 2.4,
+  "fps": 30,
+  "height": 540,
+  "layers": [
+    {
+      "align": "center",
+      "color": "#F3F0E8",
+      "enter": {
+        "delay": 0.4,
+        "dur": 0.5,
+        "preset": "slide_up"
+      },
+      "font": "Avenir Next Condensed",
+      "id": "stat-40",
+      "opacity": {
+        "at": 0.4,
+        "dur": 0.12,
+        "ease": "power1.out",
+        "from": 0,
+        "to": 1
+      },
+      "pos": [
+        480,
+        150
+      ],
+      "scale": {
+        "at": 0.75,
+        "dur": 0.45,
+        "ease": "back.out(2.2)",
+        "from": 1.16,
+        "to": 1
+      },
+      "size": 120,
+      "text": {
+        "at": 0.4,
+        "decimals": 0,
+        "dur": 0.35,
+        "ease": "expo.out",
+        "from": 0,
+        "sep": ",",
+        "suffix": " fps",
+        "to": 373
+      },
+      "type": "text",
+      "weight": 800
+    },
+    {
+      "align": "center",
+      "color": "#8A93A6",
+      "enter": {
+        "delay": 0.4,
+        "dur": 0.5,
+        "preset": "slide_up"
+      },
+      "font": "Menlo",
+      "id": "stat-40-label",
+      "opacity": {
+        "at": 0.4,
+        "dur": 0.12,
+        "ease": "power1.out",
+        "from": 0,
+        "to": 1
+      },
+      "pos": [
+        480,
+        {
+          "at": 0.75,
+          "dur": 0.5,
+          "ease": "expo.out",
+          "from": 240.4,
+          "to": 224.4
+        }
+      ],
+      "size": 26,
+      "text": "frames per second",
+      "type": "text"
+    },
+    {
+      "align": "left",
+      "color": "#8A93A6",
+      "enter": {
+        "delay": 0.9,
+        "dur": 0.45,
+        "preset": "fade"
+      },
+      "font": "Menlo",
+      "id": "race-label0",
+      "pos": [
+        120,
+        300
+      ],
+      "size": 28,
+      "text": "ours",
+      "type": "text"
+    },
+    {
+      "enter": {
+        "delay": 1.02,
+        "dur": 0.45,
+        "preset": "fade"
+      },
+      "id": "race-track0",
+      "items": [
+        {
+          "fill": "#F3F0E80f",
+          "radius": 15,
+          "rect": [
+            0,
+            -15,
+            700,
+            30
+          ]
+        }
+      ],
+      "pos": [
+        320,
+        300
+      ],
+      "type": "shape"
+    },
+    {
+      "enter": {
+        "delay": 1.14,
+        "dur": 0.45,
+        "preset": "fade"
+      },
+      "id": "race-bar0",
+      "items": [
+        {
+          "fill": "#FF5A1F",
+          "radius": 15,
+          "rect": [
+            0,
+            -15,
+            700,
+            30
+          ]
+        }
+      ],
+      "pos": [
+        320,
+        300
+      ],
+      "scale": {
+        "at": 0.9,
+        "dur": 1.2,
+        "ease": "expo.out",
+        "from": [
+          0,
+          1
+        ],
+        "to": [
+          1,
+          1
+        ]
+      },
+      "type": "shape"
+    },
+    {
+      "align": "left",
+      "color": "#F3F0E8",
+      "enter": {
+        "delay": 1.26,
+        "dur": 0.45,
+        "preset": "fade"
+      },
+      "font": "Avenir Next Condensed",
+      "id": "race-value0",
+      "pos": [
+        {
+          "at": 0.9,
+          "dur": 1.2,
+          "ease": "expo.out",
+          "from": 348,
+          "to": 1048
+        },
+        300
+      ],
+      "size": 56,
+      "text": {
+        "at": 0.9,
+        "decimals": 0,
+        "dur": 1.2,
+        "ease": "expo.out",
+        "from": 0,
+        "sep": ",",
+        "to": 373
+      },
+      "type": "text",
+      "weight": 800
+    },
+    {
+      "align": "left",
+      "color": "#8A93A6",
+      "enter": {
+        "delay": 1.38,
+        "dur": 0.45,
+        "preset": "fade"
+      },
+      "font": "Menlo",
+      "id": "race-label1",
+      "pos": [
+        120,
+        370
+      ],
+      "size": 28,
+      "text": "theirs",
+      "type": "text"
+    },
+    {
+      "enter": {
+        "delay": 1.5,
+        "dur": 0.45,
+        "preset": "fade"
+      },
+      "id": "race-track1",
+      "items": [
+        {
+          "fill": "#F3F0E80f",
+          "radius": 15,
+          "rect": [
+            0,
+            -15,
+            700,
+            30
+          ]
+        }
+      ],
+      "pos": [
+        320,
+        370
+      ],
+      "type": "shape"
+    },
+    {
+      "enter": {
+        "delay": 1.62,
+        "dur": 0.45,
+        "preset": "fade"
+      },
+      "id": "race-bar1",
+      "items": [
+        {
+          "fill": "#3D6BFF",
+          "radius": 15,
+          "rect": [
+            0,
+            -15,
+            112.60053619302948,
+            30
+          ]
+        }
+      ],
+      "pos": [
+        320,
+        370
+      ],
+      "scale": {
+        "at": 0.9,
+        "dur": 1.2,
+        "ease": "expo.out",
+        "from": [
+          0,
+          1
+        ],
+        "to": [
+          1,
+          1
+        ]
+      },
+      "type": "shape"
+    },
+    {
+      "align": "left",
+      "color": "#F3F0E8",
+      "enter": {
+        "delay": 1.74,
+        "dur": 0.45,
+        "preset": "fade"
+      },
+      "font": "Avenir Next Condensed",
+      "id": "race-value1",
+      "pos": [
+        {
+          "at": 0.9,
+          "dur": 1.2,
+          "ease": "expo.out",
+          "from": 348,
+          "to": 460.6005361930295
+        },
+        370
+      ],
+      "size": 56,
+      "text": {
+        "at": 0.9,
+        "decimals": 0,
+        "dur": 1.2,
+        "ease": "expo.out",
+        "from": 0,
+        "sep": ",",
+        "to": 60
+      },
+      "type": "text",
+      "weight": 800
+    }
+  ],
+  "root": ".",
+  "width": 960
+}

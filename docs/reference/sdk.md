@@ -4,6 +4,25 @@
 
 The functions a film imports from `"turbomotion"`, taken from the doc comments on the exports in `crates/script/sdk`. Only documented exports are listed.
 
+## `assets`
+
+Artwork from code: SVG through the engine's importer (`svg`, `svgFile`) and pixel art from rows of characters.
+
+```ts
+export function svg(source: string, o: SvgOpts = {}): Layer
+```
+SVG markup (`"<svg ...>"`) or bare path data (`"M0 0 L10 0 ..."`) as a shape layer; its `anchor` is the artwork's centre.
+
+```ts
+export function svgFile(path: string, o: SvgOpts = {}): Layer
+```
+An `.svg` file next to the film (or under its `root`), imported like `svg()`. The file is watched by `sdk watch`.
+
+```ts
+export function pixelSprite(rows: string[], palette: Record<string, Color>, o: PixelOpts = {}): Layer
+```
+Pixel art from rows of characters: `pixelSprite(["..aa..", ".aaaa."], { a: "#ff5a1f" }, { px: 6 })`. `.` and space are clear; centred on its position.
+
 ## `comp`
 
 The film: size, frame rate, layers, and the edit timeline of shots, transitions, overlays and hits.
@@ -28,6 +47,30 @@ export const comp = (opts: CompOpts): Film
 ```
 The film: `comp({ width, height, fps, bg, ... })`, then `film.add(layers)`, `film.shot(...)` and `export default film`.
 
+## `components/appear`
+
+An entrance for a whole component: every visible layer enters with an engine preset ("fade", "slide_up", "pop", ...), optionally one after another. It uses the layers' own `enter`, so it never fights the animation a component already has.
+
+```ts
+export type AppearPreset = "fade" | "slide_up" | "slide_down" | "slide_left" | "slide_right" | "pop" | "zoom_in" | "zoom_out" | "blur" | "whip_left" | "whip_right" | "spin";
+```
+The presets of `comp catalogue` that make sense as an entrance.
+
+```ts
+export type AppearOpt = AppearPreset | AppearSpec;
+```
+A preset name, or the full spec.
+
+```ts
+export function appear(layers: Layer[] | Part, opt: AppearOpt, at: number): number
+```
+Make `layers` enter from `at`. Groups (null layers) are skipped: their children enter themselves. Returns when the last one is in.
+
+```ts
+export function entrance<T extends Part>(part: T, opt: AppearOpt | undefined, at: number): T
+```
+What a component does last: add its entrance (when asked for) and report the later `end`.
+
 ## `components/barRace`
 
 Horizontal bars that grow to their values, each with a label on the left and a counter riding its tip.
@@ -51,6 +94,20 @@ export function bboxOverlay(o: BboxOverlayOpts): Part
 ```
 `bboxOverlay({ tl, at: 1, boxes: [{ x: 120, y: 80, w: 1240, h: 180, label: "title" }] })`; `x`,`y` are the top-left.
 
+## `components/blob`
+
+An organic blob: a smooth closed outline with seeded wobble, optionally morphing into a second blob (and back).
+
+```ts
+export function blobPath(points: number, r: number, wobble: number, seed: number): string
+```
+A smooth closed path of `points` lobes around radius `r`; the same `points` always give a path the engine can morph between.
+
+```ts
+export function blob(o: BlobOpts): BlobPart
+```
+`blob({ id: "b", size: 320, seed: 4, fill: "#3D6BFF", pos: [960, 540], morph: { tl, seed: 9, at: 1, dur: 1.2, back: true } })`.
+
 ## `components/browserWindow`
 
 A generic browser window: three dots, a URL pill, a spinner and a skeleton page. No real brand marks.
@@ -59,6 +116,20 @@ A generic browser window: three dots, a URL pill, a spinner and a skeleton page.
 export function browserWindow(o: BrowserWindowOpts): Part
 ```
 `browserWindow({ tl, url: "localhost:3000", at: 0.4 })`: `root` is the group to move or break apart.
+
+## `components/capsule`
+
+A pill: two round ends joined by straight sides. Shape items turn about the layer origin, not their own centre, so capsules at an angle are built as paths.
+
+```ts
+export function capsulePath(x: number, y: number, len: number, w: number, deg: number): string
+```
+SVG path of a capsule `len` long and `w` wide, starting at (x, y) and pointing `deg` degrees clockwise from +x.
+
+```ts
+export function capsule(o: CapsuleOpts): Layer
+```
+`capsule({ w: 40, len: 200, deg: 30, fill: "#3D6BFF", pos: [400, 300] })`, or `capsule({ from: [100, 100], to: [500, 300], w: 24, fill })`.
 
 ## `components/cardWall`
 
@@ -83,6 +154,30 @@ export function codePanel(o: CodePanelOpts): Part
 ```
 `codePanel({ tl, at: 12.5, perLine: 1, lines: ["const film = comp({ ... });", ...] })`.
 
+## `components/cube`
+
+Cubes made of 3D shape faces: a solid cube with its own art on each face, a 3x3x3 puzzle cube whose slabs twist, and a tile that flips from art to a letter. Every function returns `{ root, layers, ... }`: put `layers` straight into a shot and move, spin or scale `root`.
+
+```ts
+export interface CubeFace { fill?: Color; items?: Items }
+```
+One face: a fill, and shape items drawn on it (centred on the face, in pixels).
+
+```ts
+export function cube(o: CubeOpts): CubePart
+```
+`cube({ id: "c", size: 200, faces: ["#3D6BFF", { fill: "#FF5A1F", items: icon }] , pos: [960, 540, 0] })`.
+
+```ts
+export function puzzleCube(o: PuzzleCubeOpts): PuzzleCubePart
+```
+A 3x3x3 puzzle cube: three slabs you can twist, each tile its own colour and art.
+
+```ts
+export function letterCube(o: LetterCubeOpts): CubePart
+```
+A tile that flips from art (front) to a letter (back): rotate `root` 180 about y.
+
 ## `components/cutout`
 
 A cut-out subject that is alive: a picture (or any layer) standing on the ground with a contact shadow, moving by itself. Idle motion is a looping expression on the *body*, so the group around it stays free for the film's own moves (a stage glides the group between poses, a timeline enters it) and the two never fight over one property.  const hand = cutout({ id: "hand", src: "assets/hand.png", size: [300, 290], pivot: "base", idle: { float: { amp: 12, period: 3.2 }, sway: { deg: 3, period: 4.1 } }, shadow: { width: 260, y: 150 }, ring: { rx: 230 } }); shot({ layers: [hand] });                 // pos, scale, rotation and opacity of `hand.root` are yours to move
@@ -101,6 +196,60 @@ Options for `cutout`: an image or built layer that lives by itself (float, sway,
 export function cutout(o: CutoutOpts): Part
 ```
 `cutout({ id, src, size, idle, shadow, ring })`: `root` is the group to place and move; `body` is the picture.
+
+## `components/dollyZoom`
+
+The vertigo shot: the camera travels while its lens zooms the other way, so the subject plane stays the same size and the depth behind it stretches.
+
+```ts
+export function dollyZoom(cam: Layer, o: DollyZoomOpts): number
+```
+`dollyZoom(cam, { tl, at: 0.5, dur: 2, amount: 0.4 })`. Give the camera `pos: [cx, cy, -distance]` and `zoom: distance` first. Returns the end time.
+
+## `components/flipTile`
+
+A two-sided card in 3D: it turns over to show its back. Each side is a fill, shape items and an optional label.
+
+```ts
+export function flipTile(o: FlipTileOpts): FlipTilePart
+```
+`flipTile({ tl, id: "t", size: 240, pos: [960, 540], front: { fill: "#3D6BFF", label: "?" }, back: { fill: "#C8F031", label: "A" }, at: 1 })`.
+
+## `components/glassPanel`
+
+A frosted-glass panel: a soft shadow, a translucent body with a sheen, and a bright rim. When the engine offers a `backdrop` effect, `blur` asks the body to blur whatever is behind it; without one the panel is translucent only.
+
+```ts
+export function glassPanel(o: GlassPanelOpts): GlassPanelPart
+```
+`glassPanel({ id: "card", pos: [960, 540], size: [640, 360], radius: 28, tint: "#cfe1ff" })`.
+
+## `components/hand`
+
+A stylised glowing hand (vector artwork): forearm, palm, four fanned fingers and a thumb, pointing along +x from the wrist.
+
+```ts
+export function hand(o: HandOpts): Layer
+```
+`hand({ id: "h", pos: [400, 600], rotation: -20, fill: "#f3f0e8", rim: "#3D6BFF" })`.
+
+## `components/lens`
+
+A camera lens seen from the front: barrel, glass with a reflection, and an iris of blades that can open.
+
+```ts
+export function lens(o: LensOpts): LensPart
+```
+`lens({ id: "lens", pos: [960, 540], size: 360, open: { tl, at: 0.5, sfx: "click" } })`.
+
+## `components/montage`
+
+A run of short shots, each a word over a field, with the start/overlap arithmetic done for you. A shot's `start` is the leading edge of its incoming transition, so each shot is sized to hold `hold` seconds fully in view between the transition into it and the transition out.
+
+```ts
+export function montage(o: MontageOpts): Montage
+```
+`film.timeline({ shots: [...intro, ...montage({ items: [{ word: "fast", field: "#FF5A1F" }, ...], hold: 0.5 }).shots] })`.
 
 ## `components/promptBox`
 
@@ -128,6 +277,15 @@ A big number that counts up and slams: it lands with a scale overshoot and a `st
 export function statCounter(o: StatCounterOpts): Part
 ```
 `statCounter({ tl, value: 373, suffix: " fps", label: "frames per second", at: 36 })`.
+
+## `components/swarm`
+
+A swarm of cubes that burst out of a point and tumble toward the lens, or drift in calmly.
+
+```ts
+export function swarm(o: SwarmOpts): SwarmPart
+```
+`swarm({ tl, id: "a", n: 9, seed: 3, at: 1.1, dur: 0.8, art: (i, s) => icon(names[i % 4], s * 0.7) })`.
 
 ## `components/textStack`
 
@@ -191,6 +349,11 @@ export const shadow = (blur = 40, dy = 24, opacity = 0.2, color: [number, number
 ```
 A drop shadow effect.
 
+```ts
+export function mergeProps(where: string, ...parts: Array<Record<string, unknown>>): Record<string, unknown>
+```
+Merge prop objects into one, and THROW when two of them set the same key. Object spread keeps the last writer and drops the others without a word, which is how two idle motions on one `rotation` used to cancel each other.
+
 ## `components/waveform`
 
 A row of thin rounded bars that grow in and then pulse like an audio level, driven by expressions (sines plus the beat).
@@ -206,6 +369,39 @@ export function waveform(o: WaveformOpts): Part
 export interface Hit
 ```
 A sound on a moment. `at` is film time (a number, or a literal like `"title.start+0.8"`); inside `shot({ hits })` it is shot-local seconds.
+
+## `image-check`
+
+`image()` options, checked where the author wrote them instead of by the engine's schema error at render time.
+
+```ts
+export function checkImage(src: string, o: ImageOpts): string
+```
+Throws a message naming the option and the fix; returns `src` so it can be used inline.
+
+## `item-tweens`
+
+Tweening the items of a shape layer: `tl.to(ring, { items: { 0: { trim_end: 1, stroke_width: 6 } } })`. The engine animates an item's trim, offset, rotation, scale, opacity, stroke and fill; a rect's size and corner radius are plain numbers in the schema, so animate the item's `scale` (about its `anchor`) instead.
+
+```ts
+export const itemKey = (index: number | string, name: string): string
+```
+The tween key for item `index`'s property: `items.2.trim_end`.
+
+```ts
+export function flattenItems(items: unknown, where: string): Record<string, Val>
+```
+Flatten `{ 0: { trim_end: 1 } }` into `{ "items.0.trim_end": 1 }`, rejecting what the schema cannot animate.
+
+```ts
+export function itemBase(out: Record<string, any>, key: string, id: string): Val | undefined
+```
+What item `key` holds now in the layer JSON (`out.items`), or its resting value; undefined when it has neither.
+
+```ts
+export function setItem(out: Record<string, any>, key: string, value: unknown): void
+```
+Write `value` at the item property, copying along the way so the layer's own items stay untouched.
 
 ## `layers`
 
@@ -280,6 +476,11 @@ export function measure(text: string, options: MeasureOptions = {}): Measured
 ```
 Pixel dimensions and character/word boxes, using the most recently constructed comp's fonts.
 
+```ts
+export const filmRoot = (): string
+```
+The asset root the latest comp() declared (relative to the script's folder).
+
 ## `motion`
 
 Small deterministic helpers: seeded random numbers, ranges, interpolation, grids.
@@ -308,9 +509,32 @@ export function overwritten(tweens: Tween[], base: Value | undefined, id: string
 ```
 Compile only when an author opts into overwrite; the ordinary key/tween path remains compact.
 
+## `relative`
+
+Relative tween values: `"+=40"` means 40 more than where the property is when the tween starts.
+
+```ts
+export function relative(v: Val, cur: Val | undefined, where: string): Val
+```
+Resolve `"+=n"` / `"-=n"` (alone or per component of a vector) against `cur`; other values pass through.
+
+## `site`
+
+Where in the author's script something was created, for errors found later (a tween merged at write-out, a layer the engine rejects). `sdk check` turns tracking on; otherwise nothing is recorded.
+
+```ts
+export function callSite(): string
+```
+The first stack frame outside the SDK: the line of the author's script that made this call.
+
+```ts
+export function noteSite(id: string): void
+```
+Remember the line that created layer `id` (only while the host asked for it).
+
 ## `sound`
 
-Sound: audio layers, and hits (sound-kit cues placed on moments). Hits made on a timeline are shot-local seconds; `film.timeline` turns them into the engine's `"<shotId>.start+<t>"` literal, so the engine, which knows where each shot really starts once transitions overlap, puts them on the right frame.
+Sound: audio layers, and hits (sound-kit cues placed on moments). Hits made on a timeline are shot-local seconds; `film.timeline` turns them into the engine's `"<shotId>.start+<t>"` literal, so the engine, which knows where each shot really starts once transitions overlap, puts them on the right frame.  The kit (`comp catalogue` -> `sound_kit`) has ~230 synthesised sounds in families. A cue names one of them: "whoosh"            any whoosh; the engine uses a different one each time (and a touch of pitch and gain) "whoosh/airy"       one of the airy whooshes        "whoosh/airy-01"   exactly that file "pluck/C4"          a pitched voice at a note (pluck, bell, marimba, stab, bass) `melody` and `drumPattern` turn a list of notes or a step pattern into hits, so a bed can be sequenced from kit voices.
 
 ```ts
 export function audio(src: string, o: AudioOpts = {}): Layer
@@ -320,12 +544,37 @@ A sound on the timeline: `audio("launch/music/bed.wav", { id: "music", volume: 0
 ```ts
 export const hit = (at: number | string, cue: string, volume?: number): Hit
 ```
-A hit at film time: `hit(26, "boom")` or `hit("drop.start+0.2", "riser", 0.5)`.
+A hit at film time: `hit(26, "boom")`, `hit("drop.start+0.2", "riser/quick", 0.5)`, `hit(3, "pluck/C4")`. A family name ("whoosh", "kick", "ui") varies on its own: neighbouring hits of the same cue get different sounds.
 
 ```ts
 export function inShot(id: string, hits: Hit[] = []): Hit[]
 ```
 Shot-local hits as film-time literals: `at: 0.8` in shot "deep" becomes `"deep.start+0.8"`.
+
+```ts
+export type Step = string | string[] | null | number | { note: string | string[]; volume?: number };
+```
+One step of a melody: a note, several notes at once (a chord), or a rest (`null`, `"."`, `"-"`, `0`).
+
+```ts
+export const transpose = (note: string, semitones: number): string
+```
+`transpose("C4", 7)` is `"G4"`.
+
+```ts
+export function scale(root: string, mode: "major" | "minor" | "major-pentatonic" | "minor-pentatonic" | "chromatic" = "major", octaves = 1): string[]
+```
+The notes of a scale from `root` ("C3") upward: `scale("C3", "minor", 2)` is two octaves of C minor, ending on the top root.
+
+```ts
+export function melody(notes: Step[], o: MelodyOpts): Hit[]
+```
+A tune from a kit voice: `melody(["C4", "Eb4", "G4", null, "C5"], { at: 2, step: 0.25, voice: "pluck" })` emits one hit per note (`pluck/C4` ...). Rests are `null`; an array is a chord. Notes outside the voice's two octaves are reported by the engine.
+
+```ts
+export function drumPattern(pattern: string, o: DrumOpts): Hit[]
+```
+Hits from a step pattern: `drumPattern("x...x...x...x.x.", { at: 4, bpm: 120, voice: "kick" })`. `x` hits, `X` accents, `o` is a soft hit (half volume), `.`, `-` and spaces rest, `|` is a bar line (ignored). Use a map for several drums at once. Use one call per drum so each line reads like a row in a drum machine.
 
 ## `stage`
 
@@ -346,6 +595,45 @@ export const stage = (layers: Record<string, Layer>, poses: Record<string, Recor
 ```
 Smart Animate: name poses for a set of layers, then `go("pose", { at, dur })` moves every layer to its new state.
 
+## `text-fx`
+
+Text effects that need more than a few options: type on a path, wrapped on a surface, scrolling rows, flipping letters, cipher decode. Each returns plain engine JSON, typed in ./types.
+
+```ts
+export const textOnPath = (content: string, path: TextPathOpts, o: TextOpts = {}): Layer
+```
+Text along any path (After Effects' Path Options): `textOnPath("HELLO", { ellipse: [0, 0, 300, 300] }, { pos: [960, 540] })`. The path is in pixels from the layer's `pos`. Characters advance by arc length and turn to the tangent; `align` picks which end of the text sits at `first_margin` (left), the middle, or `last_margin` (right). Characters pushed past an open path's ends hide.
+
+```ts
+export function orbitText(content: string, radius: number, lap: Seconds, o: TextOpts = {}): Layer
+```
+Text circling a point: one exact lap every `lap` seconds, forever (the lap is `travel` 0 to 1 on a closed path, so the loop has no seam). `orbitText("SPIN ", 300, 6, { pos: [960, 540], size: 60 })`. A negative `lap` goes the other way round.
+
+```ts
+export const wrapText = (content: string, kind: "cylinder" | "sphere", o: TextOpts & { radius?: TextSurfaceOpts["radius"]; turn?: TextSurfaceOpts["turn"]; back?: boolean } = {}): Layer
+```
+Text wrapped on a cylinder or sphere (the CC Cylinder / CC Sphere look, with live type): `wrapText("WORLD TOUR", "cylinder", { pos: [960, 540] })`. Each character stands on the surface and turns with it; `turn` (degrees, animatable) scrolls the text round, characters facing away hide unless `back` is set. The surface's axis goes through `pos` and the vanishing point is `pos`.
+
+```ts
+export const marquee = (content: string, m: MarqueeOpts, o: TextOpts = {}): Layer
+```
+A seamlessly repeating, scrolling row (ticker, marquee). The text and `gap` form one period; copies are laid end to end across the frame and shifted by `speed` px/s. Left aligned from `pos`, so put the layer at x 0 for a full-width row.
+
+```ts
+export function charFlip(o: { axis?: "x" | "y"; from?: number; each?: Seconds; at?: Seconds; dur?: Seconds; z?: number; by?: "chars" | "words" } = {}): TextAnimator
+```
+Letters flip in one by one (After Effects' per-character 3D): turn about `axis` from `from` degrees to flat, `each` seconds apart.
+
+```ts
+export function decode(o: { charset?: CipherCharset; each?: Seconds; at?: Seconds; dur?: Seconds; rate?: number; seed?: number } = {}): TextAnimator
+```
+Cipher decode: characters show random noise, then lock on to the real ones left to right, `each` seconds apart. Deterministic by `seed`. `charset` is a name (`auto`, `upper`, `lower`, `digits`, `alnum`, `hex`, `binary`, `symbols`, `matrix`) or the characters themselves.
+
+```ts
+export const outlineText = (content: string, o: TextOpts & { stroke_color?: Color; width?: number; at?: Seconds; dur?: Seconds } = {}): Layer
+```
+Outline-only type that writes itself on: stroked glyph outlines from 0 to 1 of their length over `dur` seconds.
+
 ## `three`
 
 Solids. Every 3D object is one `mesh` layer whose `geometry` says what it is made of: glyph outlines, a box, a sphere, a torus, a cylinder or an SVG path pushed into depth. `text3d` and `letters3d` are the text geometry; `spin` turns any of them about its own axis.
@@ -358,7 +646,7 @@ A mesh from any geometry: `mesh({ kind: "sphere", size: 300 }, { color: "#e8402f
 ```ts
 export const box = (g: Omit<BoxGeometry, "kind">, o?: MeshOpts): Layer
 ```
-A box: `box({ size, height?, depth? }, { color, side, pos, rot_y })`.
+A box: `box({ size, height?, depth? }, { color, side, pos, rotation })`.
 
 ```ts
 export const sphere = (g: Omit<SphereGeometry, "kind">, o?: MeshOpts): Layer
@@ -393,16 +681,11 @@ Split `word` into one 3D text layer per letter, centred on `pos` (default the or
 ```ts
 export function spin(degreesPerSecond: number, from = 0): string
 ```
-A turntable: the angle of a steady turn as an expression, for `rot_y` (or `rot_x` / `rotation`) of a 3D object. `box({ size: 200 }, { rot_y: spin(90) })` makes a full turn in four seconds; `from` is the starting angle.
+A turntable: the angle of a steady turn as an expression, for the Z Rotation of a 3D object (`rotation`), or any of the three axes (`rotation: [0, spin(90), 0]`). `box({ size: 200 }, { rotation: spin(90) })` makes a full turn in four seconds; `from` is the starting angle.
 
 ## `timeline`
 
-A GSAP-style timeline. `tl.to(layer, { rot_y: 0, duration: 0.8 }, 0.2)` records tweens on the layer; when the layer is written out, all tweens on one property merge into one key list in time order.
-
-```ts
-export function callSite(): string
-```
-The first stack frame outside the SDK: the line of the author's script that made this call.
+A GSAP-style timeline. `tl.to(layer, { rotation: [null, 90, null], duration: 0.8 }, 0.2)` records tweens on the layer; when the layer is written out, all tweens on one property merge into one key list in time order.
 
 ```ts
 export class Timeline
@@ -422,9 +705,19 @@ Write the tweens of one layer into `out` (the layer's JSON): one merged property
 ## `tween-types`
 
 ```ts
+export type Num = number | `+=${number}` | `-=${number}`;
+```
+A number, or one relative to the property when the tween starts: `"+=40"`, `"-=0.5"`.
+
+```ts
+export interface ItemVars
+```
+What an item of a shape layer lets a tween change (`tl.to(layer, { items: { 0: { trim_end: 1 } } })`). A rect's size and radius are fixed; animate `scale` instead.
+
+```ts
 export interface Animatable
 ```
-Properties a tween can animate. `x`/`y`/`z` move `pos`.
+Properties a tween can animate. `x`/`y`/`z` move `pos`; `pos: [x, y, z]` moves several at once.
 
 ## `types`
 
@@ -441,9 +734,29 @@ export interface LayerOpts
 What every layer takes. `x`, `y`, `z` are shorthand for `pos`.
 
 ```ts
+export interface TextUnitProps
+```
+What a text animator does to a unit at full weight. Rotations share the layer's `rotation: [x, y, z]` axes and signs.
+
+```ts
+export type CipherCharset = "auto" | "upper" | "lower" | "digits" | "alnum" | "hex" | "binary" | "symbols" | "matrix" | (string & {});
+```
+Where a cipher's random characters come from: a name, or any string of characters.
+
+```ts
+export interface TextPathOpts
+```
+Text along a path. Exactly one geometry (`d`, `points`, `ellipse`, `rect`, `polygon`, `star`) or `layer`.
+
+```ts
 export interface CounterSpec
 ```
 `text` may also be a counter that counts from `from` to `to`.
+
+```ts
+export interface Framing
+```
+One end of an image's Ken Burns move: `zoom` 1 is the fitted image; `center` is a fraction of the image.
 
 ```ts
 export interface TorusGeometry { kind: "torus"; size: number; tube?: number }
@@ -459,4 +772,58 @@ export interface CylinderGeometry { kind: "cylinder"; size: number; height: numb
 export interface ExtrudeGeometry { kind: "extrude"; d: string; size: number; depth?: number; bevel?: number }
 ```
 An SVG path `d` (filled) scaled to `size` wide and pushed `depth` deep (0.3 x size when left out).
+
+## `vector-tweens`
+
+The layer's three-dimensional vectors: After Effects' X, Y and Z Rotation, its X, Y and Z Orientation, and the point its face turns toward. The engine holds each as a vector of three components, so a tween of one of them becomes a tween per component, and the components are put back together when the layer is written out.
+
+```ts
+export const VECTORS: Record<string, number> = { rotation: 3, orientation: 3, aim: 3 };
+```
+The vector properties, and how many components each has.
+
+```ts
+export const vectorKey = (name: string, index: number): string
+```
+The tween key for component `index` of `name`: `rotation.1`.
+
+```ts
+export const isVectorKey = (key: string): boolean
+```
+Is this tween key one component of a vector property?
+
+```ts
+export const parseVectorKey = (key: string): { name: string; index: number }
+```
+The vector property and the component a tween key names.
+
+```ts
+export function flattenVector(name: string, value: unknown, where: string): Record<string, Val>
+```
+Split a vector tween into one entry per component. `rotation` is the one vector with a shorthand: a bare number is the Z Rotation, the turn in the layer's own plane. The other vectors are always a triple.
+
+```ts
+export function vectorBase(out: Record<string, any>, name: string, index: number, id: string): Val
+```
+The value component `index` of the vector `name` starts from.
+
+```ts
+export function vectorComponents(out: Record<string, any>, name: string): Array<number | string>
+```
+The components of the vector `name` as the layer holds them now: a lone number or expression is the last one (the Z Rotation), and an expression in an axis stays an expression instead of turning into 0.
+
+```ts
+export function setVector(out: Record<string, any>, name: string, parts: Map<number, unknown>): void
+```
+Write the tweened components of `name` back into the layer, keeping the components it does not touch.
+
+```ts
+export function fillVector(base: Array<number | string>, value: Array<number | string | null | undefined>): Array<number | string>
+```
+Fill the holes of a partial vector against the layer's current components: a hole leaves that axis alone.
+
+```ts
+export function checkVectors(out: Record<string, any>, id: string): void
+```
+The orientation and the point of interest are vectors of three; a mistake here is worth naming.
 

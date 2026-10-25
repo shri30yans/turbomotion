@@ -1,0 +1,159 @@
+{
+  "bg": "#0b0d12",
+  "fps": 30,
+  "height": 540,
+  "root": ".",
+  "timeline": {
+    "shots": [
+      {
+        "dur": 2.2,
+        "id": "vertigo",
+        "layers": [
+          {
+            "id": "camera1",
+            "poi": [
+              480,
+              270,
+              0
+            ],
+            "pos": [
+              480,
+              270,
+              {
+                "at": 0.2,
+                "dur": 1.8,
+                "ease": "power2.inOut",
+                "from": -800,
+                "to": -440.00000000000006
+              }
+            ],
+            "type": "camera",
+            "zoom": {
+              "at": 0.2,
+              "dur": 1.8,
+              "ease": "power2.inOut",
+              "from": 800,
+              "to": 440.00000000000006
+            }
+          },
+          {
+            "id": "light7",
+            "kind": "ambient",
+            "type": "light"
+          },
+          {
+            "id": "light8",
+            "kind": "directional",
+            "pos": [
+              -300,
+              -400,
+              -600
+            ],
+            "type": "light"
+          },
+          {
+            "color": "#3D6BFF",
+            "geometry": {
+              "kind": "box",
+              "size": 90
+            },
+            "id": "mesh2",
+            "pos": [
+              180,
+              270,
+              -250
+            ],
+            "rotation": [
+              -16.4703,
+              24.0929,
+              6.8817
+            ],
+            "three_d": true,
+            "type": "mesh"
+          },
+          {
+            "color": "#FF5A1F",
+            "geometry": {
+              "kind": "box",
+              "size": 90
+            },
+            "id": "mesh3",
+            "pos": [
+              330,
+              270,
+              -120
+            ],
+            "rotation": [
+              -16.4703,
+              24.0929,
+              6.8817
+            ],
+            "three_d": true,
+            "type": "mesh"
+          },
+          {
+            "color": "#C8F031",
+            "geometry": {
+              "kind": "box",
+              "size": 90
+            },
+            "id": "mesh4",
+            "pos": [
+              480,
+              270,
+              0
+            ],
+            "rotation": [
+              -16.4703,
+              24.0929,
+              6.8817
+            ],
+            "three_d": true,
+            "type": "mesh"
+          },
+          {
+            "color": "#8F6CFF",
+            "geometry": {
+              "kind": "box",
+              "size": 90
+            },
+            "id": "mesh5",
+            "pos": [
+              630,
+              270,
+              400
+            ],
+            "rotation": [
+              -16.4703,
+              24.0929,
+              6.8817
+            ],
+            "three_d": true,
+            "type": "mesh"
+          },
+          {
+            "color": "#FF57E6",
+            "geometry": {
+              "kind": "box",
+              "size": 90
+            },
+            "id": "mesh6",
+            "pos": [
+              780,
+              270,
+              900
+            ],
+            "rotation": [
+              -16.4703,
+              24.0929,
+              6.8817
+            ],
+            "three_d": true,
+            "type": "mesh"
+          }
+        ]
+      }
+    ]
+  },
+  "width": 960
+}

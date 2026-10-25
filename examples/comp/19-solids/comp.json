@@ -8,9 +8,9 @@
   {"type": "camera", "zoom": 1800},
   {"type": "light", "kind": "ambient", "color": "#5a6a9a", "intensity": 0.55},
   {"type": "light", "kind": "point", "pos": [300, -300, -900], "color": "#ffd9a0", "intensity": 1.8, "radius": 2600, "shine": 1.0},
-  {"type": "mesh", "three_d": true, "geometry": {"kind": "box", "size": 240, "depth": 240}, "color": "#e8402f", "pos": [360, 540, 0], "rot_x": 20, "rot_y": "time*90", "material": {"specular": 0.6, "shininess": 30}},
-  {"type": "mesh", "three_d": true, "geometry": {"kind": "sphere", "size": 280}, "color": "#4aa3ff", "pos": [760, 540, 0], "rot_y": "time*60", "material": {"specular": 0.9, "shininess": 60}},
-  {"type": "mesh", "three_d": true, "geometry": {"kind": "torus", "size": 300, "tube": 90}, "color": "#f2c14e", "pos": [1160, 540, 0], "rot_x": "55+time*45", "rot_y": "time*70", "material": {"specular": 0.8, "shininess": 50}},
-  {"type": "mesh", "three_d": true, "geometry": {"kind": "cylinder", "size": 200, "height": 280, "top": 0}, "color": "#6bd18a", "pos": [1560, 540, 0], "rot_x": 15, "rot_y": "time*-80", "material": {"specular": 0.5, "shininess": 25}}
+  {"type": "mesh", "three_d": true, "geometry": {"kind": "box", "size": 240, "depth": 240}, "color": "#e8402f", "pos": [360, 540, 0], "rotation": [20, 0, 0], "orientation": [0, "time*90", 0], "material": {"specular": 0.6, "shininess": 30}},
+  {"type": "mesh", "three_d": true, "geometry": {"kind": "sphere", "size": 280}, "color": "#4aa3ff", "pos": [760, 540, 0], "rotation": [0, "time*60", 0], "material": {"specular": 0.9, "shininess": 60}},
+  {"type": "mesh", "three_d": true, "geometry": {"kind": "torus", "size": 300, "tube": 90}, "color": "#f2c14e", "pos": [1160, 540, 0], "rotation": ["55+time*45", 0, 0], "orientation": [0, "time*70", 0], "material": {"specular": 0.8, "shininess": 50}},
+  {"type": "mesh", "three_d": true, "geometry": {"kind": "cylinder", "size": 200, "height": 280, "top": 0}, "color": "#6bd18a", "pos": [1560, 540, 0], "rotation": [15, 0, 0], "orientation": [0, "time*-80", 0], "material": {"specular": 0.5, "shininess": 25}}
  ]
 }

@@ -76,18 +76,43 @@ Text presets, enter and exit presets, eases, expressions and the sound kit.
 
 | cue | timbre |
 | --- | --- |
-| `card-in` | soft whoosh and a muted wood tick |
-| `stamp` | heavy low impact with grit |
-| `counter` | bright metallic ping |
-| `loss` | detuned low brass, beating |
-| `reveal` | rising shimmer |
-| `whoosh` | air past the lens |
-| `swish` | a fast whip |
-| `sweep` | a long pass |
-| `riser` | a build into a hit |
-| `pop` | a soft bubble |
-| `click` | a UI click |
-| `tick` | a dry tick |
-| `glitch` | crushed digital bursts |
-| `boom` | a sub drop |
-| `type` | one keystroke |
+| `bass` | round sub bass with a saw edge (pitched: use pluck/C4 ... notes) |
+| `bell` | inharmonic struck bell with an FM glint (pitched: use pluck/C4 ... notes) |
+| `clap` | hand claps |
+| `downer` | falls away: plunges, closing filters, tape stop |
+| `glitch` | digital stutters, chirps and data bursts |
+| `hat` | hi-hats: closed, open, pedal |
+| `impact` | hits: sub booms, punches, struck metal, wood, glass and cinematic slams |
+| `key` | keyboard keys (each different), space, enter and mouse clicks |
+| `kick` | kick drums: 808, punchy, soft, techno, sub, distorted |
+| `marimba` | tuned wooden bar (pitched: use pluck/C4 ... notes) |
+| `mech` | camera shutters, servos, switches, ratchets and clock ticks |
+| `paper` | paper rustles, cloth brushes, page flips, crumples and tears |
+| `pluck` | Karplus-Strong plucked string (pitched: use pluck/C4 ... notes) |
+| `pop` | bubbles, lip pops, water plops |
+| `rim` | rim shots, side-sticks and clave |
+| `riser` | builds to a moment: noise, tonal, Shepard, pulses |
+| `shimmer` | sparkle clouds, glints, shimmering beds and harp glissandi |
+| `snare` | snares: tight, fat, electro, snappy, brush, gated |
+| `stab` | detuned saw stab with a closing filter (pitched: use pluck/C4 ... notes) |
+| `stinger` | tonal chord hits in C minor (cmin) and F major (fmaj) |
+| `sweep` | long filter passes: noise, tonal, flanged, radio |
+| `swell` | pads, strings, choir and cymbal blooms |
+| `swish` | fast whips and cloth flicks |
+| `tom` | toms from floor to high |
+| `ui` | interface clicks, taps, toggles, hovers, notifications, success and error |
+| `whoosh` | air moving past: short, bright, dark, long, airy and reversed |
+| `boom` | a pool: impact/sub, impact/cine |
+| `card-in` | a pool: swish/flick, paper/flip |
+| `click` | a pool: ui/click, key/mouse |
+| `counter` | a pool: ui/notify, shimmer/glint |
+| `fast-pass` | a pool: whoosh/short, whoosh/bright, swish/flick |
+| `heavy-pass` | a pool: whoosh/dark, whoosh/long, downer/noise |
+| `loss` | a pool: downer/drop, impact/sub |
+| `pull-back` | a pool: whoosh/reverse, downer/noise, sweep/noise-down |
+| `reveal` | a pool: shimmer/sparkle, shimmer/shimmer, swell/cymbal |
+| `soft-pass` | a pool: whoosh/airy, whoosh/long, paper/cloth |
+| `stamp` | a pool: impact/punch, impact/wood |
+| `tick` | a pool: mech/tick |
+| `type` | a pool: key/key |
+| `wipe-pass` | a pool: swish/whip, whoosh/bright, paper/flip |

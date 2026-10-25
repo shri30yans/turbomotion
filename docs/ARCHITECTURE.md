@@ -84,6 +84,28 @@ render/   how it looks              Frame → pixels on the GPU: painters per la
 Each stage has its own tests: schema errors are strings, plan resolution is tables, evaluation is numbers, rendering
 is goldens. A bug is found in the earliest stage that can express it.
 
+#### The frame graph
+
+`render/graph/` turns one composition frame into passes over named images: paint a layer, run its effects, build its
+masks and mattes, multiply, wipe, composite, snapshot, adjust. A pass reads images and writes one; the builder walks
+back from the picture that is wanted, so emission order is a topological order and a layer nobody reads (hidden, matte
+source only, fully transparent) is never drawn. An image is dropped after its last reader, and a layer that is a matte,
+a clip and an effect input at once is drawn once. The composite is the one image modified in place. A new construct
+(shadows, a depth buffer, colour conversion) is a new `Stage` and the builder code that emits it, not surgery on a loop.
+`turbomotion comp graph <comp.json> --t <seconds>` prints the passes, their reads and writes, and the most images
+alive at once.
+
+Effects that read their own past (`@input name history=N`) re-render the layer's chain at `t - k/fps` through the same
+graph (`render/history.rs`): `out(t, 0) = input(t)`, `out(t, d) = effect(input(t), out(t-1/fps, d-1) ..)`, so a frame
+is still a pure function of time and a seek equals playing from frame 0.
+
+What that costs, with `N` history frames and recursion `D` deep. The cache (`Cache`, 512 MiB, oldest dropped first) keeps
+every `(time, level)` picture, so playing forward adds per frame: one more render of the effect's input chain (the
+frame drawn as `t` last time is drawn again as `t - 1/fps`, because the main render does not hand its inputs to the cache)
+and `D - 1` runs of the effect's shader, whatever `N` is. The first frame after a seek has nothing cached and does
+`N*D` input renders and `N*D*(D+1)/2` shader runs. A 1080p half-float picture is 16 MiB, so about 32 pictures fit; an
+effect that needs more than that (`N*D` large, big frames) still draws the same pixels but recomputes what was evicted.
+
 Supporting modules: `anim/` (eases, keyframes, expression language, noise), `media/` (image cache, ffmpeg video
 decoder, probes), `audio/` (mix and audio-reactive signals), `fxlib/` (shader plugins and the built-in effect and
 texture pack), `text/` (layout, per-character animators, named presets; a character the designed font does not have falls back to another installed face and is painted in the same colour as the rest of the line), `check/` (lint and assertions),
@@ -117,6 +139,21 @@ exactly like a built-in: `{"effect": "vhs", "amount": [[0, 0], [1, 0.8]]}`.
 
 Generators (a texture, a background, a light leak) are the same thing with `"kind": "generator"`: no input layer, the
 shader paints the whole layer.
+
+The header of a plugin is its whole declaration (`fxlib::Descriptor`; platform effects produce one too, and the
+reference pages are written from descriptors only). A platform effect declares its parameters once, in the `registry!` of
+`crates/core/src/effects/mod.rs`: name, kind, default, range and doc. `Effect::build` checks a use against that
+declaration (a stray name is an error that lists the valid ones, a missing one takes its default, a value is held in its
+range as a plugin's is), and the descriptor is written from the same lines, so the struct, the plan and the reference
+cannot disagree. Palette names (`"color": "accent"`) are looked up only in the parameters an effect declares as colours. Besides `@param`, it can declare `@param name choice default a,b,c`
+(written as a name), `@input name layer` (another layer's picture, named by id in the use, fitted `center`, `stretch` or
+`screen`: displacement maps, mattes), `@input name history=N depth=D` (the effect's own past: trails, datamosh),
+`@pass name scale=S` (several passes; each sees the earlier ones by name, sampled bilinearly without mipmaps, so a pass far below half size aliases fine detail) and `@example`. Every `*.sksl` in
+`crates/comp/src/fxlib/builtin/` is a shipped plugin, found by `build.rs`: adding one is adding a file.
+
+Every effect instance, built-in or plugin, also takes a `composite` (`fxlib::composite`): its result is laid over its
+input only inside a mask (a luma band or the edges of the input, its alpha, another layer), with a blend mode and an
+amount. It is one implementation in `render/composite.rs`, so a shader never re-implements "keep the original".
 
 ## How an agent brings its own images
 

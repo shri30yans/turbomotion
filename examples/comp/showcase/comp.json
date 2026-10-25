@@ -392,7 +392,11 @@
       "specular": 0.8,
       "shininess": 40
      },
-     "rot_y": 24
+     "rotation": [
+      0,
+      24,
+      0
+     ]
     },
     {
      "type": "shape",
@@ -445,7 +449,11 @@
       "specular": 0.8,
       "shininess": 40
      },
-     "rot_y": -24
+     "rotation": [
+      0,
+      -24,
+      0
+     ]
     },
     {
      "type": "particles",

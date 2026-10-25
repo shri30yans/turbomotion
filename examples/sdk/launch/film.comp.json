@@ -2,6 +2,7 @@
   "bg": "#0b0d12",
   "fps": 30,
   "height": 1080,
+  "root": ".",
   "timeline": {
     "shots": [
       {
@@ -34,10 +35,16 @@
             "type": "light"
           },
           {
-            "bevel": 6,
             "color": "#f4f1ea",
-            "depth": 70,
-            "font": "Avenir Next",
+            "geometry": {
+              "bevel": 6,
+              "depth": 70,
+              "font": "Avenir Next",
+              "kind": "text",
+              "size": 240,
+              "text": "M",
+              "weight": 800
+            },
             "id": "letter0",
             "material": {
               "shininess": 40,
@@ -51,7 +58,7 @@
               "to": 1
             },
             "pos": [
-              539.1999999999999,
+              530.46,
               540,
               {
                 "at": 0.2,
@@ -61,32 +68,38 @@
                 "to": 0
               }
             ],
-            "rot_x": {
-              "at": 0.2,
-              "dur": 1,
-              "ease": "back.out(1.4)",
-              "from": -100,
-              "to": 0
-            },
-            "rot_y": {
-              "at": 0.2,
-              "dur": 1,
-              "ease": "back.out(1.4)",
-              "from": 60,
-              "to": 0
-            },
+            "rotation": [
+              {
+                "at": 0.2,
+                "dur": 1,
+                "ease": "back.out(1.4)",
+                "from": -100,
+                "to": 0
+              },
+              {
+                "at": 0.2,
+                "dur": 1,
+                "ease": "back.out(1.4)",
+                "from": 60,
+                "to": 0
+              },
+              0
+            ],
             "side": "#b8442c",
-            "size": 240,
-            "text": "M",
             "three_d": true,
-            "type": "text3d",
-            "weight": 800
+            "type": "mesh"
           },
           {
-            "bevel": 6,
             "color": "#f4f1ea",
-            "depth": 70,
-            "font": "Avenir Next",
+            "geometry": {
+              "bevel": 6,
+              "depth": 70,
+              "font": "Avenir Next",
+              "kind": "text",
+              "size": 240,
+              "text": "O",
+              "weight": 800
+            },
             "id": "letter1",
             "material": {
               "shininess": 40,
@@ -100,7 +113,7 @@
               "to": 1
             },
             "pos": [
-              755.9999999999999,
+              758.41999,
               540,
               {
                 "at": 0.27,
@@ -110,32 +123,38 @@
                 "to": 0
               }
             ],
-            "rot_x": {
-              "at": 0.27,
-              "dur": 1,
-              "ease": "back.out(1.4)",
-              "from": -100,
-              "to": 0
-            },
-            "rot_y": {
-              "at": 0.27,
-              "dur": 1,
-              "ease": "back.out(1.4)",
-              "from": 60,
-              "to": 0
-            },
+            "rotation": [
+              {
+                "at": 0.27,
+                "dur": 1,
+                "ease": "back.out(1.4)",
+                "from": -100,
+                "to": 0
+              },
+              {
+                "at": 0.27,
+                "dur": 1,
+                "ease": "back.out(1.4)",
+                "from": 60,
+                "to": 0
+              },
+              0
+            ],
             "side": "#b8442c",
-            "size": 240,
-            "text": "O",
             "three_d": true,
-            "type": "text3d",
-            "weight": 800
+            "type": "mesh"
           },
           {
-            "bevel": 6,
             "color": "#f4f1ea",
-            "depth": 70,
-            "font": "Avenir Next",
+            "geometry": {
+              "bevel": 6,
+              "depth": 70,
+              "font": "Avenir Next",
+              "kind": "text",
+              "size": 240,
+              "text": "T",
+              "weight": 800
+            },
             "id": "letter2",
             "material": {
               "shininess": 40,
@@ -149,7 +168,7 @@
               "to": 1
             },
             "pos": [
-              936.7999999999998,
+              937.41998,
               540,
               {
                 "at": 0.34,
@@ -159,32 +178,38 @@
                 "to": 0
               }
             ],
-            "rot_x": {
-              "at": 0.34,
-              "dur": 1,
-              "ease": "back.out(1.4)",
-              "from": -100,
-              "to": 0
-            },
-            "rot_y": {
-              "at": 0.34,
-              "dur": 1,
-              "ease": "back.out(1.4)",
-              "from": 60,
-              "to": 0
-            },
+            "rotation": [
+              {
+                "at": 0.34,
+                "dur": 1,
+                "ease": "back.out(1.4)",
+                "from": -100,
+                "to": 0
+              },
+              {
+                "at": 0.34,
+                "dur": 1,
+                "ease": "back.out(1.4)",
+                "from": 60,
+                "to": 0
+              },
+              0
+            ],
             "side": "#b8442c",
-            "size": 240,
-            "text": "T",
             "three_d": true,
-            "type": "text3d",
-            "weight": 800
+            "type": "mesh"
           },
           {
-            "bevel": 6,
             "color": "#f4f1ea",
-            "depth": 70,
-            "font": "Avenir Next",
+            "geometry": {
+              "bevel": 6,
+              "depth": 70,
+              "font": "Avenir Next",
+              "kind": "text",
+              "size": 240,
+              "text": "I",
+              "weight": 800
+            },
             "id": "letter3",
             "material": {
               "shininess": 40,
@@ -198,7 +223,7 @@
               "to": 1
             },
             "pos": [
-              1055.1999999999998,
+              1062.059985,
               540,
               {
                 "at": 0.41,
@@ -208,32 +233,38 @@
                 "to": 0
               }
             ],
-            "rot_x": {
-              "at": 0.41,
-              "dur": 1,
-              "ease": "back.out(1.4)",
-              "from": -100,
-              "to": 0
-            },
-            "rot_y": {
-              "at": 0.41,
-              "dur": 1,
-              "ease": "back.out(1.4)",
-              "from": 60,
-              "to": 0
-            },
+            "rotation": [
+              {
+                "at": 0.41,
+                "dur": 1,
+                "ease": "back.out(1.4)",
+                "from": -100,
+                "to": 0
+              },
+              {
+                "at": 0.41,
+                "dur": 1,
+                "ease": "back.out(1.4)",
+                "from": 60,
+                "to": 0
+              },
+              0
+            ],
             "side": "#b8442c",
-            "size": 240,
-            "text": "I",
             "three_d": true,
-            "type": "text3d",
-            "weight": 800
+            "type": "mesh"
           },
           {
-            "bevel": 6,
             "color": "#f4f1ea",
-            "depth": 70,
-            "font": "Avenir Next",
+            "geometry": {
+              "bevel": 6,
+              "depth": 70,
+              "font": "Avenir Next",
+              "kind": "text",
+              "size": 240,
+              "text": "O",
+              "weight": 800
+            },
             "id": "letter4",
             "material": {
               "shininess": 40,
@@ -247,7 +278,7 @@
               "to": 1
             },
             "pos": [
-              1197.6,
+              1217.299955,
               540,
               {
                 "at": 0.48,
@@ -257,32 +288,38 @@
                 "to": 0
               }
             ],
-            "rot_x": {
-              "at": 0.48,
-              "dur": 1,
-              "ease": "back.out(1.4)",
-              "from": -100,
-              "to": 0
-            },
-            "rot_y": {
-              "at": 0.48,
-              "dur": 1,
-              "ease": "back.out(1.4)",
-              "from": 60,
-              "to": 0
-            },
+            "rotation": [
+              {
+                "at": 0.48,
+                "dur": 1,
+                "ease": "back.out(1.4)",
+                "from": -100,
+                "to": 0
+              },
+              {
+                "at": 0.48,
+                "dur": 1,
+                "ease": "back.out(1.4)",
+                "from": 60,
+                "to": 0
+              },
+              0
+            ],
             "side": "#b8442c",
-            "size": 240,
-            "text": "O",
             "three_d": true,
-            "type": "text3d",
-            "weight": 800
+            "type": "mesh"
           },
           {
-            "bevel": 6,
             "color": "#f4f1ea",
-            "depth": 70,
-            "font": "Avenir Next",
+            "geometry": {
+              "bevel": 6,
+              "depth": 70,
+              "font": "Avenir Next",
+              "kind": "text",
+              "size": 240,
+              "text": "N",
+              "weight": 800
+            },
             "id": "letter5",
             "material": {
               "shininess": 40,
@@ -296,7 +333,7 @@
               "to": 1
             },
             "pos": [
-              1397.5999999999997,
+              1422.819975,
               540,
               {
                 "at": 0.55,
@@ -306,26 +343,26 @@
                 "to": 0
               }
             ],
-            "rot_x": {
-              "at": 0.55,
-              "dur": 1,
-              "ease": "back.out(1.4)",
-              "from": -100,
-              "to": 0
-            },
-            "rot_y": {
-              "at": 0.55,
-              "dur": 1,
-              "ease": "back.out(1.4)",
-              "from": 60,
-              "to": 0
-            },
+            "rotation": [
+              {
+                "at": 0.55,
+                "dur": 1,
+                "ease": "back.out(1.4)",
+                "from": -100,
+                "to": 0
+              },
+              {
+                "at": 0.55,
+                "dur": 1,
+                "ease": "back.out(1.4)",
+                "from": 60,
+                "to": 0
+              },
+              0
+            ],
             "side": "#b8442c",
-            "size": 240,
-            "text": "N",
             "three_d": true,
-            "type": "text3d",
-            "weight": 800
+            "type": "mesh"
           }
         ]
       },
@@ -386,8 +423,11 @@
               500,
               0
             ],
-            "rot_x": 25,
-            "rot_y": -20,
+            "rotation": [
+              26.3922,
+              -18.0578,
+              8.7447
+            ],
             "three_d": true,
             "type": "null"
           },
@@ -422,13 +462,17 @@
               -328,
               0
             ],
-            "rot_y": {
-              "at": 0.685,
-              "dur": 0.55,
-              "ease": "back.out(1.7)",
-              "from": 70,
-              "to": 0
-            },
+            "rotation": [
+              0,
+              {
+                "at": 0.685,
+                "dur": 0.55,
+                "ease": "back.out(1.7)",
+                "from": 70,
+                "to": 0
+              },
+              0
+            ],
             "scale": {
               "at": 0.685,
               "dur": 0.55,
@@ -470,13 +514,17 @@
               -328,
               0
             ],
-            "rot_y": {
-              "at": 0.655,
-              "dur": 0.55,
-              "ease": "back.out(1.7)",
-              "from": 70,
-              "to": 0
-            },
+            "rotation": [
+              0,
+              {
+                "at": 0.655,
+                "dur": 0.55,
+                "ease": "back.out(1.7)",
+                "from": 70,
+                "to": 0
+              },
+              0
+            ],
             "scale": {
               "at": 0.655,
               "dur": 0.55,
@@ -518,13 +566,17 @@
               -328,
               0
             ],
-            "rot_y": {
-              "at": 0.625,
-              "dur": 0.55,
-              "ease": "back.out(1.7)",
-              "from": 70,
-              "to": 0
-            },
+            "rotation": [
+              0,
+              {
+                "at": 0.625,
+                "dur": 0.55,
+                "ease": "back.out(1.7)",
+                "from": 70,
+                "to": 0
+              },
+              0
+            ],
             "scale": {
               "at": 0.625,
               "dur": 0.55,
@@ -566,13 +618,17 @@
               -328,
               0
             ],
-            "rot_y": {
-              "at": 0.595,
-              "dur": 0.55,
-              "ease": "back.out(1.7)",
-              "from": 70,
-              "to": 0
-            },
+            "rotation": [
+              0,
+              {
+                "at": 0.595,
+                "dur": 0.55,
+                "ease": "back.out(1.7)",
+                "from": 70,
+                "to": 0
+              },
+              0
+            ],
             "scale": {
               "at": 0.595,
               "dur": 0.55,
@@ -614,13 +670,17 @@
               -328,
               0
             ],
-            "rot_y": {
-              "at": 0.565,
-              "dur": 0.55,
-              "ease": "back.out(1.7)",
-              "from": 70,
-              "to": 0
-            },
+            "rotation": [
+              0,
+              {
+                "at": 0.565,
+                "dur": 0.55,
+                "ease": "back.out(1.7)",
+                "from": 70,
+                "to": 0
+              },
+              0
+            ],
             "scale": {
               "at": 0.565,
               "dur": 0.55,
@@ -662,13 +722,17 @@
               -328,
               0
             ],
-            "rot_y": {
-              "at": 0.535,
-              "dur": 0.55,
-              "ease": "back.out(1.7)",
-              "from": 70,
-              "to": 0
-            },
+            "rotation": [
+              0,
+              {
+                "at": 0.535,
+                "dur": 0.55,
+                "ease": "back.out(1.7)",
+                "from": 70,
+                "to": 0
+              },
+              0
+            ],
             "scale": {
               "at": 0.535,
               "dur": 0.55,
@@ -710,13 +774,17 @@
               -328,
               0
             ],
-            "rot_y": {
-              "at": 0.505,
-              "dur": 0.55,
-              "ease": "back.out(1.7)",
-              "from": 70,
-              "to": 0
-            },
+            "rotation": [
+              0,
+              {
+                "at": 0.505,
+                "dur": 0.55,
+                "ease": "back.out(1.7)",
+                "from": 70,
+                "to": 0
+              },
+              0
+            ],
             "scale": {
               "at": 0.505,
               "dur": 0.55,
@@ -758,13 +826,17 @@
               -328,
               0
             ],
-            "rot_y": {
-              "at": 0.475,
-              "dur": 0.55,
-              "ease": "back.out(1.7)",
-              "from": 70,
-              "to": 0
-            },
+            "rotation": [
+              0,
+              {
+                "at": 0.475,
+                "dur": 0.55,
+                "ease": "back.out(1.7)",
+                "from": 70,
+                "to": 0
+              },
+              0
+            ],
             "scale": {
               "at": 0.475,
               "dur": 0.55,
@@ -806,13 +878,17 @@
               -164,
               0
             ],
-            "rot_y": {
-              "at": 0.445,
-              "dur": 0.55,
-              "ease": "back.out(1.7)",
-              "from": 70,
-              "to": 0
-            },
+            "rotation": [
+              0,
+              {
+                "at": 0.445,
+                "dur": 0.55,
+                "ease": "back.out(1.7)",
+                "from": 70,
+                "to": 0
+              },
+              0
+            ],
             "scale": {
               "at": 0.445,
               "dur": 0.55,
@@ -854,13 +930,17 @@
               -164,
               0
             ],
-            "rot_y": {
-              "at": 0.415,
-              "dur": 0.55,
-              "ease": "back.out(1.7)",
-              "from": 70,
-              "to": 0
-            },
+            "rotation": [
+              0,
+              {
+                "at": 0.415,
+                "dur": 0.55,
+                "ease": "back.out(1.7)",
+                "from": 70,
+                "to": 0
+              },
+              0
+            ],
             "scale": {
               "at": 0.415,
               "dur": 0.55,
@@ -902,13 +982,17 @@
               -164,
               0
             ],
-            "rot_y": {
-              "at": 0.385,
-              "dur": 0.55,
-              "ease": "back.out(1.7)",
-              "from": 70,
-              "to": 0
-            },
+            "rotation": [
+              0,
+              {
+                "at": 0.385,
+                "dur": 0.55,
+                "ease": "back.out(1.7)",
+                "from": 70,
+                "to": 0
+              },
+              0
+            ],
             "scale": {
               "at": 0.385,
               "dur": 0.55,
@@ -950,13 +1034,17 @@
               -164,
               0
             ],
-            "rot_y": {
-              "at": 0.355,
-              "dur": 0.55,
-              "ease": "back.out(1.7)",
-              "from": 70,
-              "to": 0
-            },
+            "rotation": [
+              0,
+              {
+                "at": 0.355,
+                "dur": 0.55,
+                "ease": "back.out(1.7)",
+                "from": 70,
+                "to": 0
+              },
+              0
+            ],
             "scale": {
               "at": 0.355,
               "dur": 0.55,
@@ -998,13 +1086,17 @@
               -164,
               0
             ],
-            "rot_y": {
-              "at": 0.325,
-              "dur": 0.55,
-              "ease": "back.out(1.7)",
-              "from": 70,
-              "to": 0
-            },
+            "rotation": [
+              0,
+              {
+                "at": 0.325,
+                "dur": 0.55,
+                "ease": "back.out(1.7)",
+                "from": 70,
+                "to": 0
+              },
+              0
+            ],
             "scale": {
               "at": 0.325,
               "dur": 0.55,
@@ -1046,13 +1138,17 @@
               -164,
               0
             ],
-            "rot_y": {
-              "at": 0.295,
-              "dur": 0.55,
-              "ease": "back.out(1.7)",
-              "from": 70,
-              "to": 0
-            },
+            "rotation": [
+              0,
+              {
+                "at": 0.295,
+                "dur": 0.55,
+                "ease": "back.out(1.7)",
+                "from": 70,
+                "to": 0
+              },
+              0
+            ],
             "scale": {
               "at": 0.295,
               "dur": 0.55,
@@ -1094,13 +1190,17 @@
               -164,
               0
             ],
-            "rot_y": {
-              "at": 0.265,
-              "dur": 0.55,
-              "ease": "back.out(1.7)",
-              "from": 70,
-              "to": 0
-            },
+            "rotation": [
+              0,
+              {
+                "at": 0.265,
+                "dur": 0.55,
+                "ease": "back.out(1.7)",
+                "from": 70,
+                "to": 0
+              },
+              0
+            ],
             "scale": {
               "at": 0.265,
               "dur": 0.55,
@@ -1142,13 +1242,17 @@
               -164,
               0
             ],
-            "rot_y": {
-              "at": 0.235,
-              "dur": 0.55,
-              "ease": "back.out(1.7)",
-              "from": 70,
-              "to": 0
-            },
+            "rotation": [
+              0,
+              {
+                "at": 0.235,
+                "dur": 0.55,
+                "ease": "back.out(1.7)",
+                "from": 70,
+                "to": 0
+              },
+              0
+            ],
             "scale": {
               "at": 0.235,
               "dur": 0.55,
@@ -1190,13 +1294,17 @@
               0,
               0
             ],
-            "rot_y": {
-              "at": 0.205,
-              "dur": 0.55,
-              "ease": "back.out(1.7)",
-              "from": 70,
-              "to": 0
-            },
+            "rotation": [
+              0,
+              {
+                "at": 0.205,
+                "dur": 0.55,
+                "ease": "back.out(1.7)",
+                "from": 70,
+                "to": 0
+              },
+              0
+            ],
             "scale": {
               "at": 0.205,
               "dur": 0.55,
@@ -1238,13 +1346,17 @@
               0,
               0
             ],
-            "rot_y": {
-              "at": 0.175,
-              "dur": 0.55,
-              "ease": "back.out(1.7)",
-              "from": 70,
-              "to": 0
-            },
+            "rotation": [
+              0,
+              {
+                "at": 0.175,
+                "dur": 0.55,
+                "ease": "back.out(1.7)",
+                "from": 70,
+                "to": 0
+              },
+              0
+            ],
             "scale": {
               "at": 0.175,
               "dur": 0.55,
@@ -1286,13 +1398,17 @@
               0,
               0
             ],
-            "rot_y": {
-              "at": 0.145,
-              "dur": 0.55,
-              "ease": "back.out(1.7)",
-              "from": 70,
-              "to": 0
-            },
+            "rotation": [
+              0,
+              {
+                "at": 0.145,
+                "dur": 0.55,
+                "ease": "back.out(1.7)",
+                "from": 70,
+                "to": 0
+              },
+              0
+            ],
             "scale": {
               "at": 0.145,
               "dur": 0.55,
@@ -1334,13 +1450,17 @@
               0,
               0
             ],
-            "rot_y": {
-              "at": 0.115,
-              "dur": 0.55,
-              "ease": "back.out(1.7)",
-              "from": 70,
-              "to": 0
-            },
+            "rotation": [
+              0,
+              {
+                "at": 0.115,
+                "dur": 0.55,
+                "ease": "back.out(1.7)",
+                "from": 70,
+                "to": 0
+              },
+              0
+            ],
             "scale": {
               "at": 0.115,
               "dur": 0.55,
@@ -1383,13 +1503,17 @@
               0,
               -140
             ],
-            "rot_y": {
-              "at": 0.115,
-              "dur": 0.55,
-              "ease": "back.out(1.7)",
-              "from": 70,
-              "to": 0
-            },
+            "rotation": [
+              0,
+              {
+                "at": 0.115,
+                "dur": 0.55,
+                "ease": "back.out(1.7)",
+                "from": 70,
+                "to": 0
+              },
+              0
+            ],
             "scale": {
               "at": 0.115,
               "dur": 0.55,
@@ -1431,13 +1555,17 @@
               0,
               0
             ],
-            "rot_y": {
-              "at": 0.145,
-              "dur": 0.55,
-              "ease": "back.out(1.7)",
-              "from": 70,
-              "to": 0
-            },
+            "rotation": [
+              0,
+              {
+                "at": 0.145,
+                "dur": 0.55,
+                "ease": "back.out(1.7)",
+                "from": 70,
+                "to": 0
+              },
+              0
+            ],
             "scale": {
               "at": 0.145,
               "dur": 0.55,
@@ -1479,13 +1607,17 @@
               0,
               0
             ],
-            "rot_y": {
-              "at": 0.175,
-              "dur": 0.55,
-              "ease": "back.out(1.7)",
-              "from": 70,
-              "to": 0
-            },
+            "rotation": [
+              0,
+              {
+                "at": 0.175,
+                "dur": 0.55,
+                "ease": "back.out(1.7)",
+                "from": 70,
+                "to": 0
+              },
+              0
+            ],
             "scale": {
               "at": 0.175,
               "dur": 0.55,
@@ -1527,13 +1659,17 @@
               0,
               0
             ],
-            "rot_y": {
-              "at": 0.205,
-              "dur": 0.55,
-              "ease": "back.out(1.7)",
-              "from": 70,
-              "to": 0
-            },
+            "rotation": [
+              0,
+              {
+                "at": 0.205,
+                "dur": 0.55,
+                "ease": "back.out(1.7)",
+                "from": 70,
+                "to": 0
+              },
+              0
+            ],
             "scale": {
               "at": 0.205,
               "dur": 0.55,
@@ -1575,13 +1711,17 @@
               164,
               0
             ],
-            "rot_y": {
-              "at": 0.235,
-              "dur": 0.55,
-              "ease": "back.out(1.7)",
-              "from": 70,
-              "to": 0
-            },
+            "rotation": [
+              0,
+              {
+                "at": 0.235,
+                "dur": 0.55,
+                "ease": "back.out(1.7)",
+                "from": 70,
+                "to": 0
+              },
+              0
+            ],
             "scale": {
               "at": 0.235,
               "dur": 0.55,
@@ -1623,13 +1763,17 @@
               164,
               0
             ],
-            "rot_y": {
-              "at": 0.265,
-              "dur": 0.55,
-              "ease": "back.out(1.7)",
-              "from": 70,
-              "to": 0
-            },
+            "rotation": [
+              0,
+              {
+                "at": 0.265,
+                "dur": 0.55,
+                "ease": "back.out(1.7)",
+                "from": 70,
+                "to": 0
+              },
+              0
+            ],
             "scale": {
               "at": 0.265,
               "dur": 0.55,
@@ -1671,13 +1815,17 @@
               164,
               0
             ],
-            "rot_y": {
-              "at": 0.295,
-              "dur": 0.55,
-              "ease": "back.out(1.7)",
-              "from": 70,
-              "to": 0
-            },
+            "rotation": [
+              0,
+              {
+                "at": 0.295,
+                "dur": 0.55,
+                "ease": "back.out(1.7)",
+                "from": 70,
+                "to": 0
+              },
+              0
+            ],
             "scale": {
               "at": 0.295,
               "dur": 0.55,
@@ -1719,13 +1867,17 @@
               164,
               0
             ],
-            "rot_y": {
-              "at": 0.325,
-              "dur": 0.55,
-              "ease": "back.out(1.7)",
-              "from": 70,
-              "to": 0
-            },
+            "rotation": [
+              0,
+              {
+                "at": 0.325,
+                "dur": 0.55,
+                "ease": "back.out(1.7)",
+                "from": 70,
+                "to": 0
+              },
+              0
+            ],
             "scale": {
               "at": 0.325,
               "dur": 0.55,
@@ -1767,13 +1919,17 @@
               164,
               0
             ],
-            "rot_y": {
-              "at": 0.355,
-              "dur": 0.55,
-              "ease": "back.out(1.7)",
-              "from": 70,
-              "to": 0
-            },
+            "rotation": [
+              0,
+              {
+                "at": 0.355,
+                "dur": 0.55,
+                "ease": "back.out(1.7)",
+                "from": 70,
+                "to": 0
+              },
+              0
+            ],
             "scale": {
               "at": 0.355,
               "dur": 0.55,
@@ -1815,13 +1971,17 @@
               164,
               0
             ],
-            "rot_y": {
-              "at": 0.385,
-              "dur": 0.55,
-              "ease": "back.out(1.7)",
-              "from": 70,
-              "to": 0
-            },
+            "rotation": [
+              0,
+              {
+                "at": 0.385,
+                "dur": 0.55,
+                "ease": "back.out(1.7)",
+                "from": 70,
+                "to": 0
+              },
+              0
+            ],
             "scale": {
               "at": 0.385,
               "dur": 0.55,
@@ -1863,13 +2023,17 @@
               164,
               0
             ],
-            "rot_y": {
-              "at": 0.415,
-              "dur": 0.55,
-              "ease": "back.out(1.7)",
-              "from": 70,
-              "to": 0
-            },
+            "rotation": [
+              0,
+              {
+                "at": 0.415,
+                "dur": 0.55,
+                "ease": "back.out(1.7)",
+                "from": 70,
+                "to": 0
+              },
+              0
+            ],
             "scale": {
               "at": 0.415,
               "dur": 0.55,
@@ -1911,13 +2075,17 @@
               164,
               0
             ],
-            "rot_y": {
-              "at": 0.445,
-              "dur": 0.55,
-              "ease": "back.out(1.7)",
-              "from": 70,
-              "to": 0
-            },
+            "rotation": [
+              0,
+              {
+                "at": 0.445,
+                "dur": 0.55,
+                "ease": "back.out(1.7)",
+                "from": 70,
+                "to": 0
+              },
+              0
+            ],
             "scale": {
               "at": 0.445,
               "dur": 0.55,
@@ -1959,13 +2127,17 @@
               328,
               0
             ],
-            "rot_y": {
-              "at": 0.475,
-              "dur": 0.55,
-              "ease": "back.out(1.7)",
-              "from": 70,
-              "to": 0
-            },
+            "rotation": [
+              0,
+              {
+                "at": 0.475,
+                "dur": 0.55,
+                "ease": "back.out(1.7)",
+                "from": 70,
+                "to": 0
+              },
+              0
+            ],
             "scale": {
               "at": 0.475,
               "dur": 0.55,
@@ -2007,13 +2179,17 @@
               328,
               0
             ],
-            "rot_y": {
-              "at": 0.505,
-              "dur": 0.55,
-              "ease": "back.out(1.7)",
-              "from": 70,
-              "to": 0
-            },
+            "rotation": [
+              0,
+              {
+                "at": 0.505,
+                "dur": 0.55,
+                "ease": "back.out(1.7)",
+                "from": 70,
+                "to": 0
+              },
+              0
+            ],
             "scale": {
               "at": 0.505,
               "dur": 0.55,
@@ -2055,13 +2231,17 @@
               328,
               0
             ],
-            "rot_y": {
-              "at": 0.535,
-              "dur": 0.55,
-              "ease": "back.out(1.7)",
-              "from": 70,
-              "to": 0
-            },
+            "rotation": [
+              0,
+              {
+                "at": 0.535,
+                "dur": 0.55,
+                "ease": "back.out(1.7)",
+                "from": 70,
+                "to": 0
+              },
+              0
+            ],
             "scale": {
               "at": 0.535,
               "dur": 0.55,
@@ -2103,13 +2283,17 @@
               328,
               0
             ],
-            "rot_y": {
-              "at": 0.565,
-              "dur": 0.55,
-              "ease": "back.out(1.7)",
-              "from": 70,
-              "to": 0
-            },
+            "rotation": [
+              0,
+              {
+                "at": 0.565,
+                "dur": 0.55,
+                "ease": "back.out(1.7)",
+                "from": 70,
+                "to": 0
+              },
+              0
+            ],
             "scale": {
               "at": 0.565,
               "dur": 0.55,
@@ -2151,13 +2335,17 @@
               328,
               0
             ],
-            "rot_y": {
-              "at": 0.595,
-              "dur": 0.55,
-              "ease": "back.out(1.7)",
-              "from": 70,
-              "to": 0
-            },
+            "rotation": [
+              0,
+              {
+                "at": 0.595,
+                "dur": 0.55,
+                "ease": "back.out(1.7)",
+                "from": 70,
+                "to": 0
+              },
+              0
+            ],
             "scale": {
               "at": 0.595,
               "dur": 0.55,
@@ -2199,13 +2387,17 @@
               328,
               0
             ],
-            "rot_y": {
-              "at": 0.625,
-              "dur": 0.55,
-              "ease": "back.out(1.7)",
-              "from": 70,
-              "to": 0
-            },
+            "rotation": [
+              0,
+              {
+                "at": 0.625,
+                "dur": 0.55,
+                "ease": "back.out(1.7)",
+                "from": 70,
+                "to": 0
+              },
+              0
+            ],
             "scale": {
               "at": 0.625,
               "dur": 0.55,
@@ -2247,13 +2439,17 @@
               328,
               0
             ],
-            "rot_y": {
-              "at": 0.655,
-              "dur": 0.55,
-              "ease": "back.out(1.7)",
-              "from": 70,
-              "to": 0
-            },
+            "rotation": [
+              0,
+              {
+                "at": 0.655,
+                "dur": 0.55,
+                "ease": "back.out(1.7)",
+                "from": 70,
+                "to": 0
+              },
+              0
+            ],
             "scale": {
               "at": 0.655,
               "dur": 0.55,
@@ -2295,13 +2491,17 @@
               328,
               0
             ],
-            "rot_y": {
-              "at": 0.685,
-              "dur": 0.55,
-              "ease": "back.out(1.7)",
-              "from": 70,
-              "to": 0
-            },
+            "rotation": [
+              0,
+              {
+                "at": 0.685,
+                "dur": 0.55,
+                "ease": "back.out(1.7)",
+                "from": 70,
+                "to": 0
+              },
+              0
+            ],
             "scale": {
               "at": 0.685,
               "dur": 0.55,

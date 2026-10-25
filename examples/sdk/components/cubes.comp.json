@@ -1,0 +1,2142 @@
+{
+  "bg": "#0b0d12",
+  "fps": 30,
+  "height": 540,
+  "root": ".",
+  "timeline": {
+    "shots": [
+      {
+        "dur": 3,
+        "id": "cubes",
+        "layers": [
+          {
+            "id": "light1",
+            "kind": "ambient",
+            "type": "light"
+          },
+          {
+            "id": "light2",
+            "kind": "directional",
+            "pos": [
+              -300,
+              -400,
+              -600
+            ],
+            "type": "light"
+          },
+          {
+            "id": "a",
+            "pos": [
+              200,
+              270,
+              0
+            ],
+            "rotation": [
+              -20,
+              {
+                "at": 0,
+                "dur": 3,
+                "ease": "none",
+                "from": 30,
+                "to": 330
+              },
+              0
+            ],
+            "three_d": true,
+            "type": "null"
+          },
+          {
+            "id": "a-f0",
+            "items": [
+              {
+                "fill": "#3D6BFF",
+                "rect": [
+                  -75,
+                  -75,
+                  150,
+                  150
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 3.75
+                }
+              }
+            ],
+            "material": {
+              "shininess": 30,
+              "specular": 0.5
+            },
+            "parent": "a",
+            "pos": [
+              0,
+              0,
+              -75
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "a-f1",
+            "items": [
+              {
+                "fill": "#FF5A1F",
+                "rect": [
+                  -75,
+                  -75,
+                  150,
+                  150
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 3.75
+                }
+              },
+              {
+                "ellipse": [
+                  0,
+                  0,
+                  42.00000000000001,
+                  42.00000000000001
+                ],
+                "fill": "#ffffff"
+              }
+            ],
+            "material": {
+              "shininess": 30,
+              "specular": 0.5
+            },
+            "parent": "a",
+            "pos": [
+              0,
+              0,
+              75
+            ],
+            "rotation": [
+              0,
+              180,
+              0
+            ],
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "a-f2",
+            "items": [
+              {
+                "fill": "#C8F031",
+                "rect": [
+                  -75,
+                  -75,
+                  150,
+                  150
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 3.75
+                }
+              }
+            ],
+            "material": {
+              "shininess": 30,
+              "specular": 0.5
+            },
+            "parent": "a",
+            "pos": [
+              75,
+              0,
+              0
+            ],
+            "rotation": [
+              0,
+              90,
+              0
+            ],
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "a-f3",
+            "items": [
+              {
+                "fill": "#3D6BFF",
+                "rect": [
+                  -75,
+                  -75,
+                  150,
+                  150
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 3.75
+                }
+              }
+            ],
+            "material": {
+              "shininess": 30,
+              "specular": 0.5
+            },
+            "parent": "a",
+            "pos": [
+              -75,
+              0,
+              0
+            ],
+            "rotation": [
+              0,
+              -90,
+              0
+            ],
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "a-f4",
+            "items": [
+              {
+                "fill": "#3D6BFF",
+                "rect": [
+                  -75,
+                  -75,
+                  150,
+                  150
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 3.75
+                }
+              }
+            ],
+            "material": {
+              "shininess": 30,
+              "specular": 0.5
+            },
+            "parent": "a",
+            "pos": [
+              0,
+              -75,
+              0
+            ],
+            "rotation": [
+              90,
+              0,
+              0
+            ],
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "a-f5",
+            "items": [
+              {
+                "fill": "#3D6BFF",
+                "rect": [
+                  -75,
+                  -75,
+                  150,
+                  150
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 3.75
+                }
+              }
+            ],
+            "material": {
+              "shininess": 30,
+              "specular": 0.5
+            },
+            "parent": "a",
+            "pos": [
+              0,
+              75,
+              0
+            ],
+            "rotation": [
+              -90,
+              0,
+              0
+            ],
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "p",
+            "pos": [
+              480,
+              270,
+              0
+            ],
+            "rotation": [
+              -22,
+              {
+                "at": 0,
+                "dur": 3,
+                "ease": "none",
+                "from": 35,
+                "to": 155
+              },
+              0
+            ],
+            "three_d": true,
+            "type": "null"
+          },
+          {
+            "id": "p-slab0",
+            "parent": "p",
+            "pos": [
+              0,
+              -60,
+              0
+            ],
+            "rotation": [
+              0,
+              {
+                "at": 0.6,
+                "dur": 0.8,
+                "ease": "expo.inOut",
+                "from": 0,
+                "to": 90
+              },
+              0
+            ],
+            "three_d": true,
+            "type": "null"
+          },
+          {
+            "id": "p-s00",
+            "items": [
+              {
+                "fill": "#3EE6D6",
+                "radius": 3,
+                "rect": [
+                  -88.5,
+                  -28.5,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "ellipse": [
+                  0,
+                  0,
+                  10.416000000000002,
+                  10.416000000000002
+                ],
+                "fill": "#ffffff",
+                "offset": [
+                  -60,
+                  0
+                ]
+              },
+              {
+                "fill": "#8F6CFF",
+                "radius": 3,
+                "rect": [
+                  -28.5,
+                  -28.5,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "ellipse": [
+                  0,
+                  0,
+                  10.416000000000002,
+                  10.416000000000002
+                ],
+                "fill": "#ffffff",
+                "offset": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "fill": "#52E08A",
+                "radius": 3,
+                "rect": [
+                  31.5,
+                  -28.5,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "ellipse": [
+                  0,
+                  0,
+                  10.416000000000002,
+                  10.416000000000002
+                ],
+                "fill": "#ffffff",
+                "offset": [
+                  60,
+                  0
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 30,
+              "specular": 0.5
+            },
+            "parent": "p-slab0",
+            "pos": [
+              0,
+              0,
+              -90
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "p-s01",
+            "items": [
+              {
+                "fill": "#FFE94A",
+                "radius": 3,
+                "rect": [
+                  -88.5,
+                  -28.5,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "ellipse": [
+                  0,
+                  0,
+                  10.416000000000002,
+                  10.416000000000002
+                ],
+                "fill": "#0b0d12",
+                "offset": [
+                  -60,
+                  0
+                ]
+              },
+              {
+                "fill": "#C4F4FF",
+                "radius": 3,
+                "rect": [
+                  -28.5,
+                  -28.5,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "ellipse": [
+                  0,
+                  0,
+                  10.416000000000002,
+                  10.416000000000002
+                ],
+                "fill": "#0b0d12",
+                "offset": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "fill": "#FFB24A",
+                "radius": 3,
+                "rect": [
+                  31.5,
+                  -28.5,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "ellipse": [
+                  0,
+                  0,
+                  10.416000000000002,
+                  10.416000000000002
+                ],
+                "fill": "#0b0d12",
+                "offset": [
+                  60,
+                  0
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 30,
+              "specular": 0.5
+            },
+            "parent": "p-slab0",
+            "pos": [
+              0,
+              0,
+              90
+            ],
+            "rotation": [
+              0,
+              180,
+              0
+            ],
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "p-s02",
+            "items": [
+              {
+                "fill": "#FF57E6",
+                "radius": 3,
+                "rect": [
+                  -88.5,
+                  -28.5,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "ellipse": [
+                  0,
+                  0,
+                  10.416000000000002,
+                  10.416000000000002
+                ],
+                "fill": "#ffffff",
+                "offset": [
+                  -60,
+                  0
+                ]
+              },
+              {
+                "fill": "#FF4A55",
+                "radius": 3,
+                "rect": [
+                  -28.5,
+                  -28.5,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "ellipse": [
+                  0,
+                  0,
+                  10.416000000000002,
+                  10.416000000000002
+                ],
+                "fill": "#ffffff",
+                "offset": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "fill": "#3EE6D6",
+                "radius": 3,
+                "rect": [
+                  31.5,
+                  -28.5,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "ellipse": [
+                  0,
+                  0,
+                  10.416000000000002,
+                  10.416000000000002
+                ],
+                "fill": "#ffffff",
+                "offset": [
+                  60,
+                  0
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 30,
+              "specular": 0.5
+            },
+            "parent": "p-slab0",
+            "pos": [
+              90,
+              0,
+              0
+            ],
+            "rotation": [
+              0,
+              90,
+              0
+            ],
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "p-s03",
+            "items": [
+              {
+                "fill": "#8F6CFF",
+                "radius": 3,
+                "rect": [
+                  -88.5,
+                  -28.5,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "ellipse": [
+                  0,
+                  0,
+                  10.416000000000002,
+                  10.416000000000002
+                ],
+                "fill": "#0b0d12",
+                "offset": [
+                  -60,
+                  0
+                ]
+              },
+              {
+                "fill": "#52E08A",
+                "radius": 3,
+                "rect": [
+                  -28.5,
+                  -28.5,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "ellipse": [
+                  0,
+                  0,
+                  10.416000000000002,
+                  10.416000000000002
+                ],
+                "fill": "#0b0d12",
+                "offset": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "fill": "#FFE94A",
+                "radius": 3,
+                "rect": [
+                  31.5,
+                  -28.5,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "ellipse": [
+                  0,
+                  0,
+                  10.416000000000002,
+                  10.416000000000002
+                ],
+                "fill": "#0b0d12",
+                "offset": [
+                  60,
+                  0
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 30,
+              "specular": 0.5
+            },
+            "parent": "p-slab0",
+            "pos": [
+              -90,
+              0,
+              0
+            ],
+            "rotation": [
+              0,
+              -90,
+              0
+            ],
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "p-c0",
+            "items": [
+              {
+                "fill": "#C4F4FF",
+                "radius": 3,
+                "rect": [
+                  -90,
+                  -90,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "fill": "#FFE94A",
+                "radius": 3,
+                "rect": [
+                  -30,
+                  -90,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "fill": "#52E08A",
+                "radius": 3,
+                "rect": [
+                  30,
+                  -90,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "fill": "#8F6CFF",
+                "radius": 3,
+                "rect": [
+                  -90,
+                  -30,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "fill": "#3EE6D6",
+                "radius": 3,
+                "rect": [
+                  -30,
+                  -30,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "fill": "#FF4A55",
+                "radius": 3,
+                "rect": [
+                  30,
+                  -30,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "fill": "#FF57E6",
+                "radius": 3,
+                "rect": [
+                  -90,
+                  30,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "fill": "#FFB24A",
+                "radius": 3,
+                "rect": [
+                  -30,
+                  30,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "fill": "#C4F4FF",
+                "radius": 3,
+                "rect": [
+                  30,
+                  30,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              }
+            ],
+            "material": {
+              "shininess": 30,
+              "specular": 0.5
+            },
+            "parent": "p-slab0",
+            "pos": [
+              0,
+              -30,
+              0
+            ],
+            "rotation": [
+              90,
+              0,
+              0
+            ],
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "p-slab1",
+            "parent": "p",
+            "pos": [
+              0,
+              0,
+              0
+            ],
+            "three_d": true,
+            "type": "null"
+          },
+          {
+            "id": "p-s10",
+            "items": [
+              {
+                "fill": "#FFB24A",
+                "radius": 3,
+                "rect": [
+                  -88.5,
+                  -28.5,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "ellipse": [
+                  0,
+                  0,
+                  10.416000000000002,
+                  10.416000000000002
+                ],
+                "fill": "#0b0d12",
+                "offset": [
+                  -60,
+                  0
+                ]
+              },
+              {
+                "fill": "#FF57E6",
+                "radius": 3,
+                "rect": [
+                  -28.5,
+                  -28.5,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "ellipse": [
+                  0,
+                  0,
+                  10.416000000000002,
+                  10.416000000000002
+                ],
+                "fill": "#0b0d12",
+                "offset": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "fill": "#FF4A55",
+                "radius": 3,
+                "rect": [
+                  31.5,
+                  -28.5,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "ellipse": [
+                  0,
+                  0,
+                  10.416000000000002,
+                  10.416000000000002
+                ],
+                "fill": "#0b0d12",
+                "offset": [
+                  60,
+                  0
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 30,
+              "specular": 0.5
+            },
+            "parent": "p-slab1",
+            "pos": [
+              0,
+              0,
+              -90
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "p-s11",
+            "items": [
+              {
+                "fill": "#3EE6D6",
+                "radius": 3,
+                "rect": [
+                  -88.5,
+                  -28.5,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "ellipse": [
+                  0,
+                  0,
+                  10.416000000000002,
+                  10.416000000000002
+                ],
+                "fill": "#ffffff",
+                "offset": [
+                  -60,
+                  0
+                ]
+              },
+              {
+                "fill": "#8F6CFF",
+                "radius": 3,
+                "rect": [
+                  -28.5,
+                  -28.5,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "ellipse": [
+                  0,
+                  0,
+                  10.416000000000002,
+                  10.416000000000002
+                ],
+                "fill": "#ffffff",
+                "offset": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "fill": "#52E08A",
+                "radius": 3,
+                "rect": [
+                  31.5,
+                  -28.5,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "ellipse": [
+                  0,
+                  0,
+                  10.416000000000002,
+                  10.416000000000002
+                ],
+                "fill": "#ffffff",
+                "offset": [
+                  60,
+                  0
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 30,
+              "specular": 0.5
+            },
+            "parent": "p-slab1",
+            "pos": [
+              0,
+              0,
+              90
+            ],
+            "rotation": [
+              0,
+              180,
+              0
+            ],
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "p-s12",
+            "items": [
+              {
+                "fill": "#FFE94A",
+                "radius": 3,
+                "rect": [
+                  -88.5,
+                  -28.5,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "ellipse": [
+                  0,
+                  0,
+                  10.416000000000002,
+                  10.416000000000002
+                ],
+                "fill": "#0b0d12",
+                "offset": [
+                  -60,
+                  0
+                ]
+              },
+              {
+                "fill": "#C4F4FF",
+                "radius": 3,
+                "rect": [
+                  -28.5,
+                  -28.5,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "ellipse": [
+                  0,
+                  0,
+                  10.416000000000002,
+                  10.416000000000002
+                ],
+                "fill": "#0b0d12",
+                "offset": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "fill": "#FFB24A",
+                "radius": 3,
+                "rect": [
+                  31.5,
+                  -28.5,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "ellipse": [
+                  0,
+                  0,
+                  10.416000000000002,
+                  10.416000000000002
+                ],
+                "fill": "#0b0d12",
+                "offset": [
+                  60,
+                  0
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 30,
+              "specular": 0.5
+            },
+            "parent": "p-slab1",
+            "pos": [
+              90,
+              0,
+              0
+            ],
+            "rotation": [
+              0,
+              90,
+              0
+            ],
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "p-s13",
+            "items": [
+              {
+                "fill": "#FF57E6",
+                "radius": 3,
+                "rect": [
+                  -88.5,
+                  -28.5,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "ellipse": [
+                  0,
+                  0,
+                  10.416000000000002,
+                  10.416000000000002
+                ],
+                "fill": "#ffffff",
+                "offset": [
+                  -60,
+                  0
+                ]
+              },
+              {
+                "fill": "#FF4A55",
+                "radius": 3,
+                "rect": [
+                  -28.5,
+                  -28.5,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "ellipse": [
+                  0,
+                  0,
+                  10.416000000000002,
+                  10.416000000000002
+                ],
+                "fill": "#ffffff",
+                "offset": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "fill": "#3EE6D6",
+                "radius": 3,
+                "rect": [
+                  31.5,
+                  -28.5,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "ellipse": [
+                  0,
+                  0,
+                  10.416000000000002,
+                  10.416000000000002
+                ],
+                "fill": "#ffffff",
+                "offset": [
+                  60,
+                  0
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 30,
+              "specular": 0.5
+            },
+            "parent": "p-slab1",
+            "pos": [
+              -90,
+              0,
+              0
+            ],
+            "rotation": [
+              0,
+              -90,
+              0
+            ],
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "p-slab2",
+            "parent": "p",
+            "pos": [
+              0,
+              60,
+              0
+            ],
+            "rotation": [
+              0,
+              {
+                "at": 1.6,
+                "dur": 0.8,
+                "ease": "expo.inOut",
+                "from": 0,
+                "to": -90
+              },
+              0
+            ],
+            "three_d": true,
+            "type": "null"
+          },
+          {
+            "id": "p-s20",
+            "items": [
+              {
+                "fill": "#8F6CFF",
+                "radius": 3,
+                "rect": [
+                  -88.5,
+                  -28.5,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "ellipse": [
+                  0,
+                  0,
+                  10.416000000000002,
+                  10.416000000000002
+                ],
+                "fill": "#0b0d12",
+                "offset": [
+                  -60,
+                  0
+                ]
+              },
+              {
+                "fill": "#52E08A",
+                "radius": 3,
+                "rect": [
+                  -28.5,
+                  -28.5,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "ellipse": [
+                  0,
+                  0,
+                  10.416000000000002,
+                  10.416000000000002
+                ],
+                "fill": "#0b0d12",
+                "offset": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "fill": "#FFE94A",
+                "radius": 3,
+                "rect": [
+                  31.5,
+                  -28.5,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "ellipse": [
+                  0,
+                  0,
+                  10.416000000000002,
+                  10.416000000000002
+                ],
+                "fill": "#0b0d12",
+                "offset": [
+                  60,
+                  0
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 30,
+              "specular": 0.5
+            },
+            "parent": "p-slab2",
+            "pos": [
+              0,
+              0,
+              -90
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "p-s21",
+            "items": [
+              {
+                "fill": "#C4F4FF",
+                "radius": 3,
+                "rect": [
+                  -88.5,
+                  -28.5,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "ellipse": [
+                  0,
+                  0,
+                  10.416000000000002,
+                  10.416000000000002
+                ],
+                "fill": "#ffffff",
+                "offset": [
+                  -60,
+                  0
+                ]
+              },
+              {
+                "fill": "#FFB24A",
+                "radius": 3,
+                "rect": [
+                  -28.5,
+                  -28.5,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "ellipse": [
+                  0,
+                  0,
+                  10.416000000000002,
+                  10.416000000000002
+                ],
+                "fill": "#ffffff",
+                "offset": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "fill": "#FF57E6",
+                "radius": 3,
+                "rect": [
+                  31.5,
+                  -28.5,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "ellipse": [
+                  0,
+                  0,
+                  10.416000000000002,
+                  10.416000000000002
+                ],
+                "fill": "#ffffff",
+                "offset": [
+                  60,
+                  0
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 30,
+              "specular": 0.5
+            },
+            "parent": "p-slab2",
+            "pos": [
+              0,
+              0,
+              90
+            ],
+            "rotation": [
+              0,
+              180,
+              0
+            ],
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "p-s22",
+            "items": [
+              {
+                "fill": "#FF4A55",
+                "radius": 3,
+                "rect": [
+                  -88.5,
+                  -28.5,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "ellipse": [
+                  0,
+                  0,
+                  10.416000000000002,
+                  10.416000000000002
+                ],
+                "fill": "#0b0d12",
+                "offset": [
+                  -60,
+                  0
+                ]
+              },
+              {
+                "fill": "#3EE6D6",
+                "radius": 3,
+                "rect": [
+                  -28.5,
+                  -28.5,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "ellipse": [
+                  0,
+                  0,
+                  10.416000000000002,
+                  10.416000000000002
+                ],
+                "fill": "#0b0d12",
+                "offset": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "fill": "#8F6CFF",
+                "radius": 3,
+                "rect": [
+                  31.5,
+                  -28.5,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "ellipse": [
+                  0,
+                  0,
+                  10.416000000000002,
+                  10.416000000000002
+                ],
+                "fill": "#0b0d12",
+                "offset": [
+                  60,
+                  0
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 30,
+              "specular": 0.5
+            },
+            "parent": "p-slab2",
+            "pos": [
+              90,
+              0,
+              0
+            ],
+            "rotation": [
+              0,
+              90,
+              0
+            ],
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "p-s23",
+            "items": [
+              {
+                "fill": "#52E08A",
+                "radius": 3,
+                "rect": [
+                  -88.5,
+                  -28.5,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "ellipse": [
+                  0,
+                  0,
+                  10.416000000000002,
+                  10.416000000000002
+                ],
+                "fill": "#ffffff",
+                "offset": [
+                  -60,
+                  0
+                ]
+              },
+              {
+                "fill": "#FFE94A",
+                "radius": 3,
+                "rect": [
+                  -28.5,
+                  -28.5,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "ellipse": [
+                  0,
+                  0,
+                  10.416000000000002,
+                  10.416000000000002
+                ],
+                "fill": "#ffffff",
+                "offset": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "fill": "#C4F4FF",
+                "radius": 3,
+                "rect": [
+                  31.5,
+                  -28.5,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "ellipse": [
+                  0,
+                  0,
+                  10.416000000000002,
+                  10.416000000000002
+                ],
+                "fill": "#ffffff",
+                "offset": [
+                  60,
+                  0
+                ]
+              }
+            ],
+            "material": {
+              "shininess": 30,
+              "specular": 0.5
+            },
+            "parent": "p-slab2",
+            "pos": [
+              -90,
+              0,
+              0
+            ],
+            "rotation": [
+              0,
+              -90,
+              0
+            ],
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "p-c2",
+            "items": [
+              {
+                "fill": "#FFE94A",
+                "radius": 3,
+                "rect": [
+                  -90,
+                  -90,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "fill": "#52E08A",
+                "radius": 3,
+                "rect": [
+                  -30,
+                  -90,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "fill": "#8F6CFF",
+                "radius": 3,
+                "rect": [
+                  30,
+                  -90,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "fill": "#3EE6D6",
+                "radius": 3,
+                "rect": [
+                  -90,
+                  -30,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "fill": "#FF4A55",
+                "radius": 3,
+                "rect": [
+                  -30,
+                  -30,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "fill": "#FF57E6",
+                "radius": 3,
+                "rect": [
+                  30,
+                  -30,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "fill": "#FFB24A",
+                "radius": 3,
+                "rect": [
+                  -90,
+                  30,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "fill": "#C4F4FF",
+                "radius": 3,
+                "rect": [
+                  -30,
+                  30,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              },
+              {
+                "fill": "#FFE94A",
+                "radius": 3,
+                "rect": [
+                  30,
+                  30,
+                  57,
+                  57
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              }
+            ],
+            "material": {
+              "shininess": 30,
+              "specular": 0.5
+            },
+            "parent": "p-slab2",
+            "pos": [
+              0,
+              30,
+              0
+            ],
+            "rotation": [
+              -90,
+              0,
+              0
+            ],
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "l",
+            "pos": [
+              760,
+              270,
+              0
+            ],
+            "rotation": [
+              -12,
+              {
+                "at": 1.2,
+                "dur": 1.2,
+                "ease": "expo.inOut",
+                "from": -20,
+                "to": 160
+              },
+              0
+            ],
+            "three_d": true,
+            "type": "null"
+          },
+          {
+            "id": "l-f0",
+            "items": [
+              {
+                "fill": "#8F6CFF",
+                "rect": [
+                  -75,
+                  -75,
+                  150,
+                  150
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 3.75
+                }
+              },
+              {
+                "ellipse": [
+                  0,
+                  0,
+                  42.00000000000001,
+                  42.00000000000001
+                ],
+                "fill": "#ffffff"
+              }
+            ],
+            "material": {
+              "shininess": 30,
+              "specular": 0.5
+            },
+            "parent": "l",
+            "pos": [
+              0,
+              0,
+              -75
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "l-f1",
+            "items": [
+              {
+                "fill": "#8F6CFF",
+                "rect": [
+                  -75,
+                  -75,
+                  150,
+                  150
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 3.75
+                }
+              }
+            ],
+            "material": {
+              "shininess": 30,
+              "specular": 0.5
+            },
+            "parent": "l",
+            "pos": [
+              0,
+              0,
+              75
+            ],
+            "rotation": [
+              0,
+              180,
+              0
+            ],
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "l-f2",
+            "items": [
+              {
+                "fill": "#8F6CFF",
+                "rect": [
+                  -75,
+                  -75,
+                  150,
+                  150
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 3.75
+                }
+              }
+            ],
+            "material": {
+              "shininess": 30,
+              "specular": 0.5
+            },
+            "parent": "l",
+            "pos": [
+              75,
+              0,
+              0
+            ],
+            "rotation": [
+              0,
+              90,
+              0
+            ],
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "l-f3",
+            "items": [
+              {
+                "fill": "#8F6CFF",
+                "rect": [
+                  -75,
+                  -75,
+                  150,
+                  150
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 3.75
+                }
+              }
+            ],
+            "material": {
+              "shininess": 30,
+              "specular": 0.5
+            },
+            "parent": "l",
+            "pos": [
+              -75,
+              0,
+              0
+            ],
+            "rotation": [
+              0,
+              -90,
+              0
+            ],
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "l-f4",
+            "items": [
+              {
+                "fill": "#8F6CFF",
+                "rect": [
+                  -75,
+                  -75,
+                  150,
+                  150
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 3.75
+                }
+              }
+            ],
+            "material": {
+              "shininess": 30,
+              "specular": 0.5
+            },
+            "parent": "l",
+            "pos": [
+              0,
+              -75,
+              0
+            ],
+            "rotation": [
+              90,
+              0,
+              0
+            ],
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "id": "l-f5",
+            "items": [
+              {
+                "fill": "#8F6CFF",
+                "rect": [
+                  -75,
+                  -75,
+                  150,
+                  150
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 3.75
+                }
+              }
+            ],
+            "material": {
+              "shininess": 30,
+              "specular": 0.5
+            },
+            "parent": "l",
+            "pos": [
+              0,
+              75,
+              0
+            ],
+            "rotation": [
+              -90,
+              0,
+              0
+            ],
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "align": "center",
+            "color": "#ffffff",
+            "font": "Avenir Next",
+            "id": "l-letter",
+            "parent": "l",
+            "pos": [
+              0,
+              0,
+              76
+            ],
+            "rotation": [
+              0,
+              180,
+              0
+            ],
+            "size": 78,
+            "text": "A",
+            "three_d": true,
+            "type": "text",
+            "weight": 200
+          }
+        ]
+      }
+    ]
+  },
+  "width": 960
+}

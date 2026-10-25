@@ -82,20 +82,23 @@
     540,
     0
    ],
-   "rot_x": {
-    "from": 80,
-    "to": 0,
-    "at": 0.0,
-    "dur": 0.9,
-    "ease": "back.out(1.4)"
-   },
-   "rot_y": {
-    "from": -140,
-    "to": 0,
-    "at": 0.0,
-    "dur": 0.9,
-    "ease": "back.out(1.4)"
-   },
+   "rotation": [
+    {
+     "from": 80,
+     "to": 0,
+     "at": 0.0,
+     "dur": 0.9,
+     "ease": "back.out(1.4)"
+    },
+    {
+     "from": -140,
+     "to": 0,
+     "at": 0.0,
+     "dur": 0.9,
+     "ease": "back.out(1.4)"
+    },
+    0
+   ],
    "opacity": {
     "from": 0,
     "to": 1,
@@ -127,20 +130,23 @@
     540,
     0
    ],
-   "rot_x": {
-    "from": 80,
-    "to": 0,
-    "at": 0.12,
-    "dur": 0.9,
-    "ease": "back.out(1.4)"
-   },
-   "rot_y": {
-    "from": -140,
-    "to": 0,
-    "at": 0.12,
-    "dur": 0.9,
-    "ease": "back.out(1.4)"
-   },
+   "rotation": [
+    {
+     "from": 80,
+     "to": 0,
+     "at": 0.12,
+     "dur": 0.9,
+     "ease": "back.out(1.4)"
+    },
+    {
+     "from": -140,
+     "to": 0,
+     "at": 0.12,
+     "dur": 0.9,
+     "ease": "back.out(1.4)"
+    },
+    0
+   ],
    "opacity": {
     "from": 0,
     "to": 1,
@@ -172,20 +178,23 @@
     540,
     0
    ],
-   "rot_x": {
-    "from": 80,
-    "to": 0,
-    "at": 0.24,
-    "dur": 0.9,
-    "ease": "back.out(1.4)"
-   },
-   "rot_y": {
-    "from": -140,
-    "to": 0,
-    "at": 0.24,
-    "dur": 0.9,
-    "ease": "back.out(1.4)"
-   },
+   "rotation": [
+    {
+     "from": 80,
+     "to": 0,
+     "at": 0.24,
+     "dur": 0.9,
+     "ease": "back.out(1.4)"
+    },
+    {
+     "from": -140,
+     "to": 0,
+     "at": 0.24,
+     "dur": 0.9,
+     "ease": "back.out(1.4)"
+    },
+    0
+   ],
    "opacity": {
     "from": 0,
     "to": 1,
@@ -217,20 +226,23 @@
     540,
     0
    ],
-   "rot_x": {
-    "from": 80,
-    "to": 0,
-    "at": 0.36,
-    "dur": 0.9,
-    "ease": "back.out(1.4)"
-   },
-   "rot_y": {
-    "from": -140,
-    "to": 0,
-    "at": 0.36,
-    "dur": 0.9,
-    "ease": "back.out(1.4)"
-   },
+   "rotation": [
+    {
+     "from": 80,
+     "to": 0,
+     "at": 0.36,
+     "dur": 0.9,
+     "ease": "back.out(1.4)"
+    },
+    {
+     "from": -140,
+     "to": 0,
+     "at": 0.36,
+     "dur": 0.9,
+     "ease": "back.out(1.4)"
+    },
+    0
+   ],
    "opacity": {
     "from": 0,
     "to": 1,
@@ -262,20 +274,23 @@
     540,
     0
    ],
-   "rot_x": {
-    "from": 80,
-    "to": 0,
-    "at": 0.48,
-    "dur": 0.9,
-    "ease": "back.out(1.4)"
-   },
-   "rot_y": {
-    "from": -140,
-    "to": 0,
-    "at": 0.48,
-    "dur": 0.9,
-    "ease": "back.out(1.4)"
-   },
+   "rotation": [
+    {
+     "from": 80,
+     "to": 0,
+     "at": 0.48,
+     "dur": 0.9,
+     "ease": "back.out(1.4)"
+    },
+    {
+     "from": -140,
+     "to": 0,
+     "at": 0.48,
+     "dur": 0.9,
+     "ease": "back.out(1.4)"
+    },
+    0
+   ],
    "opacity": {
     "from": 0,
     "to": 1,
@@ -307,20 +322,23 @@
     540,
     0
    ],
-   "rot_x": {
-    "from": 80,
-    "to": 0,
-    "at": 0.6,
-    "dur": 0.9,
-    "ease": "back.out(1.4)"
-   },
-   "rot_y": {
-    "from": -140,
-    "to": 0,
-    "at": 0.6,
-    "dur": 0.9,
-    "ease": "back.out(1.4)"
-   },
+   "rotation": [
+    {
+     "from": 80,
+     "to": 0,
+     "at": 0.6,
+     "dur": 0.9,
+     "ease": "back.out(1.4)"
+    },
+    {
+     "from": -140,
+     "to": 0,
+     "at": 0.6,
+     "dur": 0.9,
+     "ease": "back.out(1.4)"
+    },
+    0
+   ],
    "opacity": {
     "from": 0,
     "to": 1,

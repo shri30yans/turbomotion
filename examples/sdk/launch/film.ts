@@ -20,7 +20,7 @@ const letters = letters3d("MOTION", {
 });
 
 const intro = timeline();
-intro.from(letters, { rot_x: -100, rot_y: 60, opacity: 0, z: -400, duration: 1.0, ease: "back.out(1.4)", stagger: 0.07 }, 0.2);
+intro.from(letters, { rotation: [-100, 60, null], opacity: 0, z: -400, duration: 1.0, ease: "back.out(1.4)", stagger: 0.07 }, 0.2);
 
 const hook = shot({
   id: "hook",
@@ -38,7 +38,7 @@ const hook = shot({
 const paint = rand(11);
 const palette = ["#ff6b3d", "#3dd6ff", "#b7ff6b", "#ffd23d", "#c77dff", "#ff4d8d"];
 const words = ["GO", "NEW", "4K", "3D", "FAST", "LIVE", "RUST", "FX"];
-const wall = group({ id: "wall", three_d: true, pos: [960, 500, 0], rot_x: 25, rot_y: -20 });
+const wall = group({ id: "wall", three_d: true, pos: [960, 500, 0], rotation: [26.3922, -18.0578, 8.7447] });
 
 const HERO = 20; // column 4, row 2: the card the camera dollies toward
 const tiles = grid(8, 5, [236, 164]);
@@ -73,7 +73,7 @@ const labels = labelled.map((c) =>
 
 const cam = camera({ id: "cam", pos: [960, 540, -2700], poi: [960, 540, -100], zoom: 2000 });
 const pop = timeline();
-pop.from(cards, { scale: 0, opacity: 0, rot_y: 70, duration: 0.55, ease: "back.out(1.7)", stagger: { each: 0.03, from: "center" } }, 0.1);
+pop.from(cards, { scale: 0, opacity: 0, rotation: [null, 70, null], duration: 0.55, ease: "back.out(1.7)", stagger: { each: 0.03, from: "center" } }, 0.1);
 pop.from(labels, { opacity: 0, duration: 0.3, stagger: { each: 0.03, from: "center" } }, 0.6);
 pop.to(cam, { z: -1450, duration: 2.7, ease: "sine.inOut" }, 0.2);
 

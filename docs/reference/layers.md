@@ -17,7 +17,7 @@ A flat rectangle: backgrounds, flashes, mattes. Size defaults to the composition
 
 ## `text`
 
-Text with real shaping. `font` is a family or a file; `align` left|center|right (the layer's pos is the alignment edge, vertically centred); `width` wraps. Characters the designed font does not have take a fallback face and are painted in the same colour as the rest of the line. `preset` is a named per-character animation (see `text_presets`); `animators` build your own (GSAP staggers or After Effects range selectors). `text` can also be a counter {from, to, at, dur, ease, decimals, sep, prefix, suffix}.
+Text with real shaping. `font` is a family or a file; `align` left|center|right (the layer's pos is the alignment edge, vertically centred); `width` wraps. Characters the designed font does not have take a fallback face and are painted in the same colour as the rest of the line. `preset` is a named per-character animation (see `text_presets`); `animators` build your own (GSAP staggers or After Effects range selectors). `text` can also be a counter {from, to, at, dur, ease, decimals, sep, prefix, suffix}. Animator props include per-character 3D (`z`, `rotation_x|y|z`, `scale_z`, seen through `perspective`), `fill_hue|saturation|brightness` and `stroke_width`; an animator's `cipher` {charset, rate, seed, settle} decodes noise into the real characters. `path` {an ellipse/points/d/... geometry or a `layer` id, reverse, perpendicular, force_align, first_margin, last_margin, travel} sets the text along a path (`travel` 0..1 is one exact lap of a closed path); `surface` {kind: cylinder|sphere, radius, turn, back} wraps it on a drum or ball; `marquee` {speed, gap, repeat} scrolls a seamless row; `outline_only` with `stroke_trim` [start, end] draws the glyph outlines on.
 
 ```json
 {
@@ -109,7 +109,7 @@ A sound on the timeline: `volume` (a property), `fade_in`, `fade_out`, `src_in`,
 
 ## `mesh`
 
-A solid: a triangle mesh from a `geometry` generator, lit by the composition's lights (ambient, point, spot, directional; `material` sets specular and shininess) and drawn through its camera. Needs "three_d": true. Geometry kinds: `text` (glyph outlines extruded, with an optional chamfer; one layer per letter to stagger a word), `box`, `sphere`, `torus`, `cylinder` (`top: 0` makes a cone) and `extrude` (an SVG path pushed into depth). It turns about its own middle, so `rot_x` / `rot_y` / `rotation` tumble or spin it (`"rot_y": "time*90"` is a turntable). `color` is the front and a curved skin, `side` the walls, `back` the back; `side` defaults to a darkened `color`.
+A solid: a triangle mesh from a `geometry` generator, lit by the composition's lights (ambient, point, spot, directional; `material` sets specular and shininess) and drawn through its camera. Needs "three_d": true. Geometry kinds: `text` (glyph outlines extruded, with an optional chamfer; one layer per letter to stagger a word), `box`, `sphere`, `torus`, `cylinder` (`top: 0` makes a cone) and `extrude` (an SVG path pushed into depth). It turns about its own middle, so `rotation` tumbles or spins it (`"rotation": [0, "time*90", 0]` is a turntable). `color` is the front and a curved skin, `side` the walls, `back` the back; `side` defaults to a darkened `color`.
 
 ```json
 {
@@ -132,13 +132,16 @@ A solid: a triangle mesh from a `geometry` generator, lit by the composition's l
     540,
     0
   ],
-  "rot_x": 20,
-  "rot_y": {
-    "dur": 0.8,
-    "ease": "back.out(1.4)",
-    "from": -90,
-    "to": 0
-  },
+  "rotation": [
+    20,
+    {
+      "dur": 0.8,
+      "ease": "back.out(1.4)",
+      "from": -90,
+      "to": 0
+    },
+    0
+  ],
   "side": "#8a2017",
   "three_d": true,
   "type": "mesh"
@@ -147,7 +150,7 @@ A solid: a triangle mesh from a `geometry` generator, lit by the composition's l
 
 ## `shape`
 
-Vector shapes with fill, gradient, stroke, dashes, trim (draw-on), morph and repeat. Geometry: rect, ellipse, polygon, star, d (SVG path), points.
+Vector shapes with fill, gradient, stroke, dashes, trim (draw-on), morph and repeat. Geometry: rect, ellipse, polygon, star, d (SVG path), points. A fill is a colour or a gradient (linear {from, to}, radial {center, radius}). Every item animates its own properties (`trim`, `rotation`, `scale`, `opacity`, rect/ellipse sizes); `anchor` is the item's pivot for rotation and scale, in the item's own units from the shape's origin.
 
 ```json
 {
@@ -204,6 +207,57 @@ Vector shapes with fill, gradient, stroke, dashes, trim (draw-on), morph and rep
           "from": 0,
           "to": 1
         }
+      }
+    },
+    {
+      "ellipse": [
+        300,
+        0,
+        160,
+        160
+      ],
+      "fill": {
+        "gradient": {
+          "center": [
+            0,
+            0
+          ],
+          "radius": 90,
+          "stops": [
+            [
+              0,
+              "#ffe9a8"
+            ],
+            [
+              0.6,
+              "#ff8a00"
+            ],
+            [
+              1,
+              "#e52e71"
+            ]
+          ],
+          "type": "radial"
+        }
+      }
+    },
+    {
+      "anchor": [
+        60,
+        20
+      ],
+      "fill": "#8be9fd",
+      "rect": [
+        -60,
+        200,
+        120,
+        40
+      ],
+      "rotation": {
+        "dur": 1.2,
+        "ease": "sine.inOut",
+        "from": -20,
+        "to": 20
       }
     }
   ],
@@ -281,7 +335,7 @@ Applies its effects to everything below it (a grade, a glitch, a blur over the w
 
 ## `texture`
 
-Paints a generator shader over the layer (noise, clouds, cells, stripes, grid, gradient, light_leak, bokeh, floor, or your own `effects/<name>.sksl` with `@kind generator`). Use it as a background, a matte, or blended over footage. `comp fx list` shows each one's parameters.
+Paints a generator shader over the layer (noise, clouds, cells, stripes, grid, gradient, aura (a soft multi-point mesh-gradient backdrop with animatable point positions and colours), light_leak, bokeh, floor, or your own `effects/<name>.sksl` with `@kind generator`). Use it as a background, a matte, or blended over footage. `comp fx list` shows each one's parameters.
 
 ```json
 {
@@ -419,7 +473,7 @@ A light for 3D layers: ambient, point, directional or spot. 3D layers are shaded
 
 ## `extrude`
 
-Depth for a three_d text, shape or solid layer: copies stepping back in z, coloured from `color` to `far`. Show it with a camera move or rot_y.
+Depth for a three_d text, shape or solid layer: copies stepping back in z, coloured from `color` to `far`. Show it with a camera move or a Y Rotation.
 
 ```json
 {
@@ -431,7 +485,11 @@ Depth for a three_d text, shape or solid layer: copies stepping back in z, colou
     960,
     540
   ],
-  "rot_y": 18,
+  "rotation": [
+    0,
+    18,
+    0
+  ],
   "text": "88888",
   "three_d": true,
   "type": "text"

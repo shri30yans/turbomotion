@@ -1,0 +1,197 @@
+{
+  "bg": "#101420",
+  "dur": 1,
+  "fps": 30,
+  "height": 540,
+  "layers": [
+    {
+      "id": "orb1",
+      "items": [
+        {
+          "ellipse": [
+            0,
+            0,
+            210,
+            210
+          ],
+          "fill": {
+            "gradient": {
+              "center": [
+                0,
+                0
+              ],
+              "radius": 210,
+              "stops": [
+                [
+                  0,
+                  "#FF5A1F"
+                ],
+                [
+                  1,
+                  "#101420"
+                ]
+              ],
+              "type": "radial"
+            }
+          }
+        }
+      ],
+      "pos": [
+        300,
+        250
+      ],
+      "type": "shape"
+    },
+    {
+      "id": "orb2",
+      "items": [
+        {
+          "ellipse": [
+            0,
+            0,
+            210,
+            210
+          ],
+          "fill": {
+            "gradient": {
+              "center": [
+                0,
+                0
+              ],
+              "radius": 210,
+              "stops": [
+                [
+                  0,
+                  "#3D6BFF"
+                ],
+                [
+                  1,
+                  "#101420"
+                ]
+              ],
+              "type": "radial"
+            }
+          }
+        }
+      ],
+      "pos": [
+        680,
+        300
+      ],
+      "type": "shape"
+    },
+    {
+      "fx": [
+        {
+          "blur": 48,
+          "color": [
+            11,
+            12,
+            16
+          ],
+          "dx": 0,
+          "dy": 28,
+          "effect": "shadow",
+          "opacity": 0.5
+        }
+      ],
+      "id": "card-shadow",
+      "items": [
+        {
+          "fill": "#000000",
+          "radius": 32,
+          "rect": [
+            -260,
+            -130,
+            520,
+            260
+          ]
+        }
+      ],
+      "opacity": 0.35,
+      "pos": [
+        480,
+        270
+      ],
+      "type": "shape"
+    },
+    {
+      "id": "card",
+      "items": [
+        {
+          "fill": {
+            "gradient": {
+              "from": [
+                0,
+                -130
+              ],
+              "stops": [
+                [
+                  0,
+                  "#cfe1ff49"
+                ],
+                [
+                  0.5,
+                  "#cfe1ff29"
+                ],
+                [
+                  1,
+                  "#cfe1ff18"
+                ]
+              ],
+              "to": [
+                0,
+                130
+              ],
+              "type": "linear"
+            }
+          },
+          "radius": 32,
+          "rect": [
+            -260,
+            -130,
+            520,
+            260
+          ],
+          "stroke": {
+            "color": "#ffffff73",
+            "width": 1.5
+          }
+        },
+        {
+          "fill": {
+            "color": "#ffffff",
+            "opacity": 0.55
+          },
+          "radius": 1,
+          "rect": [
+            -240.8,
+            -128.5,
+            481.6,
+            2
+          ]
+        }
+      ],
+      "pos": [
+        480,
+        270
+      ],
+      "type": "shape"
+    },
+    {
+      "align": "center",
+      "color": "#ffffff",
+      "id": "word",
+      "pos": [
+        480,
+        290
+      ],
+      "size": 96,
+      "text": "glass",
+      "type": "text",
+      "weight": 700
+    }
+  ],
+  "root": ".",
+  "width": 960
+}

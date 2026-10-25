@@ -2,11 +2,40 @@
 
 # Effects
 
-Built-in effects, then the shader plugins (`.sksl` files with `// @param` headers).
+Every effect and generator, from its descriptor: platform effects first, then the shipped shader plugins. Write effects/<name>.sksl beside comp.json: header comments `// @effect name`, `// @kind effect|generator`, `// @summary ...`, `// @param name float|vec2|color default [min max] -- doc`, `// @param name choice default a,b,c -- doc` (written as a name), `// @input name layer` (another layer's picture, named by id in the use), `// @input name history=N [depth=D]` (the effect's own output N frames ago), `// @pass name [scale=S]` (several passes, each sees the earlier ones by name), `// @example {json}`, then `half4 main(float2 xy)`. You get `image` (effects), `resolution`, `time` and a library (hash21, vnoise, fbm, worley, rot2, luma, hsv2rgb, straight, premul). Try it with `comp fx test <name> --out sheet.png`; then use it like any effect: {"effect": "name", "param": value}.
+
+## Composite options (every effect)
+
+Every effect, built-in or plugin, takes an optional `composite`: the original picture stays visible and the effect's result is laid over it, only inside a mask, with a blend mode and an amount. Without it the result replaces the input.
+
+* `blend`: any layer blend mode (default normal)
+* `mask`: none (default) | alpha | {kind: luma, lo, hi, softness, invert} | {kind: edges, strength, width} | {kind: layer, layer: id, channel: luma|alpha, invert}
+* `mix`: 0..1, animatable (default 1): how much of the laid-over result shows
+
+```json
+{
+  "composite": {
+    "blend": "screen",
+    "mask": {
+      "kind": "luma",
+      "lo": 0.5,
+      "softness": 0.2
+    },
+    "mix": 0.8
+  },
+  "effect": "halftone",
+  "size": 12
+}
+```
 
 ## `blur`
 
-Gaussian blur. `radius` is the sigma in pixels.
+Gaussian blur. (effect, platform)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `radius` | float | 8.0 | 0 or more | Gaussian sigma in pixels. |
+
 
 ```json
 {
@@ -17,7 +46,13 @@ Gaussian blur. `radius` is the sigma in pixels.
 
 ## `directional_blur`
 
-Motion blur: smears the layer `distance` pixels along `angle` degrees.
+Motion blur: smears the layer along an angle. (effect, platform)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `distance` | float | 40.0 |  | Length of the smear in pixels. |
+| `angle` | float | 0.0 |  | Direction of the smear in degrees (0 = horizontal, 90 = vertical). |
+
 
 ```json
 {
@@ -29,7 +64,14 @@ Motion blur: smears the layer `distance` pixels along `angle` degrees.
 
 ## `radial_blur`
 
-Zoom blur from a point (`x`, `y` as fractions of the frame); `amount` 0.1 smears 10%.
+Zoom blur from a point. (effect, platform)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `amount` | float | 0.1 |  | Extra zoom at the end of the smear: 0.1 smears 10%. |
+| `x` | float | 0.5 |  | Centre across the frame, as a fraction. |
+| `y` | float | 0.5 |  | Centre down the frame, as a fraction. |
+
 
 ```json
 {
@@ -42,7 +84,15 @@ Zoom blur from a point (`x`, `y` as fractions of the frame); `amount` 0.1 smears
 
 ## `glow`
 
-Adds a blurred copy back on top. `threshold` limits it to the bright parts, `color` tints the halo.
+Adds a blurred copy back on top, so bright parts bleed light. (effect, platform)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `radius` | float | 24.0 | 0 or more | Blur sigma of the halo in pixels. |
+| `strength` | float | 1.0 | 0 or more | How much of the halo is added back (1 = as bright as the source). |
+| `threshold` | float | 0.0 | 0 to 1 | Only parts brighter than this (0..1 luma) glow; 0 makes everything glow. |
+| `color` | color | none |  | Colour of the halo; leave out to glow in the layer's own colours. |
+
 
 ```json
 {
@@ -60,7 +110,16 @@ Adds a blurred copy back on top. `threshold` limits it to the bright parts, `col
 
 ## `shadow`
 
-Soft drop shadow behind the layer's shape.
+Soft drop shadow behind the layer's shape. (effect, platform)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `dx` | float | 0.0 |  | Horizontal offset in pixels. |
+| `dy` | float | 12.0 |  | Vertical offset in pixels. |
+| `blur` | float | 16.0 | 0 or more | Gaussian sigma of the shadow's edge. |
+| `color` | color | [0.0,0.0,0.0,1.0] |  | Shadow colour. |
+| `opacity` | float | 0.5 | 0 to 1 | How dark the shadow is. |
+
 
 ```json
 {
@@ -79,7 +138,14 @@ Soft drop shadow behind the layer's shape.
 
 ## `outline`
 
-Solid outline `width` pixels around the layer's shape.
+Solid outline around the layer's shape. (effect, platform)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `width` | float | 4.0 | 0 or more | Thickness in pixels. |
+| `color` | color | [255.0,255.0,255.0,1.0] |  | Outline colour. |
+| `opacity` | float | 1.0 | 0 to 1 | How solid the outline is. |
+
 
 ```json
 {
@@ -96,7 +162,12 @@ Solid outline `width` pixels around the layer's shape.
 
 ## `brightness`
 
-Adds `amount` (0..1 scale) to every channel.
+Adds a fixed amount to every channel. (effect, platform)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `amount` | float | 0.0 |  | Added to every channel (0..1 scale): 0.2 is a clear lift, negative darkens. |
+
 
 ```json
 {
@@ -107,7 +178,12 @@ Adds `amount` (0..1 scale) to every channel.
 
 ## `contrast`
 
-1 = unchanged, 0 = flat grey, 2 = punchy.
+Spreads or squeezes the tones around mid-grey. (effect, platform)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `amount` | float | 1.0 |  | 1 leaves the layer alone, 0 is flat grey, 2 is punchy. |
+
 
 ```json
 {
@@ -118,7 +194,12 @@ Adds `amount` (0..1 scale) to every channel.
 
 ## `saturation`
 
-1 = unchanged, 0 = black and white, 2 = vivid.
+Strengthens or drains colour. (effect, platform)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `amount` | float | 1.0 |  | 1 leaves the layer alone, 0 is black and white, 2 is vivid. |
+
 
 ```json
 {
@@ -129,7 +210,12 @@ Adds `amount` (0..1 scale) to every channel.
 
 ## `hue`
 
-Rotates colours around the wheel by `degrees`.
+Rotates colours around the wheel. (effect, platform)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `degrees` | float | 0.0 |  | Degrees around the colour wheel. |
+
 
 ```json
 {
@@ -140,7 +226,12 @@ Rotates colours around the wheel by `degrees`.
 
 ## `exposure`
 
-Photographic stops: +1 doubles the light.
+Photographic stops of light. (effect, platform)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `amount` | float | 0.0 |  | Photographic stops: +1 doubles the light, -1 halves it. |
+
 
 ```json
 {
@@ -151,7 +242,12 @@ Photographic stops: +1 doubles the light.
 
 ## `gamma`
 
-Mid-tone curve: above 1 lightens, below 1 darkens.
+Mid-tone curve. (effect, platform)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `amount` | float | 1.0 |  | Above 1 lightens the mid-tones, below 1 darkens them. |
+
 
 ```json
 {
@@ -162,7 +258,12 @@ Mid-tone curve: above 1 lightens, below 1 darkens.
 
 ## `invert`
 
-Negative; `amount` 1 is a full invert.
+Negative. (effect, platform)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `amount` | float | 1.0 |  | How far to the negative: 1 fully inverts, 0.5 is flat grey. |
+
 
 ```json
 {
@@ -173,7 +274,13 @@ Negative; `amount` 1 is a full invert.
 
 ## `tint`
 
-Paints the layer toward `color` by `amount` (0..1), keeping its shape.
+Paints the layer toward a colour, keeping its shape. (effect, platform)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `color` | color | [255.0,255.0,255.0,1.0] |  | The colour the layer is painted toward. |
+| `amount` | float | 1.0 | 0 to 1 | 0 keeps the layer's colours, 1 paints it all in `color` (the alpha shape stays). |
+
 
 ```json
 {
@@ -189,7 +296,18 @@ Paints the layer toward `color` by `amount` (0..1), keeping its shape.
 
 ## `grade`
 
-The scene colour grade on one layer: lift, gamma, gain, sat, contrast, tint (rgb) and tint_k.
+The scene colour grade on one layer. (effect, platform)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `lift` | float | 0.0 |  | Added to the darks. |
+| `gamma` | float | 1.0 |  | Mid-tone curve. |
+| `gain` | float | 1.0 |  | Multiplies the lights. |
+| `sat` | float | 1.0 |  | Colour strength: 1 unchanged, 0 black and white. |
+| `contrast` | float | 1.0 |  | Spread around mid-grey. |
+| `tint` | color | none |  | Colour the picture is pushed toward; leave out for no tint. |
+| `tint_k` | float | 0.0 |  | How far toward `tint` (0..1); ignored without a tint. |
+
 
 ```json
 {
@@ -210,7 +328,15 @@ The scene colour grade on one layer: lift, gamma, gain, sat, contrast, tint (rgb
 
 ## `wave`
 
-Sine wave displacement: `amplitude` px, `wavelength` px, `speed` crests per second, `angle` of travel.
+Sine wave displacement. (effect, platform)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `amplitude` | float | 12.0 |  | How far pixels move, in pixels. |
+| `wavelength` | float | 160.0 | 1 or more | Distance between crests in pixels. |
+| `speed` | float | 0.5 |  | Crests travelling past per second (negative reverses). |
+| `angle` | float | 0.0 |  | Direction the wave travels in degrees (0 = left to right); pixels move across it. |
+
 
 ```json
 {
@@ -224,7 +350,15 @@ Sine wave displacement: `amplitude` px, `wavelength` px, `speed` crests per seco
 
 ## `twirl`
 
-Swirls the picture around (`x`, `y`) by `angle` degrees within `radius` pixels.
+Swirls the picture around a point. (effect, platform)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `angle` | float | 90.0 |  | Turn at the centre in degrees (it eases to nothing at the radius). |
+| `radius` | float | 300.0 | 1 or more | Reach in pixels. |
+| `x` | float | 0.5 |  | Centre across the frame, as a fraction. |
+| `y` | float | 0.5 |  | Centre down the frame, as a fraction. |
+
 
 ```json
 {
@@ -238,7 +372,15 @@ Swirls the picture around (`x`, `y`) by `angle` degrees within `radius` pixels.
 
 ## `bulge`
 
-Magnifies (positive) or pinches (negative) the picture around (`x`, `y`) within `radius` pixels.
+Magnifies or pinches the picture around a point. (effect, platform)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `strength` | float | 0.5 |  | 0.5 magnifies the centre, negative pinches it in. |
+| `radius` | float | 300.0 | 1 or more | Reach in pixels. |
+| `x` | float | 0.5 |  | Centre across the frame, as a fraction. |
+| `y` | float | 0.5 |  | Centre down the frame, as a fraction. |
+
 
 ```json
 {
@@ -252,7 +394,12 @@ Magnifies (positive) or pinches (negative) the picture around (`x`, `y`) within 
 
 ## `pixelate`
 
-Mosaic of `size` pixel blocks.
+Mosaic of square blocks. (effect, platform)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `size` | float | 16.0 | 1 or more | Block size in pixels. |
+
 
 ```json
 {
@@ -263,7 +410,12 @@ Mosaic of `size` pixel blocks.
 
 ## `chromatic_aberration`
 
-Red and blue part ways toward the corners by `amount` pixels, like a cheap lens.
+Red and blue part ways toward the corners, like a cheap lens. (effect, platform)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `amount` | float | 6.0 |  | Red/blue separation in pixels at the frame corners (zero at the centre). |
+
 
 ```json
 {
@@ -274,7 +426,13 @@ Red and blue part ways toward the corners by `amount` pixels, like a cheap lens.
 
 ## `rgb_split`
 
-Red and blue shift `distance` pixels apart along `angle` degrees; green stays.
+Red and blue shift apart along an angle; green stays. (effect, platform)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `distance` | float | 8.0 |  | Red and blue part ways by this many pixels. |
+| `angle` | float | 0.0 |  | Direction in degrees (0 = horizontal). |
+
 
 ```json
 {
@@ -286,7 +444,13 @@ Red and blue shift `distance` pixels apart along `angle` degrees; green stays.
 
 ## `grain`
 
-Film grain, redrawn 24 times a second.
+Film grain, redrawn 24 times a second. (effect, platform)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `amount` | float | 0.12 |  | Strength of the noise (0.1 is visible, 0.3 is heavy). |
+| `seed` | float | 0.0 | 0 or more | Pattern seed. |
+
 
 ```json
 {
@@ -298,7 +462,14 @@ Film grain, redrawn 24 times a second.
 
 ## `scanlines`
 
-CRT scanlines every `spacing` pixels, dimming by `strength`.
+CRT scanlines. (effect, platform)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `spacing` | float | 4.0 | 2 or more | Distance between lines in pixels. |
+| `strength` | float | 0.35 |  | How much the dark part of each line dims the picture (0..1). |
+| `thickness` | float | 0.5 | 0.05 to 0.85 | Fraction of each spacing that is dark. |
+
 
 ```json
 {
@@ -311,7 +482,13 @@ CRT scanlines every `spacing` pixels, dimming by `strength`.
 
 ## `vignette`
 
-Darkens toward the corners.
+Darkens toward the corners. (effect, platform)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `strength` | float | 0.5 |  | 0 = none, 1 = black corners. |
+| `softness` | float | 0.45 |  | How far from the centre the falloff starts, as a fraction of the half diagonal (0..1). |
+
 
 ```json
 {
@@ -323,7 +500,12 @@ Darkens toward the corners.
 
 ## `opacity`
 
-Fades the whole layer.
+Fades the whole layer. (effect, platform)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `value` | float | 1.0 | 0 to 1 | 0 = invisible, 1 = unchanged. |
+
 
 ```json
 {
@@ -334,7 +516,17 @@ Fades the whole layer.
 
 ## `transform`
 
-Moves (`x`, `y` px), scales and rotates (clockwise degrees) the layer about an anchor (fractions of the frame).
+Moves, scales and rotates the layer about an anchor. (effect, platform)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `x` | float | 0.0 |  | Move right by this many pixels. |
+| `y` | float | 0.0 |  | Move down by this many pixels. |
+| `scale` | float | 1.0 |  | Uniform scale (1 = unchanged). |
+| `rotation` | float | 0.0 |  | Clockwise degrees. |
+| `anchor_x` | float | 0.5 |  | The point scale and rotation pivot about, across the frame as a fraction. |
+| `anchor_y` | float | 0.5 |  | The same point, down the frame. |
+
 
 ```json
 {
@@ -348,74 +540,1618 @@ Moves (`x`, `y` px), scales and rotates (clockwise degrees) the layer about an a
 }
 ```
 
-## Shader plugins
+## `anamorphic`
 
-Write effects/<name>.sksl beside comp.json: header comments `// @effect name`, `// @kind effect|generator`, `// @summary ...`, `// @param name float|vec2|color default [min max] -- doc`, then `half4 main(float2 xy)`. You get `image` (effects), `resolution`, `time` and a library (hash21, vnoise, fbm, worley, rot2, luma, hsv2rgb, straight, premul). Try it with `comp fx test <name> --out sheet.png`; then use it like any effect: {"effect": "name", "param": value}.
+Horizontal streak flare on the highlights, like a cinema anamorphic lens. (effect, shader plugin)
 
-| plugin | kind | what it does | params |
-| --- | --- | --- | --- |
-| `anamorphic` | effect | Horizontal streak flare on the highlights, like a cinema anamorphic lens. | `amount Float = [0.0]`, `threshold Float = [0.62]`, `tint Color = [207.0, 228.0, 255.0, 1.0]` |
-| `barrel` | effect | Lens barrel (positive) or pincushion (negative). A cheap CCTV lens, a stills distortion. | `amount Float = [0.0]`, `x Float = [0.5]`, `y Float = [0.5]` |
-| `bleach` | effect | Skip-bleach: silver retained in the highlights, blacks crushed. A cold news look. | `amount Float = [0.0]` |
-| `bloom` | effect | Bright areas bleed soft light into their surroundings, like a lens does. Keeps midtones untouched. | `amount Float = [0.6]`, `radius Float = [28.0]`, `threshold Float = [0.65]` |
-| `bokeh` | generator | Soft discs of light: a night-city floor, a lens wide open. | `density Float = [0.4]`, `scale Float = [70.0]`, `brightness Float = [0.55]`, `tint Color = [255.0, 217.0, 168.0, 1.0]`, `seed Float = [3.0]` |
-| `bolt` | generator | A photoreal branched strike on a clear plate. Blend `add` or `screen` over the scene. | `x Float = [0.5]`, `y Float = [0.0]`, `seed Float = [2.0]`, `thickness Float = [1.0]`, `tint Color = [215.0, 232.0, 255.0, 1.0]` |
-| `cells` | generator | Cellular (worley) pattern: caustics, cracked ground, scales, bokeh when thresholded. | `scale Float = [90.0]`, `speed Float = [0.2]`, `edge Float = [0.08]`, `line Color = [191.0, 232.0, 255.0, 1.0]`, `fill Color = [8.0, 32.0, 56.0, 1.0]` |
-| `chroma_hold` | effect | Keep one hue, drain the rest. The red loss number on a grey room. | `amount Float = [0.0]`, `hue Float = [8.0]`, `width Float = [0.35]` |
-| `chroma_key` | effect | Removes a background colour (a green screen) and pulls the colour spill out of the edges. | `key Color = [0.0, 177.0, 64.0, 1.0]`, `tolerance Float = [0.28]`, `softness Float = [0.12]`, `spill Float = [0.6]` |
-| `clouds` | generator | Layered fractal noise: smoke, fog, nebula, paper grain at a larger scale. | `scale Float = [300.0]`, `speed Float = [0.1]`, `low Color = [5.0, 6.0, 12.0, 1.0]`, `high Color = [154.0, 167.0, 199.0, 1.0]`, `threshold Float = [0.35]`, `softness Float = [0.4]` |
-| `comet` | effect | A highlight racing the silhouette: the neon border of a pane catching a pass of light. | `tint Color = [234.0, 255.0, 248.0, 1.0]`, `speed Float = [0.22]`, `strength Float = [1.4]`, `width Float = [10.0]` |
-| `crumble` | effect | The layer turns to dust from left to right: grains drift and fade (a card coming apart). | `amount Float = [0.0]`, `seed Float = [3.0]`, `travel Float = [36.0]` |
-| `dot_grid` | generator | A regular field of dots: the quiet dotted ground of a notebook, a UI canvas or a pictogram card. | `size Float = [48.0]`, `radius Float = [2.5]`, `ink Color = [255.0, 255.0, 255.0, 0.25098039215686274]`, `background Color = [0.0, 0.0, 0.0, 0.0]`, `offset Vec2 = [0.0, 0.0]`, `fade Float = [0.0]` |
-| `dots` | effect | An LED / dot-matrix of the layer: a tape, a pit screen, a board. | `size Float = [8.0]`, `tint Color = [255.0, 211.0, 122.0, 1.0]`, `amount Float = [1.0]` |
-| `dropout` | effect | Tape dropouts: thin bands of missing picture. News archive, a damaged recording. | `amount Float = [0.0]`, `rate Float = [9.0]`, `density Float = [0.08]` |
-| `duotone` | effect | Maps brightness onto two colours: darks become `shadow`, lights become `light`. | `shadow Color = [16.0, 16.0, 48.0, 1.0]`, `light Color = [255.0, 214.0, 160.0, 1.0]`, `amount Float = [1.0]` |
-| `dust` | generator | Motes rising through a beam: stage dust, not weather. | `tint Color = [217.0, 236.0, 255.0, 1.0]`, `density Float = [0.55]`, `speed Float = [0.12]`, `seed Float = [2.0]` |
-| `echo` | effect | Ghosts of the layer along a direction: a fast card, a tumbling ticket. | `amount Float = [0.55]`, `copies Float = [5.0]`, `travel Float = [36.0]`, `angle Float = [-18.0]` |
-| `edge_glow` | effect | Finds the edges in the picture and lights them: a blueprint, circuit or neon-outline look. | `strength Float = [1.0]`, `width Float = [1.5]`, `tint Color = [90.0, 210.0, 255.0, 1.0]`, `keep Float = [0.35]` |
-| `film_burn` | generator | Heat at the frame edge, as if the print is catching. Blend `add` or `screen`. | `amount Float = [0.6]`, `x Float = [0.0]`, `tint Color = [255.0, 106.0, 36.0, 1.0]` |
-| `flash` | effect | Photographic strobe: a brief white exposure from the centre. Animate `amount` 1→0 for a camera flash. | `amount Float = [0.0]`, `warmth Float = [0.12]` |
-| `flicker` | effect | Exposure flutter: a failing bulb, a projector, a strike that has not quite gone. | `amount Float = [0.0]`, `rate Float = [18.0]` |
-| `floor` | generator | A receding grid, as if looking across a dark floor. | `horizon Float = [0.48]`, `vanish Vec2 = [0.5, 0.44]`, `cells Float = [7.0]`, `line Color = [26.0, 92.0, 120.0, 1.0]`, `haze Color = [5.0, 7.0, 15.0, 1.0]`, `glow Float = [0.4]` |
-| `foil` | effect | Iridescent conic foil on the layer: a die-cut hologram, a security stripe. | `amount Float = [0.7]`, `shift Float = [0.0]` |
-| `gate_weave` | effect | Film-gate jitter: the frame sits a few pixels off, twenty-four times a second. | `amount Float = [0.0]`, `seed Float = [1.0]` |
-| `glitch_slices` | effect | Horizontal bands jump sideways at random, with a colour split on the displaced ones. | `amount Float = [40.0]`, `bands Float = [14.0]`, `rate Float = [12.0]`, `density Float = [0.35]` |
-| `glow_field` | generator | Two soft colour glows drifting on a dark ground: the ambient light behind a product shot. | `base Color = [11.0, 15.0, 23.0, 1.0]`, `a Color = [90.0, 63.0, 200.0, 1.0]`, `b Color = [31.0, 166.0, 200.0, 1.0]`, `size Float = [0.55]`, `drift Float = [0.08]`, `amount Float = [0.8]` |
-| `gradient` | generator | Smooth two-colour gradient with film-style dither (no banding). | `from Color = [26.0, 31.0, 58.0, 1.0]`, `to Color = [224.0, 96.0, 58.0, 1.0]`, `angle Float = [90.0]`, `mid Float = [0.5]` |
-| `grid` | generator | Lines on a regular grid, for blueprint backgrounds and HUD overlays. | `size Float = [60.0]`, `thickness Float = [1.5]`, `line Color = [90.0, 169.0, 255.0, 1.0]`, `background Color = [0.0, 0.0, 0.0, 0.0]`, `offset Vec2 = [0.0, 0.0]` |
-| `guilloche` | generator | Security-print rosettes: the ground of a certificate, a contract, a ticket. | `ink Color = [26.0, 74.0, 110.0, 1.0]`, `paper Color = [243.0, 234.0, 216.0, 1.0]`, `density Float = [7.0]`, `amount Float = [0.55]` |
-| `halation` | effect | The warm red-orange fringe film shows around bright highlights. | `amount Float = [0.5]`, `radius Float = [20.0]`, `tint Color = [255.0, 90.0, 40.0, 1.0]` |
-| `halftone` | effect | Newspaper dot screen: dots grow with brightness. | `size Float = [14.0]`, `angle Float = [25.0]`, `ink Color = [16.0, 16.0, 16.0, 1.0]`, `paper Color = [244.0, 239.0, 228.0, 1.0]`, `amount Float = [1.0]` |
-| `halftone_field` | generator | A screen of ink dots that swell from one side to the other: the print ground of a zine or a dossier. | `size Float = [18.0]`, `angle Float = [25.0]`, `ink Color = [16.0, 16.0, 16.0, 1.0]`, `paper Color = [244.0, 239.0, 228.0, 1.0]`, `from Float = [0.0]`, `to Float = [0.6]`, `direction Float = [0.0]` |
-| `haze` | generator | Soft atmospheric haze. Blend `screen` at low opacity over a room or a map. | `amount Float = [0.4]`, `height Float = [0.55]`, `tint Color = [154.0, 173.0, 200.0, 1.0]` |
-| `heat` | effect | A warm glow hugging the silhouette, as if the layer is still hot. | `amount Float = [0.75]`, `width Float = [7.0]`, `color Color = [255.0, 106.0, 36.0, 1.0]` |
-| `highlighter` | effect | Roughens a flat mark into a real highlighter: the edge is displaced, the fill stays the ink. | `amount Float = [0.7]` |
-| `holo` | effect | Holographic pane: a neon tube on the silhouette, a tinted wash inside, bloom just outside, a top-left sheen. | `tint Color = [92.0, 255.0, 210.0, 1.0]`, `edge Float = [1.85]`, `width Float = [5.5]`, `fill Float = [0.48]`, `sheen Float = [0.7]`, `frost Float = [0.03]` |
-| `hud` | generator | A reticle: rings, crosshair and corner brackets. Numbers stay on text layers. | `tint Color = [61.0, 255.0, 224.0, 1.0]`, `amount Float = [0.85]` |
-| `impact` | effect | A hit of light and a chromatic split: the number landing, the stamp. | `amount Float = [0.0]`, `angle Float = [18.0]` |
-| `interference` | effect | Broadcast breakup: a rolling bar and fine snow. Not VHS; this is the signal dying. | `amount Float = [0.0]`, `speed Float = [0.35]` |
-| `kaleidoscope` | effect | Mirrors a wedge of the picture around the centre. | `segments Float = [6.0]`, `rotation Float = [0.0]`, `zoom Float = [1.0]` |
-| `light_leak` | generator | Warm out-of-focus film light bleeding in from an edge. Blend it with `screen` or `add`. | `color_a Color = [255.0, 122.0, 42.0, 1.0]`, `color_b Color = [255.0, 42.0, 106.0, 1.0]`, `x Float = [0.0]`, `spread Float = [0.45]`, `flicker Float = [0.15]` |
-| `light_sweep` | effect | A soft band of light that travels across the layer, brightening what is under it. | `position Float = [0.0]`, `width Float = [0.18]`, `angle Float = [20.0]`, `strength Float = [0.8]`, `tint Color = [255.0, 243.0, 214.0, 1.0]` |
-| `lightning` | effect | A strike: cool branched light and an exposure spike. Animate `amount` in a few frames, not a cartoon bolt. | `amount Float = [0.0]`, `x Float = [0.5]`, `y Float = [0.0]`, `seed Float = [3.0]`, `tint Color = [197.0, 220.0, 255.0, 1.0]` |
-| `liquid` | effect | Warps the picture like heat over water or a slow melt; good for dream and memory cuts. | `amount Float = [12.0]`, `scale Float = [0.006]`, `speed Float = [0.4]` |
-| `mirror` | effect | Reflects one half of the layer onto the other. | `axis Float = [0.5]`, `vertical Float = [0.0]` |
-| `noise` | generator | Smooth monochrome value noise, drifting over time. Use as a matte, a displacement source or a texture. | `scale Float = [120.0]`, `speed Float = [0.3]`, `low Color = [0.0, 0.0, 0.0, 1.0]`, `high Color = [255.0, 255.0, 255.0, 1.0]`, `contrast Float = [1.0]` |
-| `pixel_dissolve` | effect | Dissolves the layer away in blocks. Animate `progress` 0 to 1 to remove it, 1 to 0 to bring it in. | `progress Float = [0.5]`, `block Float = [24.0]`, `edge Float = [0.08]` |
-| `posterize` | effect | Reduces each channel to a few flat levels. | `levels Float = [4.0]` |
-| `prism` | effect | Spectral split on contrast edges, like light through glass. Quiet, not a party filter. | `amount Float = [0.0]`, `angle Float = [18.0]` |
-| `rain` | generator | Fine rain streaks. Blend `screen`. Not anime speed-lines: thin, fast, sparse. | `amount Float = [0.55]`, `speed Float = [1.0]`, `tint Color = [184.0, 200.0, 220.0, 1.0]` |
-| `ridgeline` | generator | A live ridgeline: P&L, mark-to-market, a quiet-money chart. | `tint Color = [226.0, 196.0, 138.0, 1.0]`, `amp Float = [0.22]`, `seed Float = [2.0]`, `fill Float = [0.18]` |
-| `rim` | effect | A coloured rim light along the silhouette, facing `angle`. | `angle Float = [-40.0]`, `width Float = [5.0]`, `strength Float = [0.9]`, `color Color = [234.0, 242.0, 255.0, 1.0]` |
-| `ripple` | effect | Rings of displacement spreading from a point, like a drop in water. | `x Float = [0.5]`, `y Float = [0.5]`, `amplitude Float = [14.0]`, `wavelength Float = [70.0]`, `speed Float = [220.0]`, `falloff Float = [900.0]` |
-| `scan` | effect | A scan line that turns what it has passed into a code grid, with a bright front. | `position Float = [0.5]`, `amount Float = [1.0]`, `tint Color = [125.0, 255.0, 210.0, 1.0]`, `seed Float = [1.0]` |
-| `scratches` | effect | Hairline scuffs in the paint: a slapped-on sticker, not a clean shape. | `amount Float = [0.45]`, `seed Float = [2.0]` |
-| `shafts` | generator | Volumetric light shafts from a point. Blend `screen` or `add` over a dark plate. | `x Float = [0.5]`, `y Float = [0.12]`, `amount Float = [0.55]`, `spread Float = [0.7]`, `tint Color = [200.0, 216.0, 240.0, 1.0]` |
-| `sharpen` | effect | Unsharp mask from four neighbours. A document, a number that must read. | `amount Float = [0.0]` |
-| `shockwave` | effect | One expanding ring of refraction, like a blast or a stamp landing. Animate `progress` 0→1. | `progress Float = [0.0]`, `x Float = [0.5]`, `y Float = [0.5]`, `amplitude Float = [22.0]`, `width Float = [0.045]` |
-| `split_tone` | effect | Tints the shadows one colour and the highlights another: the quickest way to make mixed sources look graded together. | `shadows Color = [26.0, 58.0, 92.0, 1.0]`, `highlights Color = [255.0, 176.0, 102.0, 1.0]`, `amount Float = [0.5]`, `balance Float = [0.0]` |
-| `spotlight` | generator | Two conic stage lights from above, falling onto a dark floor. | `tint Color = [200.0, 228.0, 255.0, 1.0]`, `amount Float = [0.7]`, `spread Float = [0.16]` |
-| `static` | generator | Broadcast snow. Blend `add` or `overlay` over a dead monitor. | `amount Float = [0.45]`, `tint Color = [208.0, 214.0, 224.0, 1.0]` |
-| `stripes` | generator | Diagonal or straight bars; animate `offset` to make them travel. | `width Float = [40.0]`, `angle Float = [45.0]`, `offset Float = [0.0]`, `a Color = [255.0, 255.0, 255.0, 1.0]`, `b Color = [16.0, 16.0, 16.0, 1.0]`, `softness Float = [1.0]` |
-| `tilt_shift` | effect | Blurs everything outside a horizontal band so a scene reads as a miniature. | `focus Float = [0.5]`, `band Float = [0.18]`, `blur Float = [14.0]` |
-| `vhs` | effect | Worn tape: wobbling lines, colour bleed, tracking noise and a rolling bar. | `amount Float = [0.5]`, `bleed Float = [6.0]`, `noise Float = [0.25]` |
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `amount` | float | 0.0 | 0 to 1 | 0 is the original, 1 is a long streak |
+| `threshold` | float | 0.62 | 0.2 to 0.95 | how bright a pixel must be to flare |
+| `tint` | color | [207.0,228.0,255.0,1.0] |  | colour of the streak |
+
+
+```json
+{
+  "amount": 0.0,
+  "effect": "anamorphic",
+  "threshold": 0.62,
+  "tint": "#cfe4ff"
+}
+```
+
+## `aura`
+
+Soft mesh-gradient light: up to six coloured points blended into one smooth, band-free field. (generator, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `base` | color | [10.0,12.0,24.0,1.0] |  | ground colour where no point reaches |
+| `c1` | color | [91.0,61.0,245.0,1.0] |  | colour of point 1 (alpha 0 turns a point off) |
+| `p1` | vec2 | [0.22,0.28] |  | position of point 1, share of the frame (0..1) |
+| `c2` | color | [31.0,181.0,224.0,1.0] |  | colour of point 2 |
+| `p2` | vec2 | [0.78,0.24] |  | position of point 2 |
+| `c3` | color | [255.0,95.0,158.0,1.0] |  | colour of point 3 |
+| `p3` | vec2 | [0.7,0.78] |  | position of point 3 |
+| `c4` | color | [255.0,179.0,90.0,1.0] |  | colour of point 4 |
+| `p4` | vec2 | [0.2,0.82] |  | position of point 4 |
+| `c5` | color | [0.0,0.0,0.0,1.0] |  | colour of point 5 (off by default; set alpha above 0) |
+| `p5` | vec2 | [0.5,0.5] |  | position of point 5 |
+| `c6` | color | [0.0,0.0,0.0,1.0] |  | colour of point 6 (off by default; set alpha above 0) |
+| `p6` | vec2 | [0.5,0.5] |  | position of point 6 |
+| `softness` | float | 0.46 | 0.05 to 2 | how far each point spreads, share of the frame height |
+| `ground` | float | 0.01 | 0 to 0.6 | how much of the ground colour shows far from every point (0 fills the frame with point colours) |
+| `drift` | float | 0.0 | 0 to 1 | idle wander of every point, cycles per second (0 holds still) |
+| `swirl` | float | 0.06 | 0 to 0.3 | how far a wandering point strays, share of the frame |
+| `glow` | float | 0.25 | 0 to 1 | extra brightness where several points overlap |
+| `vivid` | float | 0.15 | 0 to 1 | pushes the blend away from grey, so opposite hues stay clean |
+
+
+```json
+{
+  "params": {
+    "base": "#0a0c18",
+    "c1": "#5b3df5",
+    "c2": "#1fb5e0",
+    "c3": "#ff5f9e",
+    "c4": "#ffb35a",
+    "c5": "#000000",
+    "c6": "#000000",
+    "drift": 0.0,
+    "glow": 0.25,
+    "ground": 0.01,
+    "p1": [
+      0.22,
+      0.28
+    ],
+    "p2": [
+      0.78,
+      0.24
+    ],
+    "p3": [
+      0.7,
+      0.78
+    ],
+    "p4": [
+      0.2,
+      0.82
+    ],
+    "p5": [
+      0.5,
+      0.5
+    ],
+    "p6": [
+      0.5,
+      0.5
+    ],
+    "softness": 0.46,
+    "swirl": 0.06,
+    "vivid": 0.15
+  },
+  "shader": "aura",
+  "type": "texture"
+}
+```
+
+## `barrel`
+
+Lens barrel (positive) or pincushion (negative). A cheap CCTV lens, a stills distortion. (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `amount` | float | 0.0 | -0.6 to 0.6 | 0 is the original, positive barrels, negative pinches |
+| `x` | float | 0.5 | 0 to 1 | optical centre, share of the width |
+| `y` | float | 0.5 | 0 to 1 | optical centre, share of the height |
+
+
+```json
+{
+  "amount": 0.0,
+  "effect": "barrel",
+  "x": 0.5,
+  "y": 0.5
+}
+```
+
+## `bleach`
+
+Skip-bleach: silver retained in the highlights, blacks crushed. A cold news look. (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `amount` | float | 0.0 | 0 to 1 | 0 is the original, 1 is a hard skip-bleach |
+
+
+```json
+{
+  "amount": 0.0,
+  "effect": "bleach"
+}
+```
+
+## `bloom`
+
+Bright areas bleed soft light into their surroundings, like a lens does. Keeps midtones untouched. (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `amount` | float | 0.6 | 0 to 2 | strength of the bleed |
+| `radius` | float | 28.0 | 2 to 120 | how far the light spreads in px |
+| `threshold` | float | 0.65 | 0 to 1 | brightness above which light spreads |
+
+
+```json
+{
+  "amount": 0.6,
+  "effect": "bloom",
+  "radius": 28.0,
+  "threshold": 0.65
+}
+```
+
+## `bokeh`
+
+Soft discs of light: a night-city floor, a lens wide open. (generator, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `density` | float | 0.4 | 0.05 to 1 | how many discs (share of the 48 slots that light up) |
+| `scale` | float | 70.0 | 12 to 240 | typical disc radius, px |
+| `brightness` | float | 0.55 | 0 to 2 | how hot the cores are |
+| `tint` | color | [255.0,217.0,168.0,1.0] |  | colour of the lights |
+| `seed` | float | 3.0 | 0 to 80 | which arrangement |
+
+
+```json
+{
+  "params": {
+    "brightness": 0.55,
+    "density": 0.4,
+    "scale": 70.0,
+    "seed": 3.0,
+    "tint": "#ffd9a8"
+  },
+  "shader": "bokeh",
+  "type": "texture"
+}
+```
+
+## `bolt`
+
+A photoreal branched strike on a clear plate. Blend `add` or `screen` over the scene. (generator, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `x` | float | 0.5 | 0 to 1 | origin, share of the width |
+| `y` | float | 0.0 | 0 to 1 | origin, share of the height (0 is the top) |
+| `seed` | float | 2.0 | 0 to 40 | which fork pattern |
+| `thickness` | float | 1.0 | 0.3 to 3 | how wide the core is |
+| `tint` | color | [215.0,232.0,255.0,1.0] |  | colour of the light |
+
+
+```json
+{
+  "params": {
+    "seed": 2.0,
+    "thickness": 1.0,
+    "tint": "#d7e8ff",
+    "x": 0.5,
+    "y": 0.0
+  },
+  "shader": "bolt",
+  "type": "texture"
+}
+```
+
+## `cells`
+
+Cellular (worley) pattern: caustics, cracked ground, scales, bokeh when thresholded. (generator, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `scale` | float | 90.0 | 10 to 600 | cell size in px |
+| `speed` | float | 0.2 | 0 to 3 | how fast the cells wander |
+| `edge` | float | 0.08 | 0.01 to 0.5 | thickness of the bright lines between cells |
+| `line` | color | [191.0,232.0,255.0,1.0] |  | colour of the lines |
+| `fill` | color | [8.0,32.0,56.0,1.0] |  | colour inside the cells |
+
+
+```json
+{
+  "params": {
+    "edge": 0.08,
+    "fill": "#082038",
+    "line": "#bfe8ff",
+    "scale": 90.0,
+    "speed": 0.2
+  },
+  "shader": "cells",
+  "type": "texture"
+}
+```
+
+## `chroma_hold`
+
+Keep one hue, drain the rest. The red loss number on a grey room. (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `amount` | float | 0.0 | 0 to 1 | 0 is the original, 1 is a hard hold |
+| `hue` | float | 8.0 | 0 to 360 | hue to keep, degrees (8 is the channel accent) |
+| `width` | float | 0.35 | 0.05 to 1 | how wide the kept band is |
+
+
+```json
+{
+  "amount": 0.0,
+  "effect": "chroma_hold",
+  "hue": 8.0,
+  "width": 0.35
+}
+```
+
+## `chroma_key`
+
+Removes a background colour (a green screen) and pulls the colour spill out of the edges. (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `key` | color | [0.0,177.0,64.0,1.0] |  | the background colour to remove |
+| `tolerance` | float | 0.28 | 0.01 to 1 | how far from the key colour still counts as background |
+| `softness` | float | 0.12 | 0.001 to 0.5 | width of the soft edge |
+| `spill` | float | 0.6 | 0 to 1 | how much of the key colour is removed from what stays |
+
+
+```json
+{
+  "effect": "chroma_key",
+  "key": "#00b140",
+  "softness": 0.12,
+  "spill": 0.6,
+  "tolerance": 0.28
+}
+```
+
+## `clouds`
+
+Layered fractal noise: smoke, fog, nebula, paper grain at a larger scale. (generator, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `scale` | float | 300.0 | 20 to 2000 | size of the largest billows in px |
+| `speed` | float | 0.1 | 0 to 2 | drift per second |
+| `low` | color | [5.0,6.0,12.0,1.0] |  | colour of the clear parts |
+| `high` | color | [154.0,167.0,199.0,1.0] |  | colour of the dense parts |
+| `threshold` | float | 0.35 | 0 to 1 | values below this are clear |
+| `softness` | float | 0.4 | 0.01 to 1 | how gradually density rises above the threshold |
+
+
+```json
+{
+  "params": {
+    "high": "#9aa7c7",
+    "low": "#05060c",
+    "scale": 300.0,
+    "softness": 0.4,
+    "speed": 0.1,
+    "threshold": 0.35
+  },
+  "shader": "clouds",
+  "type": "texture"
+}
+```
+
+## `comet`
+
+A highlight racing the silhouette: the neon border of a pane catching a pass of light. (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `tint` | color | [234.0,255.0,248.0,1.0] |  | colour of the comet |
+| `speed` | float | 0.22 | 0.02 to 2 | laps per second |
+| `strength` | float | 1.4 | 0 to 4 | brightness of the head |
+| `width` | float | 10.0 | 2 to 40 | how far the head reaches off the edge, px |
+
+
+```json
+{
+  "effect": "comet",
+  "speed": 0.22,
+  "strength": 1.4,
+  "tint": "#eafff8",
+  "width": 10.0
+}
+```
+
+## `crumble`
+
+The layer turns to dust from left to right: grains drift and fade (a card coming apart). (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `amount` | float | 0.0 | 0 to 1 | 0 is intact, 1 is gone |
+| `seed` | float | 3.0 | 0 to 80 | which grain pattern |
+| `travel` | float | 36.0 | 4 to 120 | how far a grain flies, px |
+
+
+```json
+{
+  "amount": 0.0,
+  "effect": "crumble",
+  "seed": 3.0,
+  "travel": 36.0
+}
+```
+
+## `datamosh`
+
+Blocks stop updating and keep their old pixels, smearing along a drifting vector, like video that lost its keyframes. (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `block` | float | 32.0 | 8 to 256 | block size in px |
+| `hold` | float | 0.35 | 0 to 1 | the share of blocks that keep their old pixels |
+| `smear` | float | 12.0 | 0 to 120 | px a held block's old pixels drift each frame, along a direction chosen per block |
+| `rate` | float | 3.0 | 0.25 to 30 | how many times a second the blocks choose again whether to hold |
+
+* input `prev`: its own output 1 frame(s) back, recursion 12 deep -- the effect's own picture one frame ago; a block can hold at most `depth` frames
+
+```json
+{
+  "block": 48,
+  "effect": "datamosh",
+  "hold": 0.4,
+  "rate": 2,
+  "smear": 16
+}
+```
+
+## `displacement_map`
+
+Moves the layer's pixels by the colours of another layer, as After Effects' Displacement Map does. (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `horizontal` | choice | red | off, red, green, blue, alpha, luma | the map channel that moves pixels along x (off: none) |
+| `vertical` | choice | green | off, red, green, blue, alpha, luma | the map channel that moves pixels along y (off: none) |
+| `max_x` | float | 20.0 | -400 to 400 | px a channel at full strength moves pixels right (negative: left); half strength stands still |
+| `max_y` | float | 20.0 | -400 to 400 | px a channel at full strength moves pixels down (negative: up) |
+| `outside` | choice | pin | pin, wrap | beyond the frame: the edge pixels stretch (pin), or the picture repeats (wrap) |
+
+* input `map`: the picture of another layer, named by id -- the layer whose colours steer the pixels; hide it to use it only as a map
+
+```json
+{
+  "effect": "displacement_map",
+  "horizontal": "luma",
+  "map": "ripples",
+  "max_x": 30,
+  "outside": "wrap",
+  "vertical": "off"
+}
+```
+
+## `dot_grid`
+
+A regular field of dots: the quiet dotted ground of a notebook, a UI canvas or a pictogram card. (generator, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `size` | float | 48.0 | 8 to 300 | distance between dot centres in px |
+| `radius` | float | 2.5 | 0.5 to 40 | dot radius in px |
+| `ink` | color | [255.0,255.0,255.0,0.25098039215686274] |  | dot colour |
+| `background` | color | [0.0,0.0,0.0,0.0] |  | fill colour (default transparent) |
+| `offset` | vec2 | [0.0,0.0] |  | scrolls the field in px |
+| `fade` | float | 0.0 | 0 to 1 | 0 uniform, 1 fades the dots toward the frame edges |
+
+
+```json
+{
+  "params": {
+    "background": "#000000",
+    "fade": 0.0,
+    "ink": "#ffffff",
+    "offset": [
+      0.0,
+      0.0
+    ],
+    "radius": 2.5,
+    "size": 48.0
+  },
+  "shader": "dot_grid",
+  "type": "texture"
+}
+```
+
+## `dots`
+
+An LED / dot-matrix of the layer: a tape, a pit screen, a board. (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `size` | float | 8.0 | 3 to 28 | cell size, px |
+| `tint` | color | [255.0,211.0,122.0,1.0] |  | colour of a lit cell |
+| `amount` | float | 1.0 | 0 to 1 | 0 keeps the original, 1 is only the matrix |
+
+
+```json
+{
+  "amount": 1.0,
+  "effect": "dots",
+  "size": 8.0,
+  "tint": "#ffd37a"
+}
+```
+
+## `dropout`
+
+Tape dropouts: thin bands of missing picture. News archive, a damaged recording. (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `amount` | float | 0.0 | 0 to 1 | 0 is the original, 1 is heavy dropouts |
+| `rate` | float | 9.0 | 1 to 40 | how often the pattern changes, times per second |
+| `density` | float | 0.08 | 0 to 0.5 | share of bands that drop |
+
+
+```json
+{
+  "amount": 0.0,
+  "density": 0.08,
+  "effect": "dropout",
+  "rate": 9.0
+}
+```
+
+## `duotone`
+
+Maps brightness onto two colours: darks become `shadow`, lights become `light`. (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `shadow` | color | [16.0,16.0,48.0,1.0] |  | colour of the darkest tones |
+| `light` | color | [255.0,214.0,160.0,1.0] |  | colour of the lightest tones |
+| `amount` | float | 1.0 | 0 to 1 | 0 keeps the original, 1 is fully mapped |
+
+
+```json
+{
+  "amount": 1.0,
+  "effect": "duotone",
+  "light": "#ffd6a0",
+  "shadow": "#101030"
+}
+```
+
+## `dust`
+
+Motes rising through a beam: stage dust, not weather. (generator, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `tint` | color | [217.0,236.0,255.0,1.0] |  | colour of the motes |
+| `density` | float | 0.55 | 0.05 to 1 | how many of the 40 slots light up |
+| `speed` | float | 0.12 | 0.02 to 0.8 | how fast they rise |
+| `seed` | float | 2.0 | 0 to 80 | which arrangement |
+
+
+```json
+{
+  "params": {
+    "density": 0.55,
+    "seed": 2.0,
+    "speed": 0.12,
+    "tint": "#d9ecff"
+  },
+  "shader": "dust",
+  "type": "texture"
+}
+```
+
+## `echo`
+
+Ghosts of the layer along a direction: a fast card, a tumbling ticket. (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `amount` | float | 0.55 | 0 to 1 | 0 is the original, 1 is a long trail |
+| `copies` | float | 5.0 | 2 to 10 | how many ghosts |
+| `travel` | float | 36.0 | 4 to 120 | how far the last ghost sits, px |
+| `angle` | float | -18.0 | -180 to 180 | direction the ghosts fall back, degrees |
+
+
+```json
+{
+  "amount": 0.55,
+  "angle": -18.0,
+  "copies": 5.0,
+  "effect": "echo",
+  "travel": 36.0
+}
+```
+
+## `edge_glow`
+
+Finds the edges in the picture and lights them: a blueprint, circuit or neon-outline look. (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `strength` | float | 1.0 | 0 to 3 | edge brightness |
+| `width` | float | 1.5 | 0.5 to 6 | edge thickness in px |
+| `tint` | color | [90.0,210.0,255.0,1.0] |  | edge colour |
+| `keep` | float | 0.35 | 0 to 1 | how much of the original picture stays |
+
+
+```json
+{
+  "effect": "edge_glow",
+  "keep": 0.35,
+  "strength": 1.0,
+  "tint": "#5ad2ff",
+  "width": 1.5
+}
+```
+
+## `feedback_trail`
+
+A fading trail: every frame keeps a fraction of what the effect drew one frame earlier. (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `decay` | float | 0.85 | 0 to 0.98 | the fraction of the earlier picture that survives each frame |
+
+* input `prev`: its own output 1 frame(s) back, recursion 12 deep -- the effect's own picture one frame ago
+
+```json
+{
+  "decay": 0.85,
+  "effect": "feedback_trail"
+}
+```
+
+## `film_burn`
+
+Heat at the frame edge, as if the print is catching. Blend `add` or `screen`. (generator, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `amount` | float | 0.6 | 0 to 1 | how far the burn reaches in |
+| `x` | float | 0.0 | 0 to 1 | which edge, 0 left, 1 right |
+| `tint` | color | [255.0,106.0,36.0,1.0] |  | colour of the burn |
+
+
+```json
+{
+  "params": {
+    "amount": 0.6,
+    "tint": "#ff6a24",
+    "x": 0.0
+  },
+  "shader": "film_burn",
+  "type": "texture"
+}
+```
+
+## `flash`
+
+Photographic strobe: a brief white exposure from the centre. Animate `amount` 1→0 for a camera flash. (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `amount` | float | 0.0 | 0 to 1 | 0 is the original, 1 is a full strobe |
+| `warmth` | float | 0.12 | 0 to 1 | 0 is paper-white, 1 is tungsten |
+
+
+```json
+{
+  "amount": 0.0,
+  "effect": "flash",
+  "warmth": 0.12
+}
+```
+
+## `flicker`
+
+Exposure flutter: a failing bulb, a projector, a strike that has not quite gone. (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `amount` | float | 0.0 | 0 to 1 | 0 is the original, 1 is a violent flutter |
+| `rate` | float | 18.0 | 2 to 60 | how many times a second it samples a new level |
+
+
+```json
+{
+  "amount": 0.0,
+  "effect": "flicker",
+  "rate": 18.0
+}
+```
+
+## `floor`
+
+A receding grid, as if looking across a dark floor. (generator, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `horizon` | float | 0.48 | 0.12 to 0.85 | where the floor meets the dark |
+| `vanish` | vec2 | [0.5,0.44] |  | vanishing point, share of the frame |
+| `cells` | float | 7.0 | 2 to 24 | how many cells across near the camera |
+| `line` | color | [26.0,92.0,120.0,1.0] |  | colour of the grid |
+| `haze` | color | [5.0,7.0,15.0,1.0] |  | colour of the far fog |
+| `glow` | float | 0.4 | 0 to 2 | extra brightness on the lines |
+
+
+```json
+{
+  "params": {
+    "cells": 7.0,
+    "glow": 0.4,
+    "haze": "#05070f",
+    "horizon": 0.48,
+    "line": "#1a5c78",
+    "vanish": [
+      0.5,
+      0.44
+    ]
+  },
+  "shader": "floor",
+  "type": "texture"
+}
+```
+
+## `foil`
+
+Iridescent conic foil on the layer: a die-cut hologram, a security stripe. (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `amount` | float | 0.7 | 0 to 1 | 0 keeps the original, 1 is fully foiled |
+| `shift` | float | 0.0 | 0 to 1 | rotates the rainbow (animate for a tilt) |
+
+
+```json
+{
+  "amount": 0.7,
+  "effect": "foil",
+  "shift": 0.0
+}
+```
+
+## `gate_weave`
+
+Film-gate jitter: the frame sits a few pixels off, twenty-four times a second. (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `amount` | float | 0.0 | 0 to 1 | 0 is the original, 1 is a loose gate |
+| `seed` | float | 1.0 | 0 to 99 | which weave |
+
+
+```json
+{
+  "amount": 0.0,
+  "effect": "gate_weave",
+  "seed": 1.0
+}
+```
+
+## `glitch_slices`
+
+Horizontal bands jump sideways at random, with a colour split on the displaced ones. (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `amount` | float | 40.0 | 0 to 300 | largest sideways jump in px |
+| `bands` | float | 14.0 | 2 to 60 | number of horizontal bands |
+| `rate` | float | 12.0 | 1 to 60 | how many times a second the pattern changes |
+| `density` | float | 0.35 | 0 to 1 | share of bands that jump |
+
+
+```json
+{
+  "amount": 40.0,
+  "bands": 14.0,
+  "density": 0.35,
+  "effect": "glitch_slices",
+  "rate": 12.0
+}
+```
+
+## `glow_field`
+
+Two soft colour glows drifting on a dark ground: the ambient light behind a product shot. (generator, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `base` | color | [11.0,15.0,23.0,1.0] |  | ground colour |
+| `a` | color | [90.0,63.0,200.0,1.0] |  | first glow |
+| `b` | color | [31.0,166.0,200.0,1.0] |  | second glow |
+| `size` | float | 0.55 | 0.1 to 1.5 | glow radius as a share of the frame height |
+| `drift` | float | 0.08 | 0 to 1 | how fast the glows wander, cycles per second |
+| `amount` | float | 0.8 | 0 to 1 | strength |
+
+
+```json
+{
+  "params": {
+    "a": "#5a3fc8",
+    "amount": 0.8,
+    "b": "#1fa6c8",
+    "base": "#0b0f17",
+    "drift": 0.08,
+    "size": 0.55
+  },
+  "shader": "glow_field",
+  "type": "texture"
+}
+```
+
+## `gradient`
+
+Smooth two-colour gradient with film-style dither (no banding). (generator, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `from` | color | [26.0,31.0,58.0,1.0] |  | colour at the start |
+| `to` | color | [224.0,96.0,58.0,1.0] |  | colour at the end |
+| `angle` | float | 90.0 | -180 to 180 | direction in degrees; 90 runs top to bottom |
+| `mid` | float | 0.5 | 0.05 to 0.95 | where the halfway colour sits |
+
+
+```json
+{
+  "params": {
+    "angle": 90.0,
+    "from": "#1a1f3a",
+    "mid": 0.5,
+    "to": "#e0603a"
+  },
+  "shader": "gradient",
+  "type": "texture"
+}
+```
+
+## `grid`
+
+Lines on a regular grid, for blueprint backgrounds and HUD overlays. (generator, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `size` | float | 60.0 | 8 to 400 | cell size in px |
+| `thickness` | float | 1.5 | 0.5 to 12 | line thickness in px |
+| `line` | color | [90.0,169.0,255.0,1.0] |  | line colour |
+| `background` | color | [0.0,0.0,0.0,0.0] |  | fill colour (default transparent) |
+| `offset` | vec2 | [0.0,0.0] |  | scrolls the grid in px |
+
+
+```json
+{
+  "params": {
+    "background": "#000000",
+    "line": "#5aa9ff",
+    "offset": [
+      0.0,
+      0.0
+    ],
+    "size": 60.0,
+    "thickness": 1.5
+  },
+  "shader": "grid",
+  "type": "texture"
+}
+```
+
+## `guilloche`
+
+Security-print rosettes: the ground of a certificate, a contract, a ticket. (generator, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `ink` | color | [26.0,74.0,110.0,1.0] |  | colour of the engraving |
+| `paper` | color | [243.0,234.0,216.0,1.0] |  | colour of the stock |
+| `density` | float | 7.0 | 2 to 18 | how tight the roses are |
+| `amount` | float | 0.55 | 0 to 1 | ink coverage |
+
+
+```json
+{
+  "params": {
+    "amount": 0.55,
+    "density": 7.0,
+    "ink": "#1a4a6e",
+    "paper": "#f3ead8"
+  },
+  "shader": "guilloche",
+  "type": "texture"
+}
+```
+
+## `halation`
+
+The warm red-orange fringe film shows around bright highlights. (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `amount` | float | 0.5 | 0 to 1.5 | strength of the fringe |
+| `radius` | float | 20.0 | 2 to 80 | reach in px |
+| `tint` | color | [255.0,90.0,40.0,1.0] |  | colour of the fringe |
+
+
+```json
+{
+  "amount": 0.5,
+  "effect": "halation",
+  "radius": 20.0,
+  "tint": "#ff5a28"
+}
+```
+
+## `halftone`
+
+Newspaper dot screen: dots grow with brightness. (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `size` | float | 14.0 | 4 to 80 | cell size in px |
+| `angle` | float | 25.0 | -90 to 90 | screen angle in degrees |
+| `ink` | color | [16.0,16.0,16.0,1.0] |  | dot colour |
+| `paper` | color | [244.0,239.0,228.0,1.0] |  | background colour |
+| `amount` | float | 1.0 | 0 to 1 | 0 = original, 1 = dots only |
+
+
+```json
+{
+  "amount": 1.0,
+  "angle": 25.0,
+  "effect": "halftone",
+  "ink": "#101010",
+  "paper": "#f4efe4",
+  "size": 14.0
+}
+```
+
+## `halftone_field`
+
+A screen of ink dots that swell from one side to the other: the print ground of a zine or a dossier. (generator, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `size` | float | 18.0 | 4 to 80 | cell size in px |
+| `angle` | float | 25.0 | -90 to 90 | screen angle in degrees |
+| `ink` | color | [16.0,16.0,16.0,1.0] |  | dot colour |
+| `paper` | color | [244.0,239.0,228.0,1.0] |  | background colour |
+| `from` | float | 0.0 | 0 to 1 | dot size at the start edge (0 none, 1 touching) |
+| `to` | float | 0.6 | 0 to 1 | dot size at the far edge |
+| `direction` | float | 0.0 | -180 to 180 | direction of the ramp in degrees |
+
+
+```json
+{
+  "params": {
+    "angle": 25.0,
+    "direction": 0.0,
+    "from": 0.0,
+    "ink": "#101010",
+    "paper": "#f4efe4",
+    "size": 18.0,
+    "to": 0.6
+  },
+  "shader": "halftone_field",
+  "type": "texture"
+}
+```
+
+## `haze`
+
+Soft atmospheric haze. Blend `screen` at low opacity over a room or a map. (generator, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `amount` | float | 0.4 | 0 to 1 | density |
+| `height` | float | 0.55 | 0.1 to 1 | how high the haze sits, share of the frame |
+| `tint` | color | [154.0,173.0,200.0,1.0] |  | colour of the air |
+
+
+```json
+{
+  "params": {
+    "amount": 0.4,
+    "height": 0.55,
+    "tint": "#9aadc8"
+  },
+  "shader": "haze",
+  "type": "texture"
+}
+```
+
+## `heat`
+
+A warm glow hugging the silhouette, as if the layer is still hot. (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `amount` | float | 0.75 | 0 to 3 | how strong the glow is |
+| `width` | float | 7.0 | 2 to 28 | how far the heat reaches in, px |
+| `color` | color | [255.0,106.0,36.0,1.0] |  | colour of the heat |
+
+
+```json
+{
+  "amount": 0.75,
+  "color": "#ff6a24",
+  "effect": "heat",
+  "width": 7.0
+}
+```
+
+## `highlighter`
+
+Roughens a flat mark into a real highlighter: the edge is displaced, the fill stays the ink. (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `amount` | float | 0.7 | 0 to 2 | how ragged the stroke is |
+
+
+```json
+{
+  "amount": 0.7,
+  "effect": "highlighter"
+}
+```
+
+## `holo`
+
+Holographic pane: a neon tube on the silhouette, a tinted wash inside, bloom just outside, a top-left sheen. (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `tint` | color | [92.0,255.0,210.0,1.0] |  | neon of the rim and the interior wash |
+| `edge` | float | 1.85 | 0 to 5 | brightness of the tube |
+| `width` | float | 5.5 | 1 to 20 | tube half-width, px |
+| `fill` | float | 0.48 | 0 to 1 | how much the tint washes the interior |
+| `sheen` | float | 0.7 | 0 to 2 | specular highlight in the top-left |
+| `frost` | float | 0.03 | 0 to 0.4 | residual grain in the pane |
+
+
+```json
+{
+  "edge": 1.85,
+  "effect": "holo",
+  "fill": 0.48,
+  "frost": 0.03,
+  "sheen": 0.7,
+  "tint": "#5cffd2",
+  "width": 5.5
+}
+```
+
+## `hud`
+
+A reticle: rings, crosshair and corner brackets. Numbers stay on text layers. (generator, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `tint` | color | [61.0,255.0,224.0,1.0] |  | colour of the marks |
+| `amount` | float | 0.85 | 0 to 2 | brightness |
+
+
+```json
+{
+  "params": {
+    "amount": 0.85,
+    "tint": "#3dffe0"
+  },
+  "shader": "hud",
+  "type": "texture"
+}
+```
+
+## `impact`
+
+A hit of light and a chromatic split: the number landing, the stamp. (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `amount` | float | 0.0 | 0 to 1 | 0 is the original, 1 is a hard flash |
+| `angle` | float | 18.0 | -90 to 90 | tilt of the split, degrees |
+
+
+```json
+{
+  "amount": 0.0,
+  "angle": 18.0,
+  "effect": "impact"
+}
+```
+
+## `interference`
+
+Broadcast breakup: a rolling bar and fine snow. Not VHS; this is the signal dying. (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `amount` | float | 0.0 | 0 to 1 | 0 is the original, 1 is a broken signal |
+| `speed` | float | 0.35 | 0 to 2 | how fast the bar rolls |
+
+
+```json
+{
+  "amount": 0.0,
+  "effect": "interference",
+  "speed": 0.35
+}
+```
+
+## `kaleidoscope`
+
+Mirrors a wedge of the picture around the centre. (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `segments` | float | 6.0 | 2 to 24 | number of mirrored wedges |
+| `rotation` | float | 0.0 | -360 to 360 | spin in degrees |
+| `zoom` | float | 1.0 | 0.25 to 4 | magnification of the source |
+
+
+```json
+{
+  "effect": "kaleidoscope",
+  "rotation": 0.0,
+  "segments": 6.0,
+  "zoom": 1.0
+}
+```
+
+## `light_leak`
+
+Warm out-of-focus film light bleeding in from an edge. Blend it with `screen` or `add`. (generator, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `color_a` | color | [255.0,122.0,42.0,1.0] |  | main glow colour |
+| `color_b` | color | [255.0,42.0,106.0,1.0] |  | second glow colour |
+| `x` | float | 0.0 | -0.5 to 1.5 | glow centre, share of the width (animate to sweep) |
+| `spread` | float | 0.45 | 0.1 to 1.5 | size as a share of the width |
+| `flicker` | float | 0.15 | 0 to 1 | how much it breathes |
+
+
+```json
+{
+  "params": {
+    "color_a": "#ff7a2a",
+    "color_b": "#ff2a6a",
+    "flicker": 0.15,
+    "spread": 0.45,
+    "x": 0.0
+  },
+  "shader": "light_leak",
+  "type": "texture"
+}
+```
+
+## `light_sweep`
+
+A soft band of light that travels across the layer, brightening what is under it. (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `position` | float | 0.0 | -0.3 to 1.3 | where the band is, 0 = left/top edge, 1 = opposite edge (animate this) |
+| `width` | float | 0.18 | 0.02 to 1 | band width as a share of the layer |
+| `angle` | float | 20.0 | -90 to 90 | tilt of the band in degrees |
+| `strength` | float | 0.8 | 0 to 3 | brightness added at the centre of the band |
+| `tint` | color | [255.0,243.0,214.0,1.0] |  | colour of the light |
+
+
+```json
+{
+  "angle": 20.0,
+  "effect": "light_sweep",
+  "position": 0.0,
+  "strength": 0.8,
+  "tint": "#fff3d6",
+  "width": 0.18
+}
+```
+
+## `lightning`
+
+A strike: cool branched light and an exposure spike. Animate `amount` in a few frames, not a cartoon bolt. (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `amount` | float | 0.0 | 0 to 1 | 0 is the original, 1 is the hit |
+| `x` | float | 0.5 | 0 to 1 | where the strike is aimed, share of the width |
+| `y` | float | 0.0 | 0 to 1 | origin, share of the height (0 is the top) |
+| `seed` | float | 3.0 | 0 to 40 | which fork pattern |
+| `tint` | color | [197.0,220.0,255.0,1.0] |  | colour of the light |
+
+
+```json
+{
+  "amount": 0.0,
+  "effect": "lightning",
+  "seed": 3.0,
+  "tint": "#c5dcff",
+  "x": 0.5,
+  "y": 0.0
+}
+```
+
+## `liquid`
+
+Warps the picture like heat over water or a slow melt; good for dream and memory cuts. (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `amount` | float | 12.0 | 0 to 60 | displacement in px |
+| `scale` | float | 0.006 | 0.001 to 0.03 | size of the swirls (smaller is bigger swirls) |
+| `speed` | float | 0.4 | 0 to 3 | how fast it moves |
+
+
+```json
+{
+  "amount": 12.0,
+  "effect": "liquid",
+  "scale": 0.006,
+  "speed": 0.4
+}
+```
+
+## `mirror`
+
+Reflects one half of the layer onto the other. (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `axis` | float | 0.5 | 0 to 1 | where the mirror line sits, share of the width |
+| `vertical` | float | 0.0 | 0 to 1 | 0 mirrors left/right, 1 mirrors top/bottom |
+
+
+```json
+{
+  "axis": 0.5,
+  "effect": "mirror",
+  "vertical": 0.0
+}
+```
+
+## `noise`
+
+Smooth monochrome value noise, drifting over time. Use as a matte, a displacement source or a texture. (generator, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `scale` | float | 120.0 | 4 to 1000 | feature size in px |
+| `speed` | float | 0.3 | 0 to 5 | drift per second |
+| `low` | color | [0.0,0.0,0.0,1.0] |  | colour of the low values |
+| `high` | color | [255.0,255.0,255.0,1.0] |  | colour of the high values |
+| `contrast` | float | 1.0 | 0.2 to 4 | 1 = natural, higher = harder |
+
+
+```json
+{
+  "params": {
+    "contrast": 1.0,
+    "high": "#ffffff",
+    "low": "#000000",
+    "scale": 120.0,
+    "speed": 0.3
+  },
+  "shader": "noise",
+  "type": "texture"
+}
+```
+
+## `pixel_dissolve`
+
+Dissolves the layer away in blocks. Animate `progress` 0 to 1 to remove it, 1 to 0 to bring it in. (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `progress` | float | 0.5 | 0 to 1 | 0 shows everything, 1 shows nothing |
+| `block` | float | 24.0 | 4 to 120 | block size in px |
+| `edge` | float | 0.08 | 0 to 0.3 | softness of the leading edge |
+
+
+```json
+{
+  "block": 24.0,
+  "edge": 0.08,
+  "effect": "pixel_dissolve",
+  "progress": 0.5
+}
+```
+
+## `posterize`
+
+Reduces each channel to a few flat levels. (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `levels` | float | 4.0 | 2 to 16 | number of levels per channel |
+
+
+```json
+{
+  "effect": "posterize",
+  "levels": 4.0
+}
+```
+
+## `prism`
+
+Spectral split on contrast edges, like light through glass. Quiet, not a party filter. (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `amount` | float | 0.0 | 0 to 1 | 0 is the original, 1 is a wide split |
+| `angle` | float | 18.0 | -90 to 90 | direction of the split, degrees |
+
+
+```json
+{
+  "amount": 0.0,
+  "angle": 18.0,
+  "effect": "prism"
+}
+```
+
+## `rain`
+
+Fine rain streaks. Blend `screen`. Not anime speed-lines: thin, fast, sparse. (generator, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `amount` | float | 0.55 | 0 to 1 | how many streaks |
+| `speed` | float | 1.0 | 0.2 to 3 | how fast they fall |
+| `tint` | color | [184.0,200.0,220.0,1.0] |  | colour of the rain |
+
+
+```json
+{
+  "params": {
+    "amount": 0.55,
+    "speed": 1.0,
+    "tint": "#b8c8dc"
+  },
+  "shader": "rain",
+  "type": "texture"
+}
+```
+
+## `ridgeline`
+
+A live ridgeline: P&L, mark-to-market, a quiet-money chart. (generator, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `tint` | color | [226.0,196.0,138.0,1.0] |  | colour of the stroke and the wash |
+| `amp` | float | 0.22 | 0.04 to 0.6 | how tall the waves are |
+| `seed` | float | 2.0 | 0 to 80 | which series |
+| `fill` | float | 0.18 | 0 to 1 | wash under the line |
+
+
+```json
+{
+  "params": {
+    "amp": 0.22,
+    "fill": 0.18,
+    "seed": 2.0,
+    "tint": "#e2c48a"
+  },
+  "shader": "ridgeline",
+  "type": "texture"
+}
+```
+
+## `rim`
+
+A coloured rim light along the silhouette, facing `angle`. (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `angle` | float | -40.0 | -180 to 180 | direction the light comes from, degrees (0 = from the right) |
+| `width` | float | 5.0 | 1 to 24 | how far the rim reaches in, px |
+| `strength` | float | 0.9 | 0 to 3 | brightness of the rim |
+| `color` | color | [234.0,242.0,255.0,1.0] |  | colour of the light |
+
+
+```json
+{
+  "angle": -40.0,
+  "color": "#eaf2ff",
+  "effect": "rim",
+  "strength": 0.9,
+  "width": 5.0
+}
+```
+
+## `ripple`
+
+Rings of displacement spreading from a point, like a drop in water. (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `x` | float | 0.5 | 0 to 1 | centre, share of the width |
+| `y` | float | 0.5 | 0 to 1 | centre, share of the height |
+| `amplitude` | float | 14.0 | 0 to 80 | displacement in px |
+| `wavelength` | float | 70.0 | 10 to 400 | distance between rings in px |
+| `speed` | float | 220.0 | -1000 to 1000 | how fast the rings travel, px per second |
+| `falloff` | float | 900.0 | 100 to 4000 | distance at which the ripple has faded, px |
+
+
+```json
+{
+  "amplitude": 14.0,
+  "effect": "ripple",
+  "falloff": 900.0,
+  "speed": 220.0,
+  "wavelength": 70.0,
+  "x": 0.5,
+  "y": 0.5
+}
+```
+
+## `scan`
+
+A scan line that turns what it has passed into a code grid, with a bright front. (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `position` | float | 0.5 | 0 to 1 | 0 is the top of the layer, 1 is the bottom (animate this) |
+| `amount` | float | 1.0 | 0 to 1 | how fully the passed region becomes code |
+| `tint` | color | [125.0,255.0,210.0,1.0] |  | colour of the bits and the front |
+| `seed` | float | 1.0 | 0 to 80 | which bit pattern |
+
+
+```json
+{
+  "amount": 1.0,
+  "effect": "scan",
+  "position": 0.5,
+  "seed": 1.0,
+  "tint": "#7dffd2"
+}
+```
+
+## `scratches`
+
+Hairline scuffs in the paint: a slapped-on sticker, not a clean shape. (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `amount` | float | 0.45 | 0 to 1 | how visible the scratches are |
+| `seed` | float | 2.0 | 0 to 50 | which set of scratches |
+
+
+```json
+{
+  "amount": 0.45,
+  "effect": "scratches",
+  "seed": 2.0
+}
+```
+
+## `shafts`
+
+Volumetric light shafts from a point. Blend `screen` or `add` over a dark plate. (generator, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `x` | float | 0.5 | 0 to 1 | origin, share of the width |
+| `y` | float | 0.12 | 0 to 1 | origin, share of the height |
+| `amount` | float | 0.55 | 0 to 1 | how bright the shafts are |
+| `spread` | float | 0.7 | 0.15 to 1.5 | how wide the cone is |
+| `tint` | color | [200.0,216.0,240.0,1.0] |  | colour of the light |
+
+
+```json
+{
+  "params": {
+    "amount": 0.55,
+    "spread": 0.7,
+    "tint": "#c8d8f0",
+    "x": 0.5,
+    "y": 0.12
+  },
+  "shader": "shafts",
+  "type": "texture"
+}
+```
+
+## `sharpen`
+
+Unsharp mask from four neighbours. A document, a number that must read. (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `amount` | float | 0.0 | 0 to 2 | 0 is the original, 1 is a firm snap |
+
+
+```json
+{
+  "amount": 0.0,
+  "effect": "sharpen"
+}
+```
+
+## `shockwave`
+
+One expanding ring of refraction, like a blast or a stamp landing. Animate `progress` 0→1. (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `progress` | float | 0.0 | 0 to 1 | 0 is nothing, 1 is the ring at the edge of the frame |
+| `x` | float | 0.5 | 0 to 1 | centre, share of the width |
+| `y` | float | 0.5 | 0 to 1 | centre, share of the height |
+| `amplitude` | float | 22.0 | 0 to 80 | how far the ring displaces, px |
+| `width` | float | 0.045 | 0.01 to 0.2 | thickness of the ring as a share of the frame |
+
+
+```json
+{
+  "amplitude": 22.0,
+  "effect": "shockwave",
+  "progress": 0.0,
+  "width": 0.045,
+  "x": 0.5,
+  "y": 0.5
+}
+```
+
+## `split_tone`
+
+Tints the shadows one colour and the highlights another: the quickest way to make mixed sources look graded together. (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `shadows` | color | [26.0,58.0,92.0,1.0] |  | colour pushed into the darks |
+| `highlights` | color | [255.0,176.0,102.0,1.0] |  | colour pushed into the lights |
+| `amount` | float | 0.5 | 0 to 1 | strength |
+| `balance` | float | 0.0 | -1 to 1 | negative favours shadows, positive favours highlights |
+
+
+```json
+{
+  "amount": 0.5,
+  "balance": 0.0,
+  "effect": "split_tone",
+  "highlights": "#ffb066",
+  "shadows": "#1a3a5c"
+}
+```
+
+## `spotlight`
+
+Two conic stage lights from above, falling onto a dark floor. (generator, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `tint` | color | [200.0,228.0,255.0,1.0] |  | colour of the beams |
+| `amount` | float | 0.7 | 0 to 2 | brightness of the cones |
+| `spread` | float | 0.16 | 0.04 to 0.45 | how wide each cone is |
+
+
+```json
+{
+  "params": {
+    "amount": 0.7,
+    "spread": 0.16,
+    "tint": "#c8e4ff"
+  },
+  "shader": "spotlight",
+  "type": "texture"
+}
+```
+
+## `static`
+
+Broadcast snow. Blend `add` or `overlay` over a dead monitor. (generator, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `amount` | float | 0.45 | 0 to 1 | density of the snow |
+| `tint` | color | [208.0,214.0,224.0,1.0] |  | colour of the snow |
+
+
+```json
+{
+  "params": {
+    "amount": 0.45,
+    "tint": "#d0d6e0"
+  },
+  "shader": "static",
+  "type": "texture"
+}
+```
+
+## `stripes`
+
+Diagonal or straight bars; animate `offset` to make them travel. (generator, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `width` | float | 40.0 | 2 to 400 | bar width in px |
+| `angle` | float | 45.0 | -90 to 90 | direction of the bars in degrees |
+| `offset` | float | 0.0 | -1000 to 1000 | shifts the pattern, px |
+| `a` | color | [255.0,255.0,255.0,1.0] |  | first bar colour |
+| `b` | color | [16.0,16.0,16.0,1.0] |  | second bar colour |
+| `softness` | float | 1.0 | 0.5 to 40 | edge blur in px |
+
+
+```json
+{
+  "params": {
+    "a": "#ffffff",
+    "angle": 45.0,
+    "b": "#101010",
+    "offset": 0.0,
+    "softness": 1.0,
+    "width": 40.0
+  },
+  "shader": "stripes",
+  "type": "texture"
+}
+```
+
+## `tilt_shift`
+
+Blurs everything outside a horizontal band so a scene reads as a miniature. (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `focus` | float | 0.5 | 0 to 1 | vertical centre of the sharp band (fraction of the height) |
+| `band` | float | 0.18 | 0.02 to 0.6 | half-height of the sharp band |
+| `blur` | float | 14.0 | 0 to 60 | maximum blur radius in px |
+
+
+```json
+{
+  "band": 0.18,
+  "blur": 14.0,
+  "effect": "tilt_shift",
+  "focus": 0.5
+}
+```
+
+## `turbulent_displace`
+
+Wobbles the layer by a noise layer, like After Effects' Turbulent Displace; drive the noise to animate it. (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `amount` | float | 24.0 | 0 to 400 | the most a pixel moves, px, in each direction |
+| `outside` | choice | pin | pin, wrap | beyond the frame: the edge pixels stretch (pin), or the picture repeats (wrap) |
+
+* input `noise`: the picture of another layer, named by id -- a noise picture, for example a `noise` texture layer (hidden); its brightness is the field
+
+```json
+{
+  "amount": 40,
+  "effect": "turbulent_displace",
+  "noise": "noise_layer"
+}
+```
+
+## `vhs`
+
+Worn tape: wobbling lines, colour bleed, tracking noise and a rolling bar. (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `amount` | float | 0.5 | 0 to 1 | overall strength |
+| `bleed` | float | 6.0 | 0 to 30 | horizontal colour smear in px |
+| `noise` | float | 0.25 | 0 to 1 | tracking noise strength |
+
+
+```json
+{
+  "amount": 0.5,
+  "bleed": 6.0,
+  "effect": "vhs",
+  "noise": 0.25
+}
+```
+

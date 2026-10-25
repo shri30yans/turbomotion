@@ -1,0 +1,393 @@
+{
+  "bg": "#0b0d12",
+  "fps": 30,
+  "height": 540,
+  "root": ".",
+  "timeline": {
+    "hits": [
+      {
+        "at": "flip.start+0.6",
+        "cue": "tick"
+      },
+      {
+        "at": "flip.start+0.85",
+        "cue": "tick"
+      },
+      {
+        "at": "flip.start+1.1",
+        "cue": "tick"
+      }
+    ],
+    "shots": [
+      {
+        "dur": 2.6,
+        "id": "flip",
+        "layers": [
+          {
+            "id": "light1",
+            "kind": "ambient",
+            "type": "light"
+          },
+          {
+            "id": "t0",
+            "pos": [
+              220,
+              270,
+              0
+            ],
+            "rotation": [
+              0,
+              {
+                "at": 0.6,
+                "dur": 0.7,
+                "ease": "expo.inOut",
+                "from": 0,
+                "to": 180
+              },
+              0
+            ],
+            "three_d": true,
+            "type": "null"
+          },
+          {
+            "id": "t0-front",
+            "items": [
+              {
+                "fill": "#1D2029",
+                "radius": 14,
+                "rect": [
+                  -100,
+                  -130,
+                  200,
+                  260
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              }
+            ],
+            "parent": "t0",
+            "pos": [
+              0,
+              0,
+              -0.5
+            ],
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "align": "center",
+            "color": "#8A93A6",
+            "font": "Avenir Next",
+            "id": "t0-front-label",
+            "parent": "t0",
+            "pos": [
+              0,
+              0,
+              -1.5
+            ],
+            "size": 65,
+            "text": "?",
+            "three_d": true,
+            "type": "text",
+            "weight": 700
+          },
+          {
+            "id": "t0-back",
+            "items": [
+              {
+                "fill": "#3D6BFF",
+                "radius": 14,
+                "rect": [
+                  -100,
+                  -130,
+                  200,
+                  260
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              }
+            ],
+            "parent": "t0",
+            "pos": [
+              0,
+              0,
+              0.5
+            ],
+            "rotation": [
+              0,
+              180,
+              0
+            ],
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "align": "center",
+            "color": "#ffffff",
+            "font": "Avenir Next",
+            "id": "t0-back-label",
+            "parent": "t0",
+            "pos": [
+              0,
+              0,
+              1.5
+            ],
+            "rotation": [
+              0,
+              180,
+              0
+            ],
+            "size": 65,
+            "text": "A",
+            "three_d": true,
+            "type": "text",
+            "weight": 700
+          },
+          {
+            "id": "t1",
+            "pos": [
+              480,
+              270,
+              0
+            ],
+            "rotation": [
+              0,
+              {
+                "at": 0.85,
+                "dur": 0.7,
+                "ease": "expo.inOut",
+                "from": 0,
+                "to": 180
+              },
+              0
+            ],
+            "three_d": true,
+            "type": "null"
+          },
+          {
+            "id": "t1-front",
+            "items": [
+              {
+                "fill": "#1D2029",
+                "radius": 14,
+                "rect": [
+                  -100,
+                  -130,
+                  200,
+                  260
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              }
+            ],
+            "parent": "t1",
+            "pos": [
+              0,
+              0,
+              -0.5
+            ],
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "align": "center",
+            "color": "#8A93A6",
+            "font": "Avenir Next",
+            "id": "t1-front-label",
+            "parent": "t1",
+            "pos": [
+              0,
+              0,
+              -1.5
+            ],
+            "size": 65,
+            "text": "?",
+            "three_d": true,
+            "type": "text",
+            "weight": 700
+          },
+          {
+            "id": "t1-back",
+            "items": [
+              {
+                "fill": "#FF5A1F",
+                "radius": 14,
+                "rect": [
+                  -100,
+                  -130,
+                  200,
+                  260
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              }
+            ],
+            "parent": "t1",
+            "pos": [
+              0,
+              0,
+              0.5
+            ],
+            "rotation": [
+              0,
+              180,
+              0
+            ],
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "align": "center",
+            "color": "#ffffff",
+            "font": "Avenir Next",
+            "id": "t1-back-label",
+            "parent": "t1",
+            "pos": [
+              0,
+              0,
+              1.5
+            ],
+            "rotation": [
+              0,
+              180,
+              0
+            ],
+            "size": 65,
+            "text": "B",
+            "three_d": true,
+            "type": "text",
+            "weight": 700
+          },
+          {
+            "id": "t2",
+            "pos": [
+              740,
+              270,
+              0
+            ],
+            "rotation": [
+              0,
+              {
+                "at": 1.1,
+                "dur": 0.7,
+                "ease": "expo.inOut",
+                "from": 0,
+                "to": 180
+              },
+              0
+            ],
+            "three_d": true,
+            "type": "null"
+          },
+          {
+            "id": "t2-front",
+            "items": [
+              {
+                "fill": "#1D2029",
+                "radius": 14,
+                "rect": [
+                  -100,
+                  -130,
+                  200,
+                  260
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              }
+            ],
+            "parent": "t2",
+            "pos": [
+              0,
+              0,
+              -0.5
+            ],
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "align": "center",
+            "color": "#8A93A6",
+            "font": "Avenir Next",
+            "id": "t2-front-label",
+            "parent": "t2",
+            "pos": [
+              0,
+              0,
+              -1.5
+            ],
+            "size": 65,
+            "text": "?",
+            "three_d": true,
+            "type": "text",
+            "weight": 700
+          },
+          {
+            "id": "t2-back",
+            "items": [
+              {
+                "fill": "#C8F031",
+                "radius": 14,
+                "rect": [
+                  -100,
+                  -130,
+                  200,
+                  260
+                ],
+                "stroke": {
+                  "color": "#ffffff",
+                  "width": 2
+                }
+              }
+            ],
+            "parent": "t2",
+            "pos": [
+              0,
+              0,
+              0.5
+            ],
+            "rotation": [
+              0,
+              180,
+              0
+            ],
+            "three_d": true,
+            "type": "shape"
+          },
+          {
+            "align": "center",
+            "color": "#0b0d12",
+            "font": "Avenir Next",
+            "id": "t2-back-label",
+            "parent": "t2",
+            "pos": [
+              0,
+              0,
+              1.5
+            ],
+            "rotation": [
+              0,
+              180,
+              0
+            ],
+            "size": 65,
+            "text": "C",
+            "three_d": true,
+            "type": "text",
+            "weight": 700
+          }
+        ]
+      }
+    ]
+  },
+  "width": 960
+}
