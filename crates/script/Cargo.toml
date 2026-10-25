@@ -1,0 +1,14 @@
+[package]
+name = "turbomotion-script"
+version = "0.1.0"
+edition = "2021"
+description = "TypeScript films: strips types in Rust, runs the script on an embedded QuickJS, and returns the composition JSON for turbomotion comp."
+
+[dependencies]
+anyhow.workspace = true
+clap.workspace = true
+serde_json.workspace = true
+oxc.workspace = true
+oxc_sourcemap.workspace = true
+rquickjs.workspace = true
+turbomotion-comp.workspace = true
