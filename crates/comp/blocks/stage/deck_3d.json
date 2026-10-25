@@ -1,0 +1,371 @@
+{
+  "width": 1400,
+  "height": 720,
+  "fps": 30,
+  "dur": 8,
+  "job": "stage",
+  "best_for": [
+    "a stack of tickets in space",
+    "the book of the house",
+    "three outcomes at once"
+  ],
+  "breaks": "The camera lives in this block; nested precomps flatten 3D, so do not also three_d the instance. Type is parented to each card, so it stays on the ticket.",
+  "props": [
+    "one",
+    "two",
+    "three",
+    "a",
+    "b",
+    "c",
+    "font"
+  ],
+  "vars": {
+    "accent": "#e8402f",
+    "ink": "#f6f4ee",
+    "mute": "#687e96",
+    "plate": "#121a26",
+    "loss": "#e8402f",
+    "gold": "#deb052",
+    "gain": "#3eb696",
+    "sub": "#687e96",
+    "one": "GROSS",
+    "two": "COST",
+    "three": "NET",
+    "a": "18.4%",
+    "b": "14.3%",
+    "c": "4.1%",
+    "font": "Avenir Next Condensed"
+  },
+  "layers": [
+    {
+      "type": "camera",
+      "zoom": 1600,
+      "pos": [
+        {
+          "from": 520,
+          "to": 880,
+          "dur": 7.2,
+          "ease": "sine.inOut"
+        },
+        360,
+        {
+          "from": -2100,
+          "to": -1500,
+          "dur": 7.2,
+          "ease": "power2.out"
+        }
+      ],
+      "poi": [
+        700,
+        360,
+        0
+      ],
+      "dof": {
+        "focus": 1700,
+        "blur": 6
+      }
+    },
+    {
+      "type": "light",
+      "kind": "ambient",
+      "color": "#1a2438",
+      "intensity": 0.28
+    },
+    {
+      "type": "light",
+      "kind": "point",
+      "pos": [
+        200,
+        40,
+        -600
+      ],
+      "color": "$accent",
+      "intensity": 1.5,
+      "radius": 2200,
+      "shine": 0.7
+    },
+    {
+      "type": "null",
+      "id": "spin",
+      "pos": [
+        700,
+        360,
+        0
+      ],
+      "rot_y": {
+        "from": -14,
+        "to": 10,
+        "dur": 7.2,
+        "ease": "sine.inOut"
+      },
+      "rot_x": 6
+    },
+    {
+      "type": "shape",
+      "id": "c1",
+      "parent": "spin",
+      "three_d": true,
+      "pos": [
+        -280,
+        12,
+        36
+      ],
+      "rot_y": -16,
+      "fx": [
+        {
+          "effect": "glow",
+          "radius": 8,
+          "strength": 0.28
+        }
+      ],
+      "items": [
+        {
+          "rect": [
+            -150,
+            -200,
+            300,
+            400
+          ],
+          "radius": 18,
+          "fill": "$plate",
+          "stroke": {
+            "color": "$accent",
+            "width": 1.5
+          }
+        }
+      ],
+      "enter": {
+        "preset": "pop",
+        "dur": 0.55
+      }
+    },
+    {
+      "type": "text",
+      "id": "t1",
+      "parent": "c1",
+      "three_d": true,
+      "lit": false,
+      "text": "$one",
+      "font": "$font",
+      "weight": 700,
+      "size": 22,
+      "tracking": 4,
+      "color": "#9aa8c6",
+      "pos": [
+        0,
+        -80,
+        -4
+      ],
+      "align": "center",
+      "preset": {
+        "name": "tracking_in",
+        "at": 0.2
+      }
+    },
+    {
+      "type": "text",
+      "id": "n1",
+      "parent": "c1",
+      "three_d": true,
+      "lit": false,
+      "text": "$a",
+      "font": "$font",
+      "weight": 800,
+      "size": 56,
+      "fill": "metal",
+      "color": "$accent",
+      "pos": [
+        0,
+        20,
+        -4
+      ],
+      "align": "center",
+      "preset": {
+        "name": "pop",
+        "at": 0.35
+      }
+    },
+    {
+      "type": "shape",
+      "id": "c2",
+      "parent": "spin",
+      "three_d": true,
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "rot_y": 0,
+      "fx": [
+        {
+          "effect": "glow",
+          "radius": 8,
+          "strength": 0.32
+        }
+      ],
+      "items": [
+        {
+          "rect": [
+            -150,
+            -200,
+            300,
+            400
+          ],
+          "radius": 18,
+          "fill": "$plate",
+          "stroke": {
+            "color": "$accent",
+            "width": 1.5
+          }
+        }
+      ],
+      "enter": {
+        "preset": "pop",
+        "dur": 0.55,
+        "delay": 0.08
+      }
+    },
+    {
+      "type": "text",
+      "id": "t2",
+      "parent": "c2",
+      "three_d": true,
+      "lit": false,
+      "text": "$two",
+      "font": "$font",
+      "weight": 700,
+      "size": 22,
+      "tracking": 4,
+      "color": "#9aa8c6",
+      "pos": [
+        0,
+        -80,
+        -4
+      ],
+      "align": "center",
+      "preset": {
+        "name": "tracking_in",
+        "at": 0.28
+      }
+    },
+    {
+      "type": "text",
+      "id": "n2",
+      "parent": "c2",
+      "three_d": true,
+      "lit": false,
+      "text": "$b",
+      "font": "$font",
+      "weight": 800,
+      "size": 56,
+      "color": "#ffd37a",
+      "pos": [
+        0,
+        20,
+        -4
+      ],
+      "align": "center",
+      "preset": {
+        "name": "pop",
+        "at": 0.42
+      }
+    },
+    {
+      "type": "shape",
+      "id": "c3",
+      "parent": "spin",
+      "three_d": true,
+      "pos": [
+        280,
+        12,
+        36
+      ],
+      "rot_y": 16,
+      "fx": [
+        {
+          "effect": "glow",
+          "radius": 8,
+          "strength": 0.28
+        }
+      ],
+      "items": [
+        {
+          "rect": [
+            -150,
+            -200,
+            300,
+            400
+          ],
+          "radius": 18,
+          "fill": "$plate",
+          "stroke": {
+            "color": "#ff4a3a",
+            "width": 1.5
+          }
+        }
+      ],
+      "enter": {
+        "preset": "pop",
+        "dur": 0.55,
+        "delay": 0.16
+      }
+    },
+    {
+      "type": "text",
+      "id": "t3",
+      "parent": "c3",
+      "three_d": true,
+      "lit": false,
+      "text": "$three",
+      "font": "$font",
+      "weight": 700,
+      "size": 22,
+      "tracking": 4,
+      "color": "#ff8a7a",
+      "pos": [
+        0,
+        -80,
+        -4
+      ],
+      "align": "center",
+      "preset": {
+        "name": "tracking_in",
+        "at": 0.36
+      }
+    },
+    {
+      "type": "text",
+      "id": "n3",
+      "parent": "c3",
+      "three_d": true,
+      "lit": false,
+      "text": "$c",
+      "font": "$font",
+      "weight": 800,
+      "size": 56,
+      "color": "#ff4a3a",
+      "pos": [
+        0,
+        20,
+        -4
+      ],
+      "align": "center",
+      "fx": [
+        {
+          "effect": "impact",
+          "amount": {
+            "from": 0.8,
+            "to": 0,
+            "at": 0.9,
+            "dur": 0.7,
+            "ease": "power2.out"
+          }
+        }
+      ],
+      "preset": {
+        "name": "pop",
+        "at": 0.5
+      }
+    }
+  ]
+}

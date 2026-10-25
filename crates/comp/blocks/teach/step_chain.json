@@ -1,0 +1,369 @@
+{
+  "width": 1600,
+  "height": 320,
+  "fps": 30,
+  "dur": 12,
+  "job": "teach",
+  "best_for": [
+    "a teaching beat"
+  ],
+  "breaks": "Keep the claim and the picture distinct.",
+  "props": [
+    "one",
+    "two",
+    "three",
+    "four",
+    "font"
+  ],
+  "vars": {
+    "accent": "#e8402f",
+    "ink": "#f6f4ee",
+    "mute": "#687e96",
+    "plate": "#121a26",
+    "loss": "#e8402f",
+    "gold": "#deb052",
+    "gain": "#3eb696",
+    "sub": "#687e96",
+    "one": "The fee arrives",
+    "two": "The risk sits",
+    "three": "The market moves",
+    "four": "Someone pays",
+    "font": "Avenir Next"
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "c1",
+      "pos": [
+        190,
+        150
+      ],
+      "layout": "group:s1",
+      "items": [
+        {
+          "rect": [
+            -150,
+            -90,
+            300,
+            180
+          ],
+          "radius": 16,
+          "fill": {
+            "color": "$plate",
+            "opacity": 0.94
+          },
+          "stroke": {
+            "color": "#3d4f6e",
+            "width": 1.4
+          }
+        }
+      ],
+      "enter": {
+        "preset": "slide_up",
+        "dur": 0.45
+      }
+    },
+    {
+      "type": "text",
+      "id": "n1",
+      "text": "1",
+      "font": "$font",
+      "weight": 800,
+      "size": 28,
+      "color": "$accent",
+      "pos": [
+        80,
+        92
+      ],
+      "layout": "group:s1",
+      "preset": {
+        "name": "pop",
+        "at": 0.1
+      }
+    },
+    {
+      "type": "text",
+      "id": "t1",
+      "text": "$one",
+      "font": "$font",
+      "weight": 600,
+      "size": 26,
+      "color": "$ink",
+      "pos": [
+        80,
+        168
+      ],
+      "width": 220,
+      "layout": "group:s1",
+      "preset": {
+        "name": "reveal",
+        "at": 0.18
+      }
+    },
+    {
+      "type": "shape",
+      "id": "c2",
+      "pos": [
+        590,
+        150
+      ],
+      "start": 0.35,
+      "layout": "group:s2",
+      "items": [
+        {
+          "rect": [
+            -150,
+            -90,
+            300,
+            180
+          ],
+          "radius": 16,
+          "fill": {
+            "color": "$plate",
+            "opacity": 0.94
+          },
+          "stroke": {
+            "color": "#3d4f6e",
+            "width": 1.4
+          }
+        }
+      ],
+      "enter": {
+        "preset": "slide_up",
+        "dur": 0.45
+      }
+    },
+    {
+      "type": "text",
+      "id": "n2",
+      "text": "2",
+      "font": "$font",
+      "weight": 800,
+      "size": 28,
+      "color": "$accent",
+      "pos": [
+        480,
+        92
+      ],
+      "start": 0.35,
+      "layout": "group:s2",
+      "preset": {
+        "name": "pop",
+        "at": 0.1
+      }
+    },
+    {
+      "type": "text",
+      "id": "t2",
+      "text": "$two",
+      "font": "$font",
+      "weight": 600,
+      "size": 26,
+      "color": "$ink",
+      "pos": [
+        480,
+        168
+      ],
+      "width": 220,
+      "start": 0.35,
+      "layout": "group:s2",
+      "preset": {
+        "name": "reveal",
+        "at": 0.18
+      }
+    },
+    {
+      "type": "shape",
+      "id": "c3",
+      "pos": [
+        990,
+        150
+      ],
+      "start": 0.7,
+      "layout": "group:s3",
+      "items": [
+        {
+          "rect": [
+            -150,
+            -90,
+            300,
+            180
+          ],
+          "radius": 16,
+          "fill": {
+            "color": "$plate",
+            "opacity": 0.94
+          },
+          "stroke": {
+            "color": "#3d4f6e",
+            "width": 1.4
+          }
+        }
+      ],
+      "enter": {
+        "preset": "slide_up",
+        "dur": 0.45
+      }
+    },
+    {
+      "type": "text",
+      "id": "n3",
+      "text": "3",
+      "font": "$font",
+      "weight": 800,
+      "size": 28,
+      "color": "$accent",
+      "pos": [
+        880,
+        92
+      ],
+      "start": 0.7,
+      "layout": "group:s3",
+      "preset": {
+        "name": "pop",
+        "at": 0.1
+      }
+    },
+    {
+      "type": "text",
+      "id": "t3",
+      "text": "$three",
+      "font": "$font",
+      "weight": 600,
+      "size": 26,
+      "color": "$ink",
+      "pos": [
+        880,
+        168
+      ],
+      "width": 220,
+      "start": 0.7,
+      "layout": "group:s3",
+      "preset": {
+        "name": "reveal",
+        "at": 0.18
+      }
+    },
+    {
+      "type": "shape",
+      "id": "c4",
+      "pos": [
+        1390,
+        150
+      ],
+      "start": 1.05,
+      "layout": "group:s4",
+      "items": [
+        {
+          "rect": [
+            -150,
+            -90,
+            300,
+            180
+          ],
+          "radius": 16,
+          "fill": {
+            "color": "$plate",
+            "opacity": 0.94
+          },
+          "stroke": {
+            "color": "#3d4f6e",
+            "width": 1.4
+          }
+        }
+      ],
+      "enter": {
+        "preset": "slide_up",
+        "dur": 0.45
+      }
+    },
+    {
+      "type": "text",
+      "id": "n4",
+      "text": "4",
+      "font": "$font",
+      "weight": 800,
+      "size": 28,
+      "color": "$accent",
+      "pos": [
+        1280,
+        92
+      ],
+      "start": 1.05,
+      "layout": "group:s4",
+      "preset": {
+        "name": "pop",
+        "at": 0.1
+      }
+    },
+    {
+      "type": "text",
+      "id": "t4",
+      "text": "$four",
+      "font": "$font",
+      "weight": 600,
+      "size": 26,
+      "color": "$ink",
+      "pos": [
+        1280,
+        168
+      ],
+      "width": 220,
+      "start": 1.05,
+      "layout": "group:s4",
+      "preset": {
+        "name": "reveal",
+        "at": 0.18
+      }
+    },
+    {
+      "type": "precomp",
+      "block": "connector",
+      "pos": [
+        390,
+        70
+      ],
+      "start": 0.4,
+      "scale": 0.55,
+      "vars": {
+        "color": "$accent",
+        "y0": 90,
+        "y1": 90,
+        "cy": 40
+      }
+    },
+    {
+      "type": "precomp",
+      "block": "connector",
+      "pos": [
+        790,
+        70
+      ],
+      "start": 0.75,
+      "scale": 0.55,
+      "vars": {
+        "color": "$accent",
+        "y0": 90,
+        "y1": 90,
+        "cy": 40
+      }
+    },
+    {
+      "type": "precomp",
+      "block": "connector",
+      "pos": [
+        1190,
+        70
+      ],
+      "start": 1.1,
+      "scale": 0.55,
+      "vars": {
+        "color": "$accent",
+        "y0": 90,
+        "y1": 90,
+        "cy": 40
+      }
+    }
+  ],
+  "layout": true
+}

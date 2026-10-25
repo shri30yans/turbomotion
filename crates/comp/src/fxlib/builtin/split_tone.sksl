@@ -1,0 +1,15 @@
+// @effect split_tone
+// @summary Tints the shadows one colour and the highlights another: the quickest way to make mixed sources look graded together.
+// @param shadows color #1a3a5c -- colour pushed into the darks
+// @param highlights color #ffb066 -- colour pushed into the lights
+// @param amount float 0.5 0 1 -- strength
+// @param balance float 0 -1 1 -- negative favours shadows, positive favours highlights
+half4 main(float2 xy) {
+    float4 s = straight(xy);
+    float l = luma(s.rgb);
+    float mid = 0.5 + balance * 0.3;
+    float toHi = smoothstep(mid - 0.35, mid + 0.35, l);
+    float3 tone = mix(shadows.rgb, highlights.rgb, toHi);
+    float3 rgb = mix(s.rgb, s.rgb * 0.55 + tone * (0.25 + 0.75 * l), amount);
+    return premul(clamp(rgb, 0.0, 1.0), s.a);
+}

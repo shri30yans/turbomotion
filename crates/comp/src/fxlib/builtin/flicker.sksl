@@ -1,0 +1,13 @@
+// @effect flicker
+// @summary Exposure flutter: a failing bulb, a projector, a strike that has not quite gone.
+// @param amount float 0 0 1 -- 0 is the original, 1 is a violent flutter
+// @param rate float 18 2 60 -- how many times a second it samples a new level
+half4 main(float2 xy) {
+    float4 src = straight(xy);
+    if (amount < 0.001) {
+        return premul(src.rgb, src.a);
+    }
+    float n = hash11(floor(time * rate) + 17.0);
+    float k = 1.0 + amount * (n * 2.0 - 1.0) * 0.45;
+    return premul(clamp(src.rgb * k, 0.0, 2.0), src.a);
+}

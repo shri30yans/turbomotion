@@ -1,0 +1,168 @@
+{
+  "width": 732,
+  "height": 316,
+  "fps": 30,
+  "dur": 8,
+  "job": "card",
+  "best_for": [
+    "a labelled fact",
+    "a choice",
+    "a weekday"
+  ],
+  "breaks": "One plate. Do not restyle the glass in the plan.",
+  "props": [
+    "title",
+    "lines",
+    "accent",
+    "icon",
+    "tag"
+  ],
+  "vars": {
+    "accent": "#deb052",
+    "ink": "#f6f4ee",
+    "mute": "#687e96",
+    "plate": "#121a26",
+    "loss": "#e8402f",
+    "gold": "#deb052",
+    "gain": "#3eb696",
+    "sub": "#687e96",
+    "title": "Exchange A",
+    "tag": ""
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "halo",
+      "pos": [
+        366.0,
+        158.0
+      ],
+      "blend": "screen",
+      "opacity": 0.5,
+      "fx": [
+        {
+          "effect": "blur",
+          "radius": 14
+        }
+      ],
+      "items": [
+        {
+          "rect": [
+            -320.0,
+            -112.0,
+            640,
+            224
+          ],
+          "radius": 18.0,
+          "stroke": {
+            "color": "#deb052",
+            "width": 7
+          }
+        }
+      ]
+    },
+    {
+      "type": "shape",
+      "id": "plate",
+      "pos": [
+        366.0,
+        158.0
+      ],
+      "layout": "backdrop",
+      "items": [
+        {
+          "rect": [
+            -320.0,
+            -112.0,
+            640,
+            224
+          ],
+          "radius": 18.0,
+          "fill": {
+            "color": "$plate",
+            "opacity": 0.92
+          },
+          "stroke": {
+            "color": "#deb052",
+            "width": 2.2
+          }
+        },
+        {
+          "rect": [
+            -317.0,
+            -109.0,
+            634,
+            91.56
+          ],
+          "radius": 15.0,
+          "fill": {
+            "color": "$ink",
+            "opacity": 0.035
+          }
+        },
+        {
+          "rect": [
+            -302.0,
+            -110.0,
+            604.0,
+            1.6
+          ],
+          "radius": 0.8,
+          "fill": {
+            "color": "$ink",
+            "opacity": 0.2
+          }
+        }
+      ],
+      "enter": {
+        "preset": "slide_up",
+        "dur": 0.4,
+        "ease": "expo.out"
+      }
+    },
+    {
+      "type": "text",
+      "id": "t0",
+      "text": "EXCHANGE A",
+      "role": "title",
+      "size": 26,
+      "color": "$mute",
+      "pos": [
+        76,
+        81.6
+      ],
+      "align": "left",
+      "tracking": 3.2
+    },
+    {
+      "type": "text",
+      "id": "t1",
+      "text": "ACME CORP",
+      "role": "display",
+      "size": 70,
+      "color": "#f6f4ee",
+      "pos": [
+        74,
+        145.2
+      ],
+      "align": "left"
+    },
+    {
+      "type": "text",
+      "id": "t2",
+      "text": "$10 A SHARE",
+      "role": "display",
+      "size": 54,
+      "color": "#687e96",
+      "pos": [
+        74,
+        215.6
+      ],
+      "align": "left"
+    }
+  ],
+  "uses": {
+    "surface": "card",
+    "motion": "enter"
+  }
+}

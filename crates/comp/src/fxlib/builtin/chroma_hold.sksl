@@ -1,0 +1,19 @@
+// @effect chroma_hold
+// @summary Keep one hue, drain the rest. The red loss number on a grey room.
+// @param amount float 0 0 1 -- 0 is the original, 1 is a hard hold
+// @param hue float 8 0 360 -- hue to keep, degrees (8 is the channel accent)
+// @param width float 0.35 0.05 1 -- how wide the kept band is
+half4 main(float2 xy) {
+    float4 src = straight(xy);
+    if (amount < 0.001) {
+        return premul(src.rgb, src.a);
+    }
+    float3 target = hsv2rgb(float3(hue / 360.0, 1.0, 1.0));
+    float3 a = src.rgb + float3(0.001);
+    float3 b = target + float3(0.001);
+    float d = 1.0 - dot(a / (length(a) + 0.001), b / (length(b) + 0.001));
+    float keep = 1.0 - smoothstep(0.0, width, d);
+    float y = luma(src.rgb);
+    float3 rgb = mix(src.rgb, mix(float3(y), src.rgb, keep), amount);
+    return premul(rgb, src.a);
+}

@@ -1,0 +1,18 @@
+// @effect scan
+// @summary A scan line that turns what it has passed into a code grid, with a bright front.
+// @param position float 0.5 0 1 -- 0 is the top of the layer, 1 is the bottom (animate this)
+// @param amount float 1 0 1 -- how fully the passed region becomes code
+// @param tint color #7dffd2 -- colour of the bits and the front
+// @param seed float 1 0 80 -- which bit pattern
+half4 main(float2 xy) {
+    float4 src = straight(xy);
+    float u = xy.y / max(resolution.y, 1.0);
+    float coded = 1.0 - smoothstep(position - 0.01, position + 0.02, u);
+    float front = exp(-pow((u - position) * 48.0, 2.0));
+    float2 cell = floor(xy / 5.0);
+    float bit = step(0.52, hash21(cell + seed));
+    float3 grid = mix(float3(0.03, 0.05, 0.07), tint.rgb * 0.85, bit);
+    float3 rgb = mix(src.rgb, grid, coded * amount * src.a);
+    rgb += tint.rgb * front * 1.35 * src.a;
+    return premul(clamp(rgb, 0.0, 2.0), src.a);
+}

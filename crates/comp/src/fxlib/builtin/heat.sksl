@@ -1,0 +1,17 @@
+// @effect heat
+// @summary A warm glow hugging the silhouette, as if the layer is still hot.
+// @param amount float 0.75 0 3 -- how strong the glow is
+// @param width float 7 2 28 -- how far the heat reaches in, px
+// @param color color #ff6a24 -- colour of the heat
+half4 main(float2 xy) {
+    float4 c = straight(xy);
+    if (c.a < 0.002) { return half4(0.0); }
+    float a0 = image.eval(xy).a;
+    float a1 = image.eval(xy + float2(width, 0.0)).a + image.eval(xy + float2(-width, 0.0)).a;
+    float a2 = image.eval(xy + float2(0.0, width)).a + image.eval(xy + float2(0.0, -width)).a;
+    float rim = clamp((4.0 * a0 - a1 - a2) * 0.9, 0.0, 1.0);
+    float inner = clamp(1.0 - a0, 0.0, 1.0);
+    float k = (rim * 0.85 + inner * 0.2) * amount * (0.9 + 0.1 * sin(time * 3.0 + xy.x * 0.01));
+    float3 rgb = c.rgb + color.rgb * k;
+    return premul(clamp(rgb, 0.0, 1.0), c.a);
+}

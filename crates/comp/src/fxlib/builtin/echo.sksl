@@ -1,0 +1,27 @@
+// @effect echo
+// @summary Ghosts of the layer along a direction: a fast card, a tumbling ticket.
+// @param amount float 0.55 0 1 -- 0 is the original, 1 is a long trail
+// @param copies float 5 2 10 -- how many ghosts
+// @param travel float 36 4 120 -- how far the last ghost sits, px
+// @param angle float -18 -180 180 -- direction the ghosts fall back, degrees
+half4 main(float2 xy) {
+    float4 src = straight(xy);
+    if (amount < 0.001) {
+        return premul(src.rgb, src.a);
+    }
+    float rad = radians(angle);
+    float2 dir = float2(cos(rad), sin(rad));
+    float n = max(copies, 2.0);
+    float3 rgb = src.rgb * src.a;
+    float a = src.a;
+    for (int i = 1; i < 10; i++) {
+        float k = float(i);
+        float on = step(k + 0.5, n);
+        float u = k / max(n - 1.0, 1.0);
+        float4 g = straight(xy - dir * travel * u * amount);
+        float w = (1.0 - u) * amount * 0.55 * on;
+        rgb += g.rgb * g.a * w;
+        a = max(a, g.a * w);
+    }
+    return premul(clamp(rgb, 0.0, 2.0), clamp(a, 0.0, 1.0));
+}

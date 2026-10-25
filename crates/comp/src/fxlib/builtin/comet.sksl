@@ -1,0 +1,21 @@
+// @effect comet
+// @summary A highlight racing the silhouette: the neon border of a pane catching a pass of light.
+// @param tint color #eafff8 -- colour of the comet
+// @param speed float 0.22 0.02 2 -- laps per second
+// @param strength float 1.4 0 4 -- brightness of the head
+// @param width float 10 2 40 -- how far the head reaches off the edge, px
+half4 main(float2 xy) {
+    float4 c = straight(xy);
+    float a0 = c.a;
+    float2 u = xy / max(resolution, float2(1.0, 1.0)) - 0.5;
+    float ang = atan(u.y, u.x) / TAU;
+    float head = fract(ang - time * speed);
+    float spot = exp(-min(head, 1.0 - head) * 32.0);
+    float2 dir = float2(cos(ang * TAU), sin(ang * TAU));
+    float edge = abs(image.eval(xy + dir * 3.0).a - a0) + abs(image.eval(xy - dir * 3.0).a - a0);
+    float ring = smoothstep(0.02, 0.22, edge);
+    float glow = spot * ring * strength;
+    float3 rgb = c.rgb + tint.rgb * glow;
+    float alpha = max(a0, glow * 0.55 * (width / 10.0));
+    return premul(clamp(rgb, 0.0, 4.0), clamp(alpha, 0.0, 1.0));
+}

@@ -1,12 +1,17 @@
 //! The composition file as data: strict, typed, and free of meaning. Nothing here loads a file, resolves a name or
 //! touches a GPU; that is `plan`'s job. A mistake is reported with the field's name and the valid alternatives.
 
+pub mod bake;
 pub mod blocks;
+pub mod extrude;
 mod kinds;
+pub mod letterbox;
 mod path;
 mod shape;
 mod text;
 pub mod time;
+pub mod timeline;
+pub mod tokens;
 mod wrap;
 
 use std::collections::BTreeMap;
@@ -18,8 +23,10 @@ use turbomotion_core::effects::{self, Blend, Effect};
 
 pub use kinds::*;
 pub use path::PathSpec;
-pub use shape::{Fill, Gradient, Repeat, ShapeItem, Stroke, Trim};
-pub use text::{Align, Animator, Counter, Direction, Selector, Stagger, StaggerFrom, TextSource, TextStroke, Unit, UnitProps};
+pub use shape::{Fill, Gradient, Metal, Repeat, ShapeItem, Stroke, Trim};
+pub use text::TextRun;
+pub use text::{Align, Animator, Counter, Direction, Mark, Role, Selector, Stagger, StaggerFrom, TextSource, TextStroke, TextSwap, Unit, UnitProps, Verdict};
+pub use tokens::TypeScale;
 pub use wrap::{Col, Pos, Scale, P};
 
 /// A nested composition or the root. Only the root uses `fps`, `comps`, `fonts` and `audio`.
@@ -43,19 +50,50 @@ pub struct Composition {
     pub comps: BTreeMap<String, Composition>,
     /// Variables replacing `"$name"` strings anywhere in the file.
     pub vars: Map<String, Value>,
-    /// Font roles: `{"display": "fonts/Anton.ttf"}`, then `"font": "display"` on text layers.
+    /// Font roles: `{"display": "fonts/Anton.ttf"}`, then `"font": "display"` on text layers. Type roles may also set a font.
     pub fonts: BTreeMap<String, String>,
+    /// Named colours any kind can use (`"color": "accent"` or `"$accent"`). Not a look; looks are per kind.
+    #[serde(default)]
+    pub palette: Map<String, Value>,
+    /// Text styles per role. A number is still just a size; an object may add font, weight, colour, tracking.
+    /// A text layer's `"role": "display"|"title"|"body"` (or `"size": "display"`) picks one.
+    #[serde(rename = "type", default)]
+    pub type_scale: Option<TypeScale>,
+    /// Default treatment for image layers that do not set `fx`.
+    #[serde(default)]
+    pub image: Option<Value>,
+    /// Named plate recipes for shape layers (`"surface": "card"`).
+    #[serde(default)]
+    pub surface: Map<String, Value>,
+    /// Pad, gap, radius. Published as `$pad` / `$gap` / `$radius`; a shape may say `"radius": "radius"`.
+    #[serde(default)]
+    pub space: Map<String, Value>,
+    /// Enter / exit / snap: `{ "enter": { "dur": 0.4, "ease": "decel" } }`. Fills a layer enter/exit that omitted `dur`.
+    #[serde(default)]
+    pub motion: Option<Value>,
     /// Motion blur settings (samples per frame, shutter angle). Layers with `"mblur": true` blur along their motion; the defaults are 8 samples at 180 degrees.
     pub mblur: Option<MotionBlur>,
-    /// Effects applied to the finished picture, so images from different sources share one look.
+    /// Finishing on the finished picture (grain, vignette). Not type, not images; those have their own looks.
     pub look: Vec<Value>,
+    /// Check this composition's foreground layers for clashes (`check --layout`): text, cards, shapes and packs that overlap on screen.
+    pub layout: bool,
     /// Layers, bottom first.
     pub layers: Vec<Value>,
+    /// Root only. The folder every relative path (`src`, fonts, `fx_path`, blocks) starts from, relative to this
+    /// file. A film built by the SDK into another folder sets it to the script's folder.
+    pub root: Option<String>,
+    /// Root only. Extra folders of shader plugins (`*.sksl`), relative to the root folder; see `comp fx list`.
+    pub fx_path: Vec<String>,
+    /// Root only. Extra folders of blocks (`<job>/<name>.json`), relative to the root folder; see `comp blocks`.
+    pub block_path: Vec<String>,
+    /// Root only. Black bars (or a safe-area matte) drawn over the shots and their transitions: `[w, h]` of the
+    /// picture that stays visible, centred. Overlays and film-level layers sit above the bars.
+    pub letterbox: Option<[f64; 2]>,
 }
 
 impl Default for Composition {
     fn default() -> Self {
-        Composition { width: 1920, height: 1080, fps: 30, dur: 5.0, bg: None, bpm: None, beat_offset: 0.0, markers: vec![], comps: BTreeMap::new(), vars: Map::new(), fonts: BTreeMap::new(), mblur: None, look: vec![], layers: vec![] }
+        Composition { width: 1920, height: 1080, fps: 30, dur: 5.0, bg: None, bpm: None, beat_offset: 0.0, markers: vec![], comps: BTreeMap::new(), vars: Map::new(), fonts: BTreeMap::new(), palette: Map::new(), type_scale: None, image: None, surface: Map::new(), space: Map::new(), motion: None, mblur: None, look: vec![], layout: false, layers: vec![], root: None, fx_path: vec![], block_path: vec![], letterbox: None }
     }
 }
 
@@ -93,7 +131,9 @@ impl Fx {
         let o = v.as_object().ok_or_else(|| anyhow!("an effect is an object like {{\"effect\": \"blur\", \"radius\": 8}}"))?;
         let name = o.get("effect").and_then(Value::as_str).ok_or_else(|| anyhow!("an effect needs \"effect\": \"<name>\""))?;
         if effects::catalogue().iter().any(|e| e.effect == name) {
-            Ok(Fx::Builtin(Box::new(serde_json::from_value(v.clone()).map_err(|e| anyhow!("effect {name:?}: {e}"))?)))
+            let mut baked = v.clone();
+            bake::bake(&mut baked).map_err(|e| anyhow!("effect {name:?}: {e:#}"))?;
+            Ok(Fx::Builtin(Box::new(serde_json::from_value(baked).map_err(|e| anyhow!("effect {name:?}: {e}"))?)))
         } else {
             let mut params = o.clone();
             params.remove("effect");
@@ -164,11 +204,16 @@ pub struct Transit {
     pub dist: Option<f64>,
     /// Blur in pixels at the hidden end.
     pub blur: Option<f64>,
+    /// `window` only: where the portal sits when it is small, as `[centre x, centre y, width]`, all fractions of the
+    /// frame (the portal keeps the frame's aspect ratio). Default `[0.5, 0.5, 0.34]`.
+    pub portal: Option<[f64; 3]>,
+    /// `window` only: corner radius in pixels of the portal when it is small; it squares off as the portal opens.
+    pub radius: Option<f64>,
 }
 
 impl Default for Transit {
     fn default() -> Self {
-        Transit { preset: "fade".into(), dur: 0.5, delay: 0.0, ease: None, dist: None, blur: None }
+        Transit { preset: "fade".into(), dur: 0.5, delay: 0.0, ease: None, dist: None, blur: None, portal: None, radius: None }
     }
 }
 
@@ -193,10 +238,73 @@ pub struct Material {
     pub shininess: f64,
 }
 
+/// A faded, softened mirror of the layer, drawn on the floor beneath it.
+#[derive(Debug, Deserialize, Clone)]
+#[serde(deny_unknown_fields)]
+pub struct Reflect {
+    /// Opacity of the mirror at the floor line. Default 0.4.
+    #[serde(default)]
+    pub strength: Option<P>,
+    /// How much of the layer's height is mirrored, 0..1. Default 0.55.
+    #[serde(default)]
+    pub fade: Option<f64>,
+    /// Gap between the layer and the mirror, px. Default 8.
+    #[serde(default)]
+    pub gap: Option<f64>,
+    /// Softness of the mirror, px. Default 3.
+    #[serde(default)]
+    pub blur: Option<f64>,
+}
+
 impl Default for Material {
     fn default() -> Self {
         Material { ambient: 1.0, diffuse: 1.0, specular: 0.0, shininess: 32.0 }
     }
+}
+
+/// Wrap a coordinate into `[min, max)` after it is evaluated.
+#[derive(Debug, Deserialize, Clone)]
+#[serde(deny_unknown_fields)]
+pub struct Wrap {
+    pub x: Option<[f64; 2]>,
+    pub y: Option<[f64; 2]>,
+}
+
+/// GSAP stagger applied to a parent's children: they start `each` seconds apart.
+#[derive(Debug, Deserialize, Clone)]
+#[serde(deny_unknown_fields)]
+pub struct LayerStagger {
+    #[serde(default = "stagger_each")]
+    pub each: f64,
+    #[serde(default)]
+    pub from: StaggerFrom,
+    #[serde(default = "one_u32")]
+    pub seed: u32,
+}
+
+fn stagger_each() -> f64 {
+    0.1
+}
+
+fn one_u32() -> u32 {
+    1
+}
+
+/// GSAP Flip: this layer flies from `from`'s transform onto its own, starting at `at`.
+#[derive(Debug, Deserialize, Clone)]
+#[serde(deny_unknown_fields)]
+pub struct Flip {
+    pub from: String,
+    #[serde(default)]
+    pub at: f64,
+    #[serde(default = "flip_dur")]
+    pub dur: f64,
+    #[serde(default)]
+    pub ease: Option<String>,
+}
+
+fn flip_dur() -> f64 {
+    0.8
 }
 
 /// Fields every layer has.
@@ -223,15 +331,30 @@ pub struct Common {
     pub rotation: Option<P>,
     pub rot_x: Option<P>,
     pub rot_y: Option<P>,
+    /// Shear in degrees (GSAP `skewX`). Positive leans the top to the right.
+    pub skew: Option<P>,
     pub opacity: Option<P>,
+    /// After evaluating position, wrap `x` / `y` into a range (GSAP `modifiers.wrap`). A ticker: `"pos": ["time * -80", 900], "wrap": {"x": [-1920, 1920]}`.
+    pub wrap: Option<Wrap>,
+    /// Direct children start this many seconds apart (GSAP stagger on a group).
+    pub stagger: Option<LayerStagger>,
+    /// This layer interpolates from another layer's transform onto its own (GSAP Flip).
+    pub flip: Option<Flip>,
     pub blend: Option<Blend>,
     pub fx: Vec<Value>,
     pub masks: Vec<Mask>,
     pub matte: Option<Matte>,
+    /// Keep this layer inside another layer's alpha, and still draw that layer (unlike a track matte).
+    pub clip_to: Option<String>,
     pub mblur: bool,
+    /// How `check --layout` treats this layer: `foreground` (must not overlap other foreground layers), `backdrop` or `ignore`.
+    /// Left out, text, shapes, nested comps and packs are foreground.
+    pub layout: Option<String>,
     pub along: Option<Along>,
     pub enter: Option<Transit>,
     pub exit: Option<Transit>,
+    /// Draw a faded mirror of this layer on the floor beneath it.
+    pub reflect: Option<Reflect>,
 }
 
 #[derive(Debug, Clone)]
@@ -242,7 +365,7 @@ pub struct Layer {
 }
 
 const COMMON_KEYS: &[&str] = &[
-    "id", "start", "dur", "parent", "hidden", "three_d", "lit", "material", "pos", "anchor", "scale", "rotation", "rot_x", "rot_y", "opacity", "blend", "fx", "masks", "matte", "mblur", "along", "enter", "exit",
+    "id", "start", "dur", "parent", "hidden", "three_d", "lit", "material", "pos", "anchor", "scale", "rotation", "rot_x", "rot_y", "skew", "opacity", "wrap", "stagger", "flip", "blend", "fx", "masks", "matte", "clip_to", "mblur", "layout", "along", "enter", "exit", "reflect",
 ];
 
 /// Parse layer number `index` of a composition.
@@ -271,6 +394,7 @@ pub fn parse_layer(index: usize, v: &Value) -> Result<Layer> {
             Kind::Shape(Shape { items: items.iter().enumerate().map(|(i, it)| ShapeItem::parse(it).with_context(|| format!("item {i}"))).collect::<Result<_>>().with_context(label)? })
         }
         "text" => Kind::Text(serde_json::from_value(kv).map_err(kind_err)?),
+        "mesh" => Kind::Mesh(serde_json::from_value(kv).map_err(kind_err)?),
         "image" => Kind::Image(serde_json::from_value(kv).map_err(kind_err)?),
         "video" => Kind::Video(serde_json::from_value(kv).map_err(kind_err)?),
         "audio" => Kind::Audio(serde_json::from_value(kv).map_err(kind_err)?),
@@ -286,6 +410,7 @@ pub fn parse_layer(index: usize, v: &Value) -> Result<Layer> {
     };
     Ok(Layer { common, fx, kind })
 }
+
 
 fn no_fields(kv: &Value, ty: &str, label: &dyn Fn() -> String) -> Result<()> {
     match kv.as_object().and_then(|m| m.keys().next()) {

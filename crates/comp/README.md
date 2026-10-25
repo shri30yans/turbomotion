@@ -29,6 +29,10 @@ Anything animated is a *property*: a number, an expression string, keys `[[t, va
 `ref("id", "prop")`, `beat()`, `amp("audio-id")`, `onset("audio-id")` (audio-reactive), and the layer's `time`,
 `index`, `progress`.
 
+Image layers accept `"sampling": "nearest" | "linear"`. Omit it for automatic cubic enlargement and mipmapped
+reduction. Precomp layers accept the same field and default to linear filtering. For pixel art inside a scaled
+precomp, set `sampling: "nearest"` on both the image and its precomp, then use integer scale and aligned positions.
+
 ## Working like an agent
 
 1. `catalogue` for the vocabulary. Write `comp.json`; reuse a block (`{"type": "precomp", "block": "lower_third",
@@ -56,24 +60,49 @@ half4 main(float2 xy) {
 You get `image` (effects), `resolution`, `time` and a standard library (`hash21`, `vnoise`, `fbm`, `worley`,
 `worley12`, `rot2`, `luma`, `hsv2rgb`, `sdBox`, `straight`, `premul`). Parameters are bound by name; compile errors
 come back with *your* line number and the line itself. `@kind generator` makes a texture layer instead of an effect.
-The pack ships halftone, duotone, posterize, kaleidoscope, glitch_slices, vhs, light_sweep, ripple, mirror and the
-generators noise, clouds, cells, stripes, grid, gradient, light_leak.
+The pack ships looks (halftone, duotone, vhs, holo, light_sweep), generators (noise, clouds, bokeh, floor), hits
+(`flash`, `lightning`, `bolt`, `shockwave`, `impact`), optical (`anamorphic`, `shafts`, `haze`, `rain`, `prism`,
+`barrel`, `bleach`, `chroma_hold`) and archive (`dropout`, `flicker`, `gate_weave`, `interference`, `static`,
+`film_burn`). `comp fx test <name>` sweeps each knob.
+
+## The edit timeline
+
+A root `"timeline"` writes a film as tracks: `shots` (each a comp, layers, a picture or a clip) with a transition
+`in` to each, `overlays` placed by shot, `hits` for sound. It expands into ordinary layers before anything else is
+read, so `inspect`, `check` and the layout gate see every transition. 29 transitions (push, slide over, whip pan,
+pan out to the next shot, zoom through, flood, iris, wipes, dips, glitch) move the outgoing and incoming shots as
+one strip and carry a kit sound timed to their midpoint; `speed` keys become a time remap (ramps, freezes); `move`
+and `camera` give 2D frame moves and 3D camera moves (orbit, dolly zoom, crane, truck). `mesh` is the one 3D object layer: its `geometry` is `text`, `box`, `sphere`, `torus`, `cylinder` or `extrude`, and `rot_x`/`rot_y` turn it
+about its middle (`"rot_y": "time*90"` is a turntable; `examples/comp/19-solids`). `extrude` on a text layer gives flat 3D-ish depth. `comp catalogue | jq .timeline` lists it all; `examples/comp/16-timeline` uses every family.
+
+## Tools that rewrite or produce composition JSON
+
+| Command | What it does |
+| --- | --- |
+| `comp svg art.svg --width 400 --out art.layer.json` | SVG to a shape layer (`path`, `rect`, `circle`, `ellipse`, `line`, `polyline`, `polygon`, `g`, fill/stroke/opacity, `viewBox`, `translate`). Skipped elements are printed as warnings, never dropped silently. Paste the layer into `layers`; animate it with `trim`, `fill`, `morph_to`. |
+| `comp reframe comp.json --out vertical.json --size 1080x1920 --mode cover\|contain --focus 0.5` | Wraps a finished composition for another aspect ratio. `cover` crops to fill (follow the subject with `--focus`); `contain` fits the picture over a blurred, darkened copy. The source is never edited; keep the output beside it so relative assets resolve. |
+| `comp watch comp.json --out sheet.png` | Re-checks and re-draws the contact sheet whenever the file is saved; a half-typed edit prints its error and the loop keeps going. `--once` does a single pass. |
+| `comp render comp.json --out lower_third.mov --codec alpha` | ProRes 4444 with transparency for overlays and mattes (the output must be `.mov`). |
+
+The built-in pack currently lists 65 effects and generators (`comp fx list`), including `bloom`, `halation`, `tilt_shift`, `split_tone`, `edge_glow`, `liquid` and `pixel_dissolve`. Sweep any of them with `comp fx test NAME --out sheet.png`.
 
 ## Ownership
 
 `comp` depends only on `turbomotion-core`. It knows no film element; graphics from other crates arrive through
-[`pack::Pack`](src/pack.rs) (the studio's globe, maps and charts as `studio.element`). See
+[`pack::Pack`](src/pack.rs), registered by whichever binary hosts the engine. See
 [../../docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md).
 
 ## Layout
 
 ```
-schema/    what can be said (strict serde, blocks, time literals)      plan/    what it means (resolved names, probed media)
+schema/    what can be said (strict serde, timeline, blocks, extrude, time literals)      plan/    what it means (resolved names, probed media)
 eval/      what is true at t (pure numbers; `inspect`)                 render/  how it looks (Skia/Metal; masks, mattes, fx)
 anim/      eases, properties, expressions, noise                       text/    layout, per-character animators, presets
 fxlib/     shader plugins and the built-in pack                        media/   image cache, ffmpeg video, probes
 audio/     mix and analysis signals                                    check/   lint and assertions
-pack.rs    the host-registered graphics interface                      blocks/  built-in parametrised compositions
+pack.rs    the host-registered graphics interface                      blocks/<job>/  the built-in blocks, compiled in
 ```
 
-Examples that render: `examples/comp/01-shapes` … `08-packs`. Tests: `cargo test -p turbomotion-comp`.
+Examples that render: `examples/comp/01-shapes` … `09-look`. Tests: `cargo test -p turbomotion-comp`.
+
+Tokens: `"palette"` is shared ink; `"type"` is text styles per role (size, font, weight, colour); `"image"` is picture treatment; `"surface"` is named plates; `"look"` is finishing on the finished frame. Text takes `"role"`, `"fill": "metal"` or a gradient, `"mark"` for a highlighter sweep across one word, and `preset: "reveal"` for a masked line-by-line open. Layers may `"reflect"` onto the floor. Audio `"src": "kit:card-in"` (also `stamp`, `counter`, `loss`, `reveal`). Check also gates contrast, minimum type size, `hero` frames and PNG `golden`s.

@@ -1,0 +1,11 @@
+// @effect static
+// @kind generator
+// @summary Broadcast snow. Blend `add` or `overlay` over a dead monitor.
+// @param amount float 0.45 0 1 -- density of the snow
+// @param tint color #d0d6e0 -- colour of the snow
+half4 main(float2 xy) {
+    float n = hash21(float2(floor(xy.x), floor(xy.y) + floor(time * 50.0)));
+    float k = step(1.0 - amount, n) * n;
+    float a = clamp(k, 0.0, 1.0);
+    return half4(half3(tint.rgb * a), half(a));
+}

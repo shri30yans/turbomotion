@@ -1,0 +1,26 @@
+// @effect bokeh
+// @kind generator
+// @summary Soft discs of light: a night-city floor, a lens wide open.
+// @param density float 0.4 0.05 1 -- how many discs (share of the 48 slots that light up)
+// @param scale float 70 12 240 -- typical disc radius, px
+// @param brightness float 0.55 0 2 -- how hot the cores are
+// @param tint color #ffd9a8 -- colour of the lights
+// @param seed float 3 0 80 -- which arrangement
+half4 main(float2 xy) {
+    float3 col = float3(0.0);
+    float a = 0.0;
+    float slots = 48.0 * clamp(density, 0.05, 1.0);
+    for (int i = 0; i < 48; i++) {
+        float on = step(float(i), slots - 0.5);
+        float2 id = hash22(float2(float(i) + seed, seed * 1.7 + 4.0));
+        float2 pos = id * resolution;
+        float r = mix(scale * 0.22, scale, hash21(id + float2(9.0, 2.0)));
+        float twinkle = 0.75 + 0.25 * sin(time * mix(0.4, 1.6, id.y) + id.x * 6.2);
+        float d = length(xy - pos) / max(r, 1.0);
+        float disc = pow(clamp(1.0 - d, 0.0, 1.0), 2.4) * twinkle * on;
+        float3 hue = mix(tint.rgb, tint.rgb * float3(1.0, 0.82, 0.65), id.x * 0.5);
+        col += hue * disc * brightness;
+        a += disc * 0.4;
+    }
+    return premul(clamp(col, 0.0, 1.0), clamp(a, 0.0, 1.0));
+}

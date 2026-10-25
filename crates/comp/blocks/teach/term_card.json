@@ -1,0 +1,191 @@
+{
+  "width": 1400,
+  "height": 304,
+  "fps": 30,
+  "dur": 10,
+  "job": "teach",
+  "best_for": [
+    "a term the voice is about to use",
+    "what / why / example / name"
+  ],
+  "breaks": "Name the idea first, the word last. The example is dollars and labelled EXAMPLE.",
+  "props": [
+    "term",
+    "what",
+    "why",
+    "example"
+  ],
+  "vars": {
+    "accent": "#e8402f",
+    "ink": "#f6f4ee",
+    "mute": "#687e96",
+    "plate": "#121a26",
+    "loss": "#e8402f",
+    "gold": "#deb052",
+    "gain": "#3eb696",
+    "sub": "#687e96",
+    "term": "A future",
+    "what": "A bet on a price at a date you agree now.",
+    "why": "So a farmer can lock a price before harvest.",
+    "example": "Say Acme is $10. You agree to buy it at $10 in a month."
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "plate",
+      "pos": [
+        700.0,
+        152.0
+      ],
+      "layout": "backdrop",
+      "items": [
+        {
+          "rect": [
+            -692.0,
+            -144.0,
+            1384,
+            288.0
+          ],
+          "radius": 18.0,
+          "fill": {
+            "color": "$plate",
+            "opacity": 0.94
+          },
+          "stroke": {
+            "color": "#3d4f6e",
+            "width": 1.5
+          }
+        }
+      ],
+      "enter": {
+        "preset": "slide_up",
+        "dur": 0.4,
+        "ease": "expo.out"
+      }
+    },
+    {
+      "type": "shape",
+      "id": "bar",
+      "pos": [
+        24.0,
+        152.0
+      ],
+      "items": [
+        {
+          "rect": [
+            0,
+            -128.0,
+            8,
+            256.0
+          ],
+          "radius": 4,
+          "fill": "$accent"
+        }
+      ],
+      "scale": {
+        "from": [
+          1,
+          0
+        ],
+        "to": [
+          1,
+          1
+        ],
+        "at": 0.06,
+        "dur": 0.5,
+        "ease": "expo.out"
+      }
+    },
+    {
+      "type": "text",
+      "id": "what",
+      "text": "$what",
+      "role": "title",
+      "color": "$ink",
+      "pos": [
+        64.0,
+        52.0
+      ],
+      "align": "left",
+      "width": 1312.0,
+      "preset": {
+        "name": "reveal",
+        "at": 0.12
+      }
+    },
+    {
+      "type": "text",
+      "id": "why",
+      "text": "$why",
+      "role": "body",
+      "color": "$mute",
+      "pos": [
+        64.0,
+        108.0
+      ],
+      "align": "left",
+      "width": 1312.0,
+      "preset": {
+        "name": "reveal",
+        "at": 0.32
+      }
+    },
+    {
+      "type": "text",
+      "id": "ex_tag",
+      "text": "EXAMPLE",
+      "weight": 700,
+      "size": 16,
+      "tracking": 3,
+      "color": "$accent",
+      "pos": [
+        64.0,
+        152.0
+      ],
+      "align": "left",
+      "preset": {
+        "name": "fade_up",
+        "at": 0.48
+      }
+    },
+    {
+      "type": "text",
+      "id": "example",
+      "text": "$example",
+      "role": "body",
+      "color": "$ink",
+      "pos": [
+        64.0,
+        188.0
+      ],
+      "align": "left",
+      "width": 1312.0,
+      "preset": {
+        "name": "reveal",
+        "at": 0.52
+      }
+    },
+    {
+      "type": "text",
+      "id": "term",
+      "text": "$term",
+      "role": "title",
+      "weight": 800,
+      "color": "$accent",
+      "pos": [
+        64.0,
+        232.0
+      ],
+      "align": "left",
+      "preset": {
+        "name": "tracking_in",
+        "at": 0.72
+      }
+    }
+  ],
+  "uses": {
+    "type": "title",
+    "surface": "card",
+    "motion": "enter"
+  }
+}

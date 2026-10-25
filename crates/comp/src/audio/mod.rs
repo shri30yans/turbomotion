@@ -2,6 +2,8 @@
 //! mixed in Rust (per-sample gain from volume properties and fades) and muxed into the rendered video.
 
 pub mod signal;
+#[cfg(test)]
+mod tests;
 
 use std::{
     fs,
@@ -78,20 +80,29 @@ fn soft_clip(x: f32) -> f32 {
 
 /// Mix every clip into one stereo WAV (32-bit float) of `dur` seconds. `None` when the composition has no sound.
 pub fn mix(plan: &Plan, dur: f64, wav: &Path) -> Result<Option<()>> {
+    mix_range(plan, 0.0..dur, wav)
+}
+
+/// Mix a film-time interval into a zero-based WAV; preserve the source time, automation and fades.
+pub fn mix_range(plan: &Plan, range: std::ops::Range<f64>, wav: &Path) -> Result<Option<()>> {
+    ensure!(range.start.is_finite() && range.end.is_finite() && range.start >= 0.0 && range.end > range.start,
+        "audio range must have finite seconds with 0 <= start < end");
     let mut clips = vec![];
-    collect(plan, ROOT, (1.0, 0.0), (0.0, dur), &mut clips);
+    collect(plan, ROOT, (1.0, 0.0), (0.0, plan.root().dur), &mut clips);
+    clips.retain(|clip| clip.to > range.start && clip.from < range.end);
+    let dur = range.end - range.start;
     if clips.is_empty() {
         return Ok(None);
     }
     let ev = Evaluator::new(plan);
     let sr = f64::from(SAMPLE_RATE);
-    let total = (dur * sr).ceil() as usize;
+    let total = (dur * sr).round() as usize;
     let mut mixbuf = vec![0f32; total * 2];
     for clip in &clips {
         let pcm = decode(clip).with_context(|| format!("audio {}", clip.path.display()))?;
         let comp: &CompPlan = &plan.comps[&clip.comp];
-        let first = (clip.from * sr) as usize;
-        let last = ((clip.to * sr) as usize).min(total);
+        let first = ((clip.from - range.start).max(0.0) * sr).round() as usize;
+        let last = (((clip.to - range.start).max(0.0) * sr).round() as usize).min(total);
         let block = (SAMPLE_RATE / 100) as usize;
         let gain_at = |root_t: f64| -> Result<f64> {
             let comp_t = (root_t - clip.map.1) / clip.map.0;
@@ -117,11 +128,11 @@ pub fn mix(plan: &Plan, dur: f64, wav: &Path) -> Result<Option<()>> {
         let mut i = first;
         while i < last {
             let end = (i + block).min(last);
-            let (g0, g1) = (gain_at(i as f64 / sr)?, gain_at(end as f64 / sr)?);
+            let (g0, g1) = (gain_at(range.start + i as f64 / sr)?, gain_at(range.start + end as f64 / sr)?);
             for k in i..end {
                 let u = (k - i) as f64 / (end - i).max(1) as f64;
                 let g = (g0 + (g1 - g0) * u) as f32;
-                let pos = (k as f64 / sr - clip.from) * clip.speed * sr;
+                let pos = (range.start + k as f64 / sr - clip.from) * clip.speed * sr;
                 let (p0, f) = (pos.floor() as usize, (pos - pos.floor()) as f32);
                 for ch in 0..2 {
                     let a = pcm.get(p0 * 2 + ch).copied().unwrap_or(0.0);

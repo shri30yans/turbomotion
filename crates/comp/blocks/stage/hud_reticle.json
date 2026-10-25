@@ -1,0 +1,105 @@
+{
+  "width": 640,
+  "height": 640,
+  "fps": 30,
+  "dur": 12,
+  "job": "stage",
+  "best_for": [
+    "the screen they were watching",
+    "a live price readout",
+    "telemetry over a floor"
+  ],
+  "breaks": "The shader draws rings and brackets only. Numbers are text. Keep it sparse or it becomes sci-fi.",
+  "props": [
+    "kicker",
+    "value",
+    "font"
+  ],
+  "vars": {
+    "accent": "#e8402f",
+    "ink": "#f6f4ee",
+    "mute": "#687e96",
+    "plate": "#121a26",
+    "loss": "#e8402f",
+    "gold": "#deb052",
+    "gain": "#3eb696",
+    "sub": "MARK",
+    "kicker": "LAST",
+    "value": "827",
+    "font": "Avenir Next Condensed"
+  },
+  "layers": [
+    {
+      "type": "texture",
+      "shader": "hud",
+      "params": {
+        "tint": "$accent",
+        "amount": 0.9
+      }
+    },
+    {
+      "type": "text",
+      "id": "kicker",
+      "text": "$kicker",
+      "font": "$font",
+      "weight": 600,
+      "size": 16,
+      "tracking": 5,
+      "color": "$accent",
+      "pos": [
+        320,
+        210
+      ],
+      "align": "center",
+      "preset": {
+        "name": "tracking_in",
+        "at": 0.15
+      }
+    },
+    {
+      "type": "text",
+      "id": "value",
+      "text": "$value",
+      "font": "$font",
+      "weight": 800,
+      "size": 64,
+      "color": "$ink",
+      "pos": [
+        320,
+        300
+      ],
+      "align": "center",
+      "preset": {
+        "name": "pop",
+        "at": 0.25
+      },
+      "fx": [
+        {
+          "effect": "glow",
+          "radius": 12,
+          "strength": 0.7,
+          "threshold": 0.2
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "id": "sub",
+      "text": "$sub",
+      "font": "$font",
+      "weight": 600,
+      "size": 16,
+      "tracking": 5,
+      "color": "$accent",
+      "pos": [
+        320,
+        372
+      ],
+      "align": "center",
+      "preset": {
+        "name": "fade_up",
+        "at": 0.5
+      }
+    }
+  ]
+}

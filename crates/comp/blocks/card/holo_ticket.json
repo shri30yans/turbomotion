@@ -1,0 +1,151 @@
+{
+  "width": 760,
+  "height": 360,
+  "fps": 30,
+  "dur": 12,
+  "job": "card",
+  "best_for": [
+    "a trade ticket",
+    "a receipt",
+    "an admission that was the bet"
+  ],
+  "breaks": "The silhouette is the die-cut. Foil + holo go on that shape; do not put type in the same 3D sort run as the pane.",
+  "props": [
+    "title",
+    "serial",
+    "font"
+  ],
+  "vars": {
+    "accent": "#e8402f",
+    "ink": "#f6f4ee",
+    "mute": "#687e96",
+    "plate": "#121a26",
+    "loss": "#e8402f",
+    "gold": "#deb052",
+    "gain": "#3eb696",
+    "sub": "20 FUTURE CONTRACTS",
+    "title": "TRADE TICKET",
+    "serial": "TK-20-BUY",
+    "font": "Avenir Next"
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "stub",
+      "pos": [
+        380,
+        180
+      ],
+      "fx": [
+        {
+          "effect": "foil",
+          "amount": 0.55,
+          "shift": {
+            "keys": [
+              [
+                0,
+                0
+              ],
+              [
+                2.6,
+                0.5,
+                "sine.inOut"
+              ]
+            ],
+            "loop": "pingpong"
+          }
+        },
+        {
+          "effect": "holo",
+          "tint": "$accent",
+          "edge": 1.8,
+          "width": 4.5,
+          "fill": 0.4,
+          "sheen": 0.5
+        },
+        {
+          "effect": "comet",
+          "tint": "$accent",
+          "speed": 0.2,
+          "strength": 1.4,
+          "width": 10
+        },
+        {
+          "effect": "glow",
+          "radius": 22,
+          "strength": 1.1,
+          "threshold": 0.2
+        }
+      ],
+      "items": [
+        {
+          "d": "M -340 -140 L 300 -140 Q 340 -140 340 -100 L 340 100 Q 340 140 300 140 L -340 140 L -340 36 Q -318 0 -340 -36 Z",
+          "fill": {
+            "color": "#070b14",
+            "opacity": 0.82
+          }
+        }
+      ],
+      "enter": {
+        "preset": "wipe_left",
+        "dur": 0.7
+      }
+    },
+    {
+      "type": "text",
+      "id": "serial",
+      "text": "$serial",
+      "font": "$font",
+      "weight": 600,
+      "size": 16,
+      "tracking": 4,
+      "color": "$accent",
+      "pos": [
+        360,
+        88
+      ],
+      "align": "center",
+      "preset": {
+        "name": "tracking_in",
+        "at": 0.35
+      }
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "text": "$title",
+      "font": "$font",
+      "weight": 800,
+      "size": 44,
+      "color": "$ink",
+      "pos": [
+        360,
+        168
+      ],
+      "align": "center",
+      "preset": {
+        "name": "reveal",
+        "at": 0.4
+      }
+    },
+    {
+      "type": "text",
+      "id": "sub",
+      "text": "$sub",
+      "font": "$font",
+      "weight": 600,
+      "size": 18,
+      "tracking": 2,
+      "color": "$accent",
+      "pos": [
+        360,
+        236
+      ],
+      "align": "center",
+      "preset": {
+        "name": "fade_up",
+        "at": 0.7
+      }
+    }
+  ]
+}

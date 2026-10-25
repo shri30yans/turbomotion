@@ -2,12 +2,12 @@
 //! adjustment layer, which applies the same machinery to everything composited below it.
 
 use anyhow::{Context, Result};
-use skia_safe::{color_filters, image_filters, AlphaType, BlendMode, Canvas, ColorType, ISize, ImageInfo, Paint, PaintStyle, PathFillType, Surface, TileMode};
+use skia_safe::{color_filters, image_filters, AlphaType, BlendMode, Canvas, ColorType, ISize, ImageInfo, Paint, PaintStyle, Path, PathFillType, Rect, Surface, TileMode};
 use turbomotion_core::{effects, layer::Layer};
 
 use super::{content::paint_content, Ctx};
 use crate::{
-    eval::{Frame, LayerState},
+    eval::{transit::Clip, Frame, LayerState},
     plan::CompPlan,
     schema::{MaskMode, MatteMode},
 };
@@ -41,12 +41,91 @@ pub fn layer_image(ctx: &Ctx, like: &Canvas, frame: &Frame, comp: &CompPlan, i: 
         let cov = mask_coverage(like, frame, comp, st)?;
         img = multiply_by(like, frame, &img, &cov)?;
     }
+    if let Some(src) = lp.clip_to {
+        let m = layer_image(ctx, like, frame, comp, src)?;
+        let cov = matte_coverage(like, frame, &m, MatteMode::Alpha, frame.layers[src].opacity)?;
+        img = multiply_by(like, frame, &img, &cov)?;
+    }
     if let Some((src, mode)) = lp.matte {
         let m = layer_image(ctx, like, frame, comp, src)?;
         let cov = matte_coverage(like, frame, &m, mode, frame.layers[src].opacity)?;
         img = multiply_by(like, frame, &img, &cov)?;
     }
+    if let (Some(r), Some(b)) = (st.reflect, st.bounds) {
+        img = floor_reflect(like, img, b, r)?;
+    }
+    if let (Some(clip), Some(b)) = (st.clip, st.bounds) {
+        img = apply_clip(like, frame, &img, b, clip)?;
+    }
     Ok(img)
+}
+
+/// A wipe / iris, in the layer's screen-space box.
+fn apply_clip(like: &Canvas, frame: &Frame, img: &Layer, bounds: [f64; 4], clip: Clip) -> Result<Layer> {
+    let (x0, y0, x1, y1) = (bounds[0], bounds[1], bounds[2], bounds[3]);
+    let (w, h) = ((x1 - x0).max(1.0), (y1 - y0).max(1.0));
+    Layer::render(like, frame.width as i32, frame.height as i32, |c| {
+        c.save();
+        match clip {
+            Clip::Rect(r) => {
+                let rect = Rect::from_ltrb((x0 + r[0] * w) as f32, (y0 + r[1] * h) as f32, (x0 + r[2] * w) as f32, (y0 + r[3] * h) as f32);
+                c.clip_rect(rect, None, Some(true));
+            }
+            Clip::Round { rect: r, radius } => {
+                let rect = Rect::from_ltrb((x0 + r[0] * w) as f32, (y0 + r[1] * h) as f32, (x0 + r[2] * w) as f32, (y0 + r[3] * h) as f32);
+                let rr = skia_safe::RRect::new_rect_xy(rect, radius as f32, radius as f32);
+                c.clip_rrect(rr, None, Some(true));
+            }
+            Clip::Circle(k) => {
+                let rad = (k * 0.5 * (w * w + h * h).sqrt()) as f32;
+                let mut path = Path::new();
+                path.add_circle((((x0 + x1) * 0.5) as f32, ((y0 + y1) * 0.5) as f32), rad, None);
+                c.clip_path(&path, None, Some(true));
+            }
+        }
+        c.draw_image(img.image(), (0, 0), None);
+        c.restore();
+    })
+}
+
+/// A faded, softened mirror of the layer's pixels, drawn on the floor beneath its bounding box.
+fn floor_reflect(like: &Canvas, img: Layer, bounds: [f64; 4], r: crate::eval::ReflectState) -> Result<Layer> {
+    if r.strength <= 0.01 {
+        return Ok(img);
+    }
+    let (x0, y0, x1, y1) = (bounds[0], bounds[1], bounds[2], bounds[3]);
+    let content_h = (y1 - y0 - r.gap).max(1.0) / (1.0 + r.fade);
+    let floor = y0 + content_h;
+    let n = (content_h * r.fade).max(1.0);
+    let (fw, fh) = (img.width(), img.height());
+    let dest = Rect::from_xywh(x0 as f32, (floor + r.gap) as f32, (x1 - x0).max(1.0) as f32, n as f32);
+    let strip = Layer::render(like, fw, fh, |c| {
+        c.save();
+        c.clip_rect(dest, None, Some(true));
+        // y_dest = (floor + gap) + (floor - y_src)  =>  y' = -y + 2*floor + gap
+        c.concat(&skia_safe::Matrix::new_all(1.0, 0.0, 0.0, 0.0, -1.0, (2.0 * floor + r.gap) as f32, 0.0, 0.0, 1.0));
+        c.draw_image(img.image(), (0, 0), None);
+        c.restore();
+        let fade = skia_safe::gradient_shader::linear(
+            (skia_safe::Point::new(0.0, dest.top), skia_safe::Point::new(0.0, dest.bottom)),
+            skia_safe::gradient_shader::GradientShaderColors::ColorsInSpace(
+                &[skia_safe::Color4f::new(0.0, 0.0, 0.0, r.strength as f32), skia_safe::Color4f::new(0.0, 0.0, 0.0, 0.0)],
+                None,
+            ),
+            None,
+            skia_safe::TileMode::Clamp,
+            None,
+            None,
+        );
+        let mut mask = Paint::default();
+        mask.set_shader(fade).set_blend_mode(BlendMode::DstIn);
+        c.draw_rect(dest, &mask);
+    })?;
+    let soft = strip.blurred(like, r.blur)?;
+    Layer::render(like, fw, fh, |c| {
+        c.draw_image(img.image(), (0, 0), None);
+        c.draw_image(soft.image(), (0, 0), None);
+    })
 }
 
 /// `img` where `cov` has alpha.

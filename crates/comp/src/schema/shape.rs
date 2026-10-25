@@ -13,6 +13,8 @@ pub struct ShapeItem {
     pub stroke: Option<Stroke>,
     pub trim: Option<Trim>,
     pub offset: Option<Pos>,
+    /// The point of the item that `rotation` and `scale` turn about, in layer space (default: the layer's origin).
+    pub anchor: Option<Pos>,
     pub rotation: Option<P>,
     pub scale: Option<Scale>,
     pub opacity: Option<P>,
@@ -20,7 +22,16 @@ pub struct ShapeItem {
 }
 
 const PATH_KEYS: &[&str] = &["d", "points", "closed", "smooth", "rect", "radius", "ellipse", "polygon", "star", "rotate", "morph_to", "morph"];
-const ITEM_KEYS: &[&str] = &["fill", "stroke", "trim", "offset", "rotation", "scale", "opacity", "repeat"];
+const ITEM_KEYS: &[&str] = &["fill", "stroke", "trim", "offset", "anchor", "rotation", "scale", "opacity", "repeat"];
+
+/// A brushed-metal ramp: highlight, mid, shadow. Used as a fill on big numbers and on metal edges.
+#[derive(Debug, Deserialize, Clone, Default)]
+#[serde(default, deny_unknown_fields)]
+pub struct Metal {
+    pub highlight: Option<Col>,
+    pub mid: Option<Col>,
+    pub shadow: Option<Col>,
+}
 
 impl ShapeItem {
     /// A shape item is its geometry keys (`rect`, `ellipse`, `d`, ...) and its look keys (`fill`, `stroke`, `trim`...) in one object.
@@ -41,6 +52,7 @@ impl ShapeItem {
             stroke: get("stroke").map(|s| serde_json::from_value::<Stroke>(s.clone())).transpose().map_err(|e| anyhow!("stroke: {e}"))?,
             trim: get("trim").map(|s| serde_json::from_value::<Trim>(s.clone())).transpose().map_err(|e| anyhow!("trim: {e}"))?,
             offset: get("offset").map(|s| serde_json::from_value::<Pos>(s.clone())).transpose().map_err(|e| anyhow!("offset: {e}"))?,
+            anchor: get("anchor").map(|s| serde_json::from_value::<Pos>(s.clone())).transpose().map_err(|e| anyhow!("anchor: {e}"))?,
             rotation: get("rotation").map(|s| serde_json::from_value::<P>(s.clone())).transpose().map_err(|e| anyhow!("rotation: {e}"))?,
             scale: get("scale").map(|s| serde_json::from_value::<Scale>(s.clone())).transpose().map_err(|e| anyhow!("scale: {e}"))?,
             opacity: get("opacity").map(|s| serde_json::from_value::<P>(s.clone())).transpose().map_err(|e| anyhow!("opacity: {e}"))?,
@@ -53,32 +65,49 @@ impl ShapeItem {
 pub struct Fill {
     pub color: Option<Col>,
     pub gradient: Option<Gradient>,
+    pub metal: Option<Metal>,
     pub opacity: Option<P>,
     pub even_odd: bool,
 }
 
 impl Fill {
-    /// A bare colour, or `{"color": .., "gradient": .., "opacity": .., "rule": "evenodd"}`.
+    /// A bare colour, `"metal"`, or `{"color"|"gradient"|"metal", "opacity", "rule"}`.
     pub fn parse(v: &Value) -> Result<Fill> {
-        let is_object_form = v.as_object().is_some_and(|o| o.contains_key("color") || o.contains_key("gradient") || o.contains_key("opacity") || o.contains_key("rule"));
+        if v.as_str() == Some("metal") {
+            return Ok(Fill { color: None, gradient: None, metal: Some(Metal::default()), opacity: None, even_odd: false });
+        }
+        let is_object_form = v.as_object().is_some_and(|o| o.contains_key("color") || o.contains_key("gradient") || o.contains_key("metal") || o.contains_key("opacity") || o.contains_key("rule"));
         if !is_object_form {
-            return Ok(Fill { color: Some(serde_json::from_value(v.clone()).map_err(|e| anyhow!("{e}"))?), gradient: None, opacity: None, even_odd: false });
+            return Ok(Fill { color: Some(serde_json::from_value(v.clone()).map_err(|e| anyhow!("{e}"))?), gradient: None, metal: None, opacity: None, even_odd: false });
         }
         let o = v.as_object().expect("checked");
-        if let Some(bad) = o.keys().find(|k| !["color", "gradient", "opacity", "rule"].contains(&k.as_str())) {
-            bail!("unknown fill field {bad:?}; valid: color, gradient, opacity, rule");
+        if let Some(bad) = o.keys().find(|k| !["color", "gradient", "metal", "opacity", "rule"].contains(&k.as_str())) {
+            bail!("unknown fill field {bad:?}; valid: color, gradient, metal, opacity, rule");
         }
         let even_odd = match o.get("rule").and_then(Value::as_str) {
             None | Some("nonzero") => false,
             Some("evenodd") => true,
             Some(other) => bail!("fill rule must be nonzero or evenodd, not {other:?}"),
         };
+        let metal = match o.get("metal") {
+            None => None,
+            Some(Value::Bool(true)) => Some(Metal::default()),
+            Some(v) => Some(serde_json::from_value(v.clone()).map_err(|e| anyhow!("metal: {e}"))?),
+        };
         Ok(Fill {
             color: o.get("color").map(|c| serde_json::from_value(c.clone())).transpose().map_err(|e| anyhow!("{e}"))?,
             gradient: o.get("gradient").map(|c| serde_json::from_value(c.clone())).transpose().map_err(|e| anyhow!("gradient: {e}"))?,
+            metal,
             opacity: o.get("opacity").map(|c| serde_json::from_value(c.clone())).transpose().map_err(|e| anyhow!("{e}"))?,
             even_odd,
         })
+    }
+}
+
+impl<'de> Deserialize<'de> for Fill {
+    fn deserialize<D: serde::Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        let v = Value::deserialize(d)?;
+        Fill::parse(&v).map_err(serde::de::Error::custom)
     }
 }
 

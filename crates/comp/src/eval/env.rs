@@ -67,23 +67,32 @@ impl Env for LayerEnv<'_> {
                     self.t_comp - m.t
                 }
                 // ref("title", "x"): another layer's transform property right now.
-                "ref" => {
+                "ref" | "vel" => {
                     if self.depth >= 6 {
-                        bail!("ref() chains are too deep (a loop of layers following each other?)");
+                        bail!("{name}() chains are too deep (a loop of layers following each other?)");
                     }
-                    let id = args.first().ok_or_else(|| anyhow!("ref() needs a layer id"))?.str()?;
-                    let prop = args.get(1).ok_or_else(|| anyhow!("ref(\"id\", \"prop\") needs a property"))?.str()?;
-                    let l = self.comp.layers.iter().find(|l| l.def.common.id.as_deref() == Some(id)).ok_or_else(|| anyhow!("ref(): no layer with id {id:?}"))?;
-                    let p = self.ev.local_props(self.comp, l, self.t_comp, self.depth + 1)?;
-                    match prop {
-                        "x" => p.pos[0],
-                        "y" => p.pos[1],
-                        "z" => p.pos[2],
-                        "rotation" => p.rotation,
-                        "opacity" => p.opacity,
-                        "scale" | "sx" => p.scale[0],
-                        "sy" => p.scale[1],
-                        other => bail!("ref(): unknown property {other:?}; use x, y, z, rotation, opacity, scale, sx, sy"),
+                    let id = args.first().ok_or_else(|| anyhow!("{name}() needs a layer id"))?.str()?;
+                    let prop = args.get(1).ok_or_else(|| anyhow!("{name}(\"id\", \"prop\") needs a property"))?.str()?;
+                    let l = self.comp.layers.iter().find(|l| l.def.common.id.as_deref() == Some(id)).ok_or_else(|| anyhow!("{name}(): no layer with id {id:?}"))?;
+                    let at = |t: f64| -> Result<f64> {
+                        let p = self.ev.local_props(self.comp, l, t, self.depth + 1)?;
+                        Ok(match prop {
+                            "x" => p.pos[0],
+                            "y" => p.pos[1],
+                            "z" => p.pos[2],
+                            "rotation" => p.rotation,
+                            "opacity" => p.opacity,
+                            "scale" | "sx" => p.scale[0],
+                            "sy" => p.scale[1],
+                            other => bail!("{name}(): unknown property {other:?}; use x, y, z, rotation, opacity, scale, sx, sy"),
+                        })
+                    };
+                    if name == "ref" {
+                        at(self.t_comp)?
+                    } else {
+                        // vel("knob", "x"): units per second, by central difference over one frame.
+                        let h = 0.5 / f64::from(self.ev.plan.fps);
+                        (at(self.t_comp + h)? - at((self.t_comp - h).max(0.0))?) / (self.t_comp + h - (self.t_comp - h).max(0.0))
                     }
                 }
                 // amp("track"): loudness 0..1 of an audio or video layer at this moment.
@@ -101,10 +110,31 @@ impl Env for LayerEnv<'_> {
                 _ => return Err(anyhow!("unknown function {name}()")),
             })
         };
-        if ["beat", "bar", "beat_index", "marker", "ref", "amp", "onset"].contains(&name) { Some(run()) } else { None }
+        if ["beat", "bar", "beat_index", "marker", "ref", "vel", "amp", "onset"].contains(&name) { Some(run()) } else { None }
     }
 
     fn salt(&self) -> u32 {
         (self.layer as u32).wrapping_mul(7919).wrapping_add(self.salt.wrapping_mul(104_729))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::plan::{Plan, ROOT};
+    use serde_json::json;
+
+    #[test]
+    fn vel_reads_another_layers_speed_in_units_per_second() {
+        let plan = Plan::from_value(
+            json!({"dur": 2, "layers": [
+                {"type": "null", "id": "a", "pos": [{"from": 0, "to": 100, "dur": 2, "ease": "none"}, 500]},
+                {"type": "null", "id": "b", "pos": [0, 0], "scale": "1 + vel(\"a\", \"x\") / 1000"}]}),
+            std::path::Path::new("."),
+        )
+        .unwrap();
+        let ev = crate::eval::Evaluator::new(&plan);
+        let c = &plan.comps[ROOT];
+        let p = ev.local_props(c, &c.layers[1], 1.0, 0).unwrap();
+        assert!((p.scale[0] - 1.05).abs() < 1e-3, "50 px/s is 0.05 of 1000: {}", p.scale[0]);
     }
 }

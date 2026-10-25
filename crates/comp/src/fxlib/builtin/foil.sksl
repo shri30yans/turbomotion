@@ -1,0 +1,13 @@
+// @effect foil
+// @summary Iridescent conic foil on the layer: a die-cut hologram, a security stripe.
+// @param amount float 0.7 0 1 -- 0 keeps the original, 1 is fully foiled
+// @param shift float 0 0 1 -- rotates the rainbow (animate for a tilt)
+half4 main(float2 xy) {
+    float4 src = straight(xy);
+    float2 u = xy / max(resolution, float2(1.0, 1.0)) - 0.5;
+    float hue = fract(atan(u.y, u.x) / TAU + shift + time * 0.14 + fbm(xy * 0.012) * 0.18);
+    float3 irid = hsv2rgb(float3(hue, 0.58, 1.0));
+    float sheen = pow(clamp(1.0 - length(u * float2(1.6, 2.2)), 0.0, 1.0), 3.0);
+    float3 rgb = mix(src.rgb, mix(irid, float3(1.0), sheen * 0.35), amount * src.a);
+    return premul(rgb, src.a);
+}

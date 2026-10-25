@@ -39,7 +39,7 @@ impl<'de> Deserialize<'de> for Pos {
 impl<'de> Deserialize<'de> for Scale {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
         let v = Value::deserialize(d)?;
-        let all_numbers = v.as_array().is_some_and(|a| (2..=3).contains(&a.len()) && a.iter().all(|x| x.is_number()));
+        let all_numbers = v.as_array().is_some_and(|a| (2..=3).contains(&a.len()) && a.iter().all(|x| x.is_number() || x.is_string()));
         let r = if all_numbers || v.get("from").is_some_and(Value::is_array) || v.get("keys").is_some_and(|k| k.as_array().and_then(|k| k.first()).and_then(|k| k.get(1)).is_some_and(Value::is_array)) {
             VecProp::parse(&v, 2..=3)
         } else {

@@ -1,0 +1,22 @@
+// @effect chroma_key
+// @summary Removes a background colour (a green screen) and pulls the colour spill out of the edges.
+// @param key color #00b140 -- the background colour to remove
+// @param tolerance float 0.28 0.01 1 -- how far from the key colour still counts as background
+// @param softness float 0.12 0.001 0.5 -- width of the soft edge
+// @param spill float 0.6 0 1 -- how much of the key colour is removed from what stays
+half4 main(float2 xy) {
+    float4 s = straight(xy);
+    float3 k = key.rgb;
+    float3 a = s.rgb / max(length(s.rgb), 0.001);
+    float3 b = k / max(length(k), 0.001);
+    float d = 1.0 - dot(a, b);
+    float keep = smoothstep(tolerance - softness, tolerance + softness, d);
+    float3 rgb = s.rgb;
+    float dom = max(k.r, max(k.g, k.b));
+    if (k.g >= k.r && k.g >= k.b) {
+        rgb.g = min(rgb.g, mix(rgb.g, max(rgb.r, rgb.b), spill));
+    } else if (k.b >= k.r && k.b >= k.g) {
+        rgb.b = min(rgb.b, mix(rgb.b, max(rgb.r, rgb.g), spill));
+    }
+    return premul(rgb, s.a * keep);
+}

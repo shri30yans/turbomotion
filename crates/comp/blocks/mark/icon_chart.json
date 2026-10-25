@@ -1,0 +1,13 @@
+{
+  "width": 160, "height": 160, "fps": 30, "dur": 8,
+  "vars": {"accent": "#ffd37a"},
+  "layers": [
+    {"type": "shape", "id": "icon", "pos": [0, 0],
+     "items": [
+       {"d": "M 28 118 H 132", "stroke": {"color": "$accent", "width": 3, "cap": "round"}},
+       {"d": "M 36 102 L 58 78 L 80 90 L 108 48 L 128 62", "stroke": {"color": "$accent", "width": 4, "cap": "round", "join": "round"},
+        "trim": {"end": {"from": 0, "to": 1, "at": 0.05, "dur": 0.55, "ease": "power3.out"}}}
+     ],
+     "enter": {"preset": "pop", "dur": 0.4}}
+  ]
+}

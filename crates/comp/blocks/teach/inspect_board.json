@@ -1,0 +1,442 @@
+{
+  "width": 920,
+  "height": 640,
+  "fps": 30,
+  "dur": 12,
+  "job": "teach",
+  "best_for": [
+    "what they missed",
+    "a 6-check before the trade",
+    "an inspection of the paperwork"
+  ],
+  "breaks": "Parent stagger delays whole child clocks. Put the rows on one null. Boxes fill by scale, not by swapping a glyph.",
+  "props": [
+    "one",
+    "two",
+    "three",
+    "four",
+    "five",
+    "six",
+    "font"
+  ],
+  "vars": {
+    "accent": "#e8402f",
+    "ink": "#f6f4ee",
+    "mute": "#687e96",
+    "plate": "#121a26",
+    "loss": "#e8402f",
+    "gold": "#deb052",
+    "gain": "#3eb696",
+    "sub": "#687e96",
+    "one": "The fee was on the ticket",
+    "two": "The size matched the order",
+    "three": "The account was theirs",
+    "four": "The date was a business day",
+    "five": "The margin was posted",
+    "six": "The name was on the form",
+    "font": "Avenir Next"
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "plate",
+      "pos": [
+        460,
+        320
+      ],
+      "layout": "backdrop",
+      "items": [
+        {
+          "rect": [
+            -430,
+            -290,
+            860,
+            580
+          ],
+          "radius": 18,
+          "fill": {
+            "color": "$plate",
+            "opacity": 0.94
+          },
+          "stroke": {
+            "color": "#3d4f6e",
+            "width": 1.4
+          }
+        }
+      ],
+      "enter": {
+        "preset": "slide_up",
+        "dur": 0.45
+      }
+    },
+    {
+      "type": "text",
+      "id": "head",
+      "text": "BEFORE THE TRADE",
+      "font": "$font",
+      "weight": 700,
+      "size": 18,
+      "tracking": 4,
+      "color": "$accent",
+      "pos": [
+        80,
+        64
+      ],
+      "align": "left",
+      "preset": {
+        "name": "tracking_in",
+        "at": 0.1
+      }
+    },
+    {
+      "type": "null",
+      "id": "rows",
+      "stagger": {
+        "each": 0.12,
+        "from": "start"
+      }
+    },
+    {
+      "type": "shape",
+      "id": "b1",
+      "parent": "rows",
+      "pos": [
+        80,
+        130
+      ],
+      "items": [
+        {
+          "rect": [
+            0,
+            -16,
+            32,
+            32
+          ],
+          "radius": 4,
+          "stroke": {
+            "color": "$accent",
+            "width": 2
+          }
+        }
+      ],
+      "enter": {
+        "preset": "pop",
+        "dur": 0.3
+      }
+    },
+    {
+      "type": "shape",
+      "id": "f1",
+      "parent": "rows",
+      "pos": [
+        80,
+        130
+      ],
+      "items": [
+        {
+          "rect": [
+            6,
+            -10,
+            20,
+            20
+          ],
+          "radius": 2,
+          "fill": "$accent"
+        }
+      ],
+      "scale": {
+        "from": 0,
+        "to": 1,
+        "at": 0.15,
+        "dur": 0.25,
+        "ease": "back.out(1.6)"
+      }
+    },
+    {
+      "type": "text",
+      "id": "t1",
+      "parent": "rows",
+      "text": "$one",
+      "font": "$font",
+      "weight": 600,
+      "size": 24,
+      "color": "$ink",
+      "pos": [
+        130,
+        130
+      ],
+      "align": "left"
+    },
+    {
+      "type": "shape",
+      "id": "b2",
+      "parent": "rows",
+      "pos": [
+        80,
+        210
+      ],
+      "items": [
+        {
+          "rect": [
+            0,
+            -16,
+            32,
+            32
+          ],
+          "radius": 4,
+          "stroke": {
+            "color": "$accent",
+            "width": 2
+          }
+        }
+      ],
+      "enter": {
+        "preset": "pop",
+        "dur": 0.3
+      }
+    },
+    {
+      "type": "shape",
+      "id": "f2",
+      "parent": "rows",
+      "pos": [
+        80,
+        210
+      ],
+      "items": [
+        {
+          "rect": [
+            6,
+            -10,
+            20,
+            20
+          ],
+          "radius": 2,
+          "fill": "$accent"
+        }
+      ],
+      "scale": {
+        "from": 0,
+        "to": 1,
+        "at": 0.15,
+        "dur": 0.25,
+        "ease": "back.out(1.6)"
+      }
+    },
+    {
+      "type": "text",
+      "id": "t2",
+      "parent": "rows",
+      "text": "$two",
+      "font": "$font",
+      "weight": 600,
+      "size": 24,
+      "color": "$ink",
+      "pos": [
+        130,
+        210
+      ],
+      "align": "left"
+    },
+    {
+      "type": "shape",
+      "id": "b3",
+      "parent": "rows",
+      "pos": [
+        80,
+        290
+      ],
+      "items": [
+        {
+          "rect": [
+            0,
+            -16,
+            32,
+            32
+          ],
+          "radius": 4,
+          "stroke": {
+            "color": "$accent",
+            "width": 2
+          }
+        }
+      ],
+      "enter": {
+        "preset": "pop",
+        "dur": 0.3
+      }
+    },
+    {
+      "type": "shape",
+      "id": "f3",
+      "parent": "rows",
+      "pos": [
+        80,
+        290
+      ],
+      "items": [
+        {
+          "rect": [
+            6,
+            -10,
+            20,
+            20
+          ],
+          "radius": 2,
+          "fill": "$accent"
+        }
+      ],
+      "scale": {
+        "from": 0,
+        "to": 1,
+        "at": 0.15,
+        "dur": 0.25,
+        "ease": "back.out(1.6)"
+      }
+    },
+    {
+      "type": "text",
+      "id": "t3",
+      "parent": "rows",
+      "text": "$three",
+      "font": "$font",
+      "weight": 600,
+      "size": 24,
+      "color": "$ink",
+      "pos": [
+        130,
+        290
+      ],
+      "align": "left"
+    },
+    {
+      "type": "shape",
+      "id": "b4",
+      "parent": "rows",
+      "pos": [
+        80,
+        370
+      ],
+      "items": [
+        {
+          "rect": [
+            0,
+            -16,
+            32,
+            32
+          ],
+          "radius": 4,
+          "stroke": {
+            "color": "#ff4a3a",
+            "width": 2
+          }
+        }
+      ],
+      "enter": {
+        "preset": "pop",
+        "dur": 0.3
+      }
+    },
+    {
+      "type": "text",
+      "id": "t4",
+      "parent": "rows",
+      "text": "$four",
+      "font": "$font",
+      "weight": 600,
+      "size": 24,
+      "color": "#ff8a7a",
+      "pos": [
+        130,
+        370
+      ],
+      "align": "left"
+    },
+    {
+      "type": "shape",
+      "id": "b5",
+      "parent": "rows",
+      "pos": [
+        80,
+        450
+      ],
+      "items": [
+        {
+          "rect": [
+            0,
+            -16,
+            32,
+            32
+          ],
+          "radius": 4,
+          "stroke": {
+            "color": "#ff4a3a",
+            "width": 2
+          }
+        }
+      ],
+      "enter": {
+        "preset": "pop",
+        "dur": 0.3
+      }
+    },
+    {
+      "type": "text",
+      "id": "t5",
+      "parent": "rows",
+      "text": "$five",
+      "font": "$font",
+      "weight": 600,
+      "size": 24,
+      "color": "#ff8a7a",
+      "pos": [
+        130,
+        450
+      ],
+      "align": "left"
+    },
+    {
+      "type": "shape",
+      "id": "b6",
+      "parent": "rows",
+      "pos": [
+        80,
+        530
+      ],
+      "items": [
+        {
+          "rect": [
+            0,
+            -16,
+            32,
+            32
+          ],
+          "radius": 4,
+          "stroke": {
+            "color": "#ff4a3a",
+            "width": 2
+          }
+        }
+      ],
+      "enter": {
+        "preset": "pop",
+        "dur": 0.3
+      }
+    },
+    {
+      "type": "text",
+      "id": "t6",
+      "parent": "rows",
+      "text": "$six",
+      "font": "$font",
+      "weight": 600,
+      "size": 24,
+      "color": "#ff8a7a",
+      "pos": [
+        130,
+        530
+      ],
+      "align": "left"
+    }
+  ]
+}

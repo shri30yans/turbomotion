@@ -1,8 +1,134 @@
 //! Text layers: styling, and the animators that move individual characters, words and lines.
 
 use serde::Deserialize;
+use serde_json::Value;
 
 use super::wrap::{Col, P};
+
+/// Which size on the composition's three-size scale this line is for.
+#[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum Role {
+    /// Big numbers and one-line headlines.
+    Display,
+    /// Scene titles, card headings, definition terms.
+    Title,
+    /// Supporting copy, labels, chips, callouts.
+    Body,
+}
+
+impl Role {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Role::Display => "display",
+            Role::Title => "title",
+            Role::Body => "body",
+        }
+    }
+}
+
+/// A highlighter that sweeps across one word of the line, instead of recolouring the whole line.
+#[derive(Debug, Clone)]
+pub struct Mark {
+    pub word: String,
+    /// 0 = first match of `word`.
+    pub nth: usize,
+    pub at: f64,
+    pub dur: f64,
+    pub ease: Option<String>,
+    pub color: Option<Col>,
+    /// Extra pixels around the word.
+    pub pad: Option<f64>,
+    /// FACT / INTERPRETATION / verify / loss: picks the ink if `color` is left out.
+    pub verdict: Option<Verdict>,
+    /// Ragged highlighter edge. Default on.
+    pub rough: bool,
+}
+
+#[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum Verdict {
+    #[default]
+    Fact,
+    Interpret,
+    Verify,
+    Loss,
+}
+
+impl Verdict {
+    pub fn color(self) -> [f32; 4] {
+        match self {
+            Verdict::Fact => [255.0, 229.0, 102.0, 0.84],
+            Verdict::Interpret => [124.0, 199.0, 255.0, 0.72],
+            Verdict::Verify => [255.0, 154.0, 58.0, 0.82],
+            Verdict::Loss => [255.0, 74.0, 58.0, 0.80],
+        }
+    }
+}
+
+fn mark_rough() -> bool {
+    true
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct MarkObj {
+    word: String,
+    #[serde(default)]
+    nth: usize,
+    #[serde(default)]
+    at: f64,
+    #[serde(default = "mark_dur")]
+    dur: f64,
+    #[serde(default)]
+    ease: Option<String>,
+    #[serde(default)]
+    color: Option<Col>,
+    #[serde(default)]
+    pad: Option<f64>,
+    #[serde(default)]
+    verdict: Option<Verdict>,
+    #[serde(default = "mark_rough")]
+    rough: bool,
+}
+
+fn mark_dur() -> f64 {
+    0.45
+}
+
+impl<'de> Deserialize<'de> for Mark {
+    fn deserialize<D: serde::Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        let v = Value::deserialize(d)?;
+        match v {
+            Value::String(word) => Ok(Mark { word, nth: 0, at: 0.0, dur: mark_dur(), ease: None, color: None, pad: None, verdict: None, rough: true }),
+            obj @ Value::Object(_) => {
+                let o: MarkObj = serde_json::from_value(obj).map_err(serde::de::Error::custom)?;
+                Ok(Mark { word: o.word, nth: o.nth, at: o.at, dur: o.dur, ease: o.ease, color: o.color, pad: o.pad, verdict: o.verdict, rough: o.rough })
+            }
+            other => Err(serde::de::Error::custom(format!("mark is a word or {{\"word\": \"future\", \"at\": 1.2}}, not {other}"))),
+        }
+    }
+}
+
+/// One restyled stretch of a text layer's string. Matching is case-sensitive and by exact substring, so
+/// `"match": "prompt."` restyles the word and its full stop.
+#[derive(Debug, Deserialize, Clone)]
+#[serde(deny_unknown_fields)]
+pub struct TextRun {
+    #[serde(rename = "match")]
+    pub text: String,
+    /// 0 = the first occurrence.
+    #[serde(default)]
+    pub nth: usize,
+    #[serde(default)]
+    pub italic: Option<bool>,
+    #[serde(default)]
+    pub weight: Option<u16>,
+    #[serde(default)]
+    pub font: Option<String>,
+    #[serde(default)]
+    pub color: Option<Col>,
+}
 
 #[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq, Default)]
 #[serde(rename_all = "snake_case")]
@@ -22,11 +148,12 @@ pub enum Unit {
     Lines,
 }
 
-/// A text layer's words: fixed text, or a number that counts.
+/// A text layer's words: fixed text, a number that counts, or one string becoming another (GSAP TextPlugin).
 #[derive(Debug, Clone)]
 pub enum TextSource {
     Fixed(String),
     Counter(Counter),
+    Swap(TextSwap),
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -55,13 +182,38 @@ fn one() -> f64 {
     1.0
 }
 
+fn swap_dur() -> f64 {
+    0.6
+}
+
+/// `"text": {"from": "BUYER", "to": "SELLER", "at": 1.2, "dur": 0.5}` — the string itself changes (GSAP TextPlugin).
+#[derive(Debug, Deserialize, Clone)]
+#[serde(deny_unknown_fields)]
+pub struct TextSwap {
+    pub from: String,
+    pub to: String,
+    #[serde(default)]
+    pub at: f64,
+    #[serde(default = "swap_dur")]
+    pub dur: f64,
+    #[serde(default)]
+    pub ease: Option<String>,
+}
+
 impl<'de> Deserialize<'de> for TextSource {
     fn deserialize<D: serde::Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
         let v = serde_json::Value::deserialize(d)?;
         match v {
             serde_json::Value::String(s) => Ok(TextSource::Fixed(s)),
-            serde_json::Value::Object(_) => serde_json::from_value(v).map(TextSource::Counter).map_err(serde::de::Error::custom),
-            other => Err(serde::de::Error::custom(format!("text is a string or a counter {{\"from\", \"to\", \"dur\"}}, not {other}"))),
+            serde_json::Value::Object(ref o) => {
+                let is_swap = o.get("from").is_some_and(serde_json::Value::is_string) || o.get("to").is_some_and(serde_json::Value::is_string);
+                if is_swap {
+                    serde_json::from_value(v).map(TextSource::Swap).map_err(serde::de::Error::custom)
+                } else {
+                    serde_json::from_value(v).map(TextSource::Counter).map_err(serde::de::Error::custom)
+                }
+            }
+            other => Err(serde::de::Error::custom(format!("text is a string, a counter {{\"from\", \"to\", \"dur\"}}, or a swap {{\"from\": \"BUYER\", \"to\": \"SELLER\"}}, not {other}"))),
         }
     }
 }
@@ -171,10 +323,12 @@ pub struct Animator {
     pub mask: bool,
     /// While the weight is above 0 the unit shows random characters from this set (GSAP ScrambleText).
     pub scramble: Option<String>,
+    /// With `by: chars`, spaces take a slot in the stagger too (a typewriter that pauses on spaces).
+    pub count_spaces: bool,
 }
 
 impl Default for Animator {
     fn default() -> Self {
-        Animator { by: Unit::Chars, props: UnitProps::default(), at: 0.0, dur: 0.6, ease: None, direction: Direction::In, stagger: None, selector: None, mask: false, scramble: None }
+        Animator { by: Unit::Chars, props: UnitProps::default(), at: 0.0, dur: 0.6, ease: None, direction: Direction::In, stagger: None, selector: None, mask: false, scramble: None, count_spaces: false }
     }
 }

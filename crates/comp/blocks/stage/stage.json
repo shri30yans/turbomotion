@@ -1,0 +1,88 @@
+{
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "dur": 12,
+  "job": "stage",
+  "best_for": [
+    "a cold open",
+    "a number landing",
+    "night floor under a slab"
+  ],
+  "breaks": "Spotlight and dust are generators, blend screen. Floor sits under them. Do not also light this as a 3D world.",
+  "props": [
+    "beam",
+    "mote",
+    "grid"
+  ],
+  "vars": {
+    "accent": "#e8402f",
+    "ink": "#f6f4ee",
+    "mute": "#687e96",
+    "plate": "#121a26",
+    "loss": "#e8402f",
+    "gold": "#deb052",
+    "gain": "#3eb696",
+    "sub": "#687e96",
+    "beam": "#c8e4ff",
+    "mote": "#d9ecff",
+    "grid": "#1a5e7a"
+  },
+  "layers": [
+    {
+      "type": "solid",
+      "color": "#05070f"
+    },
+    {
+      "type": "texture",
+      "shader": "floor",
+      "params": {
+        "horizon": 0.52,
+        "vanish": [
+          0.5,
+          0.46
+        ],
+        "cells": 8,
+        "line": "$grid",
+        "haze": "#05070f",
+        "glow": 0.5
+      }
+    },
+    {
+      "type": "texture",
+      "shader": "spotlight",
+      "params": {
+        "tint": "$beam",
+        "amount": 0.85,
+        "spread": 0.16
+      },
+      "blend": "screen",
+      "opacity": 0.9
+    },
+    {
+      "type": "texture",
+      "shader": "dust",
+      "params": {
+        "tint": "$mote",
+        "density": 0.6,
+        "speed": 0.14,
+        "seed": 3
+      },
+      "blend": "screen",
+      "opacity": 0.7
+    },
+    {
+      "type": "texture",
+      "shader": "bokeh",
+      "params": {
+        "density": 0.36,
+        "scale": 70,
+        "brightness": 0.38,
+        "tint": "$beam",
+        "seed": 6
+      },
+      "blend": "screen",
+      "opacity": 0.4
+    }
+  ]
+}

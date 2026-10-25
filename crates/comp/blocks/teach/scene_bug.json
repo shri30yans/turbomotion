@@ -1,0 +1,183 @@
+{
+  "width": 520,
+  "height": 72,
+  "fps": 30,
+  "dur": 8,
+  "job": "teach",
+  "best_for": [
+    "FACT",
+    "EXAMPLE",
+    "INTERPRETATION",
+    "a quiet scene label"
+  ],
+  "breaks": "Lower-left bug, not a pill at the top. Coloured edge, tracked caps, one line of detail. Dims after four seconds.",
+  "props": [
+    "label",
+    "detail"
+  ],
+  "vars": {
+    "accent": "#e8402f",
+    "ink": "#f6f4ee",
+    "mute": "#687e96",
+    "plate": "#121a26",
+    "loss": "#e8402f",
+    "gold": "#deb052",
+    "gain": "#3eb696",
+    "sub": "#687e96",
+    "label": "EXAMPLE",
+    "detail": "Acme at $10"
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "plate",
+      "pos": [
+        260.0,
+        36.0
+      ],
+      "layout": "backdrop",
+      "items": [
+        {
+          "rect": [
+            -250.0,
+            -28.0,
+            500,
+            56
+          ],
+          "radius": 4,
+          "fill": {
+            "color": "$plate",
+            "opacity": 0.82
+          }
+        }
+      ],
+      "opacity": [
+        [
+          0,
+          0
+        ],
+        [
+          0.2,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          5.2,
+          0.45
+        ]
+      ],
+      "enter": {
+        "preset": "fade",
+        "dur": 0.25,
+        "ease": "sine.inOut"
+      }
+    },
+    {
+      "type": "shape",
+      "id": "edge",
+      "pos": [
+        16,
+        36.0
+      ],
+      "items": [
+        {
+          "rect": [
+            0,
+            -20,
+            4,
+            40
+          ],
+          "radius": 2,
+          "fill": "$accent"
+        }
+      ],
+      "opacity": [
+        [
+          0,
+          0
+        ],
+        [
+          0.2,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          5.2,
+          0.45
+        ]
+      ]
+    },
+    {
+      "type": "text",
+      "id": "label",
+      "text": "$label",
+      "weight": 700,
+      "size": 15,
+      "tracking": 3.5,
+      "color": "$accent",
+      "pos": [
+        36,
+        24
+      ],
+      "align": "left",
+      "opacity": [
+        [
+          0,
+          0
+        ],
+        [
+          0.2,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          5.2,
+          0.45
+        ]
+      ]
+    },
+    {
+      "type": "text",
+      "id": "detail",
+      "text": "$detail",
+      "weight": 500,
+      "size": 16,
+      "color": "$ink",
+      "pos": [
+        36,
+        48
+      ],
+      "align": "left",
+      "opacity": [
+        [
+          0,
+          0
+        ],
+        [
+          0.25,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          5.2,
+          0.45
+        ]
+      ]
+    }
+  ],
+  "uses": {
+    "motion": "snap"
+  }
+}

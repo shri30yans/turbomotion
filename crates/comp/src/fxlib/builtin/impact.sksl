@@ -1,0 +1,20 @@
+// @effect impact
+// @summary A hit of light and a chromatic split: the number landing, the stamp.
+// @param amount float 0 0 1 -- 0 is the original, 1 is a hard flash
+// @param angle float 18 -90 90 -- tilt of the split, degrees
+half4 main(float2 xy) {
+    float4 src = straight(xy);
+    if (amount < 0.001) {
+        return premul(src.rgb, src.a);
+    }
+    float2 u = xy / max(resolution, float2(1.0, 1.0)) - 0.5;
+    float2 dir = rot2(float2(1.0, 0.0), radians(angle));
+    float split = amount * 7.0;
+    float r = straight(xy - dir * split).r;
+    float g = src.g;
+    float b = straight(xy + dir * split).b;
+    float flash = amount * exp(-dot(u, u) * 6.0);
+    float3 rgb = mix(src.rgb, float3(r, g, b), amount * src.a);
+    rgb += float3(1.0, 0.96, 0.88) * flash * src.a;
+    return premul(clamp(rgb, 0.0, 2.0), src.a);
+}

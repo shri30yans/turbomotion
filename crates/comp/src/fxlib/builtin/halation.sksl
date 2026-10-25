@@ -1,0 +1,20 @@
+// @effect halation
+// @summary The warm red-orange fringe film shows around bright highlights.
+// @param amount float 0.5 0 1.5 -- strength of the fringe
+// @param radius float 20 2 80 -- reach in px
+// @param tint color #ff5a28 -- colour of the fringe
+half4 main(float2 xy) {
+    float4 src = straight(xy);
+    float acc = 0.0;
+    for (int ring = 1; ring <= 2; ring++) {
+        float r = radius * float(ring) / 2.0;
+        for (int i = 0; i < 10; i++) {
+            float a = 6.2831853 * float(i) / 10.0 + float(ring);
+            float4 s = straight(xy + float2(cos(a), sin(a)) * r);
+            acc += smoothstep(0.7, 1.0, luma(s.rgb)) * s.a;
+        }
+    }
+    float h = acc / 20.0 * amount;
+    float3 rgb = src.rgb + tint.rgb * h;
+    return premul(clamp(rgb, 0.0, 1.0), clamp(src.a + h * 0.4, 0.0, 1.0));
+}

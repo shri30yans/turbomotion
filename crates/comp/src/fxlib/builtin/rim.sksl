@@ -1,0 +1,16 @@
+// @effect rim
+// @summary A coloured rim light along the silhouette, facing `angle`.
+// @param angle float -40 -180 180 -- direction the light comes from, degrees (0 = from the right)
+// @param width float 5 1 24 -- how far the rim reaches in, px
+// @param strength float 0.9 0 3 -- brightness of the rim
+// @param color color #eaf2ff -- colour of the light
+half4 main(float2 xy) {
+    float4 c = straight(xy);
+    if (c.a < 0.002) { return half4(0.0); }
+    float2 dir = float2(cos(radians(angle)), sin(radians(angle)));
+    float toward = image.eval(xy - dir * width).a - image.eval(xy + dir * width).a;
+    float band = clamp(toward, 0.0, 1.0) * c.a;
+    float pulse = 0.92 + 0.08 * sin(time * 0.7);
+    float3 rgb = c.rgb + color.rgb * (band * strength * pulse);
+    return premul(clamp(rgb, 0.0, 1.0), c.a);
+}

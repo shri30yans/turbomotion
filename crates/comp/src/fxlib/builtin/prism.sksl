@@ -1,0 +1,20 @@
+// @effect prism
+// @summary Spectral split on contrast edges, like light through glass. Quiet, not a party filter.
+// @param amount float 0 0 1 -- 0 is the original, 1 is a wide split
+// @param angle float 18 -90 90 -- direction of the split, degrees
+half4 main(float2 xy) {
+    float4 src = straight(xy);
+    if (amount < 0.001) {
+        return premul(src.rgb, src.a);
+    }
+    float2 dir = rot2(float2(1.0, 0.0), radians(angle));
+    float px = amount * 8.0;
+    float y0 = luma(src.rgb);
+    float y1 = luma(straight(xy + dir * 2.0).rgb);
+    float edge = clamp(abs(y0 - y1) * 4.0, 0.0, 1.0);
+    float r = straight(xy - dir * px).r;
+    float g = src.g;
+    float b = straight(xy + dir * px).b;
+    float3 rgb = mix(src.rgb, float3(r, g, b), edge * src.a);
+    return premul(rgb, src.a);
+}

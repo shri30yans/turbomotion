@@ -1,0 +1,23 @@
+// @effect guilloche
+// @kind generator
+// @summary Security-print rosettes: the ground of a certificate, a contract, a ticket.
+// @param ink color #1a4a6e -- colour of the engraving
+// @param paper color #f3ead8 -- colour of the stock
+// @param density float 7 2 18 -- how tight the roses are
+// @param amount float 0.55 0 1 -- ink coverage
+half4 main(float2 xy) {
+    float2 p = (xy - resolution * 0.5) / min(resolution.x, resolution.y);
+    float r = length(p);
+    float a = atan(p.y, p.x);
+    float rose = 0.0;
+    for (int i = 0; i < 5; i++) {
+        float n = 3.0 + float(i) * 2.0;
+        rose += abs(sin(a * n + float(i) * 0.4)) * exp(-r * (2.2 + float(i) * 0.35));
+    }
+    float rings = abs(sin((r * density * 14.0) + rose * 2.4));
+    float weave = abs(sin(p.x * density * 28.0) * sin(p.y * density * 28.0));
+    float grain = (fbm(xy * 0.07) - 0.5) * 0.12;
+    float k = clamp((rose * 0.45 + rings * 0.35 + weave * 0.2 + grain) * amount, 0.0, 1.0);
+    float3 rgb = mix(paper.rgb, ink.rgb, k);
+    return premul(rgb, 1.0);
+}

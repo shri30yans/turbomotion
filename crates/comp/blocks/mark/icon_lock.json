@@ -1,0 +1,12 @@
+{
+  "width": 160, "height": 160, "fps": 30, "dur": 8,
+  "vars": {"accent": "#ffd37a"},
+  "layers": [
+    {"type": "shape", "id": "icon", "pos": [0, 0],
+     "items": [
+       {"d": "M 56 78 C 56 50 104 50 104 78", "stroke": {"color": "$accent", "width": 7, "cap": "round"}},
+       {"rect": [50, 78, 60, 48], "radius": 8, "fill": "$accent"}
+     ],
+     "enter": {"preset": "pop", "dur": 0.4}}
+  ]
+}

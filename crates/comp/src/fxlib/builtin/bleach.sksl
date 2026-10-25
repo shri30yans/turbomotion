@@ -1,0 +1,16 @@
+// @effect bleach
+// @summary Skip-bleach: silver retained in the highlights, blacks crushed. A cold news look.
+// @param amount float 0 0 1 -- 0 is the original, 1 is a hard skip-bleach
+half4 main(float2 xy) {
+    float4 src = straight(xy);
+    if (amount < 0.001) {
+        return premul(src.rgb, src.a);
+    }
+    float y = luma(src.rgb);
+    float3 silver = float3(y);
+    float3 crushed = pow(max(src.rgb, float3(0.0)), float3(1.0 + amount * 0.7));
+    float3 highlights = mix(crushed, silver, smoothstep(0.45, 0.9, y) * amount);
+    float3 rgb = mix(src.rgb, highlights, amount);
+    rgb *= 1.0 - amount * 0.08;
+    return premul(clamp(rgb, 0.0, 1.0), src.a);
+}

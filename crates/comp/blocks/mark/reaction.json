@@ -1,0 +1,10 @@
+{
+  "width": 520, "height": 520, "fps": 30, "dur": 6,
+  "best_for": ["a verdict that is a face", "the room's reaction", "a stamp that is not a word"],
+  "breaks": "One glyph, in the layer's colour, like the rest of the type. One is a stamp; a dozen is a meme.",
+  "vars": {"glyph": "📉", "size": 140, "color": "#f4f7ff"},
+  "layers": [
+    {"type": "text", "id": "face", "text": "$glyph", "size": "$size", "color": "$color", "align": "center", "pos": [260, 260],
+     "enter": {"preset": "stamp", "dur": 0.45}}
+  ]
+}

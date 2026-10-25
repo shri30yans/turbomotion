@@ -1,0 +1,196 @@
+{
+  "width": 1200,
+  "height": 640,
+  "fps": 30,
+  "dur": 12,
+  "job": "stage",
+  "best_for": [
+    "the trade going through",
+    "a ring of tickets",
+    "a scanner beat"
+  ],
+  "breaks": "The scan is an effect on each card, not a scroll pin. Parent rotation is the orbit; do not also animate the children's world position.",
+  "props": [
+    "font"
+  ],
+  "vars": {
+    "accent": "#e8402f",
+    "ink": "#f6f4ee",
+    "mute": "#687e96",
+    "plate": "#121a26",
+    "loss": "#e8402f",
+    "gold": "#deb052",
+    "gain": "#3eb696",
+    "sub": "#687e96",
+    "font": "Avenir Next"
+  },
+  "layers": [
+    {
+      "type": "null",
+      "id": "spin",
+      "pos": [
+        600,
+        340
+      ],
+      "rotation": "time * 14"
+    },
+    {
+      "type": "shape",
+      "id": "c1",
+      "parent": "spin",
+      "pos": [
+        0,
+        -180
+      ],
+      "rotation": -8,
+      "fx": [
+        {
+          "effect": "scan",
+          "position": {
+            "from": 0,
+            "to": 1,
+            "at": 0.4,
+            "dur": 2.4,
+            "ease": "none"
+          },
+          "tint": "$accent",
+          "seed": 1
+        },
+        {
+          "effect": "glow",
+          "radius": 10,
+          "strength": 0.5
+        }
+      ],
+      "items": [
+        {
+          "rect": [
+            -110,
+            -68,
+            220,
+            136
+          ],
+          "radius": 14,
+          "fill": "#141c2c",
+          "stroke": {
+            "color": "$accent",
+            "width": 1.5
+          }
+        }
+      ],
+      "enter": {
+        "preset": "pop",
+        "dur": 0.4
+      }
+    },
+    {
+      "type": "shape",
+      "id": "c2",
+      "parent": "spin",
+      "pos": [
+        200,
+        90
+      ],
+      "rotation": 18,
+      "fx": [
+        {
+          "effect": "scan",
+          "position": {
+            "from": 0,
+            "to": 1,
+            "at": 1.0,
+            "dur": 2.4,
+            "ease": "none"
+          },
+          "tint": "$accent",
+          "seed": 4
+        }
+      ],
+      "items": [
+        {
+          "rect": [
+            -110,
+            -68,
+            220,
+            136
+          ],
+          "radius": 14,
+          "fill": "#141c2c",
+          "stroke": {
+            "color": "$accent",
+            "width": 1.5
+          }
+        }
+      ],
+      "enter": {
+        "preset": "pop",
+        "dur": 0.4,
+        "delay": 0.08
+      }
+    },
+    {
+      "type": "shape",
+      "id": "c3",
+      "parent": "spin",
+      "pos": [
+        -200,
+        90
+      ],
+      "rotation": -16,
+      "fx": [
+        {
+          "effect": "scan",
+          "position": {
+            "from": 0,
+            "to": 1,
+            "at": 1.6,
+            "dur": 2.4,
+            "ease": "none"
+          },
+          "tint": "$accent",
+          "seed": 7
+        }
+      ],
+      "items": [
+        {
+          "rect": [
+            -110,
+            -68,
+            220,
+            136
+          ],
+          "radius": 14,
+          "fill": "#141c2c",
+          "stroke": {
+            "color": "$accent",
+            "width": 1.5
+          }
+        }
+      ],
+      "enter": {
+        "preset": "pop",
+        "dur": 0.4,
+        "delay": 0.16
+      }
+    },
+    {
+      "type": "text",
+      "id": "tag",
+      "text": "CLEARING",
+      "font": "$font",
+      "weight": 700,
+      "size": 18,
+      "tracking": 6,
+      "color": "$accent",
+      "pos": [
+        600,
+        600
+      ],
+      "align": "center",
+      "preset": {
+        "name": "tracking_in",
+        "at": 0.3
+      }
+    }
+  ]
+}

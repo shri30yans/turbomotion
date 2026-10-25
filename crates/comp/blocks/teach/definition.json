@@ -1,0 +1,16 @@
+{
+  "width": 1400, "height": 280, "fps": 30, "dur": 12, "layout": true,
+  "vars": {"term": "A future", "meaning": "is a bet on a price at a date you agree now.", "accent": "#ffd37a", "ink": "#f4f7ff", "sub": "#b7c3de", "font": "Avenir Next", "plate": "#121a28"},
+  "layers": [
+    {"type": "shape", "id": "plate", "pos": [700, 140], "layout": "backdrop",
+     "items": [{"rect": [-680, -110, 1360, 220], "radius": 20, "fill": {"color": "$plate", "opacity": 0.92}, "stroke": {"color": "#3d4f6e", "width": 1.5}}],
+     "enter": {"preset": "slide_up", "dur": 0.5}},
+    {"type": "shape", "id": "bar", "pos": [40, 140],
+     "items": [{"rect": [0, -78, 8, 156], "radius": 4, "fill": "$accent"}],
+     "scale": {"from": [1, 0], "to": [1, 1], "at": 0.08, "dur": 0.5, "ease": "expo.out"}},
+    {"type": "text", "id": "term", "text": "$term", "font": "$font", "weight": 800, "role": "title", "color": "$accent",
+     "pos": [78, 100], "align": "left", "preset": {"name": "reveal", "at": 0.15}},
+    {"type": "text", "id": "meaning", "text": "$meaning", "font": "$font", "weight": 500, "role": "body", "color": "$ink",
+     "pos": [78, 168], "align": "left", "width": 1240, "preset": {"name": "reveal", "at": 0.4}}
+  ]
+}

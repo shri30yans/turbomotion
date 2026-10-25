@@ -25,6 +25,7 @@ use crate::anim::{
     suggest,
 };
 
+pub mod search;
 pub mod sweep;
 
 const PRELUDE: &str = include_str!("prelude.sksl");
@@ -46,6 +47,55 @@ const BUILTIN: &[(&str, &str)] = &[
     ("grid", include_str!("builtin/grid.sksl")),
     ("gradient", include_str!("builtin/gradient.sksl")),
     ("light_leak", include_str!("builtin/light_leak.sksl")),
+    ("holo", include_str!("builtin/holo.sksl")),
+    ("rim", include_str!("builtin/rim.sksl")),
+    ("scratches", include_str!("builtin/scratches.sksl")),
+    ("heat", include_str!("builtin/heat.sksl")),
+    ("bokeh", include_str!("builtin/bokeh.sksl")),
+    ("floor", include_str!("builtin/floor.sksl")),
+    ("crumble", include_str!("builtin/crumble.sksl")),
+    ("guilloche", include_str!("builtin/guilloche.sksl")),
+    ("spotlight", include_str!("builtin/spotlight.sksl")),
+    ("dust", include_str!("builtin/dust.sksl")),
+    ("comet", include_str!("builtin/comet.sksl")),
+    ("foil", include_str!("builtin/foil.sksl")),
+    ("scan", include_str!("builtin/scan.sksl")),
+    ("dots", include_str!("builtin/dots.sksl")),
+    ("dot_grid", include_str!("builtin/dot_grid.sksl")),
+    ("glow_field", include_str!("builtin/glow_field.sksl")),
+    ("halftone_field", include_str!("builtin/halftone_field.sksl")),
+    ("ridgeline", include_str!("builtin/ridgeline.sksl")),
+    ("hud", include_str!("builtin/hud.sksl")),
+    ("highlighter", include_str!("builtin/highlighter.sksl")),
+    ("echo", include_str!("builtin/echo.sksl")),
+    ("impact", include_str!("builtin/impact.sksl")),
+    ("flash", include_str!("builtin/flash.sksl")),
+    ("lightning", include_str!("builtin/lightning.sksl")),
+    ("bolt", include_str!("builtin/bolt.sksl")),
+    ("shockwave", include_str!("builtin/shockwave.sksl")),
+    ("anamorphic", include_str!("builtin/anamorphic.sksl")),
+    ("dropout", include_str!("builtin/dropout.sksl")),
+    ("barrel", include_str!("builtin/barrel.sksl")),
+    ("bleach", include_str!("builtin/bleach.sksl")),
+    ("prism", include_str!("builtin/prism.sksl")),
+    ("flicker", include_str!("builtin/flicker.sksl")),
+    ("gate_weave", include_str!("builtin/gate_weave.sksl")),
+    ("sharpen", include_str!("builtin/sharpen.sksl")),
+    ("chroma_hold", include_str!("builtin/chroma_hold.sksl")),
+    ("interference", include_str!("builtin/interference.sksl")),
+    ("shafts", include_str!("builtin/shafts.sksl")),
+    ("haze", include_str!("builtin/haze.sksl")),
+    ("rain", include_str!("builtin/rain.sksl")),
+    ("static", include_str!("builtin/static.sksl")),
+    ("film_burn", include_str!("builtin/film_burn.sksl")),
+    ("bloom", include_str!("builtin/bloom.sksl")),
+    ("tilt_shift", include_str!("builtin/tilt_shift.sksl")),
+    ("halation", include_str!("builtin/halation.sksl")),
+    ("edge_glow", include_str!("builtin/edge_glow.sksl")),
+    ("liquid", include_str!("builtin/liquid.sksl")),
+    ("pixel_dissolve", include_str!("builtin/pixel_dissolve.sksl")),
+    ("split_tone", include_str!("builtin/split_tone.sksl")),
+    ("chroma_key", include_str!("builtin/chroma_key.sksl")),
 ];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
@@ -87,6 +137,8 @@ pub struct Def {
 #[derive(Default)]
 pub struct Library {
     defs: BTreeMap<String, Def>,
+    /// Kit plugins that did not compile, as `(file, error)`. They do not stop a film that does not use them.
+    pub broken: Vec<(String, String)>,
 }
 
 /// One entry of an effect chain after planning: a platform effect, or a plugin with its parameters parsed.
@@ -103,6 +155,8 @@ pub struct PluginPlan {
     pub params: Vec<(String, ParamProp)>,
 }
 
+// a parameter list holds a handful of these, so the size gap between variants costs nothing
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone)]
 pub enum ParamProp {
     Num(Prop),
@@ -111,19 +165,40 @@ pub enum ParamProp {
 }
 
 impl Library {
-    /// The built-in pack plus every `*.sksl` in `<dir>/effects/`. A project file of the same name replaces a built-in.
+    /// The built-in pack, the kit and any include folders (see [`search`]), then every `*.sksl` in `<dir>/effects/`.
+    /// A project file of the same name replaces an earlier one.
     pub fn load(dir: &Path) -> Result<Library> {
+        Library::load_with(dir, &[])
+    }
+
+    /// As [`Library::load`] with the composition's own `fx_path` folders.
+    pub fn load_with(dir: &Path, declared: &[String]) -> Result<Library> {
         let mut lib = Library::default();
         for (name, src) in BUILTIN {
             let def = Def::compile(src, "builtin").with_context(|| format!("built-in effect {name}"))?;
             ensure!(def.name == *name, "built-in file {name} declares @effect {}", def.name);
             lib.defs.insert(def.name.clone(), def);
         }
+        for folder in search::include_dirs(dir, declared)? {
+            let mut from_folder: BTreeMap<String, String> = BTreeMap::new();
+            for f in search::plugin_files(&folder)? {
+                let origin = f.display().to_string();
+                let compiled = fs::read_to_string(&f).with_context(|| format!("reading {origin}")).and_then(|src| Def::compile(&src, &origin).with_context(|| origin.clone()));
+                match compiled {
+                    Ok(def) => {
+                        if let Some(first) = from_folder.insert(def.name.clone(), origin.clone()) {
+                            lib.broken.push((origin.clone(), format!("@effect {:?} is already defined by {first}; rename one", def.name)));
+                            continue;
+                        }
+                        lib.defs.insert(def.name.clone(), def);
+                    }
+                    Err(e) => lib.broken.push((origin, format!("{e:#}"))),
+                }
+            }
+        }
         let fx_dir = dir.join("effects");
         if fx_dir.is_dir() {
-            let mut files: Vec<_> = fs::read_dir(&fx_dir)?.filter_map(|e| e.ok()).map(|e| e.path()).filter(|p| p.extension().is_some_and(|x| x == "sksl")).collect();
-            files.sort();
-            for f in files {
+            for f in search::plugin_files(&fx_dir)? {
                 let src = fs::read_to_string(&f).with_context(|| format!("reading {}", f.display()))?;
                 let origin = f.strip_prefix(dir).unwrap_or(&f).display().to_string();
                 let def = Def::compile(&src, &origin).with_context(|| origin.clone())?;
@@ -137,7 +212,8 @@ impl Library {
         self.defs.get(name).ok_or_else(|| {
             let names: Vec<&str> = self.defs.keys().map(String::as_str).collect();
             let hint = suggest(name, &names).map_or(String::new(), |s| format!(" Did you mean {s:?}?"));
-            anyhow!("no effect or shader called {name:?}.{hint} Built-in: {}; plugins: add effects/{name}.sksl", effects::catalogue().iter().map(|e| e.effect).collect::<Vec<_>>().join(", "))
+            let broken = if self.broken.is_empty() { String::new() } else { format!(" Plugins that failed to compile: {}.", self.broken.iter().map(|(f, e)| format!("{f}: {}", e.lines().next().unwrap_or(""))).collect::<Vec<_>>().join("; ")) };
+            anyhow!("no effect or shader called {name:?}.{hint} Built-in: {}; plugins: add effects/{name}.sksl or put it in the kit (kit/effects/**.sksl; `comp fx list` shows every plugin and where it came from).{broken}", effects::catalogue().iter().map(|e| e.effect).collect::<Vec<_>>().join(", "))
         })
     }
 
@@ -281,7 +357,7 @@ fn explain(msg: &str, body: &str, offset: usize) -> String {
             if let Some((n, text)) = rest.split_once(": ") {
                 if let Ok(n) = n.trim().parse::<usize>() {
                     // lines inside the generated prelude have no author line; show them as they are
-                    let n = if n > offset { n - offset } else { 0 };
+                    let n = n.saturating_sub(offset);
                     if n == 0 {
                         out.push_str(&format!("(generated prelude) {text}\n"));
                         continue;
@@ -307,10 +383,29 @@ mod tests {
     #[test]
     fn the_whole_built_in_pack_compiles() {
         let lib = Library::load(Path::new("/nonexistent")).unwrap();
-        assert!(lib.defs().count() >= 16);
+        assert!(lib.defs().count() >= 61, "the pack has {} entries", lib.defs().count());
+        for name in ["bloom", "tilt_shift", "halation", "edge_glow", "liquid", "pixel_dissolve", "split_tone", "chroma_key"] {
+            let d = lib.get(name).unwrap_or_else(|e| panic!("{name}: {e:#}"));
+            assert!(!d.params.is_empty(), "{name} should expose knobs");
+        }
         for d in lib.defs() {
             assert!(!d.summary.is_empty(), "{} needs a @summary", d.name);
         }
+    }
+
+    #[test]
+    fn kit_plugins_load_from_an_include_folder_and_a_broken_one_only_hurts_its_users() {
+        let dir = std::env::temp_dir().join(format!("tm-fxkit-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&dir);
+        fs::create_dir_all(dir.join("shared/post")).unwrap();
+        fs::write(dir.join("shared/post/swirl.sksl"), "// @effect swirl\n// @summary kit effect\n// @param amount float 0.5 0 1\nhalf4 main(float2 xy) { return image.eval(xy) * amount; }\n").unwrap();
+        fs::write(dir.join("shared/oops.sksl"), "// @effect oops\nhalf4 main(float2 xy) { return nothing_here; }\n").unwrap();
+        let lib = Library::load_with(&dir, &["shared".to_string()]).unwrap();
+        assert!(lib.get("swirl").unwrap().origin.ends_with("shared/post/swirl.sksl"), "{}", lib.get("swirl").unwrap().origin);
+        assert_eq!(lib.broken.len(), 1, "{:?}", lib.broken);
+        let e = lib.get("oops").err().unwrap().to_string();
+        assert!(e.contains("oops.sksl") && e.contains("nothing_here"), "{e}");
+        let _ = fs::remove_dir_all(&dir);
     }
 
     #[test]
@@ -363,5 +458,18 @@ mod tests {
         let wrong = serde_json::json!({"layers": [{"type": "texture", "shader": "duotone"}]});
         assert!(format!("{:#}", Plan::from_value(wrong, &dir).err().unwrap()).contains("needs an input layer"));
         let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn composition_declared_shader_paths_are_used() {
+        let dir = std::env::temp_dir().join(format!("tm-declared-fx-{}", std::process::id()));
+        fs::create_dir_all(dir.join("shared")).unwrap();
+        fs::write(dir.join("shared/declared.sksl"), "// @effect declared\n// @kind generator\n// @summary declared shader path\nhalf4 main(float2 xy) { return half4(1); }\n").unwrap();
+        let value = serde_json::json!({"fx_path": ["shared"], "layers": [{"type": "texture", "shader": "declared"}]});
+        let plan = crate::plan::Plan::from_value(value, &dir).unwrap();
+        assert!(plan.fx.get("declared").is_ok());
+        let invalid = serde_json::json!({"fx_path": ["missing"], "layers": []});
+        let error = crate::plan::Plan::from_value(invalid, &dir).err().unwrap();
+        assert!(error.to_string().contains("not a folder"), "{error:#}");
     }
 }

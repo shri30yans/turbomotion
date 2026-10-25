@@ -39,6 +39,8 @@ pub enum Ease {
     Rough(f64, u32, u32),
     /// Fast, then a long linger in the middle, then fast (GSAP SlowMo): `linear_ratio`, `power`.
     Slow(f64, f64),
+    /// GSAP ExpoScaleEase: a scale from `start` to `end` that feels constant in speed. `expoScale(1, 2)`.
+    ExpoScale(f64, f64),
 }
 
 impl Default for Ease {
@@ -96,7 +98,12 @@ impl Ease {
             "hold" => Ease::Hold,
             "rough" => Ease::Rough(arg(0, 1.0), arg(1, 20.0).max(2.0) as u32, arg(2, 1.0) as u32),
             "slow" | "slowmo" => Ease::Slow(arg(0, 0.7), arg(1, 0.7)),
-            other => bail!("unknown ease {other:?}. Eases: none, power1-4, sine, expo, circ, back, elastic, bounce (each .in/.out/.inOut), steps(n), cubic(x1,y1,x2,y2), spring(zeta), smooth, wiggle(n), rough, slow, hold"),
+            "exposcale" => {
+                ensure!(args.len() == 2, "expoScale(start, end) takes the scale you animate from and to");
+                ensure!(args[0] != 0.0 && args[1] != 0.0 && args[0].signum() == args[1].signum(), "expoScale(start, end) needs two non-zero scales of the same sign");
+                Ease::ExpoScale(args[0], args[1])
+            }
+            other => bail!("unknown ease {other:?}. Eases: none, power1-4, sine, expo, circ, back, elastic, bounce (each .in/.out/.inOut), steps(n), cubic(x1,y1,x2,y2), spring(zeta), smooth, wiggle(n), rough, slow, hold, expoScale(from, to)"),
         })
     }
 
@@ -145,6 +152,7 @@ impl Ease {
             Ease::Hold => if u >= 1.0 { 1.0 } else { 0.0 },
             Ease::Rough(strength, points, seed) => rough(u, strength, points, seed),
             Ease::Slow(ratio, power) => slow(u, ratio, power),
+            Ease::ExpoScale(start, end) => expo_scale(u, start, end),
         }
     }
 }
@@ -239,6 +247,15 @@ fn rough(u: f64, strength: f64, points: u32, seed: u32) -> f64 {
     (a + (b - a) * f).clamp(-0.5, 1.5)
 }
 
+/// GSAP ExpoScaleEase: `mix(start, end, e(t)) == start * (end/start)^t`.
+fn expo_scale(u: f64, start: f64, end: f64) -> f64 {
+    if (end - start).abs() < 1e-12 {
+        return u;
+    }
+    let p = start * (end / start).powf(u);
+    (p - start) / (end - start)
+}
+
 /// GSAP's SlowMo: eases in, lingers near the middle for `ratio` of the time, eases out.
 fn slow(u: f64, ratio: f64, power: f64) -> f64 {
     let ratio = ratio.clamp(0.0, 1.0);
@@ -262,7 +279,7 @@ mod tests {
 
     #[test]
     fn parses_gsap_names_and_pins_both_ends() {
-        for name in ["none", "power1.in", "power2.out", "power3.inOut", "power4.out", "sine.inOut", "expo.out", "expo.inOut", "circ.in", "back.out(1.4)", "back.inOut", "elastic.out(1, 0.4)", "bounce.out", "bounce.inOut", "steps(6)", "cubic(0.25, 0.1, 0.25, 1)", "spring(0.5)", "smooth"] {
+        for name in ["none", "power1.in", "power2.out", "power3.inOut", "power4.out", "sine.inOut", "expo.out", "expo.inOut", "circ.in", "back.out(1.4)", "back.inOut", "elastic.out(1, 0.4)", "bounce.out", "bounce.inOut", "steps(6)", "cubic(0.25, 0.1, 0.25, 1)", "spring(0.5)", "smooth", "expoScale(1, 2)"] {
             let e = Ease::parse(name).unwrap_or_else(|err| panic!("{name}: {err}"));
             assert!(e.at(0.0).abs() < 1e-6, "{name} at 0 = {}", e.at(0.0));
             assert!((e.at(1.0) - 1.0).abs() < 1e-6, "{name} at 1 = {}", e.at(1.0));
@@ -274,6 +291,8 @@ mod tests {
         assert!((Ease::parse("power2.in").unwrap().at(0.5) - 0.125).abs() < 1e-9);
         assert!(Ease::parse("back.out(1.7)").unwrap().at(0.7) > 1.0);
         assert!(Ease::parse("elastic.out").unwrap().at(0.2) > 1.0);
+        let e = Ease::parse("expoScale(1, 2)").unwrap();
+        assert!((1.0 * (2.0f64).powf(0.5) - (1.0 + e.at(0.5))).abs() < 1e-9);
     }
 
     #[test]

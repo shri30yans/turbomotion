@@ -1,0 +1,13 @@
+// @effect haze
+// @kind generator
+// @summary Soft atmospheric haze. Blend `screen` at low opacity over a room or a map.
+// @param amount float 0.4 0 1 -- density
+// @param height float 0.55 0.1 1 -- how high the haze sits, share of the frame
+// @param tint color #9aadc8 -- colour of the air
+half4 main(float2 xy) {
+    float2 p = xy / max(resolution, float2(1.0, 1.0));
+    float n = fbm(p * float2(2.2, 1.1) + float2(time * 0.03, 0.0));
+    float floor_h = smoothstep(height, height - 0.45, p.y);
+    float a = clamp((0.35 + 0.65 * n) * floor_h * amount, 0.0, 1.0);
+    return half4(half3(tint.rgb * a), half(a));
+}

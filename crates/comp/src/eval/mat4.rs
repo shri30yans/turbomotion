@@ -45,6 +45,13 @@ impl Mat4 {
         m
     }
 
+    /// Shear in x, degrees: the top of the layer leans right when positive (GSAP skewX, y down).
+    pub fn skew_x(deg: f64) -> Mat4 {
+        let mut m = Mat4::IDENTITY;
+        m.0[1] = deg.to_radians().tan();
+        m
+    }
+
     /// Clockwise on screen (y points down).
     pub fn rot_z(deg: f64) -> Mat4 {
         let (s, c) = deg.to_radians().sin_cos();

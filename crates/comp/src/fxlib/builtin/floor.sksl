@@ -1,0 +1,27 @@
+// @effect floor
+// @kind generator
+// @summary A receding grid, as if looking across a dark floor.
+// @param horizon float 0.48 0.12 0.85 -- where the floor meets the dark
+// @param vanish vec2 0.5,0.44 -- vanishing point, share of the frame
+// @param cells float 7 2 24 -- how many cells across near the camera
+// @param line color #1a5c78 -- colour of the grid
+// @param haze color #05070f -- colour of the far fog
+// @param glow float 0.4 0 2 -- extra brightness on the lines
+half4 main(float2 xy) {
+    float2 uv = xy / max(resolution, float2(1.0, 1.0));
+    if (uv.y < horizon) {
+        return premul(haze.rgb, 0.0);
+    }
+    float z = (uv.y - horizon) + 0.018;
+    float2 p = float2((uv.x - vanish.x) * cells / z, cells * 0.55 / z);
+    float2 f = abs(fract(p) - 0.5);
+    float d = min(f.x, f.y);
+    float lw = mix(0.12, 0.028, clamp(z * 2.4, 0.0, 1.0));
+    float k = 1.0 - smoothstep(0.0, lw, d);
+    float fog = clamp(z * 1.7, 0.0, 1.0);
+    float pulse = 0.92 + 0.08 * sin(time * 0.45);
+    float3 rgb = mix(haze.rgb, line.rgb, k * fog);
+    rgb += line.rgb * k * glow * fog * pulse;
+    float a = mix(0.0, 0.85, fog) * mix(0.25, 1.0, k);
+    return premul(rgb, a);
+}

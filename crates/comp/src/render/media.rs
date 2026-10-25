@@ -9,10 +9,16 @@ use super::Ctx;
 use crate::{
     eval::media::{ParallaxState, View},
     plan::{LayerPlan, Media},
+    schema::{RasterSampling, Kind},
 };
 
 /// How a draw at the canvas's current transform should sample: mipmapped when it shrinks, a Mitchell cubic when it grows.
-fn sampling(c: &skia_safe::Canvas, view: &View) -> SamplingOptions {
+fn sampling(c: &skia_safe::Canvas, view: &View, requested: Option<RasterSampling>) -> SamplingOptions {
+    match requested {
+        Some(RasterSampling::Nearest) => return SamplingOptions::new(FilterMode::Nearest, MipmapMode::None),
+        Some(RasterSampling::Linear) => return SamplingOptions::new(FilterMode::Linear, MipmapMode::None),
+        None => {}
+    }
     let m: Matrix = c.local_to_device_as_3x3();
     let device = f64::from(m.scale_x()).hypot(f64::from(m.skew_y()));
     let into_viewport = view.dest[2] / view.src[2].max(1e-9);
@@ -30,15 +36,16 @@ pub fn paint_image(ctx: &Ctx, c: &skia_safe::Canvas, lp: &LayerPlan, view: &View
         (Some(_), Some((dp, _))) => Some(ctx.res.images.get(dp).context("loading the depth map")?),
         _ => None,
     };
-    draw(ctx, c, &img, view, parallax.as_ref().zip(depth_img.as_deref()))
+    let requested = match &lp.def.kind { Kind::Image(image) => image.sampling, _ => None };
+    draw(ctx, c, &img, view, parallax.as_ref().zip(depth_img.as_deref()), requested)
 }
 
-pub fn draw(ctx: &Ctx, c: &skia_safe::Canvas, img: &Image, view: &View, parallax: Option<(&ParallaxState, &Image)>) -> Result<()> {
+pub fn draw(ctx: &Ctx, c: &skia_safe::Canvas, img: &Image, view: &View, parallax: Option<(&ParallaxState, &Image)>, requested: Option<RasterSampling>) -> Result<()> {
     let [sx, sy, sw, sh] = view.src.map(|v| v as f32);
     let [dx, dy, dw, dh] = view.dest.map(|v| v as f32);
     c.save();
     c.clip_rect(Rect::from_wh(view.viewport[0] as f32, view.viewport[1] as f32), None, Some(true));
-    let opts = sampling(c, view);
+    let opts = sampling(c, view, requested);
     let mut paint = Paint::default();
     paint.set_anti_alias(true);
     let dest = Rect::from_xywh(dx, dy, dw, dh);
@@ -65,3 +72,7 @@ pub fn draw(ctx: &Ctx, c: &skia_safe::Canvas, img: &Image, view: &View, parallax
     c.restore();
     Ok(())
 }
+
+#[cfg(test)]
+#[path = "image_sampling_tests.rs"]
+mod image_sampling_tests;

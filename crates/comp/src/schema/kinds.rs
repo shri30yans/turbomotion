@@ -9,11 +9,14 @@ use super::{
     wrap::{Col, Pos, P},
 };
 
+// one `Kind` per layer in a plan; boxing the big variants would only add an indirection to every match
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone)]
 pub enum Kind {
     Solid(Solid),
     Shape(Shape),
     Text(Text),
+    Mesh(MeshLayer),
     Image(Image),
     Video(Video),
     Audio(Audio),
@@ -28,7 +31,7 @@ pub enum Kind {
 }
 
 impl Kind {
-    pub const NAMES: &'static [&'static str] = &["solid", "shape", "text", "image", "video", "audio", "precomp", "null", "camera", "light", "adjustment", "particles", "texture", "pack"];
+    pub const NAMES: &'static [&'static str] = &["solid", "shape", "text", "mesh", "image", "video", "audio", "precomp", "null", "camera", "light", "adjustment", "particles", "texture", "pack"];
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -60,6 +63,23 @@ pub struct Text {
     pub size: Option<P>,
     #[serde(default)]
     pub color: Option<Col>,
+    /// A gradient or `"metal"` fill; when set it paints the glyphs instead of `color`.
+    #[serde(default)]
+    pub fill: Option<super::shape::Fill>,
+    /// Sweep a highlighter across this word of the line.
+    #[serde(default)]
+    pub mark: Option<super::text::Mark>,
+    /// Restyle part of the line: an italic accent word, a bold number, another face for a unit. Each run matches
+    /// text (`"match": "prompt."`) and overrides only the fields it names.
+    #[serde(default)]
+    pub runs: Vec<super::text::TextRun>,
+    /// Text that belongs to a mocked interface (a menu label, a status line): it is decoration at a deliberate size,
+    /// so the phone-legibility size rule does not apply. Safe area and contrast are still checked.
+    #[serde(default)]
+    pub ui: bool,
+    /// Which size on the composition's type scale this line is: `display`, `title` or `body`.
+    #[serde(default)]
+    pub role: Option<super::text::Role>,
     /// Pixels added after every character.
     #[serde(default)]
     pub tracking: Option<P>,
@@ -78,6 +98,83 @@ pub struct Text {
     /// A named animation from the catalogue, expanded into animators: `"rise"` or `{"name": "rise", "by": "words"}`.
     #[serde(default)]
     pub preset: Option<Value>,
+}
+
+/// A solid: a triangle mesh made by one of the `geometry` generators, lit by the composition's lights and seen through
+/// its camera. Rotate it with the common `rot_x` / `rot_y` / `rotation`; it turns about its own middle. `text3d` is the
+/// same layer with a text geometry written flat.
+#[derive(Debug, Deserialize, Clone)]
+#[serde(deny_unknown_fields)]
+pub struct MeshLayer {
+    pub geometry: Geometry,
+    /// The front face (and a curved surface's whole skin).
+    #[serde(default)]
+    pub color: Option<Col>,
+    /// The sides and the bevel; the front colour darkened when left out.
+    #[serde(default)]
+    pub side: Option<Col>,
+    /// The back face; `side` when left out.
+    #[serde(default)]
+    pub back: Option<Col>,
+    /// Smoothness of curved geometry: segments around a full turn (48).
+    #[serde(default)]
+    pub segments: Option<u32>,
+}
+
+/// What a mesh is made of. Sizes are pixels.
+#[derive(Debug, Deserialize, Clone)]
+#[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
+pub enum Geometry {
+    /// One line of text, each glyph outline extruded; several glyphs share one mesh (one layer per letter to stagger a word).
+    Text {
+        text: String,
+        #[serde(default)]
+        font: Option<String>,
+        #[serde(default)]
+        weight: Option<u16>,
+        #[serde(default)]
+        italic: bool,
+        /// Font size.
+        size: P,
+        /// Extrusion; 0.2 x size when left out.
+        #[serde(default)]
+        depth: Option<P>,
+        /// Chamfer on the front and back edges; 0 (the default) is a hard edge.
+        #[serde(default)]
+        bevel: Option<P>,
+    },
+    /// A box `size` wide; `height` and `depth` default to `size`.
+    Box {
+        size: P,
+        #[serde(default)]
+        height: Option<P>,
+        #[serde(default)]
+        depth: Option<P>,
+    },
+    /// A sphere of diameter `size`.
+    Sphere { size: P },
+    /// A ring facing the viewer: `size` is its outer diameter, `tube` the thickness of its band (a quarter of `size`).
+    Torus {
+        size: P,
+        #[serde(default)]
+        tube: Option<P>,
+    },
+    /// A cylinder of diameter `size` and `height`; `top` is the top diameter (0 makes a cone).
+    Cylinder {
+        size: P,
+        height: P,
+        #[serde(default)]
+        top: Option<P>,
+    },
+    /// An SVG path `d` (filled) scaled to `size` wide and pushed `depth` deep (0.3 x size when left out).
+    Extrude {
+        d: String,
+        size: P,
+        #[serde(default)]
+        depth: Option<P>,
+        #[serde(default)]
+        bevel: Option<P>,
+    },
 }
 
 #[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq, Default)]
@@ -132,10 +229,21 @@ pub struct Parallax {
     pub look: Option<Pos>,
 }
 
+/// Explicit raster filtering. Omission retains each layer kind's default.
+#[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum RasterSampling {
+    Nearest,
+    Linear,
+}
+
 #[derive(Debug, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct Image {
     pub src: String,
+    /// Nearest preserves source pixels; linear interpolates without mipmaps. None keeps automatic filtering.
+    #[serde(default)]
+    pub sampling: Option<RasterSampling>,
     /// The viewport in pixels: the composition's size by default (the natural size with `fit: none`).
     #[serde(default)]
     pub size: Option<[f64; 2]>,
@@ -199,6 +307,9 @@ fn one() -> f64 {
 pub struct Precomp {
     /// The name of an entry in the composition's `comps`.
     pub comp: String,
+    /// Filtering when the rendered composition is transformed. None keeps linear filtering.
+    #[serde(default)]
+    pub sampling: Option<RasterSampling>,
     #[serde(default = "one")]
     pub speed: f64,
     /// Seconds into the nested composition that the layer starts at.

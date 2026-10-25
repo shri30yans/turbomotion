@@ -1,0 +1,489 @@
+{
+  "width": 900,
+  "height": 560,
+  "fps": 30,
+  "dur": 12,
+  "job": "card",
+  "best_for": [
+    "a number",
+    "a ticket"
+  ],
+  "breaks": "The object is the picture.",
+  "props": [
+    "kicker",
+    "title",
+    "body",
+    "chip",
+    "spark",
+    "area",
+    "font",
+    "tilt",
+    "rest"
+  ],
+  "vars": {
+    "accent": "#e8402f",
+    "ink": "#f6f4ee",
+    "mute": "#687e96",
+    "plate": "#121a26",
+    "loss": "#e8402f",
+    "gold": "#deb052",
+    "gain": "#3eb696",
+    "sub": "#687e96",
+    "kicker": "CUSTOMER ORDER",
+    "title": "BUY 20",
+    "body": "FUTURE CONTRACTS",
+    "chip": "Higher price in future",
+    "spark": "M 0 36 L 28 22 L 52 26 L 86 -6 L 128 -28 L 150 -18",
+    "area": "M 0 52 L 0 36 L 28 22 L 52 26 L 86 -6 L 128 -28 L 150 -18 L 150 52 Z",
+    "font": "Avenir Next",
+    "tilt": 18,
+    "rest": 12
+  },
+  "layers": [
+    {
+      "type": "camera",
+      "zoom": 1100,
+      "pos": [
+        450,
+        280,
+        -1100
+      ],
+      "poi": [
+        450,
+        280,
+        20
+      ],
+      "dof": {
+        "focus": 1120,
+        "blur": 5
+      }
+    },
+    {
+      "type": "light",
+      "kind": "ambient",
+      "color": "#1a2438",
+      "intensity": 0.22
+    },
+    {
+      "type": "light",
+      "kind": "point",
+      "pos": [
+        80,
+        -40,
+        -380
+      ],
+      "color": "$accent",
+      "intensity": 1.6,
+      "radius": 1600,
+      "shine": 0.85
+    },
+    {
+      "type": "null",
+      "id": "rig",
+      "pos": [
+        450,
+        280,
+        0
+      ],
+      "rot_y": {
+        "from": "$tilt",
+        "to": "$rest",
+        "dur": 1.8,
+        "ease": "expo.out"
+      },
+      "rot_x": {
+        "from": 8,
+        "to": 3.2,
+        "dur": 1.8,
+        "ease": "expo.out"
+      }
+    },
+    {
+      "type": "shape",
+      "id": "back",
+      "parent": "rig",
+      "three_d": true,
+      "lit": false,
+      "pos": [
+        0,
+        0,
+        52
+      ],
+      "items": [
+        {
+          "rect": [
+            -300,
+            -180,
+            600,
+            360
+          ],
+          "radius": 28,
+          "fill": "#05070c"
+        }
+      ]
+    },
+    {
+      "type": "shape",
+      "id": "right",
+      "parent": "rig",
+      "three_d": true,
+      "lit": false,
+      "pos": [
+        300,
+        0,
+        26
+      ],
+      "rot_y": 90,
+      "fx": [
+        {
+          "effect": "glow",
+          "radius": 16,
+          "strength": 1.0,
+          "threshold": 0.12
+        }
+      ],
+      "items": [
+        {
+          "rect": [
+            -26,
+            -180,
+            52,
+            360
+          ],
+          "fill": "$accent"
+        }
+      ]
+    },
+    {
+      "type": "shape",
+      "id": "left",
+      "parent": "rig",
+      "three_d": true,
+      "lit": false,
+      "pos": [
+        -300,
+        0,
+        26
+      ],
+      "rot_y": 90,
+      "fx": [
+        {
+          "effect": "glow",
+          "radius": 16,
+          "strength": 1.0,
+          "threshold": 0.12
+        }
+      ],
+      "items": [
+        {
+          "rect": [
+            -26,
+            -180,
+            52,
+            360
+          ],
+          "fill": "$accent"
+        }
+      ]
+    },
+    {
+      "type": "shape",
+      "id": "top",
+      "parent": "rig",
+      "three_d": true,
+      "lit": false,
+      "pos": [
+        0,
+        -180,
+        26
+      ],
+      "rot_x": 90,
+      "fx": [
+        {
+          "effect": "glow",
+          "radius": 14,
+          "strength": 0.9,
+          "threshold": 0.12
+        }
+      ],
+      "items": [
+        {
+          "rect": [
+            -300,
+            -26,
+            600,
+            52
+          ],
+          "fill": "$accent"
+        }
+      ]
+    },
+    {
+      "type": "shape",
+      "id": "front",
+      "parent": "rig",
+      "three_d": true,
+      "lit": false,
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "fx": [
+        {
+          "effect": "holo",
+          "tint": "$accent",
+          "edge": 2.2,
+          "width": 5.5,
+          "fill": 0.55,
+          "sheen": 0.55
+        },
+        {
+          "effect": "comet",
+          "tint": "$accent",
+          "speed": 0.18,
+          "strength": 1.6,
+          "width": 12
+        },
+        {
+          "effect": "glow",
+          "radius": 28,
+          "strength": 1.35,
+          "threshold": 0.2
+        }
+      ],
+      "items": [
+        {
+          "rect": [
+            -300,
+            -180,
+            600,
+            360
+          ],
+          "radius": 28,
+          "fill": {
+            "color": "#070b14",
+            "opacity": 0.58
+          }
+        }
+      ]
+    },
+    {
+      "type": "null",
+      "id": "on"
+    },
+    {
+      "type": "text",
+      "id": "kicker",
+      "parent": "rig",
+      "three_d": true,
+      "lit": false,
+      "pos": [
+        -268,
+        -142,
+        -4
+      ],
+      "align": "left",
+      "text": "$kicker",
+      "font": "$font",
+      "weight": 700,
+      "size": 22,
+      "tracking": 2.4,
+      "color": "$ink",
+      "preset": {
+        "name": "tracking_in",
+        "at": 0.12,
+        "dur": 0.55
+      }
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "parent": "rig",
+      "three_d": true,
+      "lit": false,
+      "pos": [
+        -268,
+        -52,
+        -4
+      ],
+      "align": "left",
+      "text": "$title",
+      "font": "$font",
+      "weight": 800,
+      "size": 76,
+      "color": "$accent",
+      "preset": {
+        "name": "reveal",
+        "at": 0.22
+      },
+      "fx": [
+        {
+          "effect": "glow",
+          "radius": 16,
+          "strength": 0.9,
+          "threshold": 0.2
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "id": "copy",
+      "parent": "rig",
+      "three_d": true,
+      "lit": false,
+      "pos": [
+        -268,
+        28,
+        -4
+      ],
+      "align": "left",
+      "text": "$body",
+      "font": "$font",
+      "weight": 600,
+      "size": 22,
+      "tracking": 1.6,
+      "color": "$ink",
+      "preset": {
+        "name": "reveal",
+        "at": 0.4
+      }
+    },
+    {
+      "type": "shape",
+      "id": "area",
+      "parent": "rig",
+      "three_d": true,
+      "lit": false,
+      "pos": [
+        118,
+        24,
+        -4
+      ],
+      "items": [
+        {
+          "d": "$area",
+          "fill": {
+            "color": "$accent",
+            "opacity": 0.16
+          }
+        }
+      ],
+      "enter": {
+        "preset": "fade",
+        "dur": 0.5,
+        "delay": 0.45
+      }
+    },
+    {
+      "type": "shape",
+      "id": "spark",
+      "parent": "rig",
+      "three_d": true,
+      "lit": false,
+      "pos": [
+        118,
+        24,
+        -4
+      ],
+      "items": [
+        {
+          "d": "$spark",
+          "stroke": {
+            "color": "$accent",
+            "width": 4,
+            "cap": "round",
+            "join": "round"
+          },
+          "trim": {
+            "end": {
+              "from": 0,
+              "to": 1,
+              "at": 0.35,
+              "dur": 0.9,
+              "ease": "power3.out"
+            }
+          }
+        }
+      ],
+      "fx": [
+        {
+          "effect": "glow",
+          "radius": 10,
+          "strength": 0.8,
+          "threshold": 0.15
+        }
+      ]
+    },
+    {
+      "type": "shape",
+      "id": "chip",
+      "parent": "rig",
+      "three_d": true,
+      "lit": false,
+      "pos": [
+        168,
+        -96,
+        -4
+      ],
+      "fx": [
+        {
+          "effect": "holo",
+          "tint": "$accent",
+          "edge": 1.3,
+          "width": 3.2,
+          "fill": 0.28,
+          "sheen": 0.35
+        },
+        {
+          "effect": "glow",
+          "radius": 12,
+          "strength": 0.7,
+          "threshold": 0.25
+        }
+      ],
+      "items": [
+        {
+          "rect": [
+            -108,
+            -26,
+            216,
+            52
+          ],
+          "radius": 12,
+          "fill": {
+            "color": "#05070f",
+            "opacity": 0.82
+          }
+        }
+      ],
+      "enter": {
+        "preset": "pop",
+        "dur": 0.4,
+        "delay": 0.7
+      }
+    },
+    {
+      "type": "text",
+      "id": "chip_t",
+      "parent": "rig",
+      "three_d": true,
+      "lit": false,
+      "pos": [
+        168,
+        -96,
+        -6
+      ],
+      "align": "center",
+      "text": "$chip",
+      "font": "$font",
+      "weight": 700,
+      "size": 18,
+      "color": "$ink",
+      "preset": {
+        "name": "fade_up",
+        "at": 0.85
+      }
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+// @effect holo
+// @summary Holographic pane: a neon tube on the silhouette, a tinted wash inside, bloom just outside, a top-left sheen.
+// @param tint color #5cffd2 -- neon of the rim and the interior wash
+// @param edge float 1.85 0 5 -- brightness of the tube
+// @param width float 5.5 1 20 -- tube half-width, px
+// @param fill float 0.48 0 1 -- how much the tint washes the interior
+// @param sheen float 0.7 0 2 -- specular highlight in the top-left
+// @param frost float 0.03 0 0.4 -- residual grain in the pane
+half4 main(float2 xy) {
+    float a0 = image.eval(xy).a;
+    float inside = step(0.42, a0);
+    float found = 0.0;
+    float d = 40.0;
+    for (int i = 1; i <= 16; i++) {
+        float r = float(i) * 2.5;
+        float amin = 1.0;
+        float amax = 0.0;
+        float a1 = image.eval(xy + float2(r, 0.0)).a;  amin = min(amin, a1); amax = max(amax, a1);
+        float a2 = image.eval(xy + float2(-r, 0.0)).a; amin = min(amin, a2); amax = max(amax, a2);
+        float a3 = image.eval(xy + float2(0.0, r)).a;  amin = min(amin, a3); amax = max(amax, a3);
+        float a4 = image.eval(xy + float2(0.0, -r)).a; amin = min(amin, a4); amax = max(amax, a4);
+        float s = 0.707 * r;
+        float a5 = image.eval(xy + float2(s, s)).a;    amin = min(amin, a5); amax = max(amax, a5);
+        float a6 = image.eval(xy + float2(-s, s)).a;   amin = min(amin, a6); amax = max(amax, a6);
+        float a7 = image.eval(xy + float2(s, -s)).a;   amin = min(amin, a7); amax = max(amax, a7);
+        float a8 = image.eval(xy + float2(-s, -s)).a;  amin = min(amin, a8); amax = max(amax, a8);
+        float crossed = mix(step(0.42, amax), 1.0 - step(0.42, amin), inside);
+        float take = (1.0 - found) * crossed;
+        d = mix(d, r, take);
+        found = max(found, take);
+    }
+    float sd = mix(-d, d, inside);
+    float pulse = 0.94 + 0.06 * sin(time * 1.35);
+    float tube = exp(-abs(sd) / max(width, 0.5)) * edge * pulse;
+    float halo = exp(-max(-sd, 0.0) / (width * 2.2)) * edge * 0.45 * (1.0 - inside);
+    float wash = fill * exp(-max(sd, 0.0) / 42.0);
+    float3 body = mix(float3(0.02, 0.03, 0.055), tint.rgb * 0.38, wash);
+    float2 u = xy / max(resolution, float2(1.0, 1.0));
+    float spec = pow(clamp(1.0 - length((u - float2(0.20, 0.16)) * float2(3.4, 4.2)), 0.0, 1.0), 4.4) * sheen * inside;
+    float top = smoothstep(0.62, 0.12, u.y) * 0.10 * inside;
+    float grain = (fbm(xy * 0.055) - 0.5) * frost * inside;
+    float3 rgb = body * inside + tint.rgb * (tube + halo + spec + top) + grain;
+    float alpha = max(a0, clamp(tube * 0.55 + halo * 0.8, 0.0, 1.0));
+    return premul(clamp(rgb, 0.0, 4.0), alpha);
+}

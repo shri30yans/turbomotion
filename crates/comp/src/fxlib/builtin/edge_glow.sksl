@@ -1,0 +1,16 @@
+// @effect edge_glow
+// @summary Finds the edges in the picture and lights them: a blueprint, circuit or neon-outline look.
+// @param strength float 1 0 3 -- edge brightness
+// @param width float 1.5 0.5 6 -- edge thickness in px
+// @param tint color #5ad2ff -- edge colour
+// @param keep float 0.35 0 1 -- how much of the original picture stays
+half4 main(float2 xy) {
+    float4 c = straight(xy);
+    float l = luma(c.rgb) * c.a;
+    float lx = luma(straight(xy + float2(width, 0.0)).rgb) * straight(xy + float2(width, 0.0)).a - luma(straight(xy - float2(width, 0.0)).rgb) * straight(xy - float2(width, 0.0)).a;
+    float ly = luma(straight(xy + float2(0.0, width)).rgb) * straight(xy + float2(0.0, width)).a - luma(straight(xy - float2(0.0, width)).rgb) * straight(xy - float2(0.0, width)).a;
+    float e = clamp(length(float2(lx, ly)) * 2.0 * strength, 0.0, 1.0);
+    float3 rgb = c.rgb * keep + tint.rgb * e;
+    float a = clamp(max(c.a * keep, e), 0.0, 1.0);
+    return premul(clamp(rgb, 0.0, 1.0), a);
+}

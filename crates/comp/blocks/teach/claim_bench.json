@@ -1,0 +1,296 @@
+{
+  "width": 1480,
+  "height": 560,
+  "fps": 30,
+  "dur": 12,
+  "job": "teach",
+  "best_for": [
+    "FACT vs INTERPRETATION",
+    "a ledger of claims",
+    "the release gate on screen"
+  ],
+  "breaks": "Each line needs its own `mark.word` inside that line. Verdict picks the ink. The needle is rotation, not a shader.",
+  "props": [
+    "one",
+    "one_mark",
+    "two",
+    "two_mark",
+    "three",
+    "three_mark",
+    "score_to",
+    "font"
+  ],
+  "vars": {
+    "accent": "#e8402f",
+    "ink": "#f6f4ee",
+    "mute": "#687e96",
+    "plate": "#121a26",
+    "loss": "#e8402f",
+    "gold": "#deb052",
+    "gain": "#3eb696",
+    "sub": "#687e96",
+    "one": "The fee was disclosed in the small print.",
+    "one_mark": "fee",
+    "two": "The risk sat with the customer, not the house.",
+    "two_mark": "risk",
+    "three": "When the price moved, someone had to pay.",
+    "three_mark": "pay",
+    "score_to": 12,
+    "font": "Avenir Next"
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "plate",
+      "pos": [
+        740,
+        280
+      ],
+      "layout": "backdrop",
+      "fx": [
+        {
+          "effect": "highlighter",
+          "amount": 0.45
+        },
+        {
+          "effect": "light_sweep",
+          "position": {
+            "keys": [
+              [
+                0,
+                -0.2
+              ],
+              [
+                3.2,
+                1.2,
+                "sine.inOut"
+              ]
+            ],
+            "loop": "cycle"
+          },
+          "strength": 0.45,
+          "width": 0.22
+        }
+      ],
+      "items": [
+        {
+          "rect": [
+            -700,
+            -250,
+            1400,
+            500
+          ],
+          "radius": 22,
+          "fill": {
+            "color": "$plate",
+            "opacity": 0.94
+          },
+          "stroke": {
+            "color": "#3d4f6e",
+            "width": 1.4
+          }
+        }
+      ],
+      "enter": {
+        "preset": "slide_up",
+        "dur": 0.5
+      }
+    },
+    {
+      "type": "text",
+      "id": "c1",
+      "text": "$one",
+      "font": "$font",
+      "weight": 600,
+      "role": "body",
+      "color": "$ink",
+      "pos": [
+        80,
+        140
+      ],
+      "align": "left",
+      "width": 980,
+      "mark": {
+        "word": "$one_mark",
+        "verdict": "loss",
+        "at": 0.4,
+        "dur": 0.45
+      },
+      "preset": {
+        "name": "reveal",
+        "at": 0.15
+      }
+    },
+    {
+      "type": "text",
+      "id": "c2",
+      "text": "$two",
+      "font": "$font",
+      "weight": 600,
+      "role": "body",
+      "color": "$ink",
+      "pos": [
+        80,
+        230
+      ],
+      "align": "left",
+      "width": 980,
+      "mark": {
+        "word": "$two_mark",
+        "verdict": "interpret",
+        "at": 0.9,
+        "dur": 0.45
+      },
+      "preset": {
+        "name": "reveal",
+        "at": 0.45
+      }
+    },
+    {
+      "type": "text",
+      "id": "c3",
+      "text": "$three",
+      "font": "$font",
+      "weight": 600,
+      "role": "body",
+      "color": "$ink",
+      "pos": [
+        80,
+        320
+      ],
+      "align": "left",
+      "width": 980,
+      "mark": {
+        "word": "$three_mark",
+        "verdict": "fact",
+        "at": 1.4,
+        "dur": 0.45
+      },
+      "preset": {
+        "name": "reveal",
+        "at": 0.75
+      }
+    },
+    {
+      "type": "shape",
+      "id": "dial",
+      "pos": [
+        1260,
+        220
+      ],
+      "items": [
+        {
+          "ellipse": [
+            0,
+            0,
+            86,
+            86
+          ],
+          "stroke": {
+            "color": "#5a6e8a",
+            "width": 3
+          }
+        },
+        {
+          "ellipse": [
+            0,
+            0,
+            6,
+            6
+          ],
+          "fill": "#ffd37a"
+        }
+      ],
+      "enter": {
+        "preset": "pop",
+        "dur": 0.4,
+        "delay": 0.5
+      }
+    },
+    {
+      "type": "shape",
+      "id": "needle",
+      "pos": [
+        1260,
+        220
+      ],
+      "rotation": {
+        "keys": [
+          [
+            0.6,
+            -48
+          ],
+          [
+            2.4,
+            32,
+            "expo.out"
+          ]
+        ],
+        "expr": "value + (time > 2.4 ? 5 * sin((time - 2.4) * 1.4) : 0)"
+      },
+      "items": [
+        {
+          "rect": [
+            -3,
+            -72,
+            6,
+            78
+          ],
+          "radius": 3,
+          "fill": "#ffd37a"
+        }
+      ],
+      "fx": [
+        {
+          "effect": "glow",
+          "radius": 8,
+          "strength": 0.6
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "id": "score",
+      "text": {
+        "from": 0,
+        "to": "$score_to",
+        "at": 0.6,
+        "dur": 1.8,
+        "ease": "expo.out",
+        "suffix": "/20"
+      },
+      "font": "$font",
+      "weight": 800,
+      "size": 36,
+      "color": "#ffd37a",
+      "pos": [
+        1260,
+        360
+      ],
+      "align": "center",
+      "preset": {
+        "name": "fade_up",
+        "at": 0.7
+      }
+    },
+    {
+      "type": "text",
+      "id": "tag",
+      "text": "CLAIM SCORE",
+      "font": "$font",
+      "weight": 600,
+      "size": 14,
+      "tracking": 3,
+      "color": "#9aa8c6",
+      "pos": [
+        1260,
+        408
+      ],
+      "align": "center",
+      "preset": {
+        "name": "fade_up",
+        "at": 0.9
+      }
+    }
+  ]
+}

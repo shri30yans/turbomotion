@@ -79,7 +79,7 @@ impl Arg {
 /// Names the evaluator itself defines. Anything else is looked up in the `Env`.
 const BUILTIN_FNS: &[&str] = &[
     "sin", "cos", "tan", "asin", "acos", "atan", "atan2", "abs", "min", "max", "floor", "ceil", "round", "sqrt", "pow", "exp", "ln", "sign", "fract", "clamp", "lerp",
-    "linear", "smooth", "ease", "noise", "noise2", "wiggle", "random", "radians", "degrees", "mod", "step", "pingpong",
+    "linear", "smooth", "ease", "noise", "noise2", "wiggle", "random", "radians", "degrees", "mod", "step", "pingpong", "wrap",
 ];
 
 impl Expr {
@@ -168,7 +168,7 @@ fn lex(src: &str) -> Result<Vec<Tok>> {
                 out.push(Tok::Op(op));
                 i += 2;
             } else {
-                let one = ["+", "-", "*", "/", "%", "^", "(", ")", ",", "<", ">", "!", "?", ":"].iter().find(|o| o.chars().next() == Some(c));
+                let one = ["+", "-", "*", "/", "%", "^", "(", ")", ",", "<", ">", "!", "?", ":"].iter().find(|o| o.starts_with(c));
                 out.push(Tok::Op(one.ok_or_else(|| anyhow!("unexpected character {c:?} in expression {src:?}"))?));
                 i += 1;
             }
@@ -389,6 +389,11 @@ fn builtin(name: &str, a: &[Arg], env: &dyn Env) -> Result<f64> {
         "sign" => n(0)?.signum() * f64::from(n(0)? != 0.0),
         "fract" => n(0)? - n(0)?.floor(),
         "mod" => if n(1)? == 0.0 { 0.0 } else { n(0)?.rem_euclid(n(1)?) },
+        "wrap" => {
+            let (x, lo, hi) = (n(0)?, n(1)?, n(2)?);
+            let span = hi - lo;
+            if span.abs() < 1e-12 { lo } else { lo + (x - lo).rem_euclid(span) }
+        }
         "step" => f64::from(n(1)? >= n(0)?),
         "pingpong" => {
             let (x, len) = (n(0)?, n(1)?.max(1e-9));
@@ -462,6 +467,8 @@ mod tests {
         assert_eq!(run("time > 1 ? 10 : 20", 2.0), 10.0);
         assert_eq!(run("linear(time, 0, 2, 0, 360)", 1.0), 180.0);
         assert_eq!(run("clamp(value * 2, 0, 150)", 0.0), 150.0);
+        assert_eq!(run("wrap(210, 0, 100)", 0.0), 10.0);
+        assert_eq!(run("wrap(-10, 0, 100)", 0.0), 90.0);
         assert!((run("ease('power2.in', time, 0, 1, 0, 8)", 0.5) - 1.0).abs() < 1e-9);
     }
 

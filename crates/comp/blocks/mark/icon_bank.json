@@ -1,0 +1,15 @@
+{
+  "width": 160, "height": 160, "fps": 30, "dur": 8,
+  "vars": {"accent": "#ffd37a"},
+  "layers": [
+    {"type": "shape", "id": "icon", "pos": [0, 0],
+     "items": [
+       {"d": "M 28 58 L 80 32 L 132 58", "stroke": {"color": "$accent", "width": 5, "cap": "round", "join": "round"}},
+       {"rect": [40, 62, 14, 52], "fill": "$accent"},
+       {"rect": [73, 62, 14, 52], "fill": "$accent"},
+       {"rect": [106, 62, 14, 52], "fill": "$accent"},
+       {"rect": [32, 116, 96, 10], "radius": 2, "fill": "$accent"}
+     ],
+     "enter": {"preset": "pop", "dur": 0.4}}
+  ]
+}

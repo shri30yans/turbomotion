@@ -1,0 +1,14 @@
+{
+  "width": 160, "height": 160, "fps": 30, "dur": 8,
+  "vars": {"accent": "#ffd37a"},
+  "layers": [
+    {"type": "shape", "id": "icon", "pos": [0, 0],
+     "items": [
+       {"rect": [44, 30, 72, 100], "radius": 8, "stroke": {"color": "$accent", "width": 4}},
+       {"rect": [58, 54, 44, 5], "radius": 2, "fill": "$accent"},
+       {"rect": [58, 70, 44, 5], "radius": 2, "fill": "$accent"},
+       {"rect": [58, 86, 28, 5], "radius": 2, "fill": "$accent"}
+     ],
+     "enter": {"preset": "pop", "dur": 0.4}}
+  ]
+}

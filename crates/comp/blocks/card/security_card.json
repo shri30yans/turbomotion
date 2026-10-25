@@ -1,0 +1,267 @@
+{
+  "width": 720,
+  "height": 440,
+  "fps": 30,
+  "dur": 12,
+  "job": "card",
+  "best_for": [
+    "the contract",
+    "the certificate",
+    "the ticket that was the bet"
+  ],
+  "breaks": "Keep the paper opaque. Guilloche is a texture under the type, not a grade. Crumble belongs on the precomp that instances this block, so the card stays reusable.",
+  "props": [
+    "title",
+    "serial",
+    "body",
+    "paper",
+    "foil",
+    "font"
+  ],
+  "vars": {
+    "accent": "#e8402f",
+    "ink": "#f6f4ee",
+    "mute": "#687e96",
+    "plate": "#121a26",
+    "loss": "#e8402f",
+    "gold": "#deb052",
+    "gain": "#3eb696",
+    "sub": "#687e96",
+    "title": "FUTURE CONTRACT",
+    "serial": "FC-827-1995",
+    "body": "BUY 20  \u00b7  SETTLEMENT 30 DAYS",
+    "paper": "#f3ead8",
+    "foil": "#c9a24a",
+    "font": "Avenir Next"
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "stock",
+      "pos": [
+        360,
+        "220 + 5 * sin(time * 0.55)"
+      ],
+      "items": [
+        {
+          "rect": [
+            -340,
+            -200,
+            680,
+            400
+          ],
+          "radius": 18,
+          "fill": "$paper",
+          "stroke": {
+            "color": "$foil",
+            "width": 2
+          }
+        }
+      ],
+      "enter": {
+        "preset": "pop",
+        "dur": 0.55
+      }
+    },
+    {
+      "type": "texture",
+      "shader": "guilloche",
+      "params": {
+        "ink": "#1a4a6e",
+        "paper": "$paper",
+        "density": 7,
+        "amount": 0.42
+      },
+      "opacity": 0.55,
+      "blend": "multiply"
+    },
+    {
+      "type": "shape",
+      "id": "stripe",
+      "pos": [
+        360,
+        70
+      ],
+      "fx": [
+        {
+          "effect": "foil",
+          "amount": 0.85,
+          "shift": {
+            "keys": [
+              [
+                0,
+                0
+              ],
+              [
+                2.8,
+                0.45,
+                "sine.inOut"
+              ]
+            ],
+            "loop": "pingpong"
+          }
+        }
+      ],
+      "items": [
+        {
+          "rect": [
+            -340,
+            -16,
+            680,
+            32
+          ],
+          "fill": "$foil"
+        }
+      ],
+      "enter": {
+        "preset": "wipe_left",
+        "dur": 0.7,
+        "delay": 0.2
+      }
+    },
+    {
+      "type": "shape",
+      "id": "chip",
+      "pos": [
+        120,
+        150
+      ],
+      "items": [
+        {
+          "rect": [
+            -36,
+            -28,
+            72,
+            56
+          ],
+          "radius": 4,
+          "fill": "$foil"
+        },
+        {
+          "rect": [
+            -22,
+            -14,
+            44,
+            8
+          ],
+          "fill": "#8a6a2a"
+        },
+        {
+          "rect": [
+            -22,
+            4,
+            28,
+            8
+          ],
+          "fill": "#8a6a2a"
+        }
+      ],
+      "enter": {
+        "preset": "fade",
+        "dur": 0.35,
+        "delay": 0.45
+      }
+    },
+    {
+      "type": "shape",
+      "id": "seal",
+      "pos": [
+        600,
+        320
+      ],
+      "fx": [
+        {
+          "effect": "foil",
+          "amount": 0.7
+        }
+      ],
+      "items": [
+        {
+          "ellipse": [
+            0,
+            0,
+            48,
+            48
+          ],
+          "stroke": {
+            "color": "$foil",
+            "width": 3
+          }
+        },
+        {
+          "ellipse": [
+            0,
+            0,
+            28,
+            28
+          ],
+          "fill": {
+            "color": "$foil",
+            "opacity": 0.35
+          }
+        }
+      ],
+      "enter": {
+        "preset": "pop",
+        "dur": 0.4,
+        "delay": 0.6
+      }
+    },
+    {
+      "type": "text",
+      "id": "kicker",
+      "text": "$serial",
+      "font": "$font",
+      "weight": 600,
+      "size": 16,
+      "tracking": 3,
+      "color": "$ink",
+      "pos": [
+        360,
+        72
+      ],
+      "align": "center",
+      "preset": {
+        "name": "tracking_in",
+        "at": 0.35
+      }
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "text": "$title",
+      "font": "$font",
+      "weight": 800,
+      "size": 36,
+      "tracking": 2,
+      "color": "$ink",
+      "pos": [
+        360,
+        200
+      ],
+      "align": "center",
+      "preset": {
+        "name": "reveal",
+        "at": 0.45
+      }
+    },
+    {
+      "type": "text",
+      "id": "body",
+      "text": "$body",
+      "font": "$font",
+      "weight": 600,
+      "size": 18,
+      "color": "$ink",
+      "pos": [
+        360,
+        258
+      ],
+      "align": "center",
+      "preset": {
+        "name": "fade_up",
+        "at": 0.7
+      }
+    }
+  ]
+}

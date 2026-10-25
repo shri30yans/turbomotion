@@ -1,0 +1,94 @@
+{
+  "width": 1000,
+  "height": 360,
+  "fps": 30,
+  "dur": 12,
+  "job": "card",
+  "best_for": [
+    "a count that lands on the word"
+  ],
+  "breaks": "The number is the picture. The label is small.",
+  "props": [
+    "from",
+    "to",
+    "prefix",
+    "suffix",
+    "decimals",
+    "label"
+  ],
+  "vars": {
+    "accent": "#e8402f",
+    "ink": "#f6f4ee",
+    "mute": "#687e96",
+    "plate": "#121a26",
+    "loss": "#e8402f",
+    "gold": "#deb052",
+    "gain": "#3eb696",
+    "sub": "#687e96",
+    "from": 0,
+    "to": 1200,
+    "prefix": "",
+    "suffix": "",
+    "decimals": 0,
+    "label": "users",
+    "count_time": 1.6
+  },
+  "layers": [
+    {
+      "type": "text",
+      "id": "value",
+      "text": {
+        "from": "$from",
+        "to": "$to",
+        "at": 0.1,
+        "dur": "$count_time",
+        "ease": "expo.out",
+        "sep": ",",
+        "prefix": "$prefix",
+        "suffix": "$suffix",
+        "decimals": "$decimals"
+      },
+      "fill": "metal",
+      "pos": [
+        500.0,
+        151.2
+      ],
+      "align": "center",
+      "fx": [
+        {
+          "effect": "light_sweep",
+          "position": {
+            "from": -0.2,
+            "to": 1.15,
+            "at": 0.4,
+            "dur": 1.3,
+            "ease": "sine.inOut"
+          },
+          "strength": 0.7
+        }
+      ],
+      "role": "display"
+    },
+    {
+      "type": "text",
+      "id": "label",
+      "text": "$label",
+      "role": "body",
+      "tracking": 4,
+      "color": "$mute",
+      "pos": [
+        500.0,
+        280.8
+      ],
+      "align": "center",
+      "preset": {
+        "name": "fade_up",
+        "at": 0.5
+      }
+    }
+  ],
+  "uses": {
+    "type": "display",
+    "motion": "enter"
+  }
+}

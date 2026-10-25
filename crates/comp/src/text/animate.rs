@@ -90,7 +90,7 @@ pub struct Resolved<'a> {
     pub color: Option<[f32; 4]>,
 }
 
-fn units<'a>(layout: &'a Layout, by: Unit) -> Vec<(std::ops::Range<usize>, [f32; 4])> {
+fn units(layout: &Layout, by: Unit) -> Vec<(std::ops::Range<usize>, [f32; 4])> {
     match by {
         Unit::Chars => layout.glyphs.iter().enumerate().map(|(i, g)| (i..i + 1, [g.x, g.top, g.x + g.w, g.bottom])).collect(),
         Unit::Words => layout.words.iter().map(|s: &Span| (s.glyphs.clone(), s.rect)).collect(),
@@ -99,7 +99,7 @@ fn units<'a>(layout: &'a Layout, by: Unit) -> Vec<(std::ops::Range<usize>, [f32;
 }
 
 /// Delay order of unit `i` of `n` for a stagger origin: 0 starts first.
-fn stagger_order(from: StaggerFrom, i: usize, n: usize, seed: u32) -> f64 {
+pub(crate) fn stagger_order(from: StaggerFrom, i: usize, n: usize, seed: u32) -> f64 {
     let last = (n.max(1) - 1) as f64;
     match from {
         StaggerFrom::Start => i as f64,
@@ -130,11 +130,12 @@ fn selector_weight(sel: &Selector, start: f64, end: f64, offset: f64, i: usize, 
 }
 
 /// The state of every character of `layout` at layer time `t`.
-pub fn glyph_states(layout: &Layout, animators: &[Resolved], t: f64, base_color: [f32; 4], font_size: f64) -> Result<Vec<GlyphState>> {
+pub fn glyph_states(layout: &Layout, animators: &[Resolved], t: f64, base_color: [f32; 4], font_size: f64, inks: &[Option<[f64; 3]>]) -> Result<Vec<GlyphState>> {
     let mut out: Vec<GlyphState> = layout
         .glyphs
         .iter()
-        .map(|g| GlyphState { ch: g.ch, x: g.x, y: g.y, m: Aff::IDENTITY, opacity: 1.0, blur: 0.0, color: None, clip: None })
+        .enumerate()
+        .map(|(i, g)| GlyphState { ch: g.ch, x: g.x, y: g.y, m: Aff::IDENTITY, opacity: 1.0, blur: 0.0, color: inks.get(i).copied().flatten(), clip: None })
         .collect();
     let _ = font_size;
     // cumulative tracking shift per glyph (added after the per-unit maths so later glyphs make room)
@@ -154,12 +155,18 @@ pub fn glyph_states(layout: &Layout, animators: &[Resolved], t: f64, base_color:
             Some(s) => (s.each, s.from, s.seed, s.ease.as_deref().map(Ease::parse).transpose()?),
             None => (0.0, StaggerFrom::Start, 1, None),
         };
-        let max_order = (0..n).map(|i| stagger_order(from, i, n, seed)).fold(0.0, f64::max).max(1e-9);
+        // a typewriter that counts spaces staggers by position in the text, not by position among the visible characters
+        let slots: Vec<usize> = match (a.count_spaces, a.by) {
+            (true, Unit::Chars) => list.iter().map(|(ids, _)| layout.glyphs[ids.start].slot).collect(),
+            _ => (0..n).collect(),
+        };
+        let total = slots.last().map_or(n, |s| s + 1);
+        let max_order = (0..n).map(|i| stagger_order(from, slots[i], total, seed)).fold(0.0, f64::max).max(1e-9);
         for (i, (ids, rect)) in list.iter().enumerate() {
             let w = match &a.selector {
                 Some(sel) => selector_weight(sel, r.start, r.end, r.offset, i, n),
                 None => {
-                    let order = stagger_order(from, i, n, seed);
+                    let order = stagger_order(from, slots[i], total, seed);
                     let order = match &sease {
                         Some(e) => e.at(order / max_order) * max_order,
                         None => order,

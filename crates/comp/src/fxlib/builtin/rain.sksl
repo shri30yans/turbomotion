@@ -1,0 +1,15 @@
+// @effect rain
+// @kind generator
+// @summary Fine rain streaks. Blend `screen`. Not anime speed-lines: thin, fast, sparse.
+// @param amount float 0.55 0 1 -- how many streaks
+// @param speed float 1.0 0.2 3 -- how fast they fall
+// @param tint color #b8c8dc -- colour of the rain
+half4 main(float2 xy) {
+    float2 p = xy / max(resolution, float2(1.0, 1.0));
+    float col = floor(p.x * 90.0);
+    float fall = fract(p.y * 12.0 + time * speed * 4.0 + hash11(col) * 4.0);
+    float on = step(1.0 - amount * 0.22, hash11(col * 13.7));
+    float streak = smoothstep(0.08, 0.0, abs(fract(p.x * 90.0) - 0.5)) * smoothstep(0.25, 0.0, fall) * on;
+    float a = clamp(streak, 0.0, 1.0);
+    return half4(half3(tint.rgb * a), half(a));
+}

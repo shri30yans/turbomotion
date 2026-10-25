@@ -1,0 +1,25 @@
+// @effect dust
+// @kind generator
+// @summary Motes rising through a beam: stage dust, not weather.
+// @param tint color #d9ecff -- colour of the motes
+// @param density float 0.55 0.05 1 -- how many of the 40 slots light up
+// @param speed float 0.12 0.02 0.8 -- how fast they rise
+// @param seed float 2 0 80 -- which arrangement
+half4 main(float2 xy) {
+    float3 col = float3(0.0);
+    float a = 0.0;
+    float slots = 40.0 * clamp(density, 0.05, 1.0);
+    for (int i = 0; i < 40; i++) {
+        float on = step(float(i), slots - 0.5);
+        float2 id = hash22(float2(float(i) + seed, seed * 1.3 + 2.0));
+        float life = fract(id.x + time * speed);
+        float2 pos = float2(id.y * resolution.x, (1.0 - life) * resolution.y);
+        pos.x += sin(life * 6.2 + id.y * 8.0) * 18.0;
+        float r = mix(1.2, 3.4, hash21(id + float2(4.0, 1.0)));
+        float d = length(xy - pos) / r;
+        float mote = exp(-d * d * 2.8) * on * (0.35 + 0.65 * sin(life * 3.1));
+        col += tint.rgb * mote;
+        a += mote * 0.45;
+    }
+    return premul(clamp(col, 0.0, 1.0), clamp(a, 0.0, 1.0));
+}

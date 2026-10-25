@@ -1,0 +1,19 @@
+// @effect dot_grid
+// @kind generator
+// @summary A regular field of dots: the quiet dotted ground of a notebook, a UI canvas or a pictogram card.
+// @param size float 48 8 300 -- distance between dot centres in px
+// @param radius float 2.5 0.5 40 -- dot radius in px
+// @param ink color #ffffff40 -- dot colour
+// @param background color #00000000 -- fill colour (default transparent)
+// @param offset vec2 0,0 -- scrolls the field in px
+// @param fade float 0 0 1 -- 0 uniform, 1 fades the dots toward the frame edges
+half4 main(float2 xy) {
+    float2 p = xy + offset;
+    float2 c = (floor(p / size) + 0.5) * size;
+    float d = length(p - c);
+    float k = 1.0 - smoothstep(radius - 0.7, radius + 0.7, d);
+    float2 q = xy / max(resolution, float2(1.0, 1.0)) - 0.5;
+    k *= 1.0 - fade * smoothstep(0.15, 0.75, length(q));
+    float4 col = mix(background, ink, k * ink.a);
+    return premul(col.rgb, col.a);
+}

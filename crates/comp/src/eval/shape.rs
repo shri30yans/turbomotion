@@ -57,6 +57,8 @@ pub struct ShapeState {
     pub trim: Option<[f64; 3]>,
     pub morph: f64,
     pub offset: [f64; 2],
+    /// The pivot of `rotation` and `scale`, layer space.
+    pub anchor: [f64; 2],
     pub rotation: f64,
     pub scale: [f64; 2],
     pub opacity: f64,
@@ -70,40 +72,7 @@ pub fn state(ev: &Evaluator, c: &CompPlan, l: &LayerPlan, it: &ShapeItem, geo: &
     let fill = it
         .fill
         .as_ref()
-        .map(|f| -> Result<FillState> {
-            let gradient = f
-                .gradient
-                .as_ref()
-                .map(|g| -> Result<GradientState> {
-                    let pt = |p: &Option<crate::schema::Pos>, d: [f64; 2], salt: u32| -> Result<[f64; 2]> {
-                        match p {
-                            None => Ok(d),
-                            Some(p) => {
-                                let v = p.0.at(lt, &env(salt))?;
-                                Ok([v[0], v.get(1).copied().unwrap_or(0.0)])
-                            }
-                        }
-                    };
-                    let mut stops = vec![];
-                    for (s, col) in &g.stops {
-                        stops.push((*s, col.0.at(lt, &env(2))?));
-                    }
-                    Ok(GradientState {
-                        radial: g.kind == "radial",
-                        stops,
-                        p0: pt(if g.kind == "radial" { &g.center } else { &g.from }, [0.0, 0.0], 3)?,
-                        p1: pt(&g.to, [0.0, 100.0], 5)?,
-                        radius: g.radius.as_ref().map_or(Ok(100.0), |r| r.0.at(lt, &env(7)))?,
-                    })
-                })
-                .transpose()?;
-            Ok(FillState {
-                color: f.color.as_ref().map(|c| c.0.at(lt, &env(1))).transpose()?,
-                gradient,
-                opacity: f.opacity.as_ref().map_or(Ok(1.0), |o| o.0.at(lt, &env(8)))?.clamp(0.0, 1.0),
-                even_odd: f.even_odd,
-            })
-        })
+        .map(|f| fill_state(f, lt, &env, None))
         .transpose()?;
     let stroke = it
         .stroke
@@ -140,6 +109,13 @@ pub fn state(ev: &Evaluator, c: &CompPlan, l: &LayerPlan, it: &ShapeItem, geo: &
             [v[0], v.get(1).copied().unwrap_or(0.0)]
         }
     };
+    let anchor = match &it.anchor {
+        None => [0.0, 0.0],
+        Some(p) => {
+            let v = p.0.at(lt, &env(19))?;
+            [v[0], v.get(1).copied().unwrap_or(0.0)]
+        }
+    };
     let scale = match &it.scale {
         None => [1.0, 1.0],
         Some(s) => {
@@ -153,6 +129,7 @@ pub fn state(ev: &Evaluator, c: &CompPlan, l: &LayerPlan, it: &ShapeItem, geo: &
         trim,
         morph,
         offset,
+        anchor,
         rotation: it.rotation.as_ref().map_or(Ok(0.0), |r| r.0.at(lt, &env(22)))?,
         scale,
         opacity: it.opacity.as_ref().map_or(Ok(1.0), |o| o.0.at(lt, &env(23)))?.clamp(0.0, 1.0),
@@ -160,11 +137,64 @@ pub fn state(ev: &Evaluator, c: &CompPlan, l: &LayerPlan, it: &ShapeItem, geo: &
     })
 }
 
-/// The matrix of an item inside its layer: offset · rotate · scale.
+pub const METAL_HIGHLIGHT: Rgba = [247.0, 237.0, 208.0, 1.0];
+pub const METAL_MID: Rgba = [212.0, 180.0, 90.0, 1.0];
+pub const METAL_SHADOW: Rgba = [107.0, 74.0, 22.0, 1.0];
+
+/// A brushed-metal ramp from `from` to `to` in layer space.
+pub fn metal_gradient(highlight: Rgba, mid: Rgba, shadow: Rgba, from: [f64; 2], to: [f64; 2]) -> GradientState {
+    GradientState {
+        radial: false,
+        stops: vec![(0.0, highlight), (0.28, mid), (0.48, shadow), (0.62, highlight), (0.82, mid), (1.0, shadow)],
+        p0: from,
+        p1: to,
+        radius: 100.0,
+    }
+}
+
+pub fn fill_state<'a>(f: &crate::schema::Fill, lt: f64, env: &dyn Fn(u32) -> LayerEnv<'a>, span: Option<([f64; 2], [f64; 2])>) -> Result<FillState> {
+    let pt = |p: &Option<crate::schema::Pos>, d: [f64; 2], salt: u32| -> Result<[f64; 2]> {
+        match p {
+            None => Ok(d),
+            Some(p) => {
+                let v = p.0.at(lt, &env(salt))?;
+                Ok([v[0], v.get(1).copied().unwrap_or(0.0)])
+            }
+        }
+    };
+    let gradient = if let Some(g) = &f.gradient {
+        let mut stops = vec![];
+        for (s, col) in &g.stops {
+            stops.push((*s, col.0.at(lt, &env(2))?));
+        }
+        Some(GradientState {
+            radial: g.kind == "radial",
+            stops,
+            p0: pt(if g.kind == "radial" { &g.center } else { &g.from }, [0.0, 0.0], 3)?,
+            p1: pt(&g.to, [0.0, 100.0], 5)?,
+            radius: g.radius.as_ref().map_or(Ok(100.0), |r| r.0.at(lt, &env(7)))?,
+        })
+    } else if let Some(m) = &f.metal {
+        let col = |c: &Option<crate::schema::Col>, d: Rgba, salt: u32| -> Result<Rgba> { c.as_ref().map_or(Ok(d), |c| c.0.at(lt, &env(salt))) };
+        let (from, to) = span.unwrap_or(([0.0, -80.0], [40.0, 80.0]));
+        Some(metal_gradient(col(&m.highlight, METAL_HIGHLIGHT, 30)?, col(&m.mid, METAL_MID, 31)?, col(&m.shadow, METAL_SHADOW, 32)?, from, to))
+    } else {
+        None
+    };
+    Ok(FillState {
+        color: f.color.as_ref().map(|c| c.0.at(lt, &env(1))).transpose()?,
+        gradient,
+        opacity: f.opacity.as_ref().map_or(Ok(1.0), |o| o.0.at(lt, &env(8)))?.clamp(0.0, 1.0),
+        even_odd: f.even_odd,
+    })
+}
+
+/// The matrix of an item inside its layer: offset · rotate · scale, both turning about the item's `anchor`.
 pub fn item_matrix(s: &ShapeState) -> Matrix {
+    let pivot = (s.anchor[0] as f32, s.anchor[1] as f32);
     let mut m = Matrix::translate((s.offset[0] as f32, s.offset[1] as f32));
-    m.pre_rotate(s.rotation as f32, None);
-    m.pre_scale((s.scale[0] as f32, s.scale[1] as f32), None);
+    m.pre_rotate(s.rotation as f32, Some(pivot.into()));
+    m.pre_scale((s.scale[0] as f32, s.scale[1] as f32), Some(pivot.into()));
     m
 }
 

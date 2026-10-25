@@ -1,0 +1,100 @@
+{
+  "width": 1600,
+  "height": 520,
+  "fps": 30,
+  "dur": 4,
+  "job": "card",
+  "best_for": [
+    "a chapter",
+    "a cold open title"
+  ],
+  "breaks": "Two lines and a rule. No extra furniture.",
+  "props": [
+    "title",
+    "subtitle"
+  ],
+  "vars": {
+    "accent": "#e8402f",
+    "ink": "#f6f4ee",
+    "mute": "#687e96",
+    "plate": "#121a26",
+    "loss": "#e8402f",
+    "gold": "#deb052",
+    "gain": "#3eb696",
+    "sub": "#687e96",
+    "title": "A bold idea",
+    "subtitle": "and how it moves"
+  },
+  "layers": [
+    {
+      "type": "text",
+      "id": "kicker",
+      "text": "$subtitle",
+      "role": "body",
+      "tracking": 6,
+      "color": "$accent",
+      "pos": [
+        800.0,
+        70
+      ],
+      "align": "center",
+      "preset": {
+        "name": "tracking_in",
+        "at": 0.05
+      }
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "text": "$title",
+      "role": "display",
+      "color": "$ink",
+      "pos": [
+        800.0,
+        270.40000000000003
+      ],
+      "align": "center",
+      "preset": {
+        "name": "rise",
+        "at": 0.25
+      }
+    },
+    {
+      "type": "shape",
+      "id": "rule",
+      "pos": [
+        800.0,
+        470
+      ],
+      "items": [
+        {
+          "rect": [
+            -160,
+            -2,
+            320,
+            4
+          ],
+          "radius": 2,
+          "fill": "$accent"
+        }
+      ],
+      "scale": {
+        "from": [
+          0,
+          1
+        ],
+        "to": [
+          1,
+          1
+        ],
+        "at": 0.7,
+        "dur": 0.7,
+        "ease": "expo.out"
+      }
+    }
+  ],
+  "uses": {
+    "type": "display",
+    "motion": "enter"
+  }
+}

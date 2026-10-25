@@ -1,0 +1,25 @@
+// @effect halftone_field
+// @kind generator
+// @summary A screen of ink dots that swell from one side to the other: the print ground of a zine or a dossier.
+// @param size float 18 4 80 -- cell size in px
+// @param angle float 25 -90 90 -- screen angle in degrees
+// @param ink color #101010 -- dot colour
+// @param paper color #f4efe4 -- background colour
+// @param from float 0.0 0 1 -- dot size at the start edge (0 none, 1 touching)
+// @param to float 0.6 0 1 -- dot size at the far edge
+// @param direction float 0 -180 180 -- direction of the ramp in degrees
+half4 main(float2 xy) {
+    float a = radians(angle);
+    float2 p = rot2(xy, a) / size;
+    float2 cell = floor(p) + 0.5;
+    float2 centre = rot2(cell * size, -a);
+    float2 dir = float2(cos(radians(direction)), sin(radians(direction)));
+    float2 q = centre / max(resolution, float2(1.0, 1.0)) - 0.5;
+    float t = clamp(dot(q, dir) + 0.5, 0.0, 1.0);
+    float r = mix(from, to, t) * 0.72;
+    float d = length(fract(p) - 0.5);
+    float aa = 1.0 / size;
+    float cover = 1.0 - smoothstep(r - aa, r + aa, d);
+    float4 c = mix(paper, ink, cover);
+    return premul(c.rgb, c.a);
+}

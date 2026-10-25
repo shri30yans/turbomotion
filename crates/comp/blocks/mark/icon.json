@@ -1,0 +1,56 @@
+{
+  "width": 200,
+  "height": 200,
+  "fps": 30,
+  "dur": 4,
+  "job": "mark",
+  "best_for": [
+    "one glyph",
+    "a small drawn icon"
+  ],
+  "breaks": "One mark. Pass kind: chart, lock, warn, bank, doc, arrow, punch, reaction.",
+  "props": [
+    "kind",
+    "text"
+  ],
+  "vars": {
+    "accent": "#e8402f",
+    "ink": "#f6f4ee",
+    "mute": "#687e96",
+    "plate": "#121a26",
+    "loss": "#e8402f",
+    "gold": "#deb052",
+    "gain": "#3eb696",
+    "sub": "#687e96",
+    "kind": "chart"
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "mark",
+      "pos": [
+        100.0,
+        100.0
+      ],
+      "items": [
+        {
+          "d": "M -28 18 L -8 -4 L 8 8 L 28 -18",
+          "stroke": {
+            "color": "$accent",
+            "width": 6,
+            "cap": "round",
+            "join": "round"
+          }
+        }
+      ],
+      "enter": {
+        "preset": "pop",
+        "dur": 0.25,
+        "ease": "sine.inOut"
+      }
+    }
+  ],
+  "uses": {
+    "motion": "snap"
+  }
+}

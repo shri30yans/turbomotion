@@ -1,0 +1,27 @@
+// @effect anamorphic
+// @summary Horizontal streak flare on the highlights, like a cinema anamorphic lens.
+// @param amount float 0 0 1 -- 0 is the original, 1 is a long streak
+// @param threshold float 0.62 0.2 0.95 -- how bright a pixel must be to flare
+// @param tint color #cfe4ff -- colour of the streak
+half4 main(float2 xy) {
+    float4 src = straight(xy);
+    if (amount < 0.001) {
+        return premul(src.rgb, src.a);
+    }
+    float3 acc = float3(0.0);
+    float wsum = 0.0;
+    for (int i = 1; i < 25; i++) {
+        float t = float(i) / 24.0;
+        float o = t * t * 140.0 * amount;
+        float fall = (1.0 - t) * (1.0 - t);
+        float4 a = straight(xy + float2(o, 0.0));
+        float4 b = straight(xy - float2(o, 0.0));
+        float wa = smoothstep(threshold, 1.0, luma(a.rgb)) * a.a * fall;
+        float wb = smoothstep(threshold, 1.0, luma(b.rgb)) * b.a * fall;
+        acc += a.rgb * wa + b.rgb * wb;
+        wsum += wa + wb;
+    }
+    float3 flare = wsum > 0.0 ? (acc / max(wsum, 0.001)) * tint.rgb : float3(0.0);
+    float3 rgb = src.rgb + flare * amount * 0.7 * src.a;
+    return premul(clamp(rgb, 0.0, 2.0), src.a);
+}

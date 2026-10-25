@@ -1,0 +1,15 @@
+// @effect crumble
+// @summary The layer turns to dust from left to right: grains drift and fade (a card coming apart).
+// @param amount float 0 0 1 -- 0 is intact, 1 is gone
+// @param seed float 3 0 80 -- which grain pattern
+// @param travel float 36 4 120 -- how far a grain flies, px
+half4 main(float2 xy) {
+    float2 cell = floor(xy / 3.0);
+    float h = hash21(cell + seed);
+    float front = (xy.x / max(resolution.x, 1.0)) * 0.72 + h * 0.28;
+    float gone = smoothstep(front - 0.08, front + 0.04, amount);
+    float2 dir = hash22(cell + float2(seed, 9.0)) - 0.5;
+    float4 src = straight(xy - dir * travel * gone);
+    float a = src.a * (1.0 - gone);
+    return premul(src.rgb, a);
+}

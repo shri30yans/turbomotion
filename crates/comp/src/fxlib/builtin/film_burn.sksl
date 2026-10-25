@@ -1,0 +1,16 @@
+// @effect film_burn
+// @kind generator
+// @summary Heat at the frame edge, as if the print is catching. Blend `add` or `screen`.
+// @param amount float 0.6 0 1 -- how far the burn reaches in
+// @param x float 0.0 0 1 -- which edge, 0 left, 1 right
+// @param tint color #ff6a24 -- colour of the burn
+half4 main(float2 xy) {
+    float2 p = xy / max(resolution, float2(1.0, 1.0));
+    float side = mix(p.x, 1.0 - p.x, step(0.5, x));
+    float n = fbm(p * float2(6.0, 2.2) + float2(0.0, time * 0.4));
+    float burn = smoothstep(0.22 * amount, 0.0, side) * (0.55 + 0.45 * n);
+    burn *= 0.7 + 0.3 * sin(time * 9.0 + n * 8.0);
+    float a = clamp(burn * amount, 0.0, 1.0);
+    float3 col = mix(tint.rgb, float3(1.0, 0.92, 0.7), clamp(n * 0.5, 0.0, 1.0));
+    return half4(half3(col * a), half(a));
+}

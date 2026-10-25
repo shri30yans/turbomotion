@@ -1,0 +1,15 @@
+// @effect scratches
+// @summary Hairline scuffs in the paint: a slapped-on sticker, not a clean shape.
+// @param amount float 0.45 0 1 -- how visible the scratches are
+// @param seed float 2 0 50 -- which set of scratches
+half4 main(float2 xy) {
+    float4 c = straight(xy);
+    if (c.a < 0.002) { return half4(0.0); }
+    float2 p = xy + float2(seed * 19.0, seed * 7.0);
+    float hair = smoothstep(0.84, 0.96, vnoise(float2(p.x * 0.12, p.y * 3.4)));
+    float hair2 = smoothstep(0.90, 0.98, vnoise(float2(p.x * 3.8, p.y * 0.18 + 11.0)));
+    float nick = smoothstep(0.93, 0.99, hash21(floor(p / 18.0))) * (0.85 + 0.15 * hash21(float2(seed, floor(time * 12.0))));
+    float scuff = clamp(hair + hair2 * 0.7 + nick * 0.5, 0.0, 1.0) * amount;
+    float3 rgb = mix(c.rgb, c.rgb * 0.35, scuff) + scuff * 0.08;
+    return premul(rgb, c.a);
+}

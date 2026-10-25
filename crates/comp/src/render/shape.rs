@@ -42,7 +42,7 @@ pub fn paint(c: &Canvas, items: &[ShapeState], geos: &[PathGeo]) -> Result<()> {
     Ok(())
 }
 
-fn gradient(g: &GradientState, opacity: f64) -> Option<skia_safe::Shader> {
+pub(super) fn gradient(g: &GradientState, opacity: f64) -> Option<skia_safe::Shader> {
     let colors: Vec<Color4f> = g.stops.iter().map(|(_, col)| color4f([col[0], col[1], col[2], col[3] * opacity as f32])).collect();
     let pos: Vec<f32> = g.stops.iter().map(|(p, _)| *p as f32).collect();
     if g.radial {

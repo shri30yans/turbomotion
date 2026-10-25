@@ -2,6 +2,8 @@
 //! `turbomotion comp catalogue`. It is the agent's API reference and it cannot drift: a test loads every example
 //! through the real planner, so an example that stops working fails the build.
 
+mod property_examples;
+
 use serde::Serialize;
 use serde_json::{json, Value};
 use turbomotion_core::effects;
@@ -21,12 +23,12 @@ pub fn layers() -> Vec<Entry> {
         Entry { name: "solid", summary: "A flat rectangle: backgrounds, flashes, mattes. Size defaults to the composition.", example: json!({"type": "solid", "color": "#101828"}) },
         Entry {
             name: "text",
-            summary: "Text with real shaping. `font` is a family or a file; `align` left|center|right (the layer's pos is the alignment edge, vertically centred); `width` wraps. `preset` is a named per-character animation (see `text_presets`); `animators` build your own (GSAP staggers or After Effects range selectors). `text` can also be a counter {from, to, at, dur, ease, decimals, sep, prefix, suffix}.",
-            example: json!({"type": "text", "text": "Make it move\nlike you mean it", "font": "Avenir Next", "weight": 800, "size": 96, "color": "#ffffff", "pos": [960, 540], "align": "center", "preset": {"name": "rise", "at": 0.3}}),
+            summary: "Text with real shaping. `font` is a family or a file; `align` left|center|right (the layer's pos is the alignment edge, vertically centred); `width` wraps. Characters the designed font does not have take a fallback face and are painted in the same colour as the rest of the line. `preset` is a named per-character animation (see `text_presets`); `animators` build your own (GSAP staggers or After Effects range selectors). `text` can also be a counter {from, to, at, dur, ease, decimals, sep, prefix, suffix}.",
+            example: json!({"type": "text", "text": "Make it move\nlike you mean it", "font": "Avenir Next", "weight": 800, "role": "title", "color": "#ffffff", "pos": [960, 540], "align": "center", "preset": {"name": "reveal", "at": 0.3}, "mark": {"word": "move", "at": 1.0}}),
         },
         Entry {
             name: "image",
-            summary: "Your own picture. `fit` cover|contain|fill|none, `focus` keeps the subject when cropping, `camera` is a Ken Burns move {from: {zoom, center}, to, ease}, `parallax` {depth: <grey image, white = near>, strength} gives a 2.5D move. EXIF orientation is applied. Size the source to at least the pixels shown (check warns about upscaling).",
+            summary: "Your own picture. `fit` cover|contain|fill|none, `focus` keeps the subject when cropping, `camera` is a Ken Burns move {from: {zoom, center}, to, ease}, `parallax` {depth: <grey image, white = near>, strength} gives a 2.5D move. `sampling` nearest|linear overrides automatic cubic enlargement / mipmapped reduction. EXIF orientation is applied. Size the source to at least the pixels shown (check warns about upscaling).",
             example: json!({"type": "image", "src": "photo.jpg", "fit": "cover", "focus": [0.6, 0.5], "camera": {"from": {"zoom": 1.0, "center": [0.45, 0.5]}, "to": {"zoom": 1.3, "center": [0.6, 0.5]}, "ease": "sine.inOut"}}),
         },
         Entry {
@@ -38,6 +40,12 @@ pub fn layers() -> Vec<Entry> {
             name: "audio",
             summary: "A sound on the timeline: `volume` (a property), `fade_in`, `fade_out`, `src_in`, `speed`. Mixed in Rust (soft-clipped) and muxed into the render. Other layers can react: `amp(\"id\")` is its loudness, `onset(\"id\")` spikes on hits.",
             example: json!({"type": "audio", "id": "music", "src": "music.wav", "volume": 0.8, "fade_out": 1.0}),
+        },
+        Entry {
+            name: "mesh",
+            summary: "A solid: a triangle mesh from a `geometry` generator, lit by the composition's lights (ambient, point, spot, directional; `material` sets specular and shininess) and drawn through its camera. Needs \"three_d\": true. Geometry kinds: `text` (glyph outlines extruded, with an optional chamfer; one layer per letter to stagger a word), `box`, `sphere`, `torus`, `cylinder` (`top: 0` makes a cone) and `extrude` (an SVG path pushed into depth). It turns about its own middle, so `rot_x` / `rot_y` / `rotation` tumble or spin it (`\"rot_y\": \"time*90\"` is a turntable). `color` is the front and a curved skin, `side` the walls, `back` the back; `side` defaults to a darkened `color`.",
+            example: json!({"type": "mesh", "three_d": true, "geometry": {"kind": "text", "text": "M", "font": "Avenir Next", "weight": 800, "size": 300, "depth": 60, "bevel": 6}, "color": "#e8402f", "side": "#8a2017",
+                "material": {"specular": 0.8, "shininess": 40}, "pos": [960, 540, 0], "rot_x": 20, "rot_y": {"from": -90, "to": 0, "dur": 0.8, "ease": "back.out(1.4)"}}),
         },
         Entry {
             name: "shape",
@@ -54,7 +62,7 @@ pub fn layers() -> Vec<Entry> {
         },
         Entry {
             name: "precomp",
-            summary: "Plays a nested composition from `comps` as one layer, with its own clock (offset, speed, time remap, loop). Everything a layer can do (effects, masks, mattes, 3D) works on it.",
+            summary: "Plays a nested composition from `comps` as one layer, with its own clock (offset, speed, time remap, loop). `sampling` nearest|linear controls transformed pixels (default linear); use nearest for integer-scaled pixel art. Everything a layer can do (effects, masks, mattes, 3D) works on it.",
             example: json!({"type": "precomp", "comp": "inner", "start": 0.5, "speed": 1, "pos": [960, 540], "scale": {"from": 0.8, "to": 1, "dur": 0.6, "ease": "expo.out"}}),
         },
         Entry {
@@ -64,7 +72,7 @@ pub fn layers() -> Vec<Entry> {
         },
         Entry {
             name: "texture",
-            summary: "Paints a generator shader over the layer (noise, clouds, cells, stripes, grid, gradient, light_leak, or your own `effects/<name>.sksl` with `@kind generator`). Use it as a background, a matte, or blended over footage. `comp fx list` shows each one's parameters.",
+            summary: "Paints a generator shader over the layer (noise, clouds, cells, stripes, grid, gradient, light_leak, bokeh, floor, or your own `effects/<name>.sksl` with `@kind generator`). Use it as a background, a matte, or blended over footage. `comp fx list` shows each one's parameters.",
             example: json!({"type": "texture", "shader": "clouds", "params": {"scale": 300, "high": "#9aa7c7"}, "blend": "screen", "opacity": 0.6}),
         },
         Entry {
@@ -109,7 +117,7 @@ pub fn expression_functions() -> Value {
         "math": ["sin", "cos", "tan", "asin", "acos", "atan", "atan2", "abs", "min", "max", "floor", "ceil", "round", "sqrt", "pow", "exp", "ln", "sign", "fract", "mod", "step", "pingpong", "clamp(x, lo, hi)", "lerp(a, b, t)", "radians", "degrees"],
         "motion": ["linear(x, x0, x1, y0, y1)", "smooth(x0, x1, x)", "ease(\"expo.out\", x, x0, x1, y0, y1)", "wiggle(freq, amp, octaves?)", "noise(x)", "noise2(x, y)", "random(seed)"],
         "rhythm": ["beat() 0..1 within the beat", "bar() 0..1 within the bar", "beat_index()", "marker(\"name\") seconds since the marker", "amp(\"audio layer id\") loudness 0..1", "onset(\"audio layer id\") seconds since the latest kick or hit"],
-        "layers": ["ref(\"layer id\", \"x|y|z|rotation|opacity|scale|sx|sy\")"],
+        "layers": ["ref(\"layer id\", \"x|y|z|rotation|opacity|scale|sx|sy\")", "vel(\"layer id\", \"x|y|z|rotation|opacity|scale|sx|sy\") units per second"],
         "operators": "+ - * / % ^ == != < <= > >= && || ! and a ? b : c",
     })
 }
@@ -131,10 +139,40 @@ pub fn all() -> Value {
         "expressions": expression_functions(),
         "effects": effects_catalogue(),
         "shader_plugins": shader_plugins(),
-        "text_presets": ["rise", "rise_words", "fade_up", "blur_in", "pop", "slam", "drop", "typewriter", "scramble", "tracking_in", "wave_in", "spin_in", "elastic", "fade_out", "rise_out"],
+        "text_presets": ["rise", "reveal", "rise_words", "fade_up", "blur_in", "pop", "slam", "drop", "typewriter", "scramble", "tracking_in", "wave_in", "spin_in", "elastic", "fade_out", "rise_out"],
+        "tokens": {
+            "palette": "Named colours any kind can use: {\"accent\": \"#e2c48a\", \"ink\": \"#f4f7ff\", \"plate\": \"#10161f\"}. Write \"color\": \"accent\" or \"$accent\".",
+            "type": "Text styles per role. A number is still a size; an object may add font, weight, color, tracking. Fonts live here, not on look.",
+            "image": "Default treatment for pictures: {\"treat\": [\"grain\", \"vignette\"]}. Applied as fx when the image layer has none.",
+            "surface": "Named plate recipes for shapes: {\"card\": {\"fill\": \"plate\", \"stroke\": {\"color\": \"accent\", \"width\": 1.5}, \"radius\": 18}}, then \"surface\": \"card\".",
+            "look": "Finishing on the finished frame (grain, vignette). Not type, not images.",
+            "example": {
+                "palette": {"accent": "#e2c48a", "ink": "#f4f7ff"},
+                "type": {"display": {"size": 140, "font": "Avenir Next Condensed", "weight": 800, "color": "accent"}, "title": {"size": 48, "font": "Avenir Next", "color": "ink"}, "body": 28},
+                "layers": [
+                    {"type": "text", "role": "display", "fill": "metal", "text": {"from": 0, "to": 827, "dur": 1.4, "prefix": "£", "suffix": "m"}},
+                    {"type": "text", "role": "title", "text": "A future is a bet on a price", "mark": {"word": "future", "at": 0.6}, "preset": "reveal"}
+                ]
+            }
+        },
+        "sound_kit": {"src": "kit:<cue>", "cues": [
+            {"cue": "card-in", "timbre": "soft whoosh and a muted wood tick"},
+            {"cue": "stamp", "timbre": "heavy low impact with grit"},
+            {"cue": "counter", "timbre": "bright metallic ping"},
+            {"cue": "loss", "timbre": "detuned low brass, beating"},
+            {"cue": "reveal", "timbre": "rising shimmer"},
+            {"cue": "whoosh", "timbre": "air past the lens"}, {"cue": "swish", "timbre": "a fast whip"},
+            {"cue": "sweep", "timbre": "a long pass"}, {"cue": "riser", "timbre": "a build into a hit"},
+            {"cue": "pop", "timbre": "a soft bubble"}, {"cue": "click", "timbre": "a UI click"}, {"cue": "tick", "timbre": "a dry tick"},
+            {"cue": "glitch", "timbre": "crushed digital bursts"}, {"cue": "boom", "timbre": "a sub drop"}, {"cue": "type", "timbre": "one keystroke"}
+        ]},
+        "timeline": timeline(),
+        "extrude": {"summary": "Depth for a three_d text, shape or solid layer: copies stepping back in z, coloured from `color` to `far`. Show it with a camera move or rot_y.",
+            "example": {"type": "text", "text": "88888", "three_d": true, "pos": [960, 540], "rot_y": 18, "extrude": {"depth": 60, "color": "#7a1d14"}}},
         "packs": crate::pack::catalogue().into_iter().map(|(n, s)| json!({"name": n, "summary": s})).collect::<Vec<_>>(),
         "make_a_new_effect": "Write effects/<name>.sksl beside comp.json: header comments `// @effect name`, `// @kind effect|generator`, `// @summary ...`, `// @param name float|vec2|color default [min max] -- doc`, then `half4 main(float2 xy)`. You get `image` (effects), `resolution`, `time` and a library (hash21, vnoise, fbm, worley, rot2, luma, hsv2rgb, straight, premul). Try it with `comp fx test <name> --out sheet.png`; then use it like any effect: {\"effect\": \"name\", \"param\": value}.",
         "time_literals": ["1.5s", "45f", "beat:8", "bar:2", "marker:drop", "title.end", "title.start", "prev.end", "comp.end", "any of those followed by +0.25 or -3f"],
+        "runnable_property_examples": property_examples::examples(),
         "property_forms": {
             "constant": 40,
             "expression": "wiggle(2, 30)",
@@ -143,7 +181,29 @@ pub fn all() -> Value {
             "loop": {"keys": [[0, 0], [1, 360, "none"]], "loop": "cycle"},
             "keys_plus_expression": {"value": [[0, 0], [1, 100]], "expr": "value + wiggle(3, 5)"}
         },
-        "colour_forms": ["#rrggbb", "#rrggbbaa", "#rgb", "white", [255, 128, 0], [255, 128, 0, 0.5], {"from": "#000", "to": "#f00", "dur": 1}],
+        "colour_forms": ["#rrggbb", "#rrggbbaa", "#rgb", "white", "accent (a palette token)", [255, 128, 0], [255, 128, 0, 0.5], {"from": "#000", "to": "#f00", "dur": 1}],
+    })
+}
+
+/// The edit timeline's vocabulary: shot transitions, 2D frame moves and 3D camera moves, with an example.
+fn timeline() -> Value {
+    use crate::schema::timeline::{CAMERA_MOVES, MOVES, TRANSITIONS};
+    json!({
+        "summary": "A film as tracks: `shots` run back to back with a transition between each (overlapping by its length); `overlays` sit above, placed by shot; `hits` put a sound on a moment. Each shot becomes a precomp layer named by its id (and a marker).",
+        "shot_fields": "id, dur, start (locks a cut), in (transition into it), layers | src | comp | block (+vars), bg, speed (number or keys: a speed ramp), offset, move, camera, fx, layout",
+        "transitions": TRANSITIONS.iter().map(|(n, d, cue)| json!({"type": n, "summary": d, "sound": cue})).collect::<Vec<_>>(),
+        "moves": MOVES.iter().map(|(n, d)| json!({"move": n, "summary": d})).collect::<Vec<_>>(),
+        "camera_moves": CAMERA_MOVES.iter().map(|(n, d)| json!({"move": n, "summary": d})).collect::<Vec<_>>(),
+        "example": {"timeline": {
+            "transition": {"type": "push_left", "dur": 0.6},
+            "shots": [
+                {"id": "hook", "dur": 3, "layers": [{"type": "text", "text": "£827M", "role": "display", "pos": [960, 540], "align": "center"}], "move": "push_in"},
+                {"id": "map", "dur": 4, "src": "map.png", "in": "pan_out_left", "speed": [[0, 1], [1.5, 0.3, "sine.inOut"], [3, 1]]},
+                {"id": "deep", "dur": 4, "layers": [], "in": {"type": "zoom_through", "dur": 0.8}, "camera": {"move": "orbit", "deg": 24}}
+            ],
+            "overlays": [{"shot": "map", "at": 0.5, "dur": 2.5, "type": "precomp", "block": "lower_third", "vars": {"name": "Singapore"}}],
+            "hits": [{"at": "deep.start+0.8", "cue": "boom"}]
+        }}
     })
 }
 

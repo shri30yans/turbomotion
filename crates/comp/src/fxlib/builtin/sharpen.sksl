@@ -1,0 +1,17 @@
+// @effect sharpen
+// @summary Unsharp mask from four neighbours. A document, a number that must read.
+// @param amount float 0 0 2 -- 0 is the original, 1 is a firm snap
+half4 main(float2 xy) {
+    float4 src = straight(xy);
+    if (amount < 0.001) {
+        return premul(src.rgb, src.a);
+    }
+    float3 blur = (
+        straight(xy + float2(1.0, 0.0)).rgb +
+        straight(xy + float2(-1.0, 0.0)).rgb +
+        straight(xy + float2(0.0, 1.0)).rgb +
+        straight(xy + float2(0.0, -1.0)).rgb
+    ) * 0.25;
+    float3 rgb = src.rgb + (src.rgb - blur) * amount;
+    return premul(clamp(rgb, 0.0, 1.0), src.a);
+}

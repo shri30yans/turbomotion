@@ -1,0 +1,25 @@
+// @effect spotlight
+// @kind generator
+// @summary Two conic stage lights from above, falling onto a dark floor.
+// @param tint color #c8e4ff -- colour of the beams
+// @param amount float 0.7 0 2 -- brightness of the cones
+// @param spread float 0.16 0.04 0.45 -- how wide each cone is
+half4 main(float2 xy) {
+    float2 uv = xy / max(resolution, float2(1.0, 1.0));
+    float3 col = float3(0.0);
+    float a = 0.0;
+    for (int i = 0; i < 2; i++) {
+        float side = mix(-1.0, 1.0, float(i));
+        float2 origin = float2(0.5 + side * 0.22, -0.08);
+        float2 dir = normalize(float2(side * 0.08, 1.0));
+        float2 d = uv - origin;
+        float along = dot(d, dir);
+        float across = length(d - dir * along);
+        float cone = smoothstep(spread, 0.0, across / max(along, 0.002));
+        cone *= smoothstep(0.0, 0.08, along) * (1.0 - smoothstep(0.55, 1.15, along));
+        float dust = 0.85 + 0.15 * fbm(xy * 0.01 + float2(time * 0.04, float(i)));
+        col += tint.rgb * cone * amount * dust;
+        a += cone * 0.55 * amount;
+    }
+    return premul(clamp(col, 0.0, 2.0), clamp(a, 0.0, 1.0));
+}

@@ -1,0 +1,247 @@
+{
+  "width": 1920,
+  "height": 860,
+  "fps": 30,
+  "dur": 12,
+  "job": "teach",
+  "best_for": [
+    "a teaching beat"
+  ],
+  "breaks": "Keep the claim and the picture distinct.",
+  "props": [
+    "left_kicker",
+    "left_title",
+    "left_body",
+    "left_chip",
+    "left_spark",
+    "left_area",
+    "left_accent",
+    "right_kicker",
+    "right_title",
+    "right_body",
+    "right_chip",
+    "right_spark",
+    "right_area",
+    "right_accent",
+    "font"
+  ],
+  "vars": {
+    "accent": "#e8402f",
+    "ink": "#f6f4ee",
+    "mute": "#687e96",
+    "plate": "#121a26",
+    "loss": "#e8402f",
+    "gold": "#deb052",
+    "gain": "#3eb696",
+    "sub": "#687e96",
+    "left_kicker": "CUSTOMER ORDER",
+    "left_title": "BUY 20",
+    "left_body": "FUTURE CONTRACTS",
+    "left_chip": "Higher price in future",
+    "left_spark": "M 0 36 L 28 22 L 52 26 L 86 -6 L 128 -28 L 150 -18",
+    "left_area": "M 0 52 L 0 36 L 28 22 L 52 26 L 86 -6 L 128 -28 L 150 -18 L 150 52 Z",
+    "left_accent": "#3dffe0",
+    "right_kicker": "CLERK ENTERS",
+    "right_title": "SELL 20",
+    "right_body": "FUTURE CONTRACTS",
+    "right_chip": "Lower price in future",
+    "right_spark": "M 0 -24 L 32 -4 L 58 -10 L 94 22 L 128 34 L 150 18",
+    "right_area": "M 0 52 L 0 -24 L 32 -4 L 58 -10 L 94 22 L 128 34 L 150 18 L 150 52 Z",
+    "right_accent": "#ff4a3a",
+    "font": "Avenir Next"
+  },
+  "layers": [
+    {
+      "type": "solid",
+      "color": "#05070f"
+    },
+    {
+      "type": "texture",
+      "shader": "floor",
+      "params": {
+        "horizon": 0.52,
+        "vanish": [
+          0.5,
+          0.46
+        ],
+        "cells": 8,
+        "line": "#1a5e7a",
+        "haze": "#05070f",
+        "glow": 0.45
+      }
+    },
+    {
+      "type": "texture",
+      "shader": "bokeh",
+      "params": {
+        "density": 0.42,
+        "scale": 70,
+        "brightness": 0.4,
+        "tint": "#7ad4ff",
+        "seed": 6
+      },
+      "blend": "screen",
+      "opacity": 0.4
+    },
+    {
+      "type": "precomp",
+      "id": "left",
+      "block": "holo_slab",
+      "pos": [
+        470,
+        400
+      ],
+      "reflect": {
+        "strength": 0.55,
+        "fade": 0.62,
+        "gap": 8,
+        "blur": 4
+      },
+      "vars": {
+        "kicker": "$left_kicker",
+        "title": "$left_title",
+        "body": "$left_body",
+        "chip": "$left_chip",
+        "spark": "$left_spark",
+        "area": "$left_area",
+        "accent": "$left_accent",
+        "ink": "$ink",
+        "font": "$font",
+        "tilt": 18,
+        "rest": 12
+      }
+    },
+    {
+      "type": "precomp",
+      "id": "right",
+      "block": "holo_slab",
+      "pos": [
+        1450,
+        400
+      ],
+      "start": 0.16,
+      "reflect": {
+        "strength": 0.55,
+        "fade": 0.62,
+        "gap": 8,
+        "blur": 4
+      },
+      "vars": {
+        "kicker": "$right_kicker",
+        "title": "$right_title",
+        "body": "$right_body",
+        "chip": "$right_chip",
+        "spark": "$right_spark",
+        "area": "$right_area",
+        "accent": "$right_accent",
+        "ink": "$ink",
+        "font": "$font",
+        "tilt": -18,
+        "rest": -12
+      }
+    },
+    {
+      "type": "shape",
+      "id": "neq_a",
+      "pos": [
+        960,
+        326
+      ],
+      "rotation": 32,
+      "fx": [
+        {
+          "effect": "glow",
+          "radius": 14,
+          "strength": 0.9,
+          "threshold": 0.15
+        }
+      ],
+      "items": [
+        {
+          "rect": [
+            -40,
+            -7,
+            80,
+            14
+          ],
+          "radius": 4,
+          "fill": "#f4f7ff"
+        }
+      ],
+      "enter": {
+        "preset": "pop",
+        "dur": 0.4,
+        "delay": 0.55
+      }
+    },
+    {
+      "type": "shape",
+      "id": "neq_b",
+      "pos": [
+        960,
+        350
+      ],
+      "rotation": 32,
+      "fx": [
+        {
+          "effect": "glow",
+          "radius": 14,
+          "strength": 0.9,
+          "threshold": 0.15
+        }
+      ],
+      "items": [
+        {
+          "rect": [
+            -40,
+            -7,
+            80,
+            14
+          ],
+          "radius": 4,
+          "fill": "#f4f7ff"
+        }
+      ],
+      "enter": {
+        "preset": "pop",
+        "dur": 0.4,
+        "delay": 0.62
+      }
+    },
+    {
+      "type": "precomp",
+      "id": "link_l",
+      "block": "connector",
+      "pos": [
+        780,
+        220
+      ],
+      "start": 0.5,
+      "scale": 0.55,
+      "vars": {
+        "color": "$left_accent",
+        "y0": 120,
+        "y1": 36,
+        "cy": 8
+      }
+    },
+    {
+      "type": "precomp",
+      "id": "link_r",
+      "block": "connector",
+      "pos": [
+        1140,
+        220
+      ],
+      "start": 0.6,
+      "scale": 0.55,
+      "vars": {
+        "color": "$right_accent",
+        "y0": 36,
+        "y1": 120,
+        "cy": 8
+      }
+    }
+  ],
+  "layout": true
+}

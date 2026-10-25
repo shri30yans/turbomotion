@@ -1,0 +1,19 @@
+// @effect dots
+// @summary An LED / dot-matrix of the layer: a tape, a pit screen, a board.
+// @param size float 8 3 28 -- cell size, px
+// @param tint color #ffd37a -- colour of a lit cell
+// @param amount float 1 0 1 -- 0 keeps the original, 1 is only the matrix
+half4 main(float2 xy) {
+    float4 src = straight(xy);
+    float2 cell = floor(xy / max(size, 1.0));
+    float2 centre = (cell + 0.5) * size;
+    float l = luma(straight(centre).rgb);
+    float on = step(0.16, l) * src.a;
+    float d = length(xy - centre);
+    float r = size * 0.36;
+    float led = (1.0 - smoothstep(r - 0.8, r + 0.4, d)) * on;
+    float3 matrix = tint.rgb * led * (0.35 + 0.65 * l);
+    float3 rgb = mix(src.rgb, matrix, amount);
+    float a = mix(src.a, led, amount);
+    return premul(rgb, a);
+}

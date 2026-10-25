@@ -1,0 +1,13 @@
+{
+  "width": 160, "height": 160, "fps": 30, "dur": 8,
+  "vars": {"accent": "#ff6a3d"},
+  "layers": [
+    {"type": "shape", "id": "icon", "pos": [0, 0],
+     "items": [
+       {"d": "M 80 32 L 132 122 L 28 122 Z", "stroke": {"color": "$accent", "width": 5, "join": "round", "cap": "round"}},
+       {"rect": [76, 62, 8, 34], "radius": 2, "fill": "$accent"},
+       {"ellipse": [80, 110, 5, 5], "fill": "$accent"}
+     ],
+     "enter": {"preset": "pop", "dur": 0.4}}
+  ]
+}

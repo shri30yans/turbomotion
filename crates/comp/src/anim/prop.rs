@@ -265,6 +265,10 @@ impl VecProp {
     pub fn len(&self) -> usize {
         self.0.len()
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
 }
 
 /// An RGBA colour that can animate: channels are 0..255, alpha 0..1.
@@ -287,6 +291,16 @@ pub fn parse_color_static(v: &Value) -> Result<[f64; 4]> {
         }
         other => bail!("a colour is \"#rrggbb\", \"#rrggbbaa\", a name like \"white\", or [r, g, b, a?] (0-255, alpha 0-1); found {other}"),
     }
+}
+
+/// The key list of a colour animation, in either spelling: `[[t, c], ..]` or `{"keys": [[t, c], ..]}`.
+fn colour_keys(v: &Value) -> Option<&Vec<Value>> {
+    let list = match v {
+        Value::Array(l) => l,
+        Value::Object(o) => o.get("keys")?.as_array()?,
+        _ => return None,
+    };
+    list.first().is_some_and(Value::is_array).then_some(list)
 }
 
 fn hex(s: &str) -> Result<[f64; 4]> {
@@ -323,8 +337,10 @@ impl ColorProp {
         ColorProp { r: Prop::constant(c[0]), g: Prop::constant(c[1]), b: Prop::constant(c[2]), a: Prop::constant(c[3]) }
     }
 
-    /// A colour, a tween `{"from": "#fff", "to": "#f00", "at", "dur", "ease"}`, or keys `[[t, "#fff", ease?], ..]`.
+    /// A colour, a tween `{"from": "#fff", "to": "#f00", "at", "dur", "ease"}`, keys `[[t, "#fff", ease?], ..]`, or
+    /// `{"keys": [[t, "#fff", ease?], ..], "loop": "cycle"}`.
     pub fn parse(v: &Value) -> Result<ColorProp> {
+        let looping = v.get("loop").cloned();
         let split = |keys: Vec<(f64, [f64; 4], Value)>| -> Result<ColorProp> {
             let mk = |c: usize| -> Result<Prop> {
                 let list: Vec<Value> = keys
@@ -337,11 +353,20 @@ impl ColorProp {
                         Value::Array(k)
                     })
                     .collect();
-                Prop::parse(&Value::Array(list))
+                match &looping {
+                    None => Prop::parse(&Value::Array(list)),
+                    Some(l) => Prop::parse(&serde_json::json!({"keys": list, "loop": l})),
+                }
             };
             Ok(ColorProp { r: mk(0)?, g: mk(1)?, b: mk(2)?, a: mk(3)? })
         };
         match v {
+            Value::Object(o) if o.contains_key("channels") => {
+                ensure!(o.len() == 1, "colour channels cannot be combined with other fields");
+                let channels = o["channels"].as_array().ok_or_else(|| anyhow!("colour channels must be [r,g,b,a] properties"))?;
+                ensure!(channels.len() == 4, "colour channels must have four properties: [r,g,b,a]");
+                Ok(ColorProp { r: Prop::parse(&channels[0])?, g: Prop::parse(&channels[1])?, b: Prop::parse(&channels[2])?, a: Prop::parse(&channels[3])? })
+            }
             Value::Object(o) if o.contains_key("from") => {
                 let from = parse_color_static(&o["from"])?;
                 let to = parse_color_static(o.get("to").ok_or_else(|| anyhow!("a colour tween needs \"to\""))?)?;
@@ -350,7 +375,8 @@ impl ColorProp {
                 let ease = o.get("ease").cloned().unwrap_or(Value::Null);
                 split(vec![(at, from, Value::Null), (at + dur.max(1e-6), to, ease)])
             }
-            Value::Array(list) if list.first().is_some_and(Value::is_array) => {
+            Value::Array(_) | Value::Object(_) if colour_keys(v).is_some() => {
+                let list = colour_keys(v).expect("checked in the guard");
                 let keys = list
                     .iter()
                     .map(|k| {
@@ -361,6 +387,7 @@ impl ColorProp {
                     .collect::<Result<Vec<_>>>()?;
                 split(keys)
             }
+            Value::Object(_) => bail!("a colour animation is {{\"from\": c, \"to\": c, \"at\", \"dur\", \"ease\"}} or {{\"keys\": [[seconds, colour, ease?], ..]}}; found {v}"),
             other => Ok(ColorProp::constant(parse_color_static(other)?)),
         }
     }
@@ -442,5 +469,15 @@ mod tests {
         let c = ColorProp::parse(&json!({"from": "#000000", "to": "#ff0000", "dur": 1, "ease": "none"})).unwrap();
         assert_eq!(c.at(0.5, &E).unwrap()[0], 127.5);
         assert_eq!(parse_color_static(&json!("#f80")).unwrap(), [255.0, 136.0, 0.0, 1.0]);
+    }
+
+    #[test]
+    fn colour_keys_work_bare_or_inside_keys() {
+        let bare = ColorProp::parse(&json!([[0, "#000000"], [1, "#ff0000", "none"]])).unwrap();
+        let wrapped = ColorProp::parse(&json!({"keys": [[0, "#000000"], [1, "#ff0000", "none"]]})).unwrap();
+        assert_eq!(bare.at(0.5, &E).unwrap(), wrapped.at(0.5, &E).unwrap());
+        assert_eq!(wrapped.at(0.5, &E).unwrap()[0], 127.5);
+        let e = ColorProp::parse(&json!({"colour": "#fff"})).unwrap_err().to_string();
+        assert!(e.contains("keys"), "{e}");
     }
 }

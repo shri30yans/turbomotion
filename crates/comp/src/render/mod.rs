@@ -98,6 +98,16 @@ impl<'a> Renderer<'a> {
         Ok(())
     }
 
+    /// Where each foreground layer of every `layout` composition really is at `t`, as a coarse coverage mask (a quarter of the
+    /// composition size). This is what `check --layout` compares: pixels, so charts, maps and text from any source count.
+    pub fn layout_masks(&mut self, t: f64) -> Result<Vec<LayoutMask>> {
+        let state = self.ev.frame(ROOT, t)?;
+        let ctx = Ctx { plan: self.plan, shaders: &self.shaders, programs: &self.programs, res: &self.res, packs: &self.packs, subs: &[] };
+        let mut out = Vec::new();
+        collect_masks(&ctx, self.surface.canvas(), &state, &mut out)?;
+        Ok(out)
+    }
+
     pub fn pixels(&mut self, into: &mut Vec<u8>) -> Result<()> {
         into.resize(self.info.compute_min_byte_size(), 0);
         anyhow::ensure!(self.surface.read_pixels(&self.info, into, self.info.min_row_bytes(), (0, 0)), "pixel readback failed");
@@ -155,9 +165,9 @@ pub fn render_video(plan_file: &std::path::Path, codec: &Codec, frames: std::ops
     let plan = Plan::load(plan_file)?;
     let format = VideoFormat { width: plan.root().width as i32, height: plan.root().height as i32, fps: plan.fps };
     let fps = f64::from(plan.fps);
-    let silent = out.with_extension("silent.mp4");
+    let silent = out.with_extension(format!("silent.{}", out.extension().and_then(|e| e.to_str()).unwrap_or("mp4")));
     let wav = out.with_extension("mix.wav");
-    let has_sound = crate::audio::mix(&plan, frames.end as f64 / fps, &wav)?.is_some();
+    let has_sound = crate::audio::mix_range(&plan, frames.start as f64 / fps..frames.end as f64 / fps, &wav)?.is_some();
     drop(plan);
     let video_out: &std::path::Path = if has_sound { &silent } else { out };
     parallel::render(frames, workers, video_out, |range, part| {
@@ -168,6 +178,9 @@ pub fn render_video(plan_file: &std::path::Path, codec: &Codec, frames: std::ops
         for f in range {
             renderer.draw(f).with_context(|| format!("frame {f}"))?;
             renderer.pixels(&mut pixels)?;
+            if codec.has_alpha() {
+                turbomotion_core::encode::unpremultiply(&mut pixels);
+            }
             encoder.write(&pixels)?;
         }
         encoder.finish()
@@ -263,6 +276,62 @@ fn draw_order(frame: &Frame) -> Vec<usize> {
         }
     }
     order
+}
+
+/// One foreground layer's footprint on screen.
+pub struct LayoutMask {
+    pub comp: String,
+    pub layer: String,
+    /// Layers of one group (an arrow and its head and label) never clash with each other.
+    pub group: Option<String>,
+    pub w: usize,
+    pub h: usize,
+    /// One byte per cell: 1 where the layer is drawn (alpha above a quarter).
+    pub cells: Vec<u8>,
+}
+
+const MASK_SCALE: f32 = 0.25;
+
+fn is_foreground(st: &LayerState, role: Option<&str>) -> bool {
+    match role {
+        Some("ignore" | "backdrop") => false,
+        Some("foreground") => true,
+        Some(r) if r.starts_with("group:") => true,
+        _ => matches!(st.content, Content::Text(_) | Content::Mesh(_) | Content::Precomp { .. } | Content::Shape { .. } | Content::Pack { .. }),
+    }
+}
+
+fn collect_masks(ctx: &Ctx, like: &Canvas, frame: &Frame, out: &mut Vec<LayoutMask>) -> Result<()> {
+    let comp = &ctx.plan.comps[&frame.comp];
+    for (i, st) in frame.layers.iter().enumerate() {
+        if let Content::Precomp { frame: Some(inner) } = &st.content {
+            if st.visible && st.opacity > 0.0 {
+                collect_masks(ctx, like, inner, out)?;
+            }
+        }
+        if !comp.layout || !st.active || !super::check::shows(st) || !is_foreground(st, comp.layers[i].def.common.layout.as_deref()) {
+            continue;
+        }
+        let img = post::layer_image(ctx, like, frame, comp, i).with_context(|| comp.layers[i].label.clone())?;
+        let (w, h) = ((frame.width as f32 * MASK_SCALE) as i32, (frame.height as f32 * MASK_SCALE) as i32);
+        let info = ImageInfo::new(ISize::new(w, h), ColorType::RGBA8888, AlphaType::Premul, None);
+        let mut small = like.new_surface(&info, None).context("no GPU memory for a layout mask")?;
+        small.canvas().clear(skia_safe::Color::TRANSPARENT);
+        let mut paint = Paint::default();
+        paint.set_alpha_f(st.opacity as f32);
+        small.canvas().draw_image_rect_with_sampling_options(
+            img.image(),
+            None,
+            skia_safe::Rect::from_xywh(0.0, 0.0, w as f32, h as f32),
+            skia_safe::SamplingOptions::new(skia_safe::FilterMode::Linear, skia_safe::MipmapMode::Linear),
+            &paint,
+        );
+        let mut px = vec![0u8; info.compute_min_byte_size()];
+        anyhow::ensure!(small.read_pixels(&info, &mut px, info.min_row_bytes(), (0, 0)), "layout mask readback failed");
+        let cells = px.chunks_exact(4).map(|p| u8::from(p[3] > 115)).collect();
+        out.push(LayoutMask { comp: frame.comp.clone(), layer: comp.layers[i].label.clone(), group: comp.layers[i].def.common.layout.clone().filter(|r| r.starts_with("group:")), w: w as usize, h: h as usize, cells });
+    }
+    Ok(())
 }
 
 impl LayerState {

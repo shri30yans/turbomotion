@@ -1,0 +1,190 @@
+{
+  "width": 1400,
+  "height": 520,
+  "fps": 30,
+  "dur": 12,
+  "job": "card",
+  "best_for": [
+    "gross vs net",
+    "what they reported vs what it was",
+    "mark-to-market"
+  ],
+  "breaks": "Flip dest is hidden until `at`. Keep GROSS on screen; NET flies from GROSS's origin onto its own. Do not Flip a layer from its own child. The ridgeline uses clip_to the plate; a full-frame generator will paint past the card. This block sets its own type scale so display numbers fit the card, not the parent film.",
+  "props": [
+    "from_label",
+    "to_label",
+    "from_n",
+    "to_n",
+    "suffix",
+    "font"
+  ],
+  "vars": {
+    "accent": "#e8402f",
+    "ink": "#f6f4ee",
+    "mute": "#687e96",
+    "plate": "#121a26",
+    "loss": "#e8402f",
+    "gold": "#deb052",
+    "gain": "#3eb696",
+    "sub": "#687e96",
+    "from_label": "GROSS",
+    "to_label": "NET",
+    "from_n": 18.4,
+    "to_n": 4.1,
+    "suffix": "%",
+    "font": "Avenir Next"
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "plate",
+      "pos": [
+        700,
+        260
+      ],
+      "layout": "backdrop",
+      "items": [
+        {
+          "rect": [
+            -660,
+            -230,
+            1320,
+            460
+          ],
+          "radius": 20,
+          "fill": {
+            "color": "$plate",
+            "opacity": 0.92
+          },
+          "stroke": {
+            "color": "#3d4f6e",
+            "width": 1.4
+          }
+        }
+      ],
+      "enter": {
+        "preset": "fade",
+        "dur": 0.4
+      }
+    },
+    {
+      "type": "texture",
+      "shader": "ridgeline",
+      "params": {
+        "tint": "$accent",
+        "amp": 0.18,
+        "seed": 2,
+        "fill": 0.22
+      },
+      "pos": [
+        700,
+        260
+      ],
+      "size": [
+        1320,
+        460
+      ],
+      "clip_to": "plate",
+      "opacity": 0.9,
+      "blend": "screen"
+    },
+    {
+      "type": "text",
+      "id": "gross",
+      "text": {
+        "from": 0,
+        "to": "$from_n",
+        "dur": 1.1,
+        "ease": "expo.out",
+        "decimals": 1,
+        "suffix": "$suffix"
+      },
+      "font": "$font",
+      "weight": 800,
+      "role": "display",
+      "fill": "metal",
+      "color": "$accent",
+      "pos": [
+        360,
+        175
+      ],
+      "align": "center",
+      "preset": {
+        "name": "reveal",
+        "at": 0.15
+      }
+    },
+    {
+      "type": "text",
+      "id": "gross_l",
+      "text": "$from_label",
+      "font": "$font",
+      "weight": 600,
+      "size": 16,
+      "tracking": 4,
+      "color": "#9aa8c6",
+      "pos": [
+        360,
+        255
+      ],
+      "align": "center",
+      "preset": {
+        "name": "fade_up",
+        "at": 0.4
+      }
+    },
+    {
+      "type": "text",
+      "id": "net",
+      "text": {
+        "from": "$from_n",
+        "to": "$to_n",
+        "at": 1.4,
+        "dur": 1.2,
+        "ease": "expo.inOut",
+        "decimals": 1,
+        "suffix": "$suffix"
+      },
+      "font": "$font",
+      "weight": 800,
+      "role": "display",
+      "color": "#ff4a3a",
+      "pos": [
+        1040,
+        175
+      ],
+      "align": "center",
+      "flip": {
+        "from": "gross",
+        "at": 1.2,
+        "dur": 0.9,
+        "ease": "expo.inOut"
+      }
+    },
+    {
+      "type": "text",
+      "id": "net_l",
+      "text": "$to_label",
+      "font": "$font",
+      "weight": 600,
+      "size": 16,
+      "tracking": 4,
+      "color": "#ff8a7a",
+      "pos": [
+        1040,
+        255
+      ],
+      "align": "center",
+      "start": 1.5,
+      "preset": {
+        "name": "fade_up",
+        "at": 0.05
+      }
+    }
+  ],
+  "type": {
+    "body": 18,
+    "display": 84,
+    "title": 22
+  }
+}

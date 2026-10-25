@@ -9,6 +9,7 @@ pub mod particles;
 pub mod media;
 pub mod shape;
 pub mod text;
+pub mod mesh;
 pub mod transit;
 
 use anyhow::{anyhow, Context, Result};
@@ -28,6 +29,8 @@ pub struct Evaluator<'p> {
     pub plan: &'p Plan,
     pub text: crate::text::layout::Engine,
     signals: std::cell::RefCell<std::collections::HashMap<String, std::rc::Rc<crate::audio::signal::Signal>>>,
+    /// Meshes, built once per distinct geometry and size.
+    pub(crate) meshes: std::cell::RefCell<std::collections::HashMap<crate::mesh::MeshKey, std::rc::Rc<crate::mesh::Mesh>>>,
 }
 
 #[derive(Serialize)]
@@ -95,11 +98,23 @@ pub struct LayerState {
     /// Blur from an entrance or exit preset, px.
     pub extra_blur: f64,
     pub extra_smear: f64,
+    /// A wipe / iris from an enter preset, in the layer box 0..1.
+    pub clip: Option<transit::Clip>,
     pub masks: Vec<MaskState>,
     pub fx: Vec<fx::FxState>,
     /// Present when lights shade this layer.
     pub lit: Option<LitState>,
+    /// Present when the layer draws a floor reflection of itself.
+    pub reflect: Option<ReflectState>,
     pub content: Content,
+}
+
+#[derive(Serialize, Clone, Copy)]
+pub struct ReflectState {
+    pub strength: f64,
+    pub fade: f64,
+    pub gap: f64,
+    pub blur: f64,
 }
 
 /// Where a lit layer stands in the world, for the lighting shader and for `inspect`.
@@ -123,6 +138,7 @@ pub enum Content {
     Solid { color: Rgba, size: [f64; 2] },
     Shape { items: Vec<ShapeState> },
     Text(text::TextState),
+    Mesh(mesh::MeshState),
     Image { view: media::View, parallax: Option<media::ParallaxState> },
     Video { view: media::View, src_time: f64 },
     Precomp { frame: Option<Box<Frame>> },
@@ -134,7 +150,7 @@ pub enum Content {
 
 impl<'p> Evaluator<'p> {
     pub fn new(plan: &'p Plan) -> Self {
-        Evaluator { plan, text: crate::text::layout::Engine::new(), signals: Default::default() }
+        Evaluator { plan, text: crate::text::layout::Engine::new(), signals: Default::default(), meshes: Default::default() }
     }
 
     pub fn frame(&self, comp: &str, t: f64) -> Result<Frame> {
@@ -207,11 +223,11 @@ impl<'p> Evaluator<'p> {
             }
         };
         let raster = matches!(l.def.kind, Kind::Solid(_) | Kind::Image(_) | Kind::Video(_) | Kind::Texture(_) | Kind::Precomp(_) | Kind::Pack(_));
-        let default_pos = if raster { vec![cw / 2.0, ch / 2.0, 0.0] } else { vec![0.0, 0.0, 0.0] };
+        let default_pos = if raster || matches!(l.def.kind, Kind::Mesh(_)) { vec![cw / 2.0, ch / 2.0, 0.0] } else { vec![0.0, 0.0, 0.0] };
         let mut pos = vec(&cm.pos, default_pos, 10)?;
         pos.resize(3, 0.0);
         let mut anchor = vec(&cm.anchor, vec![], 20)?;
-        let size = self.layer_size(c, l);
+        let size = self.layer_size_at(c, l, t);
         if anchor.is_empty() {
             if let Kind::Text(tx) = &l.def.kind {
                 let lay = text::layout_of(self, c, l, tx, t)?;
@@ -245,6 +261,20 @@ impl<'p> Evaluator<'p> {
                 rotation += ang;
             }
         }
+        if let Some(w) = &cm.wrap {
+            if let Some([a, b]) = w.x {
+                let span = b - a;
+                if span.abs() > 1e-9 {
+                    pos[0] = a + (pos[0] - a).rem_euclid(span);
+                }
+            }
+            if let Some([a, b]) = w.y {
+                let span = b - a;
+                if span.abs() > 1e-9 {
+                    pos[1] = a + (pos[1] - a).rem_euclid(span);
+                }
+            }
+        }
         Ok(Props {
             pos: [pos[0], pos[1], pos[2]],
             anchor: [anchor[0], anchor[1], anchor[2]],
@@ -252,12 +282,17 @@ impl<'p> Evaluator<'p> {
             rotation,
             rot_x: prop(&cm.rot_x, 0.0, 41)?,
             rot_y: prop(&cm.rot_y, 0.0, 42)?,
+            skew: prop(&cm.skew, 0.0, 44)?,
             opacity: prop(&cm.opacity, 1.0, 43)?.clamp(0.0, 1.0),
         })
     }
 
     /// The natural size of a layer in its own space.
     pub fn layer_size(&self, c: &CompPlan, l: &LayerPlan) -> [f64; 2] {
+        self.layer_size_at(c, l, l.start)
+    }
+
+    fn layer_size_at(&self, c: &CompPlan, l: &LayerPlan, t: f64) -> [f64; 2] {
         let full = [f64::from(c.width), f64::from(c.height)];
         match &l.def.kind {
             Kind::Solid(s) => s.size.unwrap_or(full),
@@ -271,6 +306,10 @@ impl<'p> Evaluator<'p> {
                 (crate::plan::Media::Video { info, .. }, Fit::None) => v.size.unwrap_or([f64::from(info.w), f64::from(info.h)]),
                 _ => v.size.unwrap_or(full),
             },
+            Kind::Text(tx) => match text::layout_of(self, c, l, tx, t) {
+                Ok(lay) => [f64::from(lay.width).max(1.0), f64::from(lay.height).max(1.0)],
+                Err(_) => full,
+            },
             _ => full,
         }
     }
@@ -280,6 +319,7 @@ impl<'p> Evaluator<'p> {
             .mul(&Mat4::rot_z(p.rotation))
             .mul(&Mat4::rot_y(p.rot_y))
             .mul(&Mat4::rot_x(p.rot_x))
+            .mul(&Mat4::skew_x(p.skew))
             .mul(&Mat4::scale(p.scale[0], p.scale[1], p.scale[2]))
             .mul(&Mat4::translate(-p.anchor[0], -p.anchor[1], -p.anchor[2]))
     }
@@ -291,12 +331,35 @@ impl<'p> Evaluator<'p> {
         }
         let l = &c.layers[i];
         let local = Self::local_matrix(&self.local_props(c, l, t, 0)?);
-        let w = match l.parent {
+        let rest = match l.parent {
             Some(p) => self.world(c, p, t, cache)?.mul(&local),
             None => local,
         };
+        cache[i] = Some((rest, local));
+        let w = self.apply_flip(c, l, t, rest, cache)?;
         cache[i] = Some((w, local));
         Ok(w)
+    }
+
+    fn flip_progress(&self, l: &LayerPlan, t: f64) -> Result<Option<f64>> {
+        let Some(flip) = &l.def.common.flip else { return Ok(None) };
+        Ok(Some(flip_u(l, t, flip)?))
+    }
+
+    /// GSAP Flip: lerp this layer's origin from `from`'s origin onto its rest origin.
+    fn apply_flip(&self, c: &CompPlan, l: &LayerPlan, t: f64, world: Mat4, cache: &mut Vec<Option<(Mat4, Mat4)>>) -> Result<Mat4> {
+        let Some(src_i) = l.flip_from else { return Ok(world) };
+        let flip = l.def.common.flip.as_ref().expect("flip_from is set with flip");
+        let u = flip_u(l, t, flip)?;
+        if u >= 1.0 - 1e-12 {
+            return Ok(world);
+        }
+        let src_w = self.world(c, src_i, t, cache)?;
+        let src_p = self.local_props(c, &c.layers[src_i], t, 0)?;
+        let dst_p = self.local_props(c, l, t, 0)?;
+        let s = src_w.apply(src_p.anchor[0], src_p.anchor[1], src_p.anchor[2]);
+        let d = world.apply(dst_p.anchor[0], dst_p.anchor[1], dst_p.anchor[2]);
+        Ok(Mat4::translate((s[0] + (d[0] - s[0]) * u) - d[0], (s[1] + (d[1] - s[1]) * u) - d[1], (s[2] + (d[2] - s[2]) * u) - d[2]).mul(&world))
     }
 
     fn layer(&self, c: &CompPlan, l: &LayerPlan, t: f64, cache: &mut Vec<Option<(Mat4, Mat4)>>, camera: Option<&CameraState>, any_lights: bool) -> Result<LayerState> {
@@ -305,16 +368,17 @@ impl<'p> Evaluator<'p> {
         let cm = &l.def.common;
         let world = self.world(c, l.index, t, cache)?;
         let props = self.local_props(c, l, t, 0)?;
-        let size = self.layer_size(c, l);
+        let size = self.layer_size_at(c, l, t);
 
         // entrance / exit
         let mut m = transit::Mod::NONE;
         let dur = l.end - l.start;
+        let frame = [f64::from(c.width), f64::from(c.height)];
         if let Some(tr) = &cm.enter {
-            m = m.combine(transit_mod(tr, lt - tr.delay, true)?);
+            m = m.combine(transit_mod(tr, lt - tr.delay, true, frame)?);
         }
         if let Some(tr) = &cm.exit {
-            m = m.combine(transit_mod(tr, dur - lt - tr.delay, false)?);
+            m = m.combine(transit_mod(tr, dur - lt - tr.delay, false, frame)?);
         }
         let pre = if m != transit::Mod::NONE {
             // scale and rotate about the layer's centre of mass: its anchor
@@ -341,14 +405,37 @@ impl<'p> Evaluator<'p> {
             (true, Some([focus, blur])) if focus > 1.0 => blur * (depth - focus).abs() / focus,
             _ => 0.0,
         };
-        let lit = if any_lights && cm.three_d && cm.lit.unwrap_or(true) && !matches!(l.def.kind, Kind::Camera(_) | Kind::Light(_) | Kind::Null | Kind::Adjustment | Kind::Audio(_)) {
+        let lit = if any_lights && cm.three_d && cm.lit.unwrap_or(true) && !matches!(l.def.kind, Kind::Camera(_) | Kind::Light(_) | Kind::Null | Kind::Adjustment | Kind::Audio(_) | Kind::Mesh(_)) {
             lit_state(&world, &screen, cm.material.unwrap_or_default())
         } else {
             None
         };
         let mut visible = active && !cm.hidden && !l.is_matte_source && !matches!(l.def.kind, Kind::Camera(_) | Kind::Light(_) | Kind::Null | Kind::Audio(_));
         let origin = screen.project(0.0, 0.0, 0.0).map_or([f64::NAN, f64::NAN], |p| [p[0], p[1]]);
-        let bounds = local_bounds.and_then(|b| project_bounds(&screen, b, &mut visible));
+        let mut bounds = match &content {
+            Content::Mesh(t) => mesh::bounds(&screen, t, &mut visible),
+            _ => local_bounds.and_then(|b| project_bounds(&screen, b, &mut visible)),
+        };
+        let env_r = LayerEnv::new(self, c, l.index, t, 0);
+        let reflect = match &cm.reflect {
+            None => None,
+            Some(r) => {
+                let strength = r.strength.as_ref().map_or(Ok(0.4), |p| p.0.at(lt, &env_r))?.clamp(0.0, 1.0);
+                let fade = r.fade.unwrap_or(0.55).clamp(0.05, 1.0);
+                let gap = r.gap.unwrap_or(8.0).max(0.0);
+                let blur = r.blur.unwrap_or(3.0).max(0.0);
+                if let Some(b) = bounds.as_mut() {
+                    b[3] += gap + (b[3] - b[1]).max(0.0) * fade;
+                }
+                Some(ReflectState { strength, fade, gap, blur })
+            }
+        };
+        let flip_u = self.flip_progress(l, t)?;
+        if let Some(u) = flip_u {
+            if u <= 1e-9 {
+                visible = false;
+            }
+        }
         Ok(LayerState {
             index: l.index,
             id: cm.id.clone(),
@@ -356,7 +443,7 @@ impl<'p> Evaluator<'p> {
             active,
             visible,
             local_t: lt,
-            opacity: props.opacity * m.opacity,
+            opacity: props.opacity * m.opacity * if flip_u.is_some_and(|u| u <= 1e-9) { 0.0 } else { 1.0 },
             origin,
             bounds,
             blend: cm.blend.map(|b| format!("{b:?}").to_lowercase()),
@@ -367,9 +454,11 @@ impl<'p> Evaluator<'p> {
             three_d: cm.three_d,
             extra_blur: m.blur + dof_blur,
             extra_smear: m.smear,
+            clip: m.clip,
             masks: shape::masks(self, c, l, t)?,
             fx: fx::chain(self, c, l.index, &l.fx, t, lt)?,
             lit,
+            reflect,
             content,
         })
     }
@@ -404,6 +493,7 @@ impl<'p> Evaluator<'p> {
                 let b = [0.0, 0.0, f64::from(st.width), f64::from(st.height)];
                 (Content::Text(st), Some(b))
             }
+            Kind::Mesh(m) => (Content::Mesh(mesh::state(self, c, l, m, t)?), None),
             Kind::Image(im) => {
                 let (view, parallax) = media::image_state(self, c, l, im, t, size)?;
                 (Content::Image { view, parallax }, Some([0.0, 0.0, size[0], size[1]]))
@@ -530,7 +620,17 @@ pub struct Props {
     pub rotation: f64,
     pub rot_x: f64,
     pub rot_y: f64,
+    pub skew: f64,
     pub opacity: f64,
+}
+
+fn flip_u(l: &LayerPlan, t: f64, flip: &crate::schema::Flip) -> Result<f64> {
+    let lt = t - l.start;
+    if lt < flip.at {
+        return Ok(0.0);
+    }
+    let ease = flip.ease.as_deref().map_or_else(|| Ease::parse("expo.inOut"), Ease::parse)?;
+    Ok(ease.at(((lt - flip.at) / flip.dur.max(1e-6)).clamp(0.0, 1.0)))
 }
 
 pub fn is_active(l: &LayerPlan, t: f64) -> bool {
@@ -538,12 +638,12 @@ pub fn is_active(l: &LayerPlan, t: f64) -> bool {
 }
 
 /// `since` is seconds since an entrance began, or seconds left before an exit ends.
-fn transit_mod(tr: &Transit, since: f64, entering: bool) -> Result<transit::Mod> {
+fn transit_mod(tr: &Transit, since: f64, entering: bool, frame: [f64; 2]) -> Result<transit::Mod> {
     let ease: Ease = transit::ease_of(tr, entering)?;
     let u = (since / tr.dur.max(1e-6)).clamp(0.0, 1.0);
     // An exit eases the hidden amount 0 -> 1 as the layer's end approaches, so it accelerates away.
     let shown = if entering { ease.at(u) } else { 1.0 - ease.at(1.0 - u) };
-    transit::apply(tr, shown)
+    transit::apply(tr, shown, entering, frame)
 }
 
 fn project_bounds(m: &Mat4, b: [f64; 4], visible: &mut bool) -> Option<[f64; 4]> {
@@ -589,5 +689,20 @@ mod light_tests {
         assert!(far.lit.is_some() && flat.lit.is_none());
         // the layer far behind the focal distance is much softer than the one near it
         assert!(far.extra_blur > 5.0 && flat.extra_blur < 2.0, "{} {}", far.extra_blur, flat.extra_blur);
+    }
+
+    #[test]
+    fn a_text_layer_is_as_wide_as_its_glyphs() {
+        let plan = Plan::from_value(
+            json!({"dur": 2, "layers": [
+                {"type": "text", "id": "hi", "text": "Hi", "size": 80, "color": "#fff", "pos": [960, 540], "align": "center"}
+            ]}),
+            std::path::Path::new("."),
+        )
+        .unwrap();
+        let ev = Evaluator::new(&plan);
+        let size = ev.layer_size(plan.root(), &plan.root().layers[0]);
+        assert!(size[0] < 400.0, "text used the full frame: {size:?}");
+        assert!(size[1] < 200.0, "text used the full frame: {size:?}");
     }
 }

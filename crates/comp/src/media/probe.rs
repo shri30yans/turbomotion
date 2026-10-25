@@ -35,6 +35,9 @@ pub fn missing(path: &Path, as_written: &str) -> anyhow::Error {
         .map(|rd| rd.filter_map(Result::ok).map(|e| e.file_name().to_string_lossy().to_string()).filter(|n| n.to_lowercase().ends_with(&ext) && !ext.is_empty()).take(8).collect())
         .unwrap_or_default();
     near.sort();
+    if as_written.starts_with("kit:") {
+        return anyhow!("{as_written:?} is not a sound-kit cue; cues are {}", kit_cues().join(", "));
+    }
     anyhow!(
         "{as_written:?} not found at {}{}",
         path.display(),
@@ -90,6 +93,14 @@ pub fn audio(path: &Path, as_written: &str) -> Result<f64> {
 }
 
 pub fn absolute(dir: &Path, rel: &str) -> PathBuf {
+    if let Some(name) = rel.strip_prefix("kit:") {
+        return Path::new(env!("CARGO_MANIFEST_DIR")).join("assets/sound").join(format!("{name}.wav"));
+    }
     let p = Path::new(rel);
     if p.is_absolute() { p.to_path_buf() } else { dir.join(p) }
+}
+
+/// Cue names shipped in `assets/sound/`.
+pub fn kit_cues() -> &'static [&'static str] {
+    &["card-in", "stamp", "counter", "loss", "reveal", "whoosh", "swish", "sweep", "riser", "pop", "click", "tick", "glitch", "boom", "type"]
 }

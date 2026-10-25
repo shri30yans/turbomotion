@@ -3,6 +3,8 @@
 //! author writes down (`comp.assert.json`) so intent becomes a test.
 
 pub mod assertions;
+pub mod cost;
+pub mod layout;
 pub mod lint;
 
 use serde::Serialize;
@@ -56,6 +58,9 @@ pub fn frame_times(plan: &crate::plan::Plan, cap: usize) -> Vec<f64> {
 /// A layer shows when it is drawn and not (nearly) transparent.
 pub fn shows(l: &crate::eval::LayerState) -> bool {
     if !(l.visible && l.opacity > 0.05) {
+        return false;
+    }
+    if l.clip.is_some_and(|c| !c.reveals()) {
         return false;
     }
     // a text layer whose characters are all still hidden by an animator is not showing yet

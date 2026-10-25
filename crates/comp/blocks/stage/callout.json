@@ -1,0 +1,79 @@
+{
+  "width": 460,
+  "height": 180,
+  "fps": 30,
+  "dur": 12,
+  "job": "stage",
+  "best_for": [
+    "the room",
+    "a caption in space"
+  ],
+  "breaks": "Camera lives inside a 3D block.",
+  "props": [
+    "text",
+    "mark",
+    "font"
+  ],
+  "vars": {
+    "accent": "#e8402f",
+    "ink": "#f6f4ee",
+    "mute": "#687e96",
+    "plate": "#121a26",
+    "loss": "#e8402f",
+    "gold": "#deb052",
+    "gain": "#3eb696",
+    "sub": "#687e96",
+    "text": "Higher price in future",
+    "mark": "future",
+    "font": "Avenir Next"
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "bubble",
+      "pos": [
+        230,
+        78
+      ],
+      "items": [
+        {
+          "d": "M -190 -58 H 190 Q 210 -58 210 -38 V 38 Q 210 58 190 58 H -70 L -96 92 L -42 58 H -190 Q -210 58 -210 38 V -38 Q -210 -58 -190 -58 Z",
+          "fill": "$plate",
+          "stroke": {
+            "color": "$accent",
+            "width": 1.5
+          }
+        }
+      ],
+      "enter": {
+        "preset": "pop",
+        "dur": 0.45
+      }
+    },
+    {
+      "type": "text",
+      "id": "line",
+      "text": "$text",
+      "font": "$font",
+      "weight": 600,
+      "size": 26,
+      "color": "$ink",
+      "pos": [
+        230,
+        78
+      ],
+      "align": "center",
+      "width": 380,
+      "mark": {
+        "word": "$mark",
+        "at": 0.55,
+        "dur": 0.4,
+        "color": "$accent"
+      },
+      "preset": {
+        "name": "fade_up",
+        "at": 0.2
+      }
+    }
+  ]
+}

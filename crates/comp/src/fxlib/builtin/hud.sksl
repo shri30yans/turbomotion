@@ -1,0 +1,24 @@
+// @effect hud
+// @kind generator
+// @summary A reticle: rings, crosshair and corner brackets. Numbers stay on text layers.
+// @param tint color #3dffe0 -- colour of the marks
+// @param amount float 0.85 0 2 -- brightness
+half4 main(float2 xy) {
+    float2 uv = xy / max(resolution, float2(1.0, 1.0));
+    float2 p = uv - 0.5;
+    float r = length(p);
+    float ring = exp(-abs(r - 0.28) * 220.0) + exp(-abs(r - 0.34) * 180.0) * 0.6;
+    float cross = exp(-abs(p.x) * 280.0) * step(abs(p.y), 0.045) + exp(-abs(p.y) * 280.0) * step(abs(p.x), 0.045);
+    float2 q = abs(uv * 2.0 - 1.0);
+    float br = (1.0 - smoothstep(0.0, 0.008, abs(q.x - 0.86))) * step(q.y, 0.18) * step(0.72, q.x);
+    br += (1.0 - smoothstep(0.0, 0.008, abs(q.y - 0.86))) * step(q.x, 0.18) * step(0.72, q.y);
+    float ticks = 0.0;
+    for (int i = 0; i < 12; i++) {
+        float ang = float(i) / 12.0 * TAU;
+        float2 t = float2(cos(ang), sin(ang)) * 0.31;
+        ticks += exp(-length(p - t) * 90.0);
+    }
+    float k = (ring + cross * 0.7 + br + ticks * 0.8) * amount;
+    float pulse = 0.92 + 0.08 * sin(time * 1.1);
+    return premul(tint.rgb * k * pulse, clamp(k, 0.0, 1.0));
+}

@@ -1,0 +1,57 @@
+{
+  "width": 1920,
+  "height": 96,
+  "fps": 30,
+  "dur": 12,
+  "job": "stage",
+  "best_for": [
+    "a looping news tape",
+    "a pit screen",
+    "a price crawl"
+  ],
+  "breaks": "The two copies must be offset by exactly `span` or the seam shows. Wrap range is \u00b1span. Skew the parent, not the glyphs.",
+  "props": [
+    "text",
+    "speed",
+    "font",
+    "skew"
+  ],
+  "vars": {
+    "accent": "#e8402f",
+    "ink": "#f6f4ee",
+    "mute": "#687e96",
+    "plate": "#121a26",
+    "loss": "#e8402f",
+    "gold": "#deb052",
+    "gain": "#3eb696",
+    "sub": "#687e96",
+    "text": "THE PRICE WAS WRONG  \u00b7  SOMEONE HAS TO PAY  \u00b7  ",
+    "speed": 90,
+    "font": "Avenir Next Condensed",
+    "skew": -8
+  },
+  "layers": [
+    {
+      "type": "text",
+      "id": "a",
+      "text": "$text",
+      "font": "$font",
+      "weight": 700,
+      "size": 26,
+      "tracking": 3,
+      "color": "$ink",
+      "pos": [
+        "40 + time * -${speed}",
+        48
+      ],
+      "wrap": {
+        "x": [
+          40,
+          900
+        ]
+      },
+      "skew": "$skew",
+      "align": "left"
+    }
+  ]
+}

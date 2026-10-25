@@ -1,0 +1,142 @@
+{
+  "width": 960,
+  "height": 180,
+  "fps": 30,
+  "dur": 4,
+  "job": "stage",
+  "best_for": [
+    "the room",
+    "a caption in space"
+  ],
+  "breaks": "Camera lives inside a 3D block.",
+  "props": [
+    "name",
+    "role",
+    "font"
+  ],
+  "vars": {
+    "accent": "#e8402f",
+    "ink": "#f6f4ee",
+    "mute": "#687e96",
+    "plate": "#121a26",
+    "loss": "#e8402f",
+    "gold": "#deb052",
+    "gain": "#3eb696",
+    "sub": "#687e96",
+    "name": "Ada Lovelace",
+    "role": "Mathematician",
+    "font": "Avenir Next"
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "plate",
+      "pos": [
+        480,
+        90
+      ],
+      "opacity": {
+        "from": 0,
+        "to": 1,
+        "at": 0,
+        "dur": 0.3,
+        "ease": "power2.out"
+      },
+      "items": [
+        {
+          "rect": [
+            -480,
+            -70,
+            960,
+            140
+          ],
+          "radius": 10,
+          "fill": "$plate"
+        }
+      ],
+      "scale": {
+        "from": [
+          0.96,
+          1
+        ],
+        "to": [
+          1,
+          1
+        ],
+        "at": 0,
+        "dur": 0.6,
+        "ease": "expo.out"
+      }
+    },
+    {
+      "type": "shape",
+      "id": "bar",
+      "pos": [
+        40,
+        90
+      ],
+      "items": [
+        {
+          "rect": [
+            0,
+            -52,
+            8,
+            104
+          ],
+          "radius": 4,
+          "fill": "$accent"
+        }
+      ],
+      "scale": {
+        "from": [
+          1,
+          0
+        ],
+        "to": [
+          1,
+          1
+        ],
+        "at": 0.1,
+        "dur": 0.55,
+        "ease": "expo.out"
+      }
+    },
+    {
+      "type": "text",
+      "id": "name",
+      "text": "$name",
+      "font": "$font",
+      "weight": 800,
+      "size": 54,
+      "color": "$ink",
+      "pos": [
+        78,
+        78
+      ],
+      "align": "left",
+      "preset": {
+        "name": "rise",
+        "at": 0.2
+      }
+    },
+    {
+      "type": "text",
+      "id": "role",
+      "text": "$role",
+      "font": "$font",
+      "weight": 500,
+      "size": 28,
+      "color": "$sub",
+      "tracking": 1.5,
+      "pos": [
+        80,
+        124
+      ],
+      "align": "left",
+      "preset": {
+        "name": "fade_up",
+        "at": 0.4
+      }
+    }
+  ]
+}

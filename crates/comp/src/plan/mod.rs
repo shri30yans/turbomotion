@@ -44,6 +44,9 @@ pub struct CompPlan {
     pub beat_offset: f64,
     pub markers: Vec<Marker>,
     pub mblur: Option<MotionBlur>,
+    /// `check --layout` looks at this composition's layers.
+    pub layout: bool,
+    pub type_scale: crate::schema::tokens::ResolvedScale,
     /// Effects over the finished picture.
     pub look: Vec<PlanFx>,
     pub layers: Vec<LayerPlan>,
@@ -60,9 +63,13 @@ pub struct LayerPlan {
     pub matte: Option<(usize, MatteMode)>,
     /// Used as someone's matte: not drawn by itself.
     pub is_matte_source: bool,
+    /// Clip this layer to another layer's alpha without hiding that layer.
+    pub clip_to: Option<usize>,
     pub shapes: Vec<PathGeo>,
     pub masks: Vec<PathGeo>,
     pub along: Option<PathGeo>,
+    /// GSAP Flip source, if this layer has `"flip": {"from": "id"}`.
+    pub flip_from: Option<usize>,
     pub media: Media,
     /// The layer's effect chain, in order.
     pub fx: Vec<PlanFx>,
@@ -86,10 +93,22 @@ impl Plan {
     }
 
     pub fn from_value(mut value: Value, dir: &Path) -> Result<Plan> {
+        // Resolve once before block expansion, media probing, fonts and shader discovery.
+        let root_dir = match value.get("root") {
+            None | Some(Value::Null) => dir.to_path_buf(),
+            Some(Value::String(root)) => dir.join(root),
+            Some(_) => bail!("composition.root must be a directory path string"),
+        };
+        let dir = root_dir.as_path();
+        schema::letterbox::apply_flat(&mut value).context("letterbox")?;
+        schema::tokens::publish_palette(&mut value);
+        schema::timeline::expand(&mut value).context("timeline")?;
         schema::blocks::expand(&mut value, dir).context("expanding blocks")?;
+        schema::extrude::expand(&mut value).context("extrude")?;
         schema::time::preprocess(&mut value).context("resolving times and variables")?;
+        schema::tokens::apply(&mut value).context("tokens")?;
         let root: schema::Composition = serde_json::from_value(value).map_err(|e| anyhow!("{e}")).context("the composition")?;
-        let fx = Library::load(dir)?;
+        let fx = Library::load_with(dir, &root.fx_path)?;
         let mut comps = BTreeMap::new();
         for (name, c) in &root.comps {
             ensure!(!name.is_empty(), "a nested composition needs a name");
@@ -191,7 +210,7 @@ impl CompPlan {
                 }
                 _ => None,
             };
-            layers.push(LayerPlan { index: i, label, def, start, end, parent: None, matte: None, is_matte_source: false, shapes, masks, along, media, fx, texture });
+            layers.push(LayerPlan { index: i, label, def, start, end, parent: None, matte: None, is_matte_source: false, clip_to: None, shapes, masks, along, flip_from: None, media, fx, texture });
         }
         // names → indices
         let mut ids: HashMap<String, usize> = HashMap::new();
@@ -205,16 +224,21 @@ impl CompPlan {
             v.sort();
             if v.is_empty() { "none (give layers an \"id\")".to_string() } else { v.join(", ") }
         };
-        for i in 0..layers.len() {
-            if let Some(p) = &layers[i].def.common.parent {
-                let &pi = ids.get(p).ok_or_else(|| anyhow!("{}: parent {p:?} does not exist; layer ids are {}", layers[i].label, known()))?;
-                ensure!(pi != i, "{}: a layer cannot be its own parent", layers[i].label);
-                layers[i].parent = Some(pi);
+        for (i, layer) in layers.iter_mut().enumerate() {
+            if let Some(p) = &layer.def.common.parent {
+                let &pi = ids.get(p).ok_or_else(|| anyhow!("{}: parent {p:?} does not exist; layer ids are {}", layer.label, known()))?;
+                ensure!(pi != i, "{}: a layer cannot be its own parent", layer.label);
+                layer.parent = Some(pi);
             }
-            if let Some(m) = &layers[i].def.common.matte {
-                let &mi = ids.get(&m.source).ok_or_else(|| anyhow!("{}: matte source {:?} does not exist; layer ids are {}", layers[i].label, m.source, known()))?;
-                ensure!(mi != i, "{}: a layer cannot be its own matte", layers[i].label);
-                layers[i].matte = Some((mi, m.mode));
+            if let Some(m) = &layer.def.common.matte {
+                let &mi = ids.get(&m.source).ok_or_else(|| anyhow!("{}: matte source {:?} does not exist; layer ids are {}", layer.label, m.source, known()))?;
+                ensure!(mi != i, "{}: a layer cannot be its own matte", layer.label);
+                layer.matte = Some((mi, m.mode));
+            }
+            if let Some(id) = &layer.def.common.clip_to {
+                let &ci = ids.get(id).ok_or_else(|| anyhow!("{}: clip_to {:?} does not exist; layer ids are {}", layer.label, id, known()))?;
+                ensure!(ci != i, "{}: a layer cannot clip_to itself", layer.label);
+                layer.clip_to = Some(ci);
             }
         }
         for i in 0..layers.len() {
@@ -231,6 +255,46 @@ impl CompPlan {
                 at = layers[a].parent;
             }
         }
+        for i in 0..layers.len() {
+            if let Some(f) = &layers[i].def.common.flip {
+                let &si = ids.get(&f.from).ok_or_else(|| anyhow!("{}: flip from {:?} does not exist; layer ids are {}", layers[i].label, f.from, known()))?;
+                ensure!(si != i, "{}: a layer cannot flip from itself", layers[i].label);
+                ensure!(f.dur >= 0.0, "{}: flip dur must not be negative", layers[i].label);
+                let mut at = Some(si);
+                let mut seen = HashSet::new();
+                while let Some(a) = at {
+                    ensure!(seen.insert(a), "{}: flip from {:?} loops back", layers[i].label, f.from);
+                    ensure!(a != i, "{}: flip from {:?} is this layer's descendant (would recurse)", layers[i].label, f.from);
+                    at = layers[a].parent;
+                }
+                layers[i].flip_from = Some(si);
+            }
+        }
+        {
+            let mut seen = HashSet::new();
+            for i in 0..layers.len() {
+                let mut at = layers[i].flip_from;
+                let mut chain = vec![i];
+                while let Some(a) = at {
+                    ensure!(!chain.contains(&a), "{}: flip from-chain loops", layers[i].label);
+                    chain.push(a);
+                    at = layers[a].flip_from;
+                }
+                seen.insert(i);
+            }
+            let _ = seen;
+        }
+        for i in 0..layers.len() {
+            let Some(st) = layers[i].def.common.stagger.clone() else { continue };
+            let kids: Vec<usize> = layers.iter().filter(|l| l.parent == Some(i)).map(|l| l.index).collect();
+            let n = kids.len();
+            for (k, &ci) in kids.iter().enumerate() {
+                let order = crate::text::animate::stagger_order(st.from, k, n, st.seed);
+                let delay = st.each * order;
+                layers[ci].start += delay;
+                layers[ci].end += delay;
+            }
+        }
         Ok(CompPlan {
             name: name.to_string(),
             width: c.width,
@@ -241,10 +305,42 @@ impl CompPlan {
             beat_offset: c.beat_offset,
             markers: c.markers.clone(),
             mblur: c.mblur,
+            layout: c.layout,
             look: c.look.iter().enumerate().map(|(i, f)| Fx::parse(f).and_then(|f| lib.plan_fx(&f)).with_context(|| format!("look {i}"))).collect::<Result<_>>()?,
             layers,
+            type_scale: match &c.type_scale {
+                Some(t) => t.resolved(f64::from(c.height)),
+                None if !name.is_empty() => root.type_scale.as_ref().cloned().unwrap_or_default().resolved(f64::from(root.height)),
+                None => schema::TypeScale::default().resolved(f64::from(c.height)),
+            },
         })
     }
+}
+
+fn probe_media(kind: &Kind, dir: &Path) -> Result<Media> {
+    Ok(match kind {
+        Kind::Image(i) => {
+            let path = probe::absolute(dir, &i.src);
+            let info = probe::image(&path, &i.src)?;
+            let depth = i.parallax.as_ref().map(|p| -> Result<_> {
+                let dp = probe::absolute(dir, &p.depth);
+                let di = probe::image(&dp, &p.depth).context("parallax depth map")?;
+                Ok((dp, di))
+            });
+            Media::Image { path, info, depth: depth.transpose()? }
+        }
+        Kind::Video(v) => {
+            let path = probe::absolute(dir, &v.src);
+            let info = probe::video(&path, &v.src)?;
+            Media::Video { path, info }
+        }
+        Kind::Audio(a) => {
+            let path = probe::absolute(dir, &a.src);
+            let dur = probe::audio(&path, &a.src)?;
+            Media::Audio { path, dur }
+        }
+        _ => Media::None,
+    })
 }
 
 #[cfg(test)]
@@ -292,30 +388,4 @@ mod tests {
         let e = format!("{:#}", plan(json!({"layers": [{"type": "blob"}]})).err().unwrap());
         assert!(e.contains("solid, shape, text"), "{e}");
     }
-}
-
-fn probe_media(kind: &Kind, dir: &Path) -> Result<Media> {
-    Ok(match kind {
-        Kind::Image(i) => {
-            let path = probe::absolute(dir, &i.src);
-            let info = probe::image(&path, &i.src)?;
-            let depth = i.parallax.as_ref().map(|p| -> Result<_> {
-                let dp = probe::absolute(dir, &p.depth);
-                let di = probe::image(&dp, &p.depth).context("parallax depth map")?;
-                Ok((dp, di))
-            });
-            Media::Image { path, info, depth: depth.transpose()? }
-        }
-        Kind::Video(v) => {
-            let path = probe::absolute(dir, &v.src);
-            let info = probe::video(&path, &v.src)?;
-            Media::Video { path, info }
-        }
-        Kind::Audio(a) => {
-            let path = probe::absolute(dir, &a.src);
-            let dur = probe::audio(&path, &a.src)?;
-            Media::Audio { path, dur }
-        }
-        _ => Media::None,
-    })
 }

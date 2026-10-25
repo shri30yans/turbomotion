@@ -1,0 +1,24 @@
+{
+  "width": 320, "height": 320, "fps": 30, "dur": 8,
+  "best_for": ["an icon that is a hole in the pane", "a proof object with a cut-out"],
+  "breaks": "The hole is a subtract mask on the plate. Draw the icon in the hole after, in the accent, or the punch reads as a sticker.",
+  "vars": {"accent": "#ffd37a"},
+  "layers": [
+    {"type": "shape", "id": "plate", "pos": [160, 160],
+     "masks": [{"path": {"rect": [-38, -52, 76, 104], "radius": 10}, "mode": "subtract"}],
+     "fx": [
+       {"effect": "holo", "tint": "$accent", "edge": 1.6, "width": 4, "fill": 0.32, "sheen": 0.4},
+       {"effect": "glow", "radius": 16, "strength": 0.8, "threshold": 0.2}
+     ],
+     "items": [{"rect": [-130, -130, 260, 260], "radius": 28, "fill": {"color": "#070b14", "opacity": 0.88}}],
+     "enter": {"preset": "pop", "dur": 0.45}},
+    {"type": "shape", "id": "icon", "pos": [160, 160],
+     "items": [
+       {"rect": [-36, -50, 72, 100], "radius": 8, "stroke": {"color": "$accent", "width": 4}},
+       {"rect": [-22, -26, 44, 5], "radius": 2, "fill": "$accent"},
+       {"rect": [-22, -8, 44, 5], "radius": 2, "fill": "$accent"},
+       {"rect": [-22, 10, 28, 5], "radius": 2, "fill": "$accent"}
+     ],
+     "enter": {"preset": "pop", "dur": 0.4, "delay": 0.15}}
+  ]
+}

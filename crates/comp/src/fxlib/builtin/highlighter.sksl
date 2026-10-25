@@ -1,0 +1,10 @@
+// @effect highlighter
+// @summary Roughens a flat mark into a real highlighter: the edge is displaced, the fill stays the ink.
+// @param amount float 0.7 0 2 -- how ragged the stroke is
+half4 main(float2 xy) {
+    float n = (fbm(xy * 0.09) - 0.5) * 7.0 * amount;
+    float4 src = straight(xy + float2(n, n * 0.45));
+    float grain = (fbm(xy * 0.35) - 0.5) * 0.08 * amount;
+    float3 rgb = src.rgb * (1.0 + grain);
+    return premul(clamp(rgb, 0.0, 1.0), src.a);
+}

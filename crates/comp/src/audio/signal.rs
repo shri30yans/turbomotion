@@ -45,7 +45,7 @@ impl Signal {
         for i in look..env.len().saturating_sub(1) {
             let avg = env[i - look..i].iter().sum::<f32>() / look as f32;
             let rise = env[i] - avg;
-            if rise > 0.25 && env[i] >= env[i + 1] && env[i] >= env[i - 1] && last.map_or(true, |l| i > l + gap) {
+            if rise > 0.25 && env[i] >= env[i + 1] && env[i] >= env[i - 1] && last.is_none_or(|l| i > l + gap) {
                 onsets.push(i as f64 / RATE);
                 last = Some(i);
             }

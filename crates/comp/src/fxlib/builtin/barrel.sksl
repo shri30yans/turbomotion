@@ -1,0 +1,20 @@
+// @effect barrel
+// @summary Lens barrel (positive) or pincushion (negative). A cheap CCTV lens, a stills distortion.
+// @param amount float 0 -0.6 0.6 -- 0 is the original, positive barrels, negative pinches
+// @param x float 0.5 0 1 -- optical centre, share of the width
+// @param y float 0.5 0 1 -- optical centre, share of the height
+half4 main(float2 xy) {
+    float4 src = straight(xy);
+    if (abs(amount) < 0.001) {
+        return premul(src.rgb, src.a);
+    }
+    float2 c = float2(x, y);
+    float2 p = xy / max(resolution, float2(1.0, 1.0)) - c;
+    p.x *= resolution.x / max(resolution.y, 1.0);
+    float r2 = dot(p, p);
+    p *= 1.0 + amount * r2;
+    p.x /= resolution.x / max(resolution.y, 1.0);
+    float2 q = (p + c) * resolution;
+    float4 hit = straight(clamp(q, float2(0.0), resolution));
+    return premul(hit.rgb, hit.a);
+}

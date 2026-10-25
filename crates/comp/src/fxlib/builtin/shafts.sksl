@@ -1,0 +1,21 @@
+// @effect shafts
+// @kind generator
+// @summary Volumetric light shafts from a point. Blend `screen` or `add` over a dark plate.
+// @param x float 0.5 0 1 -- origin, share of the width
+// @param y float 0.12 0 1 -- origin, share of the height
+// @param amount float 0.55 0 1 -- how bright the shafts are
+// @param spread float 0.7 0.15 1.5 -- how wide the cone is
+// @param tint color #c8d8f0 -- colour of the light
+half4 main(float2 xy) {
+    float2 p = xy / max(resolution, float2(1.0, 1.0));
+    float aspect = resolution.x / max(resolution.y, 1.0);
+    float2 d = float2((p.x - x) * aspect, p.y - y);
+    float ang = atan(d.x, d.y + 0.001);
+    float r = length(d);
+    float rays = 0.5 + 0.5 * sin(ang * 11.0 + fbm(float2(ang * 3.0, time * 0.15)) * 6.0);
+    rays = pow(clamp(rays, 0.0, 1.0), 4.0);
+    float cone = smoothstep(spread, 0.0, abs(d.x) / (r + 0.05));
+    float fall = exp(-r * 1.8);
+    float a = clamp(rays * cone * fall * amount, 0.0, 1.0);
+    return half4(half3(tint.rgb * a), half(a));
+}

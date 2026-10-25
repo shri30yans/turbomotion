@@ -1,0 +1,32 @@
+// @effect lightning
+// @summary A strike: cool branched light and an exposure spike. Animate `amount` in a few frames, not a cartoon bolt.
+// @param amount float 0 0 1 -- 0 is the original, 1 is the hit
+// @param x float 0.5 0 1 -- where the strike is aimed, share of the width
+// @param y float 0.0 0 1 -- origin, share of the height (0 is the top)
+// @param seed float 3 0 40 -- which fork pattern
+// @param tint color #c5dcff -- colour of the light
+half4 main(float2 xy) {
+    float4 src = straight(xy);
+    if (amount < 0.001) {
+        return premul(src.rgb, src.a);
+    }
+    float2 p = xy / max(resolution, float2(1.0, 1.0));
+    float aspect = resolution.x / max(resolution.y, 1.0);
+    float2 q = float2((p.x - x) * aspect, p.y - y);
+    float wander = (fbm(float2(q.y * 7.0, seed)) - 0.5) * 0.22;
+    float d0 = abs(q.x - wander);
+    float main_b = exp(-d0 * d0 * 2800.0);
+    float wander2 = (fbm(float2(q.y * 13.0, seed + 4.1)) - 0.5) * 0.45;
+    float fork_on = step(0.52, fbm(float2(q.y * 3.4, seed + 1.7)));
+    float d1 = abs(q.x - wander2);
+    float fork = exp(-d1 * d1 * 4200.0) * fork_on * (1.0 - p.y);
+    float glow = exp(-d0 * 14.0) * 0.35 + exp(-d1 * 18.0) * 0.18 * fork_on;
+    float strike = (main_b + fork * 0.7 + glow) * amount;
+    float3 rgb = src.rgb * (1.0 + amount * 0.55 * strike);
+    rgb += tint.rgb * strike * (1.4 + 0.4 * hash11(seed + floor(time * 40.0)));
+    float2 dir = float2(3.0 * amount, 0.0);
+    float r = straight(xy - dir).r;
+    float b = straight(xy + dir).b;
+    rgb = mix(rgb, float3(r, rgb.g, b), amount * 0.35 * strike);
+    return premul(clamp(rgb, 0.0, 2.5), src.a);
+}

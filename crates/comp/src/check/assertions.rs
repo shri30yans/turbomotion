@@ -38,6 +38,18 @@ pub enum Assertion {
     NoOverlap { a: String, b: String, from: Option<f64>, to: Option<f64> },
     /// Something on screen changes in every `window` seconds: no dead holds.
     KeepsMoving { window: f64 },
+    /// At time `t` each named layer is fully showing and inside the `safe` box (default 0.9). The hero frame of a beat.
+    Hero { t: f64, layers: Vec<String>, #[serde(default = "nine")] safe: f64 },
+    /// Pixel-compare the frame at `t` to `file` (a PNG beside the composition). `comp check` renders it; max RMSE 0..255, default 8.
+    Golden { t: f64, file: String, #[serde(default = "rmse")] rmse: f64 },
+}
+
+fn nine() -> f64 {
+    0.9
+}
+
+fn rmse() -> f64 {
+    8.0
 }
 
 fn one() -> f64 {
@@ -169,6 +181,26 @@ pub fn run(plan: &Plan, assertions: &[Assertion]) -> Result<Vec<Finding>> {
                         }
                     }
                 }
+            }
+            Assertion::Hero { t, layers, safe } => {
+                let (mx, my) = (w * (1.0 - safe) / 2.0, h * (1.0 - safe) / 2.0);
+                let f = r.at(*t)?;
+                for id in layers {
+                    let i = r.index(id)?;
+                    let st = &f.layers[i];
+                    if !shows(st) || st.opacity < 0.9 {
+                        fail("hero", Some(id), Some(*t), format!("is not fully showing at {t:.2}s (the hero frame)"), "start it earlier or shorten its entrance so it has landed by this time");
+                        continue;
+                    }
+                    if let Some(b) = st.bounds {
+                        if b[0] < mx - 0.5 || b[1] < my - 0.5 || b[2] > w - mx + 0.5 || b[3] > h - my + 0.5 {
+                            fail("hero", Some(id), Some(*t), format!("leaves the {:.0}% box at the hero frame", safe * 100.0), "move or shrink it");
+                        }
+                    }
+                }
+            }
+            Assertion::Golden { .. } => {
+                // rendered by `comp check` after the eval assertions; nothing to do on numbers alone
             }
             Assertion::KeepsMoving { window } => {
                 let times = frame_times(plan, 1500);

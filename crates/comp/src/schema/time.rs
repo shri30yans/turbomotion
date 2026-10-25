@@ -31,6 +31,7 @@ pub fn preprocess(root: &mut Value) -> Result<()> {
     substitute(root, &vars, false)?;
     let comp_durs: HashMap<String, f64> = root.get("comps").and_then(Value::as_object).map(|c| c.iter().filter_map(|(k, v)| Some((k.clone(), v.get("dur")?.as_f64()?))).collect()).unwrap_or_default();
     let fps = root.get("fps").and_then(Value::as_f64).unwrap_or(30.0);
+    inherit_tempo(root);
     resolve_comp(root, fps, &comp_durs).context("composition")?;
     if let Some(comps) = root.get_mut("comps").and_then(Value::as_object_mut) {
         for (name, comp) in comps.iter_mut() {
@@ -38,6 +39,20 @@ pub fn preprocess(root: &mut Value) -> Result<()> {
         }
     }
     Ok(())
+}
+
+/// Nested compositions without their own `bpm` use the root's (and its `beat_offset`), so `beat()` and `beat:N` mean
+/// the same grid inside a precomp as outside it.
+fn inherit_tempo(root: &mut Value) {
+    let Some(bpm) = root.get("bpm").cloned() else { return };
+    let offset = root.get("beat_offset").cloned();
+    let Some(comps) = root.get_mut("comps").and_then(Value::as_object_mut) else { return };
+    for comp in comps.values_mut().filter_map(Value::as_object_mut).filter(|c| !c.contains_key("bpm")) {
+        comp.insert("bpm".into(), bpm.clone());
+        if let (Some(o), false) = (&offset, comp.contains_key("beat_offset")) {
+            comp.insert("beat_offset".into(), o.clone());
+        }
+    }
 }
 
 /// Replace `$name` / `${name}` in a whole JSON value (used to instantiate blocks).
@@ -49,7 +64,9 @@ pub fn substitute_vars(v: &mut Value, vars: &Map<String, Value>) -> Result<()> {
 fn substitute(v: &mut Value, vars: &Map<String, Value>, inside_vars: bool) -> Result<()> {
     match v {
         Value::String(s) => {
-            if let Some(name) = s.strip_prefix('$').filter(|n| !n.is_empty() && n.chars().all(|c| c.is_alphanumeric() || c == '_')) {
+            if let Some(lit) = s.strip_prefix("$$") {
+                *v = Value::String(format!("${lit}")); // `$$100M` is the literal text `$100M`
+            } else if let Some(name) = s.strip_prefix('$').filter(|n| !n.is_empty() && n.chars().all(|c| c.is_alphanumeric() || c == '_')) {
                 *v = vars.get(name).cloned().ok_or_else(|| anyhow!("unknown variable ${name}; the variables are {}", names(vars)))?;
             } else if s.contains("${") {
                 let mut out = String::new();
@@ -240,7 +257,7 @@ fn parse_literal(text: &str, ctx: &Ctx) -> Result<Option<f64>> {
     } else {
         return Ok(None);
     };
-    if head.contains(|c: char| c == ':' || c == '.') || number(head, ctx.fps).is_some() {
+    if head.contains([':', '.']) || number(head, ctx.fps).is_some() {
         Ok(Some(base + offset))
     } else {
         bail!("not a time")
@@ -267,6 +284,13 @@ mod tests {
         let mut v = v;
         preprocess(&mut v)?;
         Ok(v)
+    }
+
+    #[test]
+    fn precomps_inherit_the_roots_tempo_unless_they_set_their_own() {
+        let v = run(json!({"bpm": 120, "beat_offset": 0.25, "comps": {"a": {"dur": 2, "layers": [{"type": "null", "start": "beat:2"}]}, "b": {"bpm": 60, "dur": 2, "layers": [{"type": "null", "start": "beat:2"}]}}, "layers": []})).unwrap();
+        assert_eq!(v["comps"]["a"]["layers"][0]["start"], 1.25, "120 bpm: beat 2 is 1 s after the 0.25 s offset");
+        assert_eq!(v["comps"]["b"]["layers"][0]["start"], 2.0);
     }
 
     #[test]

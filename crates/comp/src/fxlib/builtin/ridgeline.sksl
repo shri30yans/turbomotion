@@ -1,0 +1,25 @@
+// @effect ridgeline
+// @kind generator
+// @summary A live ridgeline: P&L, mark-to-market, a quiet-money chart.
+// @param tint color #e2c48a -- colour of the stroke and the wash
+// @param amp float 0.22 0.04 0.6 -- how tall the waves are
+// @param seed float 2 0 80 -- which series
+// @param fill float 0.18 0 1 -- wash under the line
+half4 main(float2 xy) {
+    float2 uv = xy / max(resolution, float2(1.0, 1.0));
+    float y = 0.0;
+    float f = 2.4;
+    float a = amp;
+    for (int i = 0; i < 4; i++) {
+        y += sin(uv.x * f * 6.28318 + time * mix(0.15, 0.55, hash11(seed + float(i))) + seed) * a;
+        f *= 1.85;
+        a *= 0.48;
+    }
+    float line_y = 0.58 + y;
+    float d = abs(uv.y - line_y);
+    float stroke = 1.0 - smoothstep(0.0, 0.007, d);
+    float under = step(uv.y, line_y) * (1.0 - smoothstep(line_y - 0.35, line_y, uv.y));
+    float3 rgb = tint.rgb * (stroke + under * fill);
+    float alpha = max(stroke, under * fill);
+    return premul(rgb, alpha);
+}
