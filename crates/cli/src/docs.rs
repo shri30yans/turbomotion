@@ -93,17 +93,63 @@ fn timeline(c: &Value) -> String {
 }
 
 fn effects(c: &Value) -> String {
-    let mut s = page("Effects", "Built-in effects, then the shader plugins (`.sksl` files with `// @param` headers).");
+    let mut s = page("Effects", &format!("Every effect and generator, from its descriptor: platform effects first, then the shipped shader plugins. {}", str_of(c, "make_a_new_effect")));
+    let composite = &c["effect_composite"];
+    let _ = writeln!(s, "## Composite options (every effect)\n\n{}\n", str_of(composite, "summary"));
+    for (key, what) in composite["keys"].as_object().into_iter().flatten() {
+        let _ = writeln!(s, "* `{key}`: {}", what.as_str().unwrap_or_default());
+    }
+    s.push('\n');
+    json_block(&mut s, &composite["example"]);
     for e in c["effects"].as_array().into_iter().flatten() {
-        let _ = writeln!(s, "## `{}`\n\n{}\n", str_of(e, "effect"), str_of(e, "summary"));
+        let (what, origin) = (str_of(e, "kind"), str_of(e, "origin"));
+        let _ = writeln!(s, "## `{}`\n\n{} ({what}, {})\n", str_of(e, "name"), str_of(e, "summary"), if origin == "rust" { "platform" } else { "shader plugin" });
+        param_table(&mut s, &e["params"]);
+        for i in e["inputs"].as_array().into_iter().flatten() {
+            let how = if str_of(i, "kind") == "history" { format!("its own output {} frame(s) back, recursion {} deep", i["frames"], i["depth"]) } else { "the picture of another layer, named by id".to_string() };
+            let _ = writeln!(s, "* input `{}`: {how} -- {}", str_of(i, "name"), str_of(i, "doc"));
+        }
+        let passes = e["passes"].as_array().map_or(0, Vec::len);
+        if passes > 1 {
+            let names: Vec<String> = e["passes"].as_array().into_iter().flatten().map(|p| format!("`{}` (x{})", str_of(p, "name"), p["scale"])).collect();
+            let _ = writeln!(s, "* passes: {}", names.join(", "));
+        }
+        s.push('\n');
         json_block(&mut s, &e["example"]);
     }
-    let _ = writeln!(s, "## Shader plugins\n\n{}\n\n| plugin | kind | what it does | params |\n| --- | --- | --- | --- |", str_of(c, "make_a_new_effect"));
-    for p in c["shader_plugins"].as_array().into_iter().flatten() {
-        let params: Vec<_> = p["params"].as_array().into_iter().flatten().filter_map(Value::as_str).map(|x| format!("`{x}`")).collect();
-        let _ = writeln!(s, "| `{}` | {} | {} | {} |", str_of(p, "name"), str_of(p, "kind"), str_of(p, "summary").replace('|', "\\|"), params.join(", "));
-    }
     s
+}
+
+/// A choice's default is shown by name, an optional parameter's as `none`, a float's as the bare number; a vector or a
+/// colour as written.
+fn default_of(p: &Value) -> String {
+    if p["optional"].as_bool() == Some(true) {
+        return "none".to_string();
+    }
+    match (p["options"].as_array().filter(|o| !o.is_empty()), p["default"].as_array().map(Vec::as_slice)) {
+        (Some(options), Some([at])) => at.as_f64().and_then(|at| options.get(at as usize)).and_then(Value::as_str).unwrap_or_default().to_string(),
+        (None, Some([only])) => only.to_string(),
+        _ => p["default"].to_string(),
+    }
+}
+
+/// What values a parameter may take: its range (limited to it, either end open), or its options.
+fn range_of(p: &Value) -> String {
+    match (p["min"].as_f64(), p["max"].as_f64()) {
+        (Some(lo), Some(hi)) => format!("{lo} to {hi}"),
+        (Some(lo), None) => format!("{lo} or more"),
+        (None, Some(hi)) => format!("{hi} or less"),
+        (None, None) => p["options"].as_array().filter(|o| !o.is_empty()).map_or(String::new(), |o| o.iter().filter_map(Value::as_str).collect::<Vec<_>>().join(", ")),
+    }
+}
+
+fn param_table(s: &mut String, params: &Value) {
+    let Some(rows) = params.as_array().filter(|r| !r.is_empty()) else { return };
+    let _ = writeln!(s, "| parameter | type | default | range | what it does |\n| --- | --- | --- | --- | --- |");
+    for p in rows {
+        let _ = writeln!(s, "| `{}` | {} | {} | {} | {} |", str_of(p, "name"), str_of(p, "ty"), default_of(p), range_of(p), str_of(p, "doc").replace('|', "\\|"));
+    }
+    s.push('\n');
 }
 
 fn motion(c: &Value) -> String {
