@@ -58,7 +58,7 @@ impl Layer {
 
     /// A Gaussian-blurred copy that treats the layer's edge pixels as continuing outward (`TileMode::Clamp`) or as
     /// transparent (`Decal`). Skia already filters a wide blur at reduced resolution; doing it again by hand was
-    /// measured and gave no speed-up (see docs/AGENT_FRICTION.md).
+    /// measured and gave no speed-up.
     pub fn blurred_with_edge(&self, like: &Canvas, sigma: f64, edge: TileMode) -> Result<Self> {
         if sigma <= 0.3 {
             return Ok(Self { image: self.image.clone() });

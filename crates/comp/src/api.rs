@@ -24,6 +24,13 @@ pub fn svg_layer(markup: &str, id: &str, fit: f64) -> Result<Svg> {
     Ok(Svg { layer: imported.layer, warnings: imported.warnings })
 }
 
+/// The mistakes in the keys of one layer of type `ty` (`label` names it in the messages): every key that neither the
+/// type nor every layer takes, each with the nearest valid one. An empty list means the keys are all valid; values are
+/// not looked at, so this can run while a layer is still being built.
+pub fn layer_key_problems(label: &str, ty: &str, keys: &[&str]) -> Vec<String> {
+    crate::schema::layer_keys::problems(label, ty, keys)
+}
+
 /// Plan `value` (asset paths resolve against `dir` and the value's `root`) and evaluate it at the moments `comp check`
 /// samples, so a mistake in any layer, expression, font or reference surfaces now. Returns the lint findings.
 pub fn validate(value: Value, dir: &Path) -> Result<Vec<Finding>> {

@@ -124,6 +124,7 @@ fn clean_site(site: &str) -> String {
 
 fn run_module<'js>(ctx: &Ctx<'js>, name: &str, js: String, options: &Options, reads: &crate::assets::Reads, track_sites: bool) -> std::result::Result<(String, String), rquickjs::CaughtError<'js>> {
     crate::animation::install(ctx).catch(ctx)?;
+    crate::vocabulary::install(ctx).catch(ctx)?;
     crate::measure::install(ctx, Path::new(name).parent().unwrap()).catch(ctx)?;
     crate::assets::install(ctx, Path::new(name).parent().unwrap(), reads.clone()).catch(ctx)?;
     if track_sites { ctx.eval::<(), _>("globalThis.__tm_sites = {};").catch(ctx)?; }

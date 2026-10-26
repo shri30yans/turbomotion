@@ -6,6 +6,7 @@ pub mod blocks;
 pub(crate) mod de;
 pub mod docs;
 pub mod fields;
+pub mod layer_keys;
 pub mod extrude;
 pub mod repeat;
 mod item_alias;
@@ -427,7 +428,6 @@ pub fn parse_layer(index: usize, v: &Value) -> Result<Layer> {
         return Err(Problems(vec![problem(id, format!("{label}: unknown layer type {ty:?}.{} The types are {}", turbomotion_core::suggest::hint(ty, Kind::NAMES), Kind::NAMES.join(", ")))]).into());
     };
     let mut messages: Vec<String> = Vec::new();
-    let valid: Vec<&str> = COMMON_KEYS.iter().chain(own.keys).copied().collect();
     let (mut common_map, mut kind_map) = (Map::new(), Map::new());
     for (k, val) in o {
         if k == "type" {
@@ -438,11 +438,7 @@ pub fn parse_layer(index: usize, v: &Value) -> Result<Layer> {
         } else if own.keys.contains(&k.as_str()) {
             kind_map.insert(k.clone(), val.clone());
         } else {
-            messages.push(format!(
-                "{label}: unknown key {k:?}.{} A {ty} layer takes {}, and every layer takes the common keys (`turbomotion comp catalogue layer {ty}` lists both with their forms)",
-                turbomotion_core::suggest::hint(k, &valid),
-                if own.keys.is_empty() { "no keys of its own".to_string() } else { own.keys.join(", ") }
-            ));
+            messages.push(layer_keys::unknown_key(&label, ty, own, k));
         }
     }
     let common: Option<Common> = de::from_value_at(Value::Object(common_map)).map_err(|e| messages.push(format!("{label}: {e:#}"))).ok();

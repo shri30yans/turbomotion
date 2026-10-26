@@ -152,15 +152,15 @@ pub fn all() -> Value {
                 "palette": {"accent": "#e2c48a", "ink": "#f4f7ff"},
                 "type": {"display": {"size": 140, "font": "Avenir Next Condensed", "weight": 800, "color": "accent"}, "title": {"size": 48, "font": "Avenir Next", "color": "ink"}, "body": 28},
                 "layers": [
-                    {"type": "text", "role": "display", "fill": "metal", "text": {"from": 0, "to": 827, "dur": 1.4, "prefix": "£", "suffix": "m"}},
-                    {"type": "text", "role": "title", "text": "A future is a bet on a price", "mark": {"word": "future", "at": 0.6}, "preset": "reveal"}
+                    {"type": "text", "role": "display", "fill": "metal", "pos": [960, 440], "align": "center", "text": {"from": 0, "to": 827, "dur": 1.4, "prefix": "£", "suffix": "m"}},
+                    {"type": "text", "role": "title", "pos": [960, 640], "align": "center", "text": "A future is a bet on a price", "mark": {"word": "future", "at": 0.6}, "preset": "reveal"}
                 ]
             }
         },
         "sound_kit": crate::media::kit::kit().catalogue(),
         "timeline": timeline(),
         "extrude": {"summary": "Depth for a three_d text, shape or solid layer: copies stepping back in z, coloured from `color` to `far`. Show it with a camera move or a Y Rotation. `fx` apply to the front face only; the slices behind it stay plain colour, so an outline ring lies over the first slices and hides the sides at shallow angles.",
-            "example": {"type": "text", "text": "88888", "three_d": true, "pos": [960, 540], "rotation": [0, 18, 0], "extrude": {"depth": 60, "color": "#7a1d14"}}},
+            "example": {"type": "text", "text": "88888", "size": 220, "weight": 800, "align": "center", "color": "#ffd166", "three_d": true, "pos": [960, 540], "rotation": [0, 18, 0], "extrude": {"depth": 60, "color": "#e8590c", "far": "#c2410c"}}},
         "repeat": {"summary": "Repeater for any layer: `count` copies in all, each one step further along (`offset`, `rotation`, `scale` and `opacity` per copy), turning and scaling about `origin`. Each copy keeps the layer's animation and effects; `offset` and `rotation` may be expressions. Needs an `id`. Later copies sit behind the original unless `order` is \"above\".",
             "example": {"type": "solid", "id": "slab", "color": "#8a5cff", "size": [400, 240], "pos": [760, 500], "repeat": {"count": 6, "offset": [36, -24], "opacity": 0.85}}},
         "packs": crate::pack::catalogue().into_iter().map(|(n, s)| json!({"name": n, "summary": s})).collect::<Vec<_>>(),

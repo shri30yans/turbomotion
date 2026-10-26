@@ -28,7 +28,14 @@ const natural = (markup: string): number => {
 };
 const hex = (c: Color): string => (typeof c === "string" ? c : `rgb(${c.slice(0, 3).join(",")})`);
 
-/** SVG markup (`"<svg ...>"`) or bare path data (`"M0 0 L10 0 ..."`) as a shape layer; its `anchor` is the artwork's centre. */
+/**
+ * SVG markup (`"<svg ...>"`) or bare path data (`"M0 0 L10 0 ..."`) as a shape layer; its `anchor` is the artwork's centre.
+ * @example
+ * import { comp, svg } from "turbomotion";
+ * const film = comp({ width: 1920, height: 1080, fps: 30, dur: 3, bg: "#1a1d29" });
+ * film.add(svg("<svg viewBox='0 0 10 10'><path d='M5 0 L10 10 L0 10 Z' fill='#ffd166'/></svg>", { id: "triangle", width: 400, pos: [960, 540] }));
+ * export default film;
+ */
 export function svg(source: string, o: SvgOpts = {}): Layer {
   if (typeof source !== "string" || !source.trim()) throw new Error('svg(source, opts): give SVG markup like "<svg viewBox=...>" or path data like "M0 0 L10 10"');
   if (!source.trim().startsWith("<") && !/^[Mm]\s*-?[\d.]/.test(source.trim())) throw new Error(`svg(): "${source.slice(0, 24)}" is neither SVG markup (starts with "<") nor path data (starts with "M" and a number)`);
@@ -62,7 +69,18 @@ export interface PixelOpts extends LayerOpts {
   bleed?: number;
 }
 
-/** Pixel art from rows of characters: `pixelSprite(["..aa..", ".aaaa."], { a: "#ff5a1f" }, { px: 6 })`. `.` and space are clear; centred on its position. */
+/**
+ * Pixel art from rows of characters: `pixelSprite(["..aa..", ".aaaa."], { a: "#ff5a1f" }, { px: 6 })`. `.` and space are clear; centred on its position.
+ * @example
+ * import { comp, pixelSprite } from "turbomotion";
+ * const film = comp({ width: 1920, height: 1080, fps: 30, dur: 3, bg: "#1a1d29" });
+ * film.add(pixelSprite(
+ *   ["..aa..", ".aaaa.", "aabbaa", "aaaaaa", ".a..a."],
+ *   { a: "#ff5a1f", b: "#ffffff" },
+ *   { id: "invader", px: 40, pos: [960, 540] },
+ * ));
+ * export default film;
+ */
 export function pixelSprite(rows: string[], palette: Record<string, Color>, o: PixelOpts = {}): Layer {
   const { px = 8, bleed = 0.3, ...layer } = o;
   if (!Array.isArray(rows) || !rows.length || rows.some((r) => typeof r !== "string")) throw new Error("pixelSprite(rows, palette): rows is a list of equal-length strings");

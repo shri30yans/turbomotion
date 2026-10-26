@@ -5,7 +5,8 @@
 //   export default film;
 
 export { comp, shot, Film, Shot } from "./comp";
-export { Layer, text, solid, image, shape, rect, group, camera, light, raw } from "./layers";
+export { Layer, text, solid, texture, image, shape, rect, group, camera, light, raw } from "./layers";
+export type { RawSpec, TextureOpts, TextureParam } from "./raw-types";
 export { textOnPath, orbitText, wrapText, marquee, charFlip, decode, outlineText } from "./text-fx";
 export { mesh, box, sphere, torus, cylinder, extrude, text3d, letters3d, spin } from "./three";
 export { timeline, Timeline } from "./timeline";

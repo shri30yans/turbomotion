@@ -1,0 +1,265 @@
+name	category	recipe_class	tier	status	grows_bounds	linear	ae_params	engine	test
+Bilateral Blur	Blur & Sharpen	B	T1	todo	?	?	-	-	-
+Box Blur	Blur & Sharpen	B	T0	todo	?	?	-	-	-
+Camera Lens Blur	Blur & Sharpen	B	T0	todo	?	?	-	-	-
+Channel Blur	Blur & Sharpen	B	T1	todo	?	?	-	-	-
+Compound Blur	Blur & Sharpen	B	T1	todo	?	?	-	-	-
+Directional Blur	Blur & Sharpen	-	T1	part	?	?	-	directional_blur	-
+Fast Box Blur	Blur & Sharpen	B	T0	todo	?	?	-	-	-
+Gaussian Blur	Blur & Sharpen	-	T1	part	?	?	-	blur	-
+Radial Blur	Blur & Sharpen	-	T1	part	?	?	-	radial_blur	-
+Smart Blur	Blur & Sharpen	B	T1	todo	?	?	-	-	-
+Unsharp Mask	Blur & Sharpen	B	T0	todo	?	?	-	-	-
+Sharpen	Blur & Sharpen	-	T1	part	?	?	-	sharpen	-
+Reduce Interlace Flicker	Blur & Sharpen	A	T2	todo	?	?	-	-	-
+Arithmetic	Channel	A	T2	todo	?	?	-	-	-
+Blend	Channel	A	T1	todo	?	?	-	-	-
+Calculations	Channel	A	T2	todo	?	?	-	-	-
+Compound Arithmetic	Channel	A	T2	todo	?	?	-	-	-
+Invert	Channel	-	T1	have	?	?	-	invert	-
+Minimax	Channel	A	T0	todo	?	?	-	-	-
+Remove Color Matting	Channel	A	T1	todo	?	?	-	-	-
+Set Channels	Channel	A	T1	todo	?	?	-	-	-
+Set Matte	Channel	A	T1	todo	?	?	-	-	-
+Shift Channels	Channel	A	T1	todo	?	?	-	-	-
+Solid Composite	Channel	A	T1	todo	?	?	-	-	-
+Cineon Converter	Channel	A	T2	todo	?	?	-	-	-
+Auto Color	Colour Correction	D	T1	todo	?	?	-	-	-
+Auto Contrast	Colour Correction	D	T1	todo	?	?	-	-	-
+Auto Levels	Colour Correction	D	T1	todo	?	?	-	-	-
+Black & White	Colour Correction	A	T0	todo	?	?	-	-	-
+Brightness & Contrast	Colour Correction	-	T1	part	?	?	-	brightness,contrast	-
+Broadcast Colors	Colour Correction	A	T2	todo	?	?	-	-	-
+Change Color	Colour Correction	A	T1	todo	?	?	-	-	-
+Change to Color	Colour Correction	A	T1	todo	?	?	-	-	-
+Channel Mixer	Colour Correction	A	T1	todo	?	?	-	-	-
+Color Balance	Colour Correction	A	T1	todo	?	?	-	-	-
+Color Balance (HLS)	Colour Correction	A	T2	todo	?	?	-	-	-
+Colorama	Colour Correction	A	T0	todo	?	?	-	-	-
+Curves	Colour Correction	A	T0	todo	?	?	-	-	-
+Equalize	Colour Correction	D	T2	todo	?	?	-	-	-
+Exposure	Colour Correction	-	T1	have	?	?	-	exposure	-
+Gamma/Pedestal/Gain	Colour Correction	-	T1	part	?	?	-	grade,gamma	-
+Hue/Saturation	Colour Correction	-	T1	part	?	?	-	hue,saturation	-
+Leave Color	Colour Correction	-	T1	part	?	?	-	chroma_hold	-
+Levels	Colour Correction	A	T0	todo	?	?	-	-	-
+Levels (Individual)	Colour Correction	A	T1	todo	?	?	-	-	-
+Lumetri Color	Colour Correction	B	T1	todo	?	?	-	-	-
+Match Color	Colour Correction	D	T2	todo	?	?	-	-	-
+Photo Filter	Colour Correction	A	T1	todo	?	?	-	-	-
+Selective Color	Colour Correction	A	T1	todo	?	?	-	-	-
+Shadow/Highlight	Colour Correction	B	T1	todo	?	?	-	-	-
+Tint	Colour Correction	-	T1	have	?	?	-	tint	-
+Tritone	Colour Correction	A	T0	todo	?	?	-	-	-
+Vibrance	Colour Correction	A	T1	todo	?	?	-	-	-
+Apply Color LUT	Colour Correction	A	T0	todo	?	?	-	-	-
+Bezier Warp	Distort	E	T1	todo	?	?	-	-	-
+Bulge	Distort	-	T1	have	?	?	-	bulge	-
+Corner Pin	Distort	A	T0	todo	?	?	-	-	-
+Displacement Map	Distort	-	T1	have	?	?	-	displacement_map	-
+Liquify	Distort	D	T1	todo	?	?	-	-	-
+Magnify	Distort	A	T1	todo	?	?	-	-	-
+Mesh Warp	Distort	E	T1	todo	?	?	-	-	-
+Mirror	Distort	-	T1	have	?	?	-	mirror	-
+Offset	Distort	A	T1	todo	?	?	-	-	-
+Optics Compensation	Distort	-	T1	part	?	?	-	barrel	-
+Polar Coordinates	Distort	A	T1	todo	?	?	-	-	-
+Reshape	Distort	D	T2	todo	?	?	-	-	-
+Ripple	Distort	-	T1	have	?	?	-	ripple	-
+Rolling Shutter Repair	Distort	D	T2	todo	?	?	-	-	-
+Smear	Distort	A	T2	todo	?	?	-	-	-
+Spherize	Distort	A	T1	todo	?	?	-	-	-
+Transform	Distort	-	T1	have	?	?	-	transform	-
+Turbulent Displace	Distort	-	T1	have	?	?	-	turbulent_displace	-
+Twirl	Distort	-	T1	have	?	?	-	twirl	-
+Wave Warp	Distort	-	T1	part	?	?	-	wave	-
+Angle Control	Expression Controls	-	T1	todo	?	?	-	-	-
+Checkbox Control	Expression Controls	-	T1	todo	?	?	-	-	-
+Color Control	Expression Controls	-	T1	todo	?	?	-	-	-
+Dropdown Menu Control	Expression Controls	-	T1	todo	?	?	-	-	-
+Layer Control	Expression Controls	-	T1	todo	?	?	-	-	-
+Point Control	Expression Controls	-	T1	todo	?	?	-	-	-
+3D Point Control	Expression Controls	-	T1	todo	?	?	-	-	-
+Slider Control	Expression Controls	-	T1	todo	?	?	-	-	-
+4-Color Gradient	Generate	A	T0	todo	?	?	-	-	-
+Advanced Lightning	Generate	-	T1	part	?	?	-	lightning,bolt	-
+Audio Spectrum	Generate	D	T1	todo	?	?	-	-	-
+Audio Waveform	Generate	D	T1	todo	?	?	-	-	-
+Beam	Generate	A	T1	todo	?	?	-	-	-
+Cell Pattern	Generate	-	T1	have	?	?	-	cells	-
+Checkerboard	Generate	A	T1	todo	?	?	-	-	-
+Circle	Generate	A	T1	todo	?	?	-	-	-
+Ellipse	Generate	A	T1	todo	?	?	-	-	-
+Eyedropper Fill	Generate	D	T2	todo	?	?	-	-	-
+Fill	Generate	A	T1	todo	?	?	-	-	-
+Fractal	Generate	A	T2	todo	?	?	-	-	-
+Grid	Generate	-	T1	have	?	?	-	grid	-
+Lens Flare	Generate	B	T0	todo	?	?	-	-	-
+Paint Bucket	Generate	D	T2	todo	?	?	-	-	-
+Radio Waves	Generate	A	T1	todo	?	?	-	-	-
+Ramp	Generate	-	T1	part	?	?	-	gradient	-
+Scribble	Generate	D	T1	todo	?	?	-	-	-
+Stroke	Generate	D	T1	todo	?	?	-	-	-
+Vegas	Generate	D	T1	todo	?	?	-	-	-
+Write-on	Generate	D	T1	todo	?	?	-	-	-
+CC Light Burst	Generate	B	T1	todo	?	?	-	-	-
+CC Light Rays	Generate	-	T1	part	?	?	-	shafts	-
+CC Light Sweep	Generate	-	T1	part	?	?	-	light_sweep	-
+CC Threads	Generate	A	T2	todo	?	?	-	-	-
+Color Difference Key	Keying & Matte	A	T1	todo	?	?	-	-	-
+Color Key	Keying & Matte	A	T1	part	?	?	-	chroma_key	-
+Color Range	Keying & Matte	A	T1	todo	?	?	-	-	-
+Difference Matte	Keying & Matte	A	T1	todo	?	?	-	-	-
+Extract	Keying & Matte	A	T1	todo	?	?	-	-	-
+Inner/Outer Key	Keying & Matte	D	T1	todo	?	?	-	-	-
+Keylight	Keying & Matte	B	T0	todo	?	?	-	-	-
+Linear Color Key	Keying & Matte	A	T1	todo	?	?	-	-	-
+Luma Key	Keying & Matte	A	T1	todo	?	?	-	-	-
+Spill Suppressor	Keying & Matte	A	T1	todo	?	?	-	-	-
+Matte Choker	Keying & Matte	B	T0	todo	?	?	-	-	-
+Refine Hard/Soft Matte	Keying & Matte	B	T1	todo	?	?	-	-	-
+Simple Choker	Keying & Matte	A	T1	todo	?	?	-	-	-
+Add Grain	Noise & Grain	-	T1	part	?	?	-	grain	-
+Dust & Scratches	Noise & Grain	-	T1	part	?	?	-	dust,scratches	-
+Fractal Noise	Noise & Grain	B	T0	part	?	?	-	noise,clouds	-
+Match Grain	Noise & Grain	D	T2	todo	?	?	-	-	-
+Median	Noise & Grain	B	T1	todo	?	?	-	-	-
+Noise	Noise & Grain	A	T1	todo	?	?	-	-	-
+Noise Alpha	Noise & Grain	A	T2	todo	?	?	-	-	-
+Noise HLS	Noise & Grain	A	T2	todo	?	?	-	-	-
+Remove Grain	Noise & Grain	B	T2	todo	?	?	-	-	-
+Turbulent Noise	Noise & Grain	A	T1	todo	?	?	-	-	-
+Bevel Alpha	Perspective	B	T0	todo	?	?	-	-	-
+Bevel Edges	Perspective	B	T0	todo	?	?	-	-	-
+CC Cylinder	Perspective	A	T1	todo	?	?	-	-	-
+CC Sphere	Perspective	B	T1	todo	?	?	-	-	-
+CC Spotlight	Perspective	B	T1	todo	?	?	-	-	-
+Drop Shadow	Perspective	-	T1	part	?	?	-	shadow	-
+Radial Shadow	Perspective	B	T1	todo	?	?	-	-	-
+Card Dance	Simulation	D	T2	todo	?	?	-	-	-
+Caustics	Simulation	B	T2	todo	?	?	-	-	-
+Foam	Simulation	D	T2	todo	?	?	-	-	-
+Particle Playground	Simulation	D	T2	todo	?	?	-	-	-
+Shatter	Simulation	D	T1	todo	?	?	-	-	-
+Wave World	Simulation	B	T2	todo	?	?	-	-	-
+CC Ball Action	Simulation	D	T2	todo	?	?	-	-	-
+CC Bubbles	Simulation	B	T1	todo	?	?	-	-	-
+CC Drizzle	Simulation	B	T2	todo	?	?	-	-	-
+CC Hair	Simulation	D	T2	todo	?	?	-	-	-
+CC Mr. Mercury	Simulation	D	T2	todo	?	?	-	-	-
+CC Particle Systems II	Simulation	D	T1	todo	?	?	-	-	-
+CC Particle World	Simulation	D	T1	todo	?	?	-	-	-
+CC Pixel Polly	Simulation	D	T1	todo	?	?	-	-	-
+CC Rainfall	Simulation	B	T1	todo	?	?	-	-	-
+CC Scatterize	Simulation	D	T1	todo	?	?	-	-	-
+CC Snowfall	Simulation	B	T1	todo	?	?	-	-	-
+CC Star Burst	Simulation	B	T1	todo	?	?	-	-	-
+Brush Strokes	Stylize	B	T0	todo	?	?	-	-	-
+Cartoon	Stylize	B	T0	todo	?	?	-	-	-
+Color Emboss	Stylize	A	T1	todo	?	?	-	-	-
+Emboss	Stylize	A	T1	todo	?	?	-	-	-
+Find Edges	Stylize	A	T0	todo	?	?	-	-	-
+Glow	Stylize	B	T0	part	?	?	-	glow	-
+Mosaic	Stylize	-	T1	part	?	?	-	pixelate	-
+Motion Tile	Stylize	A	T0	todo	?	?	-	-	-
+Posterize	Stylize	-	T1	have	?	?	-	posterize	-
+Roughen Edges	Stylize	A	T1	todo	?	?	-	-	-
+Scatter	Stylize	A	T0	todo	?	?	-	-	-
+Strobe Light	Stylize	A	T0	todo	?	?	-	-	-
+Texturize	Stylize	A	T1	todo	?	?	-	-	-
+Threshold	Stylize	A	T0	todo	?	?	-	-	-
+CC Block Load	Stylize	A	T2	todo	?	?	-	-	-
+CC Burn Film	Stylize	A	T2	todo	?	?	-	-	-
+CC Glass	Stylize	B	T0	todo	?	?	-	-	-
+CC HexTile	Stylize	A	T1	todo	?	?	-	-	-
+CC Kaleida	Stylize	A	T2	part	?	?	-	kaleidoscope	-
+CC Mr. Smoothie	Stylize	A	T2	todo	?	?	-	-	-
+CC Plastic	Stylize	B	T0	todo	?	?	-	-	-
+CC RepeTile	Stylize	A	T1	todo	?	?	-	-	-
+CC Threshold	Stylize	A	T1	todo	?	?	-	-	-
+CC Vignette	Stylize	-	T1	part	?	?	-	vignette	-
+Numbers	Text	A	T1	todo	?	?	-	-	-
+Timecode	Text	A	T1	todo	?	?	-	-	-
+CC Force Motion Blur	Time	C	T1	todo	?	?	-	-	-
+CC Wide Time	Time	C	T2	todo	?	?	-	-	-
+Echo	Time	-	T1	part	?	?	-	echo	-
+Pixel Motion Blur	Time	D	T1	todo	?	?	-	-	-
+Posterize Time	Time	-	T0	todo	?	?	-	-	-
+Time Difference	Time	C	T1	todo	?	?	-	-	-
+Time Displacement	Time	C	T0	todo	?	?	-	-	-
+Timewarp	Time	D	T1	todo	?	?	-	-	-
+Block Dissolve	Transition	A	T0	todo	?	?	-	-	-
+Card Wipe	Transition	D	T1	todo	?	?	-	-	-
+Gradient Wipe	Transition	A	T0	todo	?	?	-	-	-
+Iris Wipe	Transition	A	T0	todo	?	?	-	-	-
+Linear Wipe	Transition	A	T0	todo	?	?	-	-	-
+Radial Wipe	Transition	A	T0	todo	?	?	-	-	-
+Venetian Blinds	Transition	A	T0	todo	?	?	-	-	-
+CC Glass Wipe	Transition	B	T1	todo	?	?	-	-	-
+CC Grid Wipe	Transition	A	T1	todo	?	?	-	-	-
+CC Image Wipe	Transition	A	T1	todo	?	?	-	-	-
+CC Jaws	Transition	A	T2	todo	?	?	-	-	-
+CC Light Wipe	Transition	A	T1	todo	?	?	-	-	-
+CC Line Sweep	Transition	A	T1	todo	?	?	-	-	-
+CC Radial Scale Wipe	Transition	A	T1	todo	?	?	-	-	-
+CC Scale Wipe	Transition	A	T1	todo	?	?	-	-	-
+CC Twister	Transition	D	T1	todo	?	?	-	-	-
+CC WarpoMatic	Transition	A	T2	todo	?	?	-	-	-
+Color Profile Converter	Utility	A	T1	todo	?	?	-	-	-
+Grow Bounds	Utility	A	T0	todo	?	?	-	-	-
+HDR Compander	Utility	A	T2	todo	?	?	-	-	-
+HDR Highlight Compression	Utility	A	T2	todo	?	?	-	-	-
+backdrop	Engine-only	-	-	have	?	?	-	backdrop	-
+outline	Engine-only	-	-	have	?	?	-	outline	-
+chromatic_aberration	Engine-only	-	-	have	?	?	-	chromatic_aberration	-
+rgb_split	Engine-only	-	-	have	?	?	-	rgb_split	-
+scanlines	Engine-only	-	-	have	?	?	-	scanlines	-
+opacity	Engine-only	-	-	have	?	?	-	opacity	-
+anamorphic	Engine-only	-	-	have	?	?	-	anamorphic	-
+aura	Engine-only	-	-	have	?	?	-	aura	-
+bleach	Engine-only	-	-	have	?	?	-	bleach	-
+bloom	Engine-only	-	-	have	?	?	-	bloom	-
+bokeh	Engine-only	-	-	have	?	?	-	bokeh	-
+comet	Engine-only	-	-	have	?	?	-	comet	-
+crumble	Engine-only	-	-	have	?	?	-	crumble	-
+datamosh	Engine-only	-	-	have	?	?	-	datamosh	-
+dot_grid	Engine-only	-	-	have	?	?	-	dot_grid	-
+dots	Engine-only	-	-	have	?	?	-	dots	-
+dropout	Engine-only	-	-	have	?	?	-	dropout	-
+duotone	Engine-only	-	-	have	?	?	-	duotone	-
+edge_glow	Engine-only	-	-	have	?	?	-	edge_glow	-
+feedback_trail	Engine-only	-	-	have	?	?	-	feedback_trail	-
+film_burn	Engine-only	-	-	have	?	?	-	film_burn	-
+flash	Engine-only	-	-	have	?	?	-	flash	-
+flicker	Engine-only	-	-	have	?	?	-	flicker	-
+floor	Engine-only	-	-	have	?	?	-	floor	-
+foil	Engine-only	-	-	have	?	?	-	foil	-
+gate_weave	Engine-only	-	-	have	?	?	-	gate_weave	-
+glitch_slices	Engine-only	-	-	have	?	?	-	glitch_slices	-
+glow_field	Engine-only	-	-	have	?	?	-	glow_field	-
+guilloche	Engine-only	-	-	have	?	?	-	guilloche	-
+halation	Engine-only	-	-	have	?	?	-	halation	-
+halftone	Engine-only	-	-	have	?	?	-	halftone	-
+halftone_field	Engine-only	-	-	have	?	?	-	halftone_field	-
+haze	Engine-only	-	-	have	?	?	-	haze	-
+heat	Engine-only	-	-	have	?	?	-	heat	-
+highlighter	Engine-only	-	-	have	?	?	-	highlighter	-
+holo	Engine-only	-	-	have	?	?	-	holo	-
+hud	Engine-only	-	-	have	?	?	-	hud	-
+impact	Engine-only	-	-	have	?	?	-	impact	-
+interference	Engine-only	-	-	have	?	?	-	interference	-
+light_leak	Engine-only	-	-	have	?	?	-	light_leak	-
+liquid	Engine-only	-	-	have	?	?	-	liquid	-
+pixel_dissolve	Engine-only	-	-	have	?	?	-	pixel_dissolve	-
+prism	Engine-only	-	-	have	?	?	-	prism	-
+rain	Engine-only	-	-	have	?	?	-	rain	-
+ridgeline	Engine-only	-	-	have	?	?	-	ridgeline	-
+rim	Engine-only	-	-	have	?	?	-	rim	-
+scan	Engine-only	-	-	have	?	?	-	scan	-
+shockwave	Engine-only	-	-	have	?	?	-	shockwave	-
+split_tone	Engine-only	-	-	have	?	?	-	split_tone	-
+spotlight	Engine-only	-	-	have	?	?	-	spotlight	-
+static	Engine-only	-	-	have	?	?	-	static	-
+stripes	Engine-only	-	-	have	?	?	-	stripes	-
+tilt_shift	Engine-only	-	-	have	?	?	-	tilt_shift	-
+vhs	Engine-only	-	-	have	?	?	-	vhs	-

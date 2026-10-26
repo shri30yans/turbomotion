@@ -11,7 +11,17 @@ export function mesh(geometry: Geometry, o: MeshOpts = {}): Layer {
   return new Layer("mesh", { three_d: true, geometry, ...o });
 }
 
-/** A box: `box({ size, height?, depth? }, { color, side, pos, rotation })`. */
+/**
+ * A box: `box({ size, height?, depth? }, { color, side, pos, rotation })`.
+ * @example
+ * import { comp, box, camera } from "turbomotion";
+ * const film = comp({ width: 1920, height: 1080, fps: 30, dur: 3, bg: "#1a1d29" });
+ * film.add(
+ *   box({ size: 300 }, { id: "cube", color: "#e8402f", pos: [960, 540, 0], rotation: [20, 30, 0] }),
+ *   camera({ id: "cam", pos: [960, 540, -1800], poi: [960, 540, 0] }),
+ * );
+ * export default film;
+ */
 export const box = (g: Omit<BoxGeometry, "kind">, o?: MeshOpts): Layer => mesh({ kind: "box", ...g }, o);
 /** A sphere of diameter `size`. */
 export const sphere = (g: Omit<SphereGeometry, "kind">, o?: MeshOpts): Layer => mesh({ kind: "sphere", ...g }, o);
@@ -22,7 +32,17 @@ export const cylinder = (g: Omit<CylinderGeometry, "kind">, o?: MeshOpts): Layer
 /** An SVG path `d` filled and pushed `depth` deep. */
 export const extrude = (g: Omit<ExtrudeGeometry, "kind">, o?: MeshOpts): Layer => mesh({ kind: "extrude", ...g }, o);
 
-/** Extruded text: `text3d("Hi", { font, weight, size, depth, bevel, color, side, material, ...layer })`. */
+/**
+ * Extruded text: `text3d("Hi", { font, weight, size, depth, bevel, color, side, material, ...layer })`.
+ * @example
+ * import { comp, camera, text3d } from "turbomotion";
+ * const film = comp({ width: 1920, height: 1080, fps: 30, dur: 3, bg: "#1a1d29" });
+ * film.add(
+ *   text3d("Hi", { id: "word", size: 300, weight: 800, depth: 60, bevel: 6, color: "#ffd166", side: "#c2410c", pos: [960, 540, 0], rotation: [20, 20, 0] }),
+ *   camera({ id: "cam", pos: [960, 540, -1800], poi: [960, 540, 0] }),
+ * );
+ * export default film;
+ */
 export function text3d(content: string, o: Text3DOpts = {}): Layer {
   const { font, weight, italic, size = 120, depth, bevel, ...layer } = o;
   return mesh({ kind: "text", text: content, font, weight, italic, size, depth, bevel }, layer);
@@ -32,6 +52,14 @@ export function text3d(content: string, o: Text3DOpts = {}): Layer {
  * Split `word` into one 3D text layer per letter, centred on `pos` (default the origin: pass your own). Letter boxes
  * come from the renderer's own shaping (`measure`), so kerning and tracking match flat text. Spaces take room but make
  * no layer. Returns the layers in reading order, ready for a staggered tween.
+ * @example
+ * import { comp, camera, letters3d } from "turbomotion";
+ * const film = comp({ width: 1920, height: 1080, fps: 30, dur: 3, bg: "#1a1d29" });
+ * film.add(
+ *   ...letters3d("MOVE", { id: "m", pos: [960, 540, 0], size: 260, depth: 50, color: "#ffd166", side: "#c2410c", rotation: [15, 20, 0] }),
+ *   camera({ id: "cam", pos: [960, 540, -1800], poi: [960, 540, 0] }),
+ * );
+ * export default film;
  */
 export function letters3d(word: string, o: Letters3DOpts = {}): Layer[] {
   const { tracking = 0, pos, x, y, z, id, ...rest } = o;

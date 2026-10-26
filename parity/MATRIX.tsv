@@ -1,0 +1,63 @@
+feature	category	status	test	doc	ae_ref	wp
+Transform and 3D transform	Animation	have	-	-	Transform	-
+Per-component orientation vs rotation order	Animation	unverified	-	-	3D Orientation vs Rotation	WP-14
+Spatial bezier paths	Animation	none	-	-	Spatial interpolation	WP-10
+Roving keyframes	Animation	none	-	-	Roving keyframes	WP-10
+Auto-orient along path	Animation	none	-	-	Auto-Orient	WP-10
+Separate dimensions	Animation	none	-	-	Separate Dimensions	WP-10
+Temporal and spatial ease split	Animation	none	-	-	Keyframe interpolation	WP-10
+Speed and influence handles	Animation	none	-	-	Keyframe velocity	WP-10
+Hold keyframes	Animation	have	-	-	Hold interpolation	-
+Looping	Animation	part	-	-	loopIn/loopOut	WP-11
+Expressions: scalar	Expressions	have	-	-	Expressions	-
+Expressions: full object model	Expressions	none	-	-	Expression language reference	WP-12
+Expression controls	Expressions	none	-	-	Expression Controls effects	WP-11
+Layer switches	Layers	part	-	-	Layer switches	WP-14
+Parenting	Layers	have	-	-	Parent	-
+Track mattes	Layers	have	-	-	Track Matte	-
+Matte on an adjustment layer	Layers	part	-	-	Track Matte	WP-14
+Masks	Layers	have	-	-	Masks	-
+Per-vertex mask feather	Layers	none	-	-	Mask Feather tool	WP-30
+Blend modes (17 of about 38)	Compositing	part	-	-	Blending modes	WP-05
+Layer markers	Layers	part	-	-	Layer markers	WP-14
+Precomp time remap	Time	have	-	-	Time Remap	-
+Collapse transformations	Layers	unverified	-	-	Collapse Transformations	WP-14
+Frame blending, Pixel Motion Blur, Timewarp	Time	none	-	-	Frame blending	WP-13
+Posterize Time, Time Displacement, Time Difference	Time	none	-	-	Time effects	WP-13
+Motion blur per layer	Time	part	-	-	Motion Blur switch	WP-13
+Colour management	Colour	none	-	-	Color settings	WP-03
+Output formats	Output	part	-	-	Render queue	WP-50
+Lights and shadows	3D	none	-	-	Lights	WP-23
+Camera f-stop, iris, focus distance	3D	none	-	-	Camera settings	WP-24
+Layer styles	Styles	part	-	-	Layer styles	WP-31
+Shape operators	Shapes	none	-	-	Shape path operators	WP-30
+Gradient stroke, taper, wave	Shapes	none	-	-	Stroke options	WP-30
+Text measured bounds	Text	none	-	-	sourceRectAtTime	WP-32
+Text selector based-on and modes	Text	none	-	-	Text animator selectors	WP-32
+Variable font axes	Text	none	-	-	Variable fonts	WP-32
+Environment, reflection, refraction	3D	none	-	-	Ray-traced 3D	WP-21
+Fonts shipped in motions/lib/fonts	Assets	done	test_each_listed_file_exists_and_matches_its_hash	wp/WP-52/REPORT.md	-	WP-52
+Parity ledger and parity command	Process	done	the_real_ledger_is_sound	wp/WP-00/REPORT.md	-	WP-00
+Docs and probes run as tests	Process	done	every_example_on_the_sdk_page_builds_and_passes_check	docs/reference/sdk.md	-	WP-04
+Effect bounds (effects grow the layer)	Effects	none	-	-	Effects grow layer bounds	WP-01
+Blur kernels (correct sigma, disc, box)	Effects	none	-	-	Blur & Sharpen	WP-02
+Order of operations: masks before effects	Layers	none	-	-	Order of operations	WP-14
+Warps: corner pin, mesh warp, liquify, puppet	Effects	none	-	-	Distort	WP-34
+Keying and matte tools	Effects	none	-	-	Keying	WP-35
+Per-pixel mesh rasteriser and G-buffer	3D	none	-	-	3D renderer	WP-20
+Mesh materials: chrome, glass, toon, matcap	3D	none	-	-	Ray-traced 3D materials	WP-21
+3D layers intersect (depth compositing)	3D	none	-	-	3D layer intersection	WP-22
+Particles v2 and simulation effects	Simulation	none	-	-	Simulation effects	WP-36
+Rigid-body bake	Simulation	none	-	-	Physics	WP-37
+Subject matte import	Import	none	-	-	Roto Brush result	WP-40
+Simple point and corner tracking	Tracking	none	-	-	Tracker	WP-41
+Lottie import	Import	none	-	-	Bodymovin	WP-51
+Roto Brush and Refine Edge	Not built	not_supported	-	-	Roto Brush	-
+Warp Stabilizer	Not built	not_supported	-	-	Warp Stabilizer	-
+3D camera solver	Not built	not_supported	-	-	3D Camera Tracker	-
+Content-Aware Fill	Not built	not_supported	-	-	Content-Aware Fill	-
+Cinema 4D renderer	Not built	not_supported	-	-	Cinema 4D	-
+Mocha planar tracking	Not built	not_supported	-	-	Mocha AE	-
+AEP project import	Not built	not_supported	-	-	.aep	-
+Immersive and VR effects	Not built	not_supported	-	-	Immersive Video	-
+Third-party plugin clones (Particular, Form, Shine, Sapphire)	Not built	not_supported	-	-	Third-party plugins	-

@@ -1,7 +1,7 @@
 // Layers as builders. A layer holds its static properties and the tweens a timeline attached to it; `toJSON()` turns
 // both into one composition layer.
 
-import { checkGroupOpts, checkRectSize, checkSolidColor, checkTextContent } from "./arg-check";
+import { checkGroupOpts, checkLayerKeys, checkRectSize, checkSolidColor, checkTextContent, checkTextureShader, LAYER_STATE, refuseLayerAssignment } from "./arg-check";
 import { checkImage } from "./image-check";
 import { noteSite } from "./site";
 import { compileTweens } from "./compile";
@@ -10,6 +10,7 @@ import { checkVectors, fillVector, vectorComponents } from "./vector-tweens";
 import type {
   CameraOpts, Color, CounterSpec, ImageOpts, LayerOpts, LightOpts, RectOpts, ShapeItem, ShapeOpts, SolidOpts, TextOpts,
 } from "./types";
+import type { RawSpec, TextureOpts } from "./raw-types";
 
 let counter = 0;
 
@@ -34,8 +35,16 @@ export class Layer {
     for (const k of Object.keys(this.props)) if (this.props[k] === undefined) delete this.props[k];
     this.id = this.props.id ?? `${kind}${++counter}`;
     this.props.id = this.id;
+    checkLayerKeys(kind, this.id, Object.keys(this.props));
     this.settleRotation();
     noteSite(this.id);
+    // A layer's options live in `props`; assigning one as a field (`layer.effects = ...`) would be written nowhere.
+    return new Proxy(this, {
+      set(layer, key, value, receiver) {
+        if (!LAYER_STATE.includes(String(key))) refuseLayerAssignment(layer.kind, layer.id, String(key));
+        return Reflect.set(layer, key, value, receiver);
+      },
+    });
   }
 
   /** Make this layer a child of another (it follows the parent's transform). */
@@ -46,6 +55,7 @@ export class Layer {
 
   /** Change static properties after creation. */
   set(vars: Record<string, unknown>): this {
+    checkLayerKeys(this.kind, this.id, Object.keys(vars));
     const base = Array.isArray(this.props.rotation) ? vectorComponents(this.props, "rotation") : undefined;
     Object.assign(this.props, vars);
     this.settleRotation(base);
@@ -101,28 +111,89 @@ export function describe(v: unknown): string {
   return `${typeof v} ${String(v)}`;
 }
 
-/** A text layer: `text("Hello", { size, font, weight, color, pos, preset })`. Also takes a counter `{ from, to, dur }`. */
+/**
+ * A text layer: `text("Hello", { size, font, weight, color, pos, preset })`. Also takes a counter `{ from, to, dur }`.
+ * @example
+ * import { comp, text } from "turbomotion";
+ * const film = comp({ width: 1920, height: 1080, fps: 30, dur: 3, bg: "#1a1d29" });
+ * film.add(
+ *   text("Hello", { id: "title", size: 160, weight: 800, color: "#ffffff", align: "center", pos: [960, 440], preset: { name: "rise", at: 0.2 } }),
+ *   text({ from: 0, to: 100, dur: 1.5, suffix: "%" }, { id: "count", size: 120, color: "#ffd166", align: "center", pos: [960, 680] }),
+ * );
+ * export default film;
+ */
 export const text = (content: string | CounterSpec, o: TextOpts = {}): Layer => {
   checkTextContent(content);
   return new Layer("text", { text: content, ...o });
 };
 
-/** A flat rectangle: backgrounds, flashes, mattes. */
+/**
+ * A flat rectangle: backgrounds, flashes, mattes.
+ * @example
+ * import { comp, solid, text } from "turbomotion";
+ * const film = comp({ width: 1920, height: 1080, fps: 30, dur: 3, bg: "#1a1d29" });
+ * film.add(
+ *   solid("#2a4d9b", { id: "card", size: [960, 540], pos: [960, 540] }),
+ *   text("Card", { id: "label", size: 140, weight: 800, color: "#ffffff", align: "center", pos: [960, 540] }),
+ * );
+ * export default film;
+ */
 export const solid = (color: Color, o: SolidOpts = {}): Layer => {
   checkSolidColor(color);
   return new Layer("solid", { color, ...o });
 };
 
-/** A picture: `image("photo.jpg", { fit, focus, camera, parallax })`. */
+/**
+ * A generator shader painted over the whole layer: a noise field, a gradient, grain, or your own `effects/<name>.sksl` with
+ * `@kind generator`. `turbomotion comp fx list` shows each generator's parameters (`params`).
+ * @example
+ * import { comp, texture, text } from "turbomotion";
+ * const film = comp({ width: 1920, height: 1080, fps: 30, dur: 3, bg: "#1a1d29" });
+ * film.add(
+ *   texture("noise", { id: "plate", size: [1920, 1080], pos: [960, 540], opacity: 0.5 }),
+ *   text("Plate", { size: 160, color: "#ffffff", align: "center", pos: [960, 540] }),
+ * );
+ * export default film;
+ */
+export const texture = (shader: string, o: TextureOpts = {}): Layer => {
+  checkTextureShader(shader);
+  return new Layer("texture", { shader, ...o });
+};
+
+/**
+ * A picture: `image("photo.jpg", { fit, focus, camera, parallax })`.
+ * @example
+ * import { comp, image } from "turbomotion";
+ * const film = comp({ width: 1920, height: 1080, fps: 30, dur: 3, bg: "#1a1d29" });
+ * film.add(image("photo.jpg", { id: "photo", fit: "cover", camera: { from: { zoom: 1 }, to: { zoom: 1.15 }, dur: 3 } }));
+ * export default film;
+ */
 export const image = (src: string, o: ImageOpts = {}): Layer => new Layer("image", { src: checkImage(src, o), ...o });
 
-/** A vector shape from raw items: `{rect: [x, y, w, h], radius, fill, stroke}`, `{ellipse: [...]}`, `{d: "M..."}`. */
+/**
+ * A vector shape from raw items: `{rect: [x, y, w, h], radius, fill, stroke}`, `{ellipse: [...]}`, `{d: "M..."}`.
+ * @example
+ * import { comp, shape } from "turbomotion";
+ * const film = comp({ width: 1920, height: 1080, fps: 30, dur: 3, bg: "#1a1d29" });
+ * film.add(shape(
+ *   [{ ellipse: [0, 0, 200, 200], fill: "#ff5a1f" }, { rect: [-300, 240, 600, 16], fill: "#ffffff" }],
+ *   { id: "badge", pos: [960, 440] },
+ * ));
+ * export default film;
+ */
 export const shape = (items: ShapeItem[], o: ShapeOpts = {}): Layer => {
   if (!Array.isArray(items)) throw new Error("shape(items, opts): items must be a list like [{ rect: [-50, -50, 100, 100], fill: \"#fff\" }]");
   return new Layer("shape", { items, ...o });
 };
 
-/** A rectangle centred on its position, optionally rounded: `rect(260, 340, { fill: "#ff6b3d", radius: 18 })`. */
+/**
+ * A rectangle centred on its position, optionally rounded: `rect(260, 340, { fill: "#ff6b3d", radius: 18 })`.
+ * @example
+ * import { comp, rect } from "turbomotion";
+ * const film = comp({ width: 1920, height: 1080, fps: 30, dur: 3, bg: "#1a1d29" });
+ * film.add(rect(260, 340, { id: "card", fill: "#ff6b3d", radius: 18, pos: [960, 540] }));
+ * export default film;
+ */
 export function rect(w: number, h: number, o: RectOpts = {}): Layer {
   checkRectSize(w, h);
   const { fill, radius, stroke, ...layer } = o;
@@ -133,7 +204,17 @@ export function rect(w: number, h: number, o: RectOpts = {}): Layer {
   return shape([item], layer);
 }
 
-/** An invisible handle: parent layers to it to move, scale or rotate them as one. */
+/**
+ * An invisible handle: parent layers to it to move, scale or rotate them as one.
+ * @example
+ * import { comp, group, rect } from "turbomotion";
+ * const film = comp({ width: 1920, height: 1080, fps: 30, dur: 3, bg: "#1a1d29" });
+ * film.add(group({ id: "rig", pos: [960, 540] }, [
+ *   rect(300, 300, { id: "left", fill: "#ff6b3d", pos: [-200, 0] }),
+ *   rect(300, 300, { id: "right", fill: "#3d6bff", pos: [200, 0] }),
+ * ]));
+ * export default film;
+ */
 export function group(o: LayerOpts = {}, children: unknown = []): Layer {
   checkGroupOpts(o);
   const g = new Layer("null", o);
@@ -141,16 +222,48 @@ export function group(o: LayerOpts = {}, children: unknown = []): Layer {
   return g;
 }
 
-/** A 3D camera: `camera({ pos, poi, zoom, dof })`. Shots with 3D layers and no camera get a default one. */
+/**
+ * A 3D camera: `camera({ pos, poi, zoom, dof })`. Shots with 3D layers and no camera get a default one.
+ * @example
+ * import { comp, box, camera } from "turbomotion";
+ * const film = comp({ width: 1920, height: 1080, fps: 30, dur: 3, bg: "#1a1d29" });
+ * film.add(
+ *   box({ size: 300 }, { id: "cube", color: "#e8402f", pos: [960, 540, 0], rotation: [20, 30, 0] }),
+ *   camera({ id: "cam", pos: [960, 540, -1800], poi: [960, 540, 0] }),
+ * );
+ * export default film;
+ */
 export const camera = (o: CameraOpts = {}): Layer => new Layer("camera", o);
 
+/**
+ * A light that shades every `three_d` layer: `light({ kind: "point", pos, color, intensity, radius })`; kinds are ambient, point, directional and spot.
+ * @example
+ * import { comp, box, camera, light } from "turbomotion";
+ * const film = comp({ width: 1920, height: 1080, fps: 30, dur: 3, bg: "#1a1d29" });
+ * film.add(
+ *   light({ id: "key", kind: "point", pos: [400, 200, -500], color: "#ffd9a0", intensity: 1.2, radius: 1400 }),
+ *   box({ size: 300 }, { id: "cube", color: "#e8402f", pos: [960, 540, 0], rotation: [20, 30, 0] }),
+ *   camera({ id: "cam", pos: [960, 540, -1800], poi: [960, 540, 0] }),
+ * );
+ * export default film;
+ */
 export const light = (o: LightOpts): Layer => {
   if (!o || !o.kind) throw new Error('light({ kind }) needs a kind: "ambient", "point", "directional" or "spot"');
   return new Layer("light", o);
 };
 
-/** Escape hatch: any layer the engine knows, as written in `turbomotion comp catalogue`. */
-export const raw = (spec: Record<string, unknown>): Layer => {
+/**
+ * Escape hatch: any layer the engine knows, as written in `turbomotion comp catalogue`.
+ * @example
+ * import { comp, raw, solid } from "turbomotion";
+ * const film = comp({ width: 1920, height: 1080, fps: 30, dur: 3, bg: "#1a1d29" });
+ * film.add(
+ *   solid("#2a4d9b", { id: "plate" }),
+ *   raw({ type: "adjustment", id: "grade", fx: [{ effect: "vignette" }] }),
+ * );
+ * export default film;
+ */
+export const raw = (spec: RawSpec): Layer => {
   const { type, ...rest } = spec;
   if (typeof type !== "string") throw new Error('raw(spec): spec needs a "type", like "particles"');
   return new Layer(type, rest);

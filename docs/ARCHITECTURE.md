@@ -192,11 +192,8 @@ The agent loop is write → `check` → `inspect` → `sheet` → fix. Each step
 * **`sheet --times 0,0.5,1,...`**: a labelled contact sheet of stills, for the questions only eyes can answer.
 * **determinism**: a frame redraws byte-identically; `check --determinism` proves it.
 
-Measuring the agent system itself (not the renderer): `bench/briefs/*.md` are written briefs ("a masked line reveal
-that lands on the beat", "a photo with parallax and grain", "a new VHS effect"). A run is scored by the same
-machinery: did `check` pass first time, how many iterations to a passing assertion set, did the final sheet match the
-brief's checklist. A good system makes the first draft valid and the third draft good; if agents need ten
-iterations, the catalogue, the error messages or the defaults are wrong, not the agent.
+Measuring the agent system itself: the work-package gates in `docs/BUILD_PLAN.md` (section 8) are scored by the same machinery:
+was `check` clean first time, how many iterations to a passing assertion set, does the final sheet match the checklist.
 
 ## Packs: domain graphics outside the platform
 
@@ -214,15 +211,8 @@ A layer `{"type": "pack:studio.globe", ...}` calls the registered pack. A host c
 without `comp` knowing they exist. Packs are registered by the binary. This keeps the globe where it belongs and still
 lets one timeline contain it.
 
-## What else to build, in order of leverage
+## What to build next
 
-1. The four-stage spine with `inspect` and `check` (the agent's eyes).
-2. Shader plugins with the prelude and `fx test` (the agent's hands for new looks).
-3. Image pipeline: probe, mipmapped sampling, Ken Burns, parallax, treat (the agent's own media).
-4. Text engine: per-character animators, GSAP-style staggers, masked line reveals, scramble, counters.
-5. Blocks library with thumbnails (reuse beats invention). Built-ins: lower_third, title_card, stat, holo_slab, compare_two, definition, step_chain, stamp, connector, callout, and a small icon set.
-6. Audio: mix graph, beat/onset detection, `beat:N` time literals (fast-paced editing lives on the beat grid).
-7. Motion blur by temporal sampling, 3D camera and lights, particles.
-8. Alpha export, vertical presets, SVG and Lottie import.
-9. A watch mode that re-renders the current still on every save, and later a GUI over the same `Frame`.
-10. A second GPU backend behind `core::gpu` (Metal is the only one today and is the only place that names it).
+`docs/BUILD_PLAN.md` is the single plan: the ranked problems, the architecture decisions that extend this contract (effect
+bounds and kernels, a per-pixel mesh pipeline, depth-composited 3D, property model v2, the colour pipeline, the parity ledger),
+and every work package with its steps, files and tests. If a change there conflicts with this file, change this file first.

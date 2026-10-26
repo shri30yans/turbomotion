@@ -2,6 +2,7 @@
 
 import { Layer, describe, flatten } from "./layers";
 import { configureMeasure } from "./measure";
+import { checkAdjustmentMattes } from "./matte-check";
 import { inShot } from "./sound";
 import type { CompOpts, OverlayOpts, ShotOpts, TimelineOpts } from "./types";
 
@@ -18,12 +19,26 @@ export class Shot {
     const out: Record<string, unknown> = { ...rest, ...(extra ?? {}) };
     const flat = flatten(layers, `shot "${this.opts.id}" layers`);
     checkIds(flat, `shot "${this.opts.id}"`);
+    checkAdjustmentMattes(flat, `shot "${this.opts.id}"`);
     if (flat.length) out.layers = flat;
     return out;
   }
 }
 
-/** One shot of the edit: its layers, how it comes in (`in`), a 2D `move`, a 3D `camera` move. */
+/**
+ * One shot of the edit: its layers, how it comes in (`in`), a 2D `move`, a 3D `camera` move.
+ * @example
+ * import { comp, shot, text } from "turbomotion";
+ * const film = comp({ width: 1920, height: 1080, fps: 30, bg: "#1a1d29" });
+ * const title = (id: string, words: string) => text(words, { id, size: 160, weight: 800, color: "#ffffff", align: "center", pos: [960, 540] });
+ * film.timeline({
+ *   shots: [
+ *     shot({ id: "one", dur: 1.5, layers: [title("one-title", "One")], move: "push_in" }),
+ *     shot({ id: "two", dur: 1.5, layers: [title("two-title", "Two")], in: { type: "push_left", dur: 0.4 } }),
+ *   ],
+ * });
+ * export default film;
+ */
 export const shot = (opts: ShotOpts): Shot => new Shot(opts);
 
 function checkIds(layers: Layer[], where: string): void {
@@ -86,6 +101,7 @@ export class Film {
     const out: Record<string, unknown> = { ...rest, ...(extra ?? {}) };
     const layers = flatten(this.items, "film.add()");
     checkIds(layers, "the film");
+    checkAdjustmentMattes(layers, "the film");
     if (layers.length) out.layers = layers;
     if (this.edit) {
       const { overlays, shots, hits, ...tl } = this.edit;
@@ -105,5 +121,12 @@ function overlay(o: OverlayOpts): Record<string, unknown> {
   return { ...place, ...layers[0].toJSON() };
 }
 
-/** The film: `comp({ width, height, fps, bg, ... })`, then `film.add(layers)`, `film.shot(...)` and `export default film`. */
+/**
+ * The film: `comp({ width, height, fps, bg, ... })`, then `film.add(layers)`, `film.shot(...)` and `export default film`.
+ * @example
+ * import { comp, text } from "turbomotion";
+ * const film = comp({ width: 1920, height: 1080, fps: 30, dur: 3, bg: "#1a1d29" });
+ * film.add(text("A film", { id: "title", size: 160, weight: 800, color: "#ffffff", align: "center", pos: [960, 540] }));
+ * export default film;
+ */
 export const comp = (opts: CompOpts): Film => new Film(opts);

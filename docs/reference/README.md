@@ -9,3 +9,4 @@ Every page here is generated from the code. Refresh with `turbomotion docs --wri
 * [Effects](effects.md)
 * [Text, motion and expressions](text-and-motion.md)
 * [TypeScript SDK](sdk.md)
+* [Not supported and not built](parity.md)

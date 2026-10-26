@@ -61,7 +61,7 @@ pub enum Command {
         #[arg(long)]
         once: bool,
     },
-    /// Write a starting point: a typed scene folder (`new scene NAME`)
+    /// Write a starting point: a typed scene folder (`new scene NAME`) or a one-effect probe film (`new probe NAME`)
     New {
         #[command(subcommand)]
         what: New,
@@ -106,6 +106,15 @@ pub enum New {
         /// Also write `DIR/probe_NAME.ts`, a film that renders only this scene
         #[arg(long)]
         probe: bool,
+    },
+    /// `DIR/NAME/{film.ts, effects/NAME.sksl, blocks/}`: a film with `fx_path` and `block_path`, a text layer under the new
+    /// effect, and the command that renders its contact sheet
+    Probe {
+        /// The effect's name: lowercase letters, digits and _ (it is also the folder and the `@effect` name)
+        name: String,
+        /// Where the probe folder goes
+        #[arg(long, default_value = ".")]
+        dir: PathBuf,
     },
 }
 
@@ -183,6 +192,12 @@ pub fn run(command: Command) -> Result<()> {
             let created = crate::scaffold::scene(&name, &dir, probe)?;
             created.files.iter().for_each(|f| println!("created {}", f.display()));
             println!("render it with:\n  {}", created.render);
+            Ok(())
+        }
+        Command::New { what: New::Probe { name, dir } } => {
+            let created = crate::scaffold::probe(&name, &dir)?;
+            created.files.iter().for_each(|f| println!("created {}", f.display()));
+            println!("render its sheet with:\n  {}", created.render);
             Ok(())
         }
         Command::Build { script, out } => build_to(&script, out).map(|_| ()),

@@ -15,7 +15,7 @@ pub fn examples() -> Vec<Value> {
         ("shape item tweens", json!({"type":"shape","pos":[320,180],"items":[{"rect":[-100,-20,200,40],"anchor":[0,0],"scale":[{"from":0.5,"to":1,"dur":1},1],"trim":{"end":{"from":0,"to":1,"dur":1}},"stroke":{"color":"#ffffff","width":4},"fill":{"from":"#2040ff","to":"#ff5030","dur":1}}]})),
         ("glass panel: an adjustment layer limited by a mask blurs what is behind it", json!([
             {"type":"texture","shader":"aura"},
-            {"type":"text","text":"Behind glass","font":"Avenir Next","weight":800,"size":90,"color":"#ffffff","pos":[320,180],"align":"center"},
+            {"type":"text","text":"Behind glass","font":"Avenir Next","weight":800,"size":56,"color":"#ffffff","pos":[320,180],"align":"center"},
             {"type":"adjustment","masks":[{"path":{"rect":[120,100,400,160],"radius":28}}],"fx":[{"effect":"blur","radius":14},{"effect":"brightness","amount":0.08}]}
         ])),
         ("colour tween", json!({"type":"solid","color":{"from":"#2040ff","to":"#ff5030","dur":1}})),

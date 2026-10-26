@@ -54,7 +54,7 @@ fn an_unknown_text_option_names_the_option_the_nearest_valid_one_and_the_line() 
 
 #[test]
 fn every_bad_layer_of_a_film_is_reported_at_its_own_script_line() {
-    let path = film("many", "film.add(text('a', { id: 'a', colour: '#fff' } as any));\nfilm.add(solid('#000', { id: 'b', dure: 2 } as any));\nfilm.add(shape([{ ellipse: [0, 0, 5, 5], wobble: 1 } as any], { id: 'c' }));");
+    let path = film("many", "film.add(text('a', { id: 'a', weight: 'bold' } as any));\nfilm.add(solid('#000', { id: 'b', dur: 'long' } as any));\nfilm.add(shape([{ ellipse: [0, 0, 5, 5], wobble: 1 } as any], { id: 'c' }));");
     let report = auto(&path, None, None, true).unwrap();
     assert!(!report.success);
     let lines: Vec<&str> = report.diagnostics.lines().collect();

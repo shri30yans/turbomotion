@@ -1,0 +1,8 @@
+// @effect __NAME__
+// @summary Starting point: mixes the layer's colours toward their inverse (replace this with what the effect looks like).
+// @param amount float 0.5 0 1 -- how far the colours move toward their inverse
+// @example {"effect": "__NAME__", "amount": 0.8}
+half4 main(float2 xy) {
+    float4 s = straight(xy);
+    return premul(mix(s.rgb, 1.0 - s.rgb, amount), s.a);
+}

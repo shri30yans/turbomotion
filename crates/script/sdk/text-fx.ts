@@ -14,6 +14,11 @@ export const textOnPath = (content: string, path: TextPathOpts, o: TextOpts = {}
 /**
  * Text circling a point: one exact lap every `lap` seconds, forever (the lap is `travel` 0 to 1 on a closed path, so the loop has no seam).
  * `orbitText("SPIN ", 300, 6, { pos: [960, 540], size: 60 })`. A negative `lap` goes the other way round.
+ * @example
+ * import { comp, orbitText } from "turbomotion";
+ * const film = comp({ width: 1920, height: 1080, fps: 30, dur: 3, bg: "#1a1d29" });
+ * film.add(orbitText("SPIN ", 300, 6, { id: "ring", pos: [960, 540], size: 60, color: "#ffffff" }));
+ * export default film;
  */
 export function orbitText(content: string, radius: number, lap: Seconds, o: TextOpts = {}): Layer {
   return textOnPath(content, { ellipse: [0, 0, radius, radius], travel: `time / ${lap}` }, o);

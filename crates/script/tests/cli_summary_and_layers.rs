@@ -10,21 +10,22 @@ f.timeline({shots:[
   shot({id:'outro',dur:2,layers:[text('c',{id:'glow',pos:[70,50]})]})]});
 export default f;";
 
-fn film() -> (serde_json::Value, std::path::PathBuf) {
-    let dir = common::scratch("cli", "layers");
+/// `test` names the scratch folder: tests of one process run in parallel and must not write the same `film.ts`.
+fn film(test: &str) -> (serde_json::Value, std::path::PathBuf) {
+    let dir = common::scratch("cli", &format!("layers-{test}"));
     fs::write(dir.join("film.ts"), FILM).unwrap();
     (build(&dir.join("film.ts"), &Default::default()).unwrap(), dir)
 }
 
 #[test]
 fn the_summary_counts_the_layers_inside_shots() {
-    let (film, _) = film();
+    let (film, _) = film("summary");
     assert!(summary(&film).ends_with("2 shots, 3 layers"), "{}", summary(&film));
 }
 
 #[test]
 fn a_bare_id_inside_a_shot_is_inspected_and_an_ambiguous_one_is_refused() {
-    let (film, dir) = film();
+    let (film, dir) = film("bare-id");
     let frame = turbomotion_comp::api::inspect(film.clone(), &dir, 0.5, Some("title")).unwrap();
     assert_eq!(frame["layers"][0]["id"], "title");
     let error = turbomotion_comp::api::inspect(film, &dir, 0.5, Some("glow")).unwrap_err().to_string();

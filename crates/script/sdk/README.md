@@ -11,6 +11,7 @@ turbomotion sdk watch   film.ts --sheet out.png --times 0.5,2 [--shot hook] [--i
 turbomotion sdk inspect film.ts --t 2.5 [--layer s4/word] [--shot hook]
 turbomotion sdk check   film.ts [--tsc path/to/tsc.js] [--schema]
 turbomotion sdk new scene NAME [--dir DIR] [--probe]
+turbomotion sdk new probe NAME [--dir DIR]
 ```
 
 - `build` and `render` write `film.comp.json` beside the script and record the script folder as the asset root.
@@ -19,6 +20,7 @@ turbomotion sdk new scene NAME [--dir DIR] [--probe]
 - `inspect` prints the evaluated frame at `--t`; `--layer shot/layer` reaches inside shots and precomps (time is the containing comp's).
 - `check` runs strict TypeScript through an installed `tsc` (never installs one). With no `tsc` (or `--schema`) it runs the film, validates every emitted layer with the engine (parse, plan, evaluate, lint) and reports each complaint at the `film.ts:LINE:COL` that created the layer. It prints which mode ran.
 - `new scene NAME` writes `DIR/NAME/index.ts` (a function that takes typed options and returns a `shot(...)`) and `DIR/NAME/types.ts`; with `--probe` it also writes `DIR/probe_NAME.ts`, a film that renders only that scene. NAME is a folder-safe identifier (lowercase letters, digits, `-`, `_`); `chevron-tunnel` gives `chevronTunnel` and `ChevronTunnelOptions`. It never overwrites: if any target exists it lists the conflicts and writes nothing. It prints what it created and the `sdk render` command for the probe.
+- `new probe NAME` writes `DIR/NAME/film.ts`, `DIR/NAME/effects/NAME.sksl` (a working starter effect with its header and `@example`) and `DIR/NAME/blocks/`: a film whose `comp({ fx_path: ["effects"], block_path: ["blocks"] })` names both folders, with one text layer under the new effect (`fx: [{ effect: "NAME", amount: 0.8 }]`). It prints the one command that renders the contact sheet (`turbomotion sdk render DIR/NAME/film.ts --sheet DIR/NAME/sheet.png --times 0.5,1.5 --sheet-only`). NAME is also the effect's name, so it is lowercase letters, digits and `_`, and not the name of an existing effect. It never overwrites.
 - `import ... from "./scenes/vs"` resolves like standard modules: `vs.ts`, then `vs/index.ts`. A miss lists every path tried. `--layer` accepts `id` or `shot/id`; an id two shots hold is an error that lists both.
 - `--sdk-dir crates/script/sdk` loads the SDK from disk (new modules need no rebuild); without it the copy embedded in the binary is used. A chosen directory is authoritative.
 
@@ -42,7 +44,7 @@ Working examples: `examples/sdk/launch/film.ts`, and one per component in `examp
 | Area | Names |
 | --- | --- |
 | Film | `comp({width, height, fps, bg?, dur?, root?, fonts?, bpm?, look?})`; `film.add(...layers)`; `film.timeline({shots, overlays?, hits?, transition?, mblur?})` |
-| Layers | `text`, `rect(w, h, {fill, radius, stroke})`, `shape(items, o)`, `image(src, o)`, `solid`, `group(o, children)`, `camera`, `light`, `raw({type, ...})` for any other kind |
+| Layers | `text`, `rect(w, h, {fill, radius, stroke})`, `shape(items, o)`, `image(src, o)`, `solid(color, opts)`, `texture(shader, opts)`, `group(o, children)`, `camera`, `light`, `raw({type, ...})` for any other kind |
 | Artwork | `svg(markup \| pathData, {width, fill, stroke, viewBox})`, `svgFile("icons/x.svg", opts)` (engine SVG importer), `pixelSprite(rows, palette, {px})`, `image()` checks `fit`, `sampling`, `size`, `focus`, `camera`, `parallax` |
 | 3D | `mesh`, `text3d`, `letters3d(word, {pos, tracking})`, `box`, `sphere`, `torus`, `cylinder`, `extrude`, `spin(deg_per_s)` |
 | Timeline | `timeline({ease?, duration?})`: `.to .from .fromTo .set .addLabel .hit .hits .duration`; see Tweens |
@@ -61,7 +63,8 @@ Layer options: `id, pos | x,y,z, anchor, scale, skew, rotation, orientation, aim
 The first arguments are positional, everything else is an options object. A wrong guess is refused where it is written, with the form below.
 
 ```ts
-solid("#101828", { size: [1920, 1080] });          // colour FIRST ("#hex", or [r, g, b]); size defaults to the whole frame
+solid("#101828", { size: [1920, 1080] });          // solid(color, opts): colour FIRST ("#hex", or [r, g, b]); size defaults to the whole frame
+texture("noise", { params: { scale: 0.02 } });      // texture(shader, opts): a generator's name FIRST (`turbomotion comp fx list`), its parameters in `params`
 text("Hello", { size: 96, color: "#fff" });         // the words FIRST; size, font, weight, color, align, width... are options
 text({ from: 0, to: 100, dur: 1.2, suffix: "%" });  // a counter instead of words ({ from: "A", to: "B" } swaps the string)
 rect(260, 340, { fill: "#ff6b3d", radius: 18 });    // width, height, then options
@@ -70,8 +73,15 @@ group({ id: "rig", pos: [960, 540] }, [a, b]);      // options, then the childre
 raw({ type: "adjustment", fx: [{ effect: "vignette" }] });  // any other kind, as `comp catalogue layer <type>` prints it
 ```
 
-An unknown option (`colour`, `sizee`) is reported with the nearest valid name and the full list. `raw()` is the only way to
-write a plain `{ type: ... }` object as a layer.
+A layer's effects are its `fx` key (a list of `{ effect, ...parameters }`), written in the options or later with `layer.set({ fx: [...] })`;
+`layer.effects = [...]` is refused (it would write nowhere), and so is any other option assigned as a field.
+An unknown option (`colour`, `sizee`, `outline`) throws where the layer is made (the line is in the message), with the nearest valid name
+(`outline` is `outline_only`) and the full list; the engine's own key list decides, so it cannot drift from the renderer.
+An adjustment layer is limited by its own `masks`: the engine does not apply a `matte` to one, and the SDK refuses a matte whose
+source is a hidden layer. `raw()` is the only way to write a plain `{ type: ... }` object as a layer.
+
+`TURBOMOTION_BIN` is the convention for the binary that scripts and tools run (default `turbomotion/target/release/turbomotion`); the
+engine itself never reads it. A probe's film header says so too.
 
 ## Shapes
 

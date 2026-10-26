@@ -159,5 +159,15 @@ function staggerOffsets(n: number, s: Stagger | undefined): number[] {
   return Array.from({ length: n }, (_, i) => each * (from === "end" ? n - 1 - i : from === "center" ? Math.abs(i - (n - 1) / 2) : i));
 }
 
-/** A GSAP-style timeline: `tl.to(layer, { opacity: 1, duration: 0.5 }, at)`, `from`, `set`, with `stagger` and `overwrite`. */
+/**
+ * A GSAP-style timeline: `tl.to(layer, { opacity: 1, duration: 0.5 }, at)`, `from`, `set`, with `stagger` and `overwrite`.
+ * @example
+ * import { comp, text, timeline } from "turbomotion";
+ * const film = comp({ width: 1920, height: 1080, fps: 30, dur: 3, bg: "#1a1d29" });
+ * const title = text("Slide", { id: "title", size: 160, weight: 800, color: "#ffffff", align: "center", pos: [960, 540] });
+ * const tl = timeline({ ease: "power2.out" });
+ * tl.from(title, { opacity: 0, x: -200, duration: 0.8 }, 0.2);
+ * film.add(title);
+ * export default film;
+ */
 export const timeline = (defaults: { ease?: Ease; duration?: Seconds } = {}): Timeline => new Timeline(defaults);

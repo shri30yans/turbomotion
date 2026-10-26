@@ -10,6 +10,7 @@ mod module_path;
 pub mod scaffold;
 mod measure;
 mod animation;
+mod vocabulary;
 pub mod shot;
 pub mod run;
 pub mod strip;

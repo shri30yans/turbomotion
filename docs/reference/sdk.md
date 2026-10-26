@@ -2,7 +2,7 @@
 
 # TypeScript SDK
 
-The functions a film imports from `"turbomotion"`, taken from the doc comments on the exports in `crates/script/sdk`. Only documented exports are listed.
+The functions a film imports from `"turbomotion"`, taken from the doc comments on the exports in `crates/script/sdk`. Only documented exports are listed. Blocks marked `ts example` are whole film scripts: save one as `film.ts` and `turbomotion sdk build film.ts` builds it (a test builds and checks every one).
 
 ## `arg-check`
 
@@ -33,6 +33,26 @@ export function checkGroupOpts(o: unknown): void
 ```
 `group(opts, children)`: options first, then the layers that follow it.
 
+```ts
+export function checkLayerKeys(kind: string, id: string, keys: string[]): void
+```
+Every key of a layer must be one the engine reads for that type; the engine itself says which (and the nearest valid name).
+
+```ts
+export function checkTextureShader(shader: unknown): void
+```
+`texture("noise", opts)`: the generator's name is the first argument, not an option.
+
+```ts
+export const LAYER_STATE = ["id", "props", "tweens", "children"];
+```
+Layer properties a script may still assign after construction: the builder's own state (everything else is written by \`set\`).
+
+```ts
+export function refuseLayerAssignment(kind: string, id: string, key: string): never
+```
+\`layer.effects = [...]\` writes nowhere: a layer's options are the engine's keys, in \`props\`. Name the place that works.
+
 ## `assets`
 
 Artwork from code: SVG through the engine's importer (`svg`, `svgFile`) and pixel art from rows of characters.
@@ -41,6 +61,13 @@ Artwork from code: SVG through the engine's importer (`svg`, `svgFile`) and pixe
 export function svg(source: string, o: SvgOpts = {}): Layer
 ```
 SVG markup (`"<svg ...>"`) or bare path data (`"M0 0 L10 0 ..."`) as a shape layer; its `anchor` is the artwork's centre.
+
+```ts example
+import { comp, svg } from "turbomotion";
+const film = comp({ width: 1920, height: 1080, fps: 30, dur: 3, bg: "#1a1d29" });
+film.add(svg("<svg viewBox='0 0 10 10'><path d='M5 0 L10 10 L0 10 Z' fill='#ffd166'/></svg>", { id: "triangle", width: 400, pos: [960, 540] }));
+export default film;
+```
 
 ```ts
 export function svgFile(path: string, o: SvgOpts = {}): Layer
@@ -51,6 +78,17 @@ An `.svg` file next to the film (or under its `root`), imported like `svg()`. Th
 export function pixelSprite(rows: string[], palette: Record<string, Color>, o: PixelOpts = {}): Layer
 ```
 Pixel art from rows of characters: `pixelSprite(["..aa..", ".aaaa."], { a: "#ff5a1f" }, { px: 6 })`. `.` and space are clear; centred on its position.
+
+```ts example
+import { comp, pixelSprite } from "turbomotion";
+const film = comp({ width: 1920, height: 1080, fps: 30, dur: 3, bg: "#1a1d29" });
+film.add(pixelSprite(
+  ["..aa..", ".aaaa.", "aabbaa", "aaaaaa", ".a..a."],
+  { a: "#ff5a1f", b: "#ffffff" },
+  { id: "invader", px: 40, pos: [960, 540] },
+));
+export default film;
+```
 
 ## `comp`
 
@@ -66,6 +104,19 @@ export const shot = (opts: ShotOpts): Shot
 ```
 One shot of the edit: its layers, how it comes in (`in`), a 2D `move`, a 3D `camera` move.
 
+```ts example
+import { comp, shot, text } from "turbomotion";
+const film = comp({ width: 1920, height: 1080, fps: 30, bg: "#1a1d29" });
+const title = (id: string, words: string) => text(words, { id, size: 160, weight: 800, color: "#ffffff", align: "center", pos: [960, 540] });
+film.timeline({
+  shots: [
+    shot({ id: "one", dur: 1.5, layers: [title("one-title", "One")], move: "push_in" }),
+    shot({ id: "two", dur: 1.5, layers: [title("two-title", "Two")], in: { type: "push_left", dur: 0.4 } }),
+  ],
+});
+export default film;
+```
+
 ```ts
 export class Film
 ```
@@ -75,6 +126,13 @@ A composition being built: add layers, shots, audio and markers, and it becomes 
 export const comp = (opts: CompOpts): Film
 ```
 The film: `comp({ width, height, fps, bg, ... })`, then `film.add(layers)`, `film.shot(...)` and `export default film`.
+
+```ts example
+import { comp, text } from "turbomotion";
+const film = comp({ width: 1920, height: 1080, fps: 30, dur: 3, bg: "#1a1d29" });
+film.add(text("A film", { id: "title", size: 160, weight: 800, color: "#ffffff", align: "center", pos: [960, 540] }));
+export default film;
+```
 
 ## `compile`
 
@@ -513,40 +571,154 @@ export const text = (content: string | CounterSpec, o: TextOpts = {}): Layer
 ```
 A text layer: `text("Hello", { size, font, weight, color, pos, preset })`. Also takes a counter `{ from, to, dur }`.
 
+```ts example
+import { comp, text } from "turbomotion";
+const film = comp({ width: 1920, height: 1080, fps: 30, dur: 3, bg: "#1a1d29" });
+film.add(
+  text("Hello", { id: "title", size: 160, weight: 800, color: "#ffffff", align: "center", pos: [960, 440], preset: { name: "rise", at: 0.2 } }),
+  text({ from: 0, to: 100, dur: 1.5, suffix: "%" }, { id: "count", size: 120, color: "#ffd166", align: "center", pos: [960, 680] }),
+);
+export default film;
+```
+
 ```ts
 export const solid = (color: Color, o: SolidOpts = {}): Layer
 ```
 A flat rectangle: backgrounds, flashes, mattes.
+
+```ts example
+import { comp, solid, text } from "turbomotion";
+const film = comp({ width: 1920, height: 1080, fps: 30, dur: 3, bg: "#1a1d29" });
+film.add(
+  solid("#2a4d9b", { id: "card", size: [960, 540], pos: [960, 540] }),
+  text("Card", { id: "label", size: 140, weight: 800, color: "#ffffff", align: "center", pos: [960, 540] }),
+);
+export default film;
+```
+
+```ts
+export const texture = (shader: string, o: TextureOpts = {}): Layer
+```
+A generator shader painted over the whole layer: a noise field, a gradient, grain, or your own `effects/<name>.sksl` with `@kind generator`. `turbomotion comp fx list` shows each generator's parameters (`params`).
+
+```ts example
+import { comp, texture, text } from "turbomotion";
+const film = comp({ width: 1920, height: 1080, fps: 30, dur: 3, bg: "#1a1d29" });
+film.add(
+  texture("noise", { id: "plate", size: [1920, 1080], pos: [960, 540], opacity: 0.5 }),
+  text("Plate", { size: 160, color: "#ffffff", align: "center", pos: [960, 540] }),
+);
+export default film;
+```
 
 ```ts
 export const image = (src: string, o: ImageOpts = {}): Layer
 ```
 A picture: `image("photo.jpg", { fit, focus, camera, parallax })`.
 
+```ts example
+import { comp, image } from "turbomotion";
+const film = comp({ width: 1920, height: 1080, fps: 30, dur: 3, bg: "#1a1d29" });
+film.add(image("photo.jpg", { id: "photo", fit: "cover", camera: { from: { zoom: 1 }, to: { zoom: 1.15 }, dur: 3 } }));
+export default film;
+```
+
 ```ts
 export const shape = (items: ShapeItem[], o: ShapeOpts = {}): Layer
 ```
 A vector shape from raw items: `{rect: [x, y, w, h], radius, fill, stroke}`, `{ellipse: [...]}`, `{d: "M..."}`.
+
+```ts example
+import { comp, shape } from "turbomotion";
+const film = comp({ width: 1920, height: 1080, fps: 30, dur: 3, bg: "#1a1d29" });
+film.add(shape(
+  [{ ellipse: [0, 0, 200, 200], fill: "#ff5a1f" }, { rect: [-300, 240, 600, 16], fill: "#ffffff" }],
+  { id: "badge", pos: [960, 440] },
+));
+export default film;
+```
 
 ```ts
 export function rect(w: number, h: number, o: RectOpts = {}): Layer
 ```
 A rectangle centred on its position, optionally rounded: `rect(260, 340, { fill: "#ff6b3d", radius: 18 })`.
 
+```ts example
+import { comp, rect } from "turbomotion";
+const film = comp({ width: 1920, height: 1080, fps: 30, dur: 3, bg: "#1a1d29" });
+film.add(rect(260, 340, { id: "card", fill: "#ff6b3d", radius: 18, pos: [960, 540] }));
+export default film;
+```
+
 ```ts
 export function group(o: LayerOpts = {}, children: unknown = []): Layer
 ```
 An invisible handle: parent layers to it to move, scale or rotate them as one.
+
+```ts example
+import { comp, group, rect } from "turbomotion";
+const film = comp({ width: 1920, height: 1080, fps: 30, dur: 3, bg: "#1a1d29" });
+film.add(group({ id: "rig", pos: [960, 540] }, [
+  rect(300, 300, { id: "left", fill: "#ff6b3d", pos: [-200, 0] }),
+  rect(300, 300, { id: "right", fill: "#3d6bff", pos: [200, 0] }),
+]));
+export default film;
+```
 
 ```ts
 export const camera = (o: CameraOpts = {}): Layer
 ```
 A 3D camera: `camera({ pos, poi, zoom, dof })`. Shots with 3D layers and no camera get a default one.
 
+```ts example
+import { comp, box, camera } from "turbomotion";
+const film = comp({ width: 1920, height: 1080, fps: 30, dur: 3, bg: "#1a1d29" });
+film.add(
+  box({ size: 300 }, { id: "cube", color: "#e8402f", pos: [960, 540, 0], rotation: [20, 30, 0] }),
+  camera({ id: "cam", pos: [960, 540, -1800], poi: [960, 540, 0] }),
+);
+export default film;
+```
+
 ```ts
-export const raw = (spec: Record<string, unknown>): Layer
+export const light = (o: LightOpts): Layer
+```
+A light that shades every `three_d` layer: `light({ kind: "point", pos, color, intensity, radius })`; kinds are ambient, point, directional and spot.
+
+```ts example
+import { comp, box, camera, light } from "turbomotion";
+const film = comp({ width: 1920, height: 1080, fps: 30, dur: 3, bg: "#1a1d29" });
+film.add(
+  light({ id: "key", kind: "point", pos: [400, 200, -500], color: "#ffd9a0", intensity: 1.2, radius: 1400 }),
+  box({ size: 300 }, { id: "cube", color: "#e8402f", pos: [960, 540, 0], rotation: [20, 30, 0] }),
+  camera({ id: "cam", pos: [960, 540, -1800], poi: [960, 540, 0] }),
+);
+export default film;
+```
+
+```ts
+export const raw = (spec: RawSpec): Layer
 ```
 Escape hatch: any layer the engine knows, as written in `turbomotion comp catalogue`.
+
+```ts example
+import { comp, raw, solid } from "turbomotion";
+const film = comp({ width: 1920, height: 1080, fps: 30, dur: 3, bg: "#1a1d29" });
+film.add(
+  solid("#2a4d9b", { id: "plate" }),
+  raw({ type: "adjustment", id: "grade", fx: [{ effect: "vignette" }] }),
+);
+export default film;
+```
+
+## `matte-check`
+
+An adjustment layer applies to what is below it, limited by its own `masks`. The engine does not read a `matte` on an adjustment layer, and a matte source that is hidden is drawn nowhere, so such a film would apply the adjustment to the whole frame without saying so. Refuse it where the film is written, naming the layers.
+
+```ts
+export function checkAdjustmentMattes(layers: Layer[], where: string): void
+```
+Throw when an adjustment layer takes a matte from a layer in the same list that is `hidden`.
 
 ## `measure`
 
@@ -594,6 +766,25 @@ Interrupted properties retain their exact easing via the engine's scalar express
 export function overwritten(tweens: Tween[], base: Value | undefined, id: string, prop: string, local: LayerTime): unknown
 ```
 Segment times are on the timeline's clock; the expressions it writes use the layer's own time (`local`).
+
+## `raw-types`
+
+The two builders that take the engine's own vocabulary: `texture` (a generator and its parameters) and `raw` (any layer type).
+
+```ts
+export type TextureParam = number | string | Color | Vec2 | { [key: string]: unknown };
+```
+One generator parameter, as `turbomotion comp fx list` shows it: a number, a colour or a name (a choice), a point, or an animated property.
+
+```ts
+export interface TextureOpts extends LayerOpts
+```
+What a `texture` layer takes besides the layer options: the generator's `params` and the size it paints.
+
+```ts
+export interface RawSpec
+```
+Any layer the engine knows, as `turbomotion comp catalogue layer <type>` prints it: `type` plus that type's keys.
 
 ## `relative`
 
@@ -724,6 +915,13 @@ export function orbitText(content: string, radius: number, lap: Seconds, o: Text
 ```
 Text circling a point: one exact lap every `lap` seconds, forever (the lap is `travel` 0 to 1 on a closed path, so the loop has no seam). `orbitText("SPIN ", 300, 6, { pos: [960, 540], size: 60 })`. A negative `lap` goes the other way round.
 
+```ts example
+import { comp, orbitText } from "turbomotion";
+const film = comp({ width: 1920, height: 1080, fps: 30, dur: 3, bg: "#1a1d29" });
+film.add(orbitText("SPIN ", 300, 6, { id: "ring", pos: [960, 540], size: 60, color: "#ffffff" }));
+export default film;
+```
+
 ```ts
 export const wrapText = (content: string, kind: "cylinder" | "sphere", o: TextOpts & { radius?: TextSurfaceOpts["radius"]; turn?: TextSurfaceOpts["turn"]; back?: boolean } = {}): Layer
 ```
@@ -763,6 +961,16 @@ export const box = (g: Omit<BoxGeometry, "kind">, o?: MeshOpts): Layer
 ```
 A box: `box({ size, height?, depth? }, { color, side, pos, rotation })`.
 
+```ts example
+import { comp, box, camera } from "turbomotion";
+const film = comp({ width: 1920, height: 1080, fps: 30, dur: 3, bg: "#1a1d29" });
+film.add(
+  box({ size: 300 }, { id: "cube", color: "#e8402f", pos: [960, 540, 0], rotation: [20, 30, 0] }),
+  camera({ id: "cam", pos: [960, 540, -1800], poi: [960, 540, 0] }),
+);
+export default film;
+```
+
 ```ts
 export const sphere = (g: Omit<SphereGeometry, "kind">, o?: MeshOpts): Layer
 ```
@@ -788,10 +996,30 @@ export function text3d(content: string, o: Text3DOpts = {}): Layer
 ```
 Extruded text: `text3d("Hi", { font, weight, size, depth, bevel, color, side, material, ...layer })`.
 
+```ts example
+import { comp, camera, text3d } from "turbomotion";
+const film = comp({ width: 1920, height: 1080, fps: 30, dur: 3, bg: "#1a1d29" });
+film.add(
+  text3d("Hi", { id: "word", size: 300, weight: 800, depth: 60, bevel: 6, color: "#ffd166", side: "#c2410c", pos: [960, 540, 0], rotation: [20, 20, 0] }),
+  camera({ id: "cam", pos: [960, 540, -1800], poi: [960, 540, 0] }),
+);
+export default film;
+```
+
 ```ts
 export function letters3d(word: string, o: Letters3DOpts = {}): Layer[]
 ```
 Split `word` into one 3D text layer per letter, centred on `pos` (default the origin: pass your own). Letter boxes come from the renderer's own shaping (`measure`), so kerning and tracking match flat text. Spaces take room but make no layer. Returns the layers in reading order, ready for a staggered tween.
+
+```ts example
+import { comp, camera, letters3d } from "turbomotion";
+const film = comp({ width: 1920, height: 1080, fps: 30, dur: 3, bg: "#1a1d29" });
+film.add(
+  ...letters3d("MOVE", { id: "m", pos: [960, 540, 0], size: 260, depth: 50, color: "#ffd166", side: "#c2410c", rotation: [15, 20, 0] }),
+  camera({ id: "cam", pos: [960, 540, -1800], poi: [960, 540, 0] }),
+);
+export default film;
+```
 
 ```ts
 export function spin(degreesPerSecond: number, from = 0): string
@@ -811,6 +1039,16 @@ Tweens placed on a time axis, compiled into each layer's keyframes.
 export const timeline = (defaults: { ease?: Ease; duration?: Seconds } = {}): Timeline
 ```
 A GSAP-style timeline: `tl.to(layer, { opacity: 1, duration: 0.5 }, at)`, `from`, `set`, with `stagger` and `overwrite`.
+
+```ts example
+import { comp, text, timeline } from "turbomotion";
+const film = comp({ width: 1920, height: 1080, fps: 30, dur: 3, bg: "#1a1d29" });
+const title = text("Slide", { id: "title", size: 160, weight: 800, color: "#ffffff", align: "center", pos: [960, 540] });
+const tl = timeline({ ease: "power2.out" });
+tl.from(title, { opacity: 0, x: -200, duration: 0.8 }, 0.2);
+film.add(title);
+export default film;
+```
 
 ## `tween-types`
 

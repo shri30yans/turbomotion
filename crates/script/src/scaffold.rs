@@ -8,6 +8,8 @@ use anyhow::{bail, ensure, Result};
 const INDEX: &str = include_str!("../templates/scene/index.ts");
 const TYPES: &str = include_str!("../templates/scene/types.ts");
 const PROBE: &str = include_str!("../templates/scene/probe.ts");
+const EFFECT_FILM: &str = include_str!("../templates/probe/film.ts");
+const EFFECT_SHADER: &str = include_str!("../templates/probe/effect.sksl");
 
 /// What a scaffold wrote and the command that renders it.
 #[derive(Debug)]
@@ -61,6 +63,35 @@ pub fn scene(name: &str, dir: &Path, probe: bool) -> Result<Created> {
     Ok(Created {
         files: plan.into_iter().map(|(path, _)| path).collect(),
         render: format!("turbomotion sdk render {entry} --out {name}.mp4 --sheet {name}.png --times 0.5,1 --sheet-only"),
+    })
+}
+
+/// An effect name is an identifier (`@effect` allows letters, digits and underscores) that is not already an effect.
+fn validate_effect(name: &str) -> Result<()> {
+    let mut chars = name.chars();
+    let ok = chars.next().is_some_and(|c| c.is_ascii_lowercase()) && chars.all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_');
+    ensure!(ok, "probe name {name:?} is the name of an effect: start with a lowercase letter, then lowercase letters, digits and _");
+    let taken = turbomotion_comp::fxlib::Library::builtin()?.descriptors().iter().any(|d| d.name == name);
+    ensure!(!taken, "{name:?} is already an effect (`turbomotion comp fx list`); pick another name");
+    Ok(())
+}
+
+/// `sdk new probe NAME`: `dir/NAME/{film.ts, effects/NAME.sksl, blocks/}`. The film puts one text layer under the
+/// effect, names both folders in `fx_path` and `block_path`, and renders as a contact sheet. Nothing is written if any file exists.
+pub fn probe(name: &str, dir: &Path) -> Result<Created> {
+    validate_effect(name)?;
+    let root = dir.join(name);
+    let plan = [(root.join("film.ts"), fill(EFFECT_FILM, name)), (root.join("effects").join(format!("{name}.sksl")), fill(EFFECT_SHADER, name)), (root.join("blocks").join(".gitkeep"), String::new())];
+    let conflicts: Vec<String> = plan.iter().filter(|(path, _)| path.exists()).map(|(path, _)| path.display().to_string()).collect();
+    ensure!(conflicts.is_empty(), "refusing to overwrite: {}", conflicts.join(", "));
+    for (path, text) in &plan {
+        fs::create_dir_all(path.parent().expect("every file is in a folder"))?;
+        fs::write(path, text)?;
+    }
+    let (film, sheet) = (root.join("film.ts"), root.join("sheet.png"));
+    Ok(Created {
+        files: plan.into_iter().map(|(path, _)| path).collect(),
+        render: format!("turbomotion sdk render {} --sheet {} --times 0.5,1.5 --sheet-only", film.display(), sheet.display()),
     })
 }
 

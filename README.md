@@ -12,7 +12,7 @@ crates/core     the platform: GPU context, encoder, parallel scheduler, shader r
 crates/comp     compositions: schema -> plan -> eval -> render (layers, masks, mattes, text, particles, 3D, audio)
 crates/script   TypeScript authoring: strips types, runs the script on embedded QuickJS, emits a composition
 crates/cli      the `turbomotion` binary: `comp` and `sdk` subcommands, nothing else
-docs/           ARCHITECTURE.md (the contract), reference/ (generated), AGENT_FRICTION.md, agent-briefs/
+docs/           ARCHITECTURE.md (the contract), BUILD_PLAN.md (what to build, step by step), reference/ (generated)
 examples/       small runnable compositions, one per capability
 ```
 

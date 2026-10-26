@@ -3,6 +3,8 @@
 
 import type { Color } from "./types";
 
+declare const __tm_layer_problems: (type: string, label: string, keys: string) => string;
+
 /** What was passed, short enough for a message. */
 export function show(v: unknown): string {
   if (v === null) return "null";
@@ -45,4 +47,31 @@ export function checkRectSize(w: unknown, h: unknown): void {
 export function checkGroupOpts(o: unknown): void {
   if (o === undefined || (o && typeof o === "object" && !Array.isArray(o) && typeof (o as { toJSON?: unknown }).toJSON !== "function")) return;
   throw new Error(`group(opts, children): opts is an options object like { id: "rig", pos: [960, 540] } and the layers go second: group({ id: "rig" }, [a, b]); got ${show(o)}`);
+}
+
+/** Every key of a layer must be one the engine reads for that type; the engine itself says which (and the nearest valid name). */
+export function checkLayerKeys(kind: string, id: string, keys: string[]): void {
+  const problems: string[] = JSON.parse(__tm_layer_problems(kind, `${kind} layer ${JSON.stringify(id)}`, JSON.stringify(keys)));
+  if (problems.length) throw new Error(problems.join("\n"));
+}
+
+/** `texture("noise", opts)`: the generator's name is the first argument, not an option. */
+export function checkTextureShader(shader: unknown): void {
+  if (typeof shader === "string" && shader) return;
+  const hint = shader && typeof shader === "object" && !Array.isArray(shader) && "shader" in shader
+    ? ` ("shader" is the first argument, not an option: texture("${String((shader as { shader: unknown }).shader)}", { ... }))`
+    : "";
+  throw new Error(`texture(shader, opts): shader is the name of a generator like "noise" or "gradient" (\`turbomotion comp fx list\` shows them), got ${show(shader)}${hint}`);
+}
+
+/** Layer properties a script may still assign after construction: the builder's own state (everything else is written by \`set\`). */
+export const LAYER_STATE = ["id", "props", "tweens", "children"];
+
+/** \`layer.effects = [...]\` writes nowhere: a layer's options are the engine's keys, in \`props\`. Name the place that works. */
+export function refuseLayerAssignment(kind: string, id: string, key: string): never {
+  const where = `${kind} layer ${JSON.stringify(id)}`;
+  if (key === "effects" || key === "effect") {
+    throw new Error(`${where}: layer.${key} = ... has no effect: a layer's effects are its "fx" key, a list like [{ effect: "blur", radius: 8 }]; write it in the options (text("hi", { fx: [...] })) or later with layer.set({ fx: [...] })`);
+  }
+  throw new Error(`${where}: layer.${key} = ... has no effect: options are written where the layer is made, or later with layer.set({ ${key}: ... }) (animate with a timeline)`);
 }

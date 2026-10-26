@@ -129,6 +129,7 @@ export interface TextOpts extends LayerOpts {
   role?: "display" | "title" | "body";
   preset?: { name: string; at?: Seconds; [key: string]: unknown };
   tracking?: number;
+  /** Italic type (`italic: true`); there is no `style` or `fontStyle` key. */
   italic?: boolean;
   /** Line height multiplier. */
   leading?: number;
@@ -139,7 +140,7 @@ export interface TextOpts extends LayerOpts {
   /** Per-character, word or line animations: build them with `charFlip`, `decode` or write `{ by, props, stagger | selector }`. */
   animators?: TextAnimator[];
   stroke?: { color: Color; width: number };
-  /** Paint only the stroke (2 px in the text colour when `stroke` is not given). */
+  /** Outlined type: paint only the stroke (2 px in the text colour when `stroke` is not given). The key is `outline_only`; `outline` is not a key. */
   outline_only?: boolean;
   /** Draw only `[start, end]` (0..1) of the outline length: animate `end` from 0 to 1 and the letters write themselves. */
   stroke_trim?: [Prop, Prop];

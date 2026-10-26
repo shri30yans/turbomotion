@@ -477,9 +477,12 @@ Depth for a three_d text, shape or solid layer: copies stepping back in z, colou
 
 ```json
 {
+  "align": "center",
+  "color": "#ffd166",
   "extrude": {
-    "color": "#7a1d14",
-    "depth": 60
+    "color": "#e8590c",
+    "depth": 60,
+    "far": "#c2410c"
   },
   "pos": [
     960,
@@ -490,9 +493,11 @@ Depth for a three_d text, shape or solid layer: copies stepping back in z, colou
     18,
     0
   ],
+  "size": 220,
   "text": "88888",
   "three_d": true,
-  "type": "text"
+  "type": "text",
+  "weight": 800
 }
 ```
 
