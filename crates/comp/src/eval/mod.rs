@@ -14,6 +14,7 @@ pub mod shape;
 pub mod text;
 pub mod mesh;
 pub mod transit;
+mod travel;
 
 #[cfg(test)]
 mod light_tests;
@@ -226,13 +227,7 @@ impl<'p> Evaluator<'p> {
         let vec = |p: &Option<crate::schema::Pos>, default: Vec<f64>, property: u32| -> Result<Vec<f64>> {
             match p {
                 None => Ok(default),
-                Some(p) => {
-                    let mut v = Vec::new();
-                    for (i, c) in p.0 .0.iter().enumerate() {
-                        v.push(c.at(lt, &env(salt::axis(property, i)))?);
-                    }
-                    Ok(v)
-                }
+                Some(p) => p.0.at_with(lt, |i| env(salt::axis(property, i))),
             }
         };
         let raster = matches!(l.def.kind, Kind::Solid(_) | Kind::Image(_) | Kind::Video(_) | Kind::Texture(_) | Kind::Precomp(_) | Kind::Pack(_));
@@ -252,13 +247,7 @@ impl<'p> Evaluator<'p> {
         anchor.resize(3, 0.0);
         let mut scale = match &cm.scale {
             None => vec![1.0, 1.0, 1.0],
-            Some(s) => {
-                let mut v = Vec::new();
-                for (i, c) in s.0 .0.iter().enumerate() {
-                    v.push(c.at(lt, &env(salt::axis(salt::SCALE, i)))?);
-                }
-                v
-            }
+            Some(s) => s.0.at_with(lt, |i| env(salt::axis(salt::SCALE, i)))?,
         };
         if scale.len() == 2 {
             scale.push(1.0);
@@ -269,8 +258,8 @@ impl<'p> Evaluator<'p> {
             None => None,
             Some(p) => {
                 let mut v = [0.0; 3];
-                for (i, c) in p.0 .0.iter().enumerate().take(3) {
-                    v[i] = c.at(lt, &env(salt::axis(salt::AIM, i)))?;
+                for (slot, x) in v.iter_mut().zip(p.0.at_with(lt, |i| env(salt::axis(salt::AIM, i)))?) {
+                    *slot = x;
                 }
                 Some(Aim::Point(v))
             }
@@ -281,12 +270,11 @@ impl<'p> Evaluator<'p> {
             pos[0] += p[0];
             pos[1] += p[1];
             if a.orient {
-                if l.in_3d {
-                    aim = Some(Aim::Travel([ang.to_radians().cos(), ang.to_radians().sin(), 0.0]));
-                } else {
-                    pose.heading = ang;
-                }
+                travel::face(&mut pose, &mut aim, l.in_3d, [ang.to_radians().cos(), ang.to_radians().sin(), 0.0], ang);
             }
+        }
+        if let Some(dir) = cm.pos.as_ref().and_then(|p| p.0.heading(lt)).filter(|d| *d != [0.0; 3]) {
+            travel::face(&mut pose, &mut aim, l.in_3d, dir, travel::heading_of(dir));
         }
         if let Some(w) = &cm.wrap {
             if let Some([a, b]) = w.x {
@@ -585,8 +573,8 @@ impl<'p> Evaluator<'p> {
                 None => Ok(d),
                 Some(p) => {
                     let mut v = [d[0], d[1], d[2]];
-                    for (i, comp) in p.0 .0.iter().enumerate().take(3) {
-                        v[i] = comp.at(lt, &env(salt::axis(property, i)))?;
+                    for (slot, x) in v.iter_mut().zip(p.0.at_with(lt, |i| env(salt::axis(property, i)))?) {
+                        *slot = x;
                     }
                     Ok(v)
                 }
@@ -614,8 +602,8 @@ impl<'p> Evaluator<'p> {
                 None => Ok(d),
                 Some(p) => {
                     let mut v = [d[0], d[1], d[2]];
-                    for (i, comp) in p.0 .0.iter().enumerate().take(3) {
-                        v[i] = comp.at(lt, &env(salt::axis(property, i)))?;
+                    for (slot, x) in v.iter_mut().zip(p.0.at_with(lt, |i| env(salt::axis(property, i)))?) {
+                        *slot = x;
                     }
                     Ok(v)
                 }

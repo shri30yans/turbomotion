@@ -35,19 +35,14 @@ pub struct Orient(pub [Prop; 3]);
 
 /// Three animated numbers: `[x, y, z]` (each any property), `{"from": [..], "to": [..]}` or `{"keys": [[t, [..]], ..]}`.
 fn triple(v: &Value, what: &str) -> Result<[Prop; 3], String> {
-    let parts = VecProp::parse(v, 3..=3).map_err(|e| format!("{what}: {e:#}"))?;
-    Ok(parts.0.try_into().expect("VecProp::parse(3..=3) yields three"))
-}
-
-/// Is this object a tween or keys of whole vectors (as opposed to one scalar property)?
-fn is_vector_object(v: &Value) -> bool {
-    v.get("from").is_some_and(Value::is_array) || v.get("keys").and_then(Value::as_array).and_then(|k| k.first()).and_then(|k| k.get(1)).is_some_and(Value::is_array)
+    let parts = VecProp::parse(v, 3..=3).and_then(VecProp::into_axes).map_err(|e| format!("{what}: {e:#}"))?;
+    parts.try_into().map_err(|p: Vec<Prop>| format!("{what}: expected three dimensions, found {}", p.len()))
 }
 
 impl<'de> Deserialize<'de> for Rot {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
         let v = Value::deserialize(d)?;
-        if v.is_array() || is_vector_object(&v) {
+        if v.is_array() || VecProp::is_vector_object(&v) {
             return triple(&v, "rotation").map(Rot).map_err(D::Error::custom);
         }
         let p = Prop::parse(&v).map_err(|e| D::Error::custom(format!("{e:#}")))?;
@@ -58,7 +53,7 @@ impl<'de> Deserialize<'de> for Rot {
 impl<'de> Deserialize<'de> for Orient {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
         let v = Value::deserialize(d)?;
-        if !(v.is_array() || is_vector_object(&v)) {
+        if !(v.is_array() || VecProp::is_vector_object(&v)) {
             return Err(D::Error::custom(format!("an orientation is [x, y, z] (or a vector tween); found {v}")));
         }
         triple(&v, "orientation").map(Orient).map_err(D::Error::custom)
@@ -75,7 +70,7 @@ impl<'de> Deserialize<'de> for P {
 impl<'de> Deserialize<'de> for Pos {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
         let v = Value::deserialize(d)?;
-        VecProp::parse(&v, 2..=3).map(Pos).map_err(|e| D::Error::custom(format!("{e:#}")))
+        VecProp::parse_position(&v, 2..=3).map(Pos).map_err(|e| D::Error::custom(format!("{e:#}")))
     }
 }
 
@@ -84,10 +79,10 @@ impl<'de> Deserialize<'de> for Scale {
         let v = Value::deserialize(d)?;
         // `[x, y]` is per axis, whether each part is a number, an expression or a tween of its own
         let per_axis = v.as_array().is_some_and(|a| (2..=3).contains(&a.len()) && a.iter().all(|x| x.is_number() || x.is_string() || x.is_object()));
-        let r = if per_axis || v.get("from").is_some_and(Value::is_array) || v.get("keys").is_some_and(|k| k.as_array().and_then(|k| k.first()).and_then(|k| k.get(1)).is_some_and(Value::is_array)) {
+        let r = if per_axis || VecProp::is_vector_object(&v) {
             VecProp::parse(&v, 2..=3)
         } else {
-            Prop::parse(&v).map(|p| VecProp(vec![p.clone(), p]))
+            Prop::parse(&v).map(|p| VecProp::Axes(vec![p.clone(), p]))
         };
         r.map(Scale).map_err(|e| D::Error::custom(format!("{e:#}")))
     }

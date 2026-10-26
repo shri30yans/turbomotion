@@ -3,6 +3,7 @@
 import type { BlendMode } from "./blend-types";
 import type { ItemFill } from "./shape-types";
 import type { Along, Flip, LayerStagger, Reflect, Wrap } from "./layer-motion-types";
+import type { MotionPath } from "./motion-types";
 
 export type Ease = string; // any engine ease: "none", "power2.out", "back.out(1.4)", "elastic.out(1, 0.4)", "steps(8)"...
 export type Vec2 = [number, number];
@@ -66,7 +67,8 @@ export type Lit = boolean;
 /** What every layer takes. `x`, `y`, `z` are shorthand for `pos`. */
 export interface LayerOpts {
   id?: string;
-  pos?: Vec2 | Vec3 | Array<Prop>;
+  /** `[x, y]`, `[x, y, z]`, one property per axis, or a curve: `motionPath([...])`. */
+  pos?: Vec2 | Vec3 | Array<Prop> | MotionPath;
   x?: number;
   y?: number;
   z?: number;

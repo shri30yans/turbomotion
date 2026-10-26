@@ -1,13 +1,17 @@
 feature	category	status	test	doc	ae_ref	wp
 Transform and 3D transform	Animation	have	-	-	Transform	-
 Per-component orientation vs rotation order	Animation	unverified	-	-	3D Orientation vs Rotation	WP-14
-Spatial bezier paths	Animation	none	-	-	Spatial interpolation	WP-10
-Roving keyframes	Animation	none	-	-	Roving keyframes	WP-10
-Auto-orient along path	Animation	none	-	-	Auto-Orient	WP-10
-Separate dimensions	Animation	none	-	-	Separate Dimensions	WP-10
-Temporal and spatial ease split	Animation	none	-	-	Keyframe interpolation	WP-10
-Speed and influence handles	Animation	none	-	-	Keyframe velocity	WP-10
-Hold keyframes	Animation	have	-	-	Hold interpolation	-
+Spatial bezier paths	Animation	done	explicit_handles_make_the_curve_the_bezier_they_describe	parity/specs/property_model.md	Spatial interpolation	WP-10
+Roving keyframes	Animation	done	roving_keys_keep_one_speed_across_the_whole_path	parity/specs/property_model.md	Roving keyframes	WP-10
+Auto-orient along path	Animation	done	a_flat_layer_turns_to_the_direction_of_its_path_about_z	parity/specs/property_model.md	Auto-Orient	WP-10
+Separate dimensions	Animation	done	old_vector_forms_still_parse_to_one_property_per_axis	parity/specs/property_model.md	Separate Dimensions	WP-10
+Temporal and spatial ease split	Animation	done	a_path_runs_on_along_its_last_tangent_when_the_timing_overshoots	parity/specs/property_model.md	Keyframe interpolation	WP-10
+Speed and influence handles	Animation	done	the_cases_of_the_after_effects_fidelity_run_match_the_reference_solver	parity/specs/property_model.md	Keyframe velocity	WP-10
+Auto Bezier spatial tangents (a sixth of the way between neighbours)	Animation	done	auto_bezier_handles_are_a_sixth_of_the_way_between_the_neighbours	parity/specs/property_model.md	Spatial interpolation	WP-10
+Temporal Auto Bezier and Continuous Bezier	Animation	part	an_auto_bezier_key_takes_the_slope_between_its_neighbours_with_a_sixth_influence	parity/specs/property_model.md	Temporal interpolation	WP-10
+Typed property values: vector, colour, switch, text (JSON forms for switch and text)	Animation	part	a_switch_and_text_change_only_at_a_key	parity/specs/property_model.md	Property types	WP-10
+Colour keys interpolated in linear light (project setting)	Animation	none	-	-	Linear colour keyframes	-
+Hold keyframes	Animation	done	a_hold_key_steps_exactly_at_the_next_key	parity/specs/property_model.md	Hold interpolation	WP-10
 Looping	Animation	part	-	-	loopIn/loopOut	WP-11
 Expressions: scalar	Expressions	have	-	-	Expressions	-
 Expressions: full object model	Expressions	none	-	-	Expression language reference	WP-12

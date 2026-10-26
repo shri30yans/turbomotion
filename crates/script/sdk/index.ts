@@ -21,6 +21,8 @@ export * from "./components/index";
 export { rand, range, lerp, clamp, deg, grid, darken } from "./motion";
 export type { Rand, Cell } from "./motion";
 export * from "./types";
+export { motionPath } from "./motion-path";
+export type { Handle, Handles, HandleKey, MotionPath, PathHandles, PathKey, PathPoint, RovingKey, Side } from "./motion-types";
 
 export { measure } from "./measure";
 export type { MeasureOptions, Measured, CharBox, WordBox } from "./measure";

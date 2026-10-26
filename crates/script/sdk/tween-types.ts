@@ -1,3 +1,4 @@
+import type { Handles, PathPoint } from "./motion-types";
 import type { Color, Ease, Seconds } from "./types";
 
 /** A number, or one relative to the property when the tween starts: `"+=40"`, `"-=0.5"`. */
@@ -55,6 +56,14 @@ export interface TweenControls {
   sfx?: string | { cue: string; volume?: number };
   duration?: Seconds;
   ease?: Ease;
+  /** Speed and influence at the start and end of the move (After Effects' keyframe handles), in place of `ease`: `{ out: "easy", in: { speed: 0, influence: 60 } }`. */
+  handles?: Handles;
+  /**
+   * The layer follows a curve through these points over the tween: the first at its start, the last at its end, the
+   * points between passed at an even speed (roving keys), the whole move shaped by `ease` or `handles`. A point can be
+   * `[x, y]`, or `{ v: [x, y], out: [dx, dy] }` with the handles of the curve there. `autoOrient: true` turns the layer along it.
+   */
+  path?: PathPoint[] | { points: PathPoint[]; autoOrient?: boolean };
   delay?: Seconds;
   stagger?: Stagger;
 }

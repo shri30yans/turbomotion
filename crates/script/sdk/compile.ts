@@ -7,6 +7,7 @@ import { overwritten } from "./overwrite";
 import { isItemKey, itemBase, setItem } from "./item-tweens";
 import { relative } from "./relative";
 import type { Val } from "./relative";
+import { applyHandles, takePath } from "./motion-path";
 import { isVectorKey, parseVectorKey, setVector, vectorBase } from "./vector-tweens";
 import type { Tween } from "./timeline";
 
@@ -29,9 +30,11 @@ export function layerTime(out: Record<string, any>, tweens: Tween[], id: string)
 }
 
 /** Write the tweens of one layer into `out` (the layer's JSON): one merged property per animated name. */
-export function compileTweens(out: Record<string, any>, tweens: Tween[], id: string): void {
+export function compileTweens(out: Record<string, any>, all: Tween[], id: string): void {
+  if (!all.length) return;
+  const local = layerTime(out, all, id);
+  const tweens = takePath(out, all, local, id);
   if (!tweens.length) return;
-  const local = layerTime(out, tweens, id);
   const byProp = new Map<string, Tween[]>();
   for (const t of tweens) byProp.set(t.prop, [...(byProp.get(t.prop) ?? []), t]);
   const axes: Record<string, any> = {};
@@ -80,7 +83,8 @@ function baseOf(out: Record<string, any>, prop: string, id: string): Val | undef
   throw new Error(`layer "${id}": "${prop}" is already animated or an expression; tween it from the timeline only`);
 }
 
-type Key = [number, Val] | [number, Val, string];
+type Key = [number, Val] | [number, Val, string] | Record<string, any>;
+const valueOf = (k: Key): Val => (Array.isArray(k) ? k[1] : k.v);
 
 /** The engine's ease for a jump: the key before it holds until this key's time, then the value changes. */
 const HOLD = "hold";
@@ -112,15 +116,16 @@ function mergeProp(tweens: Tween[], base: Val | undefined, id: string, prop: str
       // a step needs a key before it: at the layer's first moment, unless the step is already over by then
       if (!step) keys.push([t, from]);
       else if (t > 0) keys.push([0, from]);
-    } else if (!same(last[1], from)) keys.push([t, from, HOLD]);
-    else if (!step && tw.at > lastEnd + TIE) keys.push([t, last[1]]);
+    } else if (!same(valueOf(last), from)) keys.push([t, from, HOLD]);
+    else if (!step && tw.at > lastEnd + TIE) keys.push([t, valueOf(last)]);
     keys.push(step ? [t, to, HOLD] : [local(tw.at + tw.dur), to, tw.ease]);
+    if (tw.handles && !step) applyHandles(keys, tw.handles);
     cur = to;
     lastEnd = tw.at + tw.dur;
   }
-  if (tweens.length === 1 && tweens[0].dur > 0) {
+  if (tweens.length === 1 && tweens[0].dur > 0 && !tweens[0].handles) {
     const tw = tweens[0];
-    return { from: keys[0][1], to: keys[keys.length - 1][1], at: local(tw.at), dur: r6(tw.dur), ease: tw.ease };
+    return { from: valueOf(keys[0]), to: valueOf(keys[keys.length - 1]), at: local(tw.at), dur: r6(tw.dur), ease: tw.ease };
   }
   return { keys };
 }

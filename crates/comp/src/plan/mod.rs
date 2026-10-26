@@ -1,6 +1,7 @@
 //! The plan: the composition after every name has been resolved and every impossible thing rejected, once, with a
 //! path to the mistake. Evaluation and rendering never look at a file or a string id again.
 
+mod facing;
 mod fonts;
 mod fx_inputs;
 pub mod geometry;

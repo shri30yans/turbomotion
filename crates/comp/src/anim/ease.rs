@@ -145,7 +145,7 @@ impl Ease {
                 }
             }
             Ease::Steps(n) => if u >= 1.0 { 1.0 } else { (u * f64::from(n)).floor() / f64::from(n) },
-            Ease::Cubic(x1, y1, x2, y2) => cubic_bezier(x1, y1, x2, y2, u),
+            Ease::Cubic(x1, y1, x2, y2) => super::bezier::ease(x1, y1, x2, y2, u),
             Ease::Spring(zeta) => spring(zeta, u),
             Ease::Smooth => u * u * (3.0 - 2.0 * u),
             Ease::Wiggle(n) => (2.0 * PI * f64::from(n) * u).sin() * (1.0 - u),
@@ -187,30 +187,6 @@ fn bounce_out(u: f64) -> f64 {
         let u = u - 2.625 / D;
         N * u * u + 0.984375
     }
-}
-
-fn cubic_bezier(x1: f64, y1: f64, x2: f64, y2: f64, x: f64) -> f64 {
-    let sample = |t: f64, a: f64, b: f64| 3.0 * a * (1.0 - t).powi(2) * t + 3.0 * b * (1.0 - t) * t * t + t.powi(3);
-    let slope = |t: f64, a: f64, b: f64| 3.0 * a * (1.0 - t).powi(2) + 6.0 * (b - a) * (1.0 - t) * t + 3.0 * (1.0 - b) * t * t;
-    let mut t = x;
-    for _ in 0..8 {
-        let err = sample(t, x1, x2) - x;
-        let d = slope(t, x1, x2);
-        if err.abs() < 1e-7 || d.abs() < 1e-9 {
-            break;
-        }
-        t = (t - err / d).clamp(0.0, 1.0);
-    }
-    // Bisection fallback for flat slopes.
-    let (mut lo, mut hi) = (0.0, 1.0);
-    if (sample(t, x1, x2) - x).abs() > 1e-5 {
-        t = x;
-        for _ in 0..40 {
-            if sample(t, x1, x2) < x { lo = t } else { hi = t }
-            t = 0.5 * (lo + hi);
-        }
-    }
-    sample(t, y1, y2)
 }
 
 fn spring(zeta: f64, u: f64) -> f64 {

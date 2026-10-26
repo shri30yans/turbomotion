@@ -7,6 +7,8 @@ import type { Val } from "./relative";
 import { callSite } from "./site";
 import { flattenVector, isVectorKey, VECTORS } from "./vector-tweens";
 import { Layer, list } from "./layers";
+import { checkHandles } from "./motion-path";
+import type { Handles, PathPoint } from "./motion-types";
 import type { Animatable, Ease, Hit, Seconds, Stagger, TweenVars } from "./types";
 
 export interface Tween {
@@ -20,11 +22,15 @@ export interface Tween {
   /** Where in the author's script this tween was written (for errors found later, when the layer is written out). */
   site: string;
   overwrite?: "auto" | false;
+  /** Speed and influence at the two ends, instead of an ease. */
+  handles?: Handles;
+  /** The motion path of a `path` tween (its `prop` is "path"). */
+  path?: { points: PathPoint[]; auto_orient: boolean };
 }
 
 const PROPS = ["x", "y", "z", "opacity", "scale", "size", "intensity", "zoom", "color", "skew"];
 const VECTOR_PROPS = ["rotation", "orientation", "aim"];
-const CONTROLS = ["duration", "ease", "delay", "stagger", "sfx", "overwrite"];
+const CONTROLS = ["duration", "ease", "delay", "stagger", "sfx", "overwrite", "handles", "path"];
 const r6 = (n: number): number => Math.round(n * 1e6) / 1e6;
 
 /** `pos: [x, y, z]` becomes x/y/z tweens, `items: { 0: {...} }` one per item property, and a vector one per component. */
@@ -122,6 +128,9 @@ export class Timeline {
       if (!PROPS.includes(k) && !isItemKey(k) && !isVectorKey(k)) throw new Error(`${where}: "${k}" cannot be animated here; animatable: ${[...PROPS, ...VECTOR_PROPS].join(", ")}, pos, items`);
     }
     if (vars.overwrite !== undefined && vars.overwrite !== false && vars.overwrite !== "auto") throw new Error('timeline overwrite must be "auto" or false');
+    const handles = vars.handles && checkHandles(vars.handles, where);
+    if (handles && vars.ease !== undefined) throw new Error(`${where}: "handles" and "ease" both shape the move; give one`);
+    if (handles && vars.overwrite === "auto") throw new Error(`${where}: "handles" cannot be combined with overwrite: "auto"`);
     const dur = vars.duration ?? this.defaults.duration ?? 0.5;
     if (!(dur >= 0)) throw new Error(`tl.${mode}(): duration must be 0 or more, got ${dur}`);
     const ease = vars.ease ?? this.defaults.ease ?? "power1.out";
@@ -133,9 +142,15 @@ export class Timeline {
     layers.forEach((layer, i) => {
       const at = r6(start + offsets[i]);
       if (sfx) this.hit(at, sfx.cue, sfx.volume);
+      if (vars.path !== undefined) {
+        if (mode !== "to") throw new Error(`${where}: a path tween is tl.to(layer, { path: [...] })`);
+        const spec = Array.isArray(vars.path) ? { points: vars.path, autoOrient: false } : { autoOrient: false, ...vars.path };
+        layer.tweens.push({ prop: "path", at, dur, ease, site, handles, path: { points: spec.points, auto_orient: spec.autoOrient } });
+        end = Math.max(end, at + dur);
+      }
       for (const prop of props) {
         const v = to[prop];
-        const tw: Tween = { prop, at, dur, ease: dur === 0 ? "none" : ease, site, overwrite: vars.overwrite };
+        const tw: Tween = { prop, at, dur, ease: dur === 0 ? "none" : ease, site, overwrite: vars.overwrite, handles };
         if (mode === "to") tw.to = v;
         else if (mode === "from") tw.from = v;
         else {

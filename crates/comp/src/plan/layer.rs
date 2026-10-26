@@ -77,8 +77,8 @@ pub(super) fn plan_layer(i: usize, v: &Value, c: &schema::Composition, root: &sc
             Err(e) => note(Err(e.context(format!("mask {k}")))),
         }
     }
-    if def.common.aim.is_some() && def.common.along.as_ref().is_some_and(|a| a.orient) {
-        note(Err(anyhow!("\"aim\" and \"along.orient\" both decide where the layer faces; use one")));
+    if let Some(message) = super::facing::conflict(&def.common) {
+        note(Err(anyhow!("{message}")));
     }
     let along = match def.common.along.as_ref().map(|a| crate::plan::geometry::PathGeo::build(&a.path)).transpose() {
         Ok(a) => a,

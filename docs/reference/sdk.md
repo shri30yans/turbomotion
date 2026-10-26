@@ -158,7 +158,7 @@ export function layerTime(out: Record<string, any>, tweens: Tween[], id: string)
 The layer's `start` as a number; tweens cannot be placed against a start the SDK cannot read.
 
 ```ts
-export function compileTweens(out: Record<string, any>, tweens: Tween[], id: string): void
+export function compileTweens(out: Record<string, any>, all: Tween[], id: string): void
 ```
 Write the tweens of one layer into `out` (the layer's JSON): one merged property per animated name.
 
@@ -771,6 +771,95 @@ export function grid(cols: number, rows: number, cell: number | [number, number]
 export function darken(color: string, amount = 0.55): string
 ```
 Darken a `#rrggbb` colour by `amount` (0..1); other colour forms come back unchanged.
+
+## `motion-path`
+
+Writing motion paths and handles: checks what the engine would refuse, here, at the line that wrote it.
+
+```ts
+export function motionPath(keys: Array<PathKey | RovingKey>, opts: { spatial?: "auto" | "linear" | "bezier"; auto_orient?: boolean; loop?: MotionPath["loop"] } = {}): MotionPath
+```
+A position that follows a curve through its keys, with After Effects' keyframe handles. Keys at a time are `{ t, v }`; a key `{ roving: true, v }` has no time and keeps the speed even between the keys around it.
+
+```ts example
+import { comp, solid, motionPath } from "turbomotion";
+const film = comp({ width: 1920, height: 1080, fps: 30, dur: 3, bg: "#10131c" });
+film.add(solid("#ffd166", { size: [120, 120], pos: motionPath([
+  { t: 0, v: [300, 800], ease_out: "easy" },
+  { roving: true, v: [900, 200] },
+  { t: 3, v: [1600, 800], ease_in: "easy" },
+], { auto_orient: true }) }));
+export default film;
+```
+
+```ts
+export function checkHandles(h: Handles, at: string): Handles
+```
+The checked handles of a tween (`ease_out` of its first key, `ease_in` of its last).
+
+```ts
+export function pathPos(tw: Tween, local: (t: number)
+```
+`tl.to(layer, { path })` as the layer's `pos`: the first point at the tween's start, the last at its end, the points between roving.
+
+```ts
+export function takePath(out: Record<string, any>, tweens: Tween[], local: (t: number)
+```
+Moves the `path` tween of a layer into its `pos`, and returns the other tweens. A path replaces the layer's own position, so a layer with a path tween takes no x/y/z tween and has no `pos` of its own to start from.
+
+```ts
+export function applyHandles(keys: Array<any>, h: Handles): void
+```
+Gives the last tween written into `keys` its handles: the key it starts from leaves with `out`, the key it ends on arrives with `in`. The named ease the end key carried is the one the handles replace.
+
+## `motion-types`
+
+Keyframe handles and motion paths: the types of After Effects' temporal and spatial interpolation, as the engine reads them (crates/comp/src/anim/prop). Everything here is also spelled in JSON; `motionPath` and `tl.to(layer, { path })` write it for you.
+
+```ts
+export type Handle = { speed: number | number[]; influence: number };
+```
+How a value leaves or arrives at a key, as After Effects' Keyframe Velocity dialog names it. Influence is a percent, 0 to 100.
+
+```ts
+export type Side = "linear" | "hold" | "auto" | "easy" | Handle;
+```
+One side of a key. `"linear"` keeps the segment's own speed, `"auto"` takes the slope between the neighbouring keys, `"easy"` is Easy Ease (speed 0, influence 33.33 %), `"hold"` (leaving only) keeps the value until the next key.
+
+```ts
+export interface PathHandles
+```
+Where a key's motion path bends. `in` points back along the path, `out` forward, both as offsets from the key.
+
+```ts
+export interface PathKey extends PathHandles
+```
+A key of a motion path, at a time. `ease` is the ease of the move INTO it; `ease_in` / `ease_out` replace it with speed and influence.
+
+```ts
+export interface RovingKey extends PathHandles
+```
+A key without a time: its place on the path is kept, and its time is found so the speed stays even between the fixed keys around it.
+
+```ts
+export interface MotionPath
+```
+A position that follows a curve: `pos: motionPath([...])`.
+
+```ts
+export interface HandleKey<V = number>
+```
+A key of a scalar or vector property that carries handles.
+
+```ts
+export type PathPoint = Vec2 | Vec3 | ({ v: Vec2 | Vec3 } & PathHandles);
+```
+A point of `tl.to(layer, { path })`: a place, or a place with the handles of the curve there.
+
+```ts
+export interface Handles
+```
+The two ends of a tween as speed and influence; they take the place of `ease`.
 
 ## `overwrite`
 
