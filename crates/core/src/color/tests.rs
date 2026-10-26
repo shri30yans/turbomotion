@@ -27,7 +27,7 @@ fn read(s: &mut Surface) -> Vec<[f32; 4]> {
 }
 
 /// The sRGB transfer function (IEC 61966-2-1), from its definition.
-fn srgb_to_linear(v: f64) -> f64 {
+pub(super) fn srgb_to_linear(v: f64) -> f64 {
     if v <= 0.04045 { v / 12.92 } else { ((v + 0.055) / 1.055).powf(2.4) }
 }
 

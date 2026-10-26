@@ -2,6 +2,7 @@
 
 use anyhow::Result;
 use skia_safe::{color_filters, gradient_shader, BlendMode, Canvas, Color, Color4f, Image, Matrix, Paint, PaintCap, PaintStyle, Path, Point, Rect, TileMode};
+use turbomotion_core::color::Ink;
 
 use crate::{
     eval::particles::{Particle, ParticleState},
@@ -47,7 +48,7 @@ fn unit_outline(path: &Path) -> Path {
 }
 
 /// `sprite` is the layer's own outline when its shape is a `path`.
-pub fn paint(c: &Canvas, sprite: &Image, outline: Option<&PathGeo>, st: &ParticleState) -> Result<()> {
+pub fn paint(ink: &Ink, c: &Canvas, sprite: &Image, outline: Option<&PathGeo>, st: &ParticleState) -> Result<()> {
     let outline = outline.map(|g| unit_outline(&g.path));
     let mut paint = Paint::default();
     paint.set_anti_alias(true);
@@ -57,14 +58,16 @@ pub fn paint(c: &Canvas, sprite: &Image, outline: Option<&PathGeo>, st: &Particl
         if r <= 0.05 || alpha <= 0.002 {
             continue;
         }
-        paint.set_style(PaintStyle::Fill).set_color(color).set_alpha_f(alpha).set_color_filter(None);
+        paint.set_style(PaintStyle::Fill).set_color_filter(None);
+        let rgb = Color4f::from(color);
+        ink.apply(&mut paint, c, Color4f::new(rgb.r, rgb.g, rgb.b, alpha))?;
         let at = (p.x as f32, p.y as f32);
         c.save();
         c.translate(at);
         match &st.shape {
             ParticleShape::Soft => {
                 paint.set_color_filter(color_filters::blend(color, BlendMode::SrcIn));
-                paint.set_color(Color::WHITE).set_alpha_f(alpha);
+                paint.set_shader(None).set_color(Color::WHITE).set_alpha_f(alpha);
                 c.draw_image_rect(sprite, None, Rect::from_xywh(-r * 2.0, -r * 2.0, r * 4.0, r * 4.0), &paint);
             }
             ParticleShape::Circle => {

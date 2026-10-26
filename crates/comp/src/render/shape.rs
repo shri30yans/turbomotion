@@ -4,6 +4,7 @@ use anyhow::Result;
 use skia_safe::{
     gradient_shader::GradientShaderColors, Canvas, Color4f, ContourMeasureIter, Matrix, Paint, PaintCap, PaintJoin, PaintStyle, Path, PathEffect, PathFillType, Point, TileMode,
 };
+use turbomotion_core::color::Ink;
 
 use super::color4f;
 use crate::{
@@ -11,7 +12,7 @@ use crate::{
     plan::geometry::PathGeo,
 };
 
-pub fn paint(c: &Canvas, items: &[ShapeState], geos: &[PathGeo]) -> Result<()> {
+pub fn paint(ink: &Ink, c: &Canvas, items: &[ShapeState], geos: &[PathGeo]) -> Result<()> {
     for (s, geo) in items.iter().zip(geos) {
         let mut path = geo.at(s.morph);
         if let Some([start, end, offset]) = s.trim {
@@ -24,10 +25,10 @@ pub fn paint(c: &Canvas, items: &[ShapeState], geos: &[PathGeo]) -> Result<()> {
             c.save();
             c.concat(&m);
             if let Some(f) = &s.fill {
-                fill(c, &path, f, opacity, geo.morph_to.is_none() && s.trim.is_none());
+                fill(ink, c, &path, f, opacity, geo.morph_to.is_none() && s.trim.is_none())?;
             }
             if let Some(st) = &s.stroke {
-                stroke(c, &path, st, opacity);
+                stroke(ink, c, &path, st, opacity)?;
             }
             c.restore();
             if let Some(r) = &s.repeat {
@@ -52,29 +53,30 @@ pub(super) fn gradient(g: &GradientState, opacity: f64) -> Option<skia_safe::Sha
     }
 }
 
-fn fill(c: &Canvas, path: &Path, f: &FillState, opacity: f64, _plain: bool) {
+fn fill(ink: &Ink, c: &Canvas, path: &Path, f: &FillState, opacity: f64, _plain: bool) -> Result<()> {
     let mut p = Paint::default();
     p.set_anti_alias(true).set_style(PaintStyle::Fill);
     let a = (f.opacity * opacity) as f32;
     if let Some(g) = &f.gradient {
         p.set_shader(gradient(g, f.opacity * opacity));
     } else if let Some(col) = f.color {
-        p.set_color4f(color4f([col[0], col[1], col[2], col[3] * a]), None);
+        ink.apply(&mut p, c, color4f([col[0], col[1], col[2], col[3] * a]))?;
     } else {
-        return;
+        return Ok(());
     }
     let mut path = path.clone();
     path.set_fill_type(if f.even_odd { PathFillType::EvenOdd } else { PathFillType::Winding });
     c.draw_path(&path, &p);
+    Ok(())
 }
 
-fn stroke(c: &Canvas, path: &Path, s: &StrokeState, opacity: f64) {
+fn stroke(ink: &Ink, c: &Canvas, path: &Path, s: &StrokeState, opacity: f64) -> Result<()> {
     if s.width <= 0.0 {
-        return;
+        return Ok(());
     }
     let mut p = Paint::default();
     p.set_anti_alias(true).set_style(PaintStyle::Stroke).set_stroke_width(s.width as f32);
-    p.set_color4f(color4f([s.color[0], s.color[1], s.color[2], s.color[3] * (s.opacity * opacity) as f32]), None);
+    ink.apply(&mut p, c, color4f([s.color[0], s.color[1], s.color[2], s.color[3] * (s.opacity * opacity) as f32]))?;
     p.set_stroke_cap(match s.cap.as_str() {
         "round" => PaintCap::Round,
         "square" => PaintCap::Square,
@@ -92,6 +94,7 @@ fn stroke(c: &Canvas, path: &Path, s: &StrokeState, opacity: f64) {
         }
     }
     c.draw_path(path, &p);
+    Ok(())
 }
 
 /// The part of every contour between fractions `start` and `end` of the whole outline, shifted by `offset` (wrapping).

@@ -4,7 +4,7 @@
 
 use anyhow::Result;
 
-use super::{effects, shader::Program};
+use super::{color::Ink, effects, shader::Program};
 
 pub struct Shaders {
     pub effects: effects::Programs,
@@ -14,6 +14,8 @@ pub struct Shaders {
     pub add_clip: Program,
     /// Coverage union: `a + b - a*b` on alpha.
     pub union: Program,
+    /// How a flat colour is painted without being held in 8 bits (see [`Ink`]).
+    pub ink: Ink,
 }
 
 impl Shaders {
@@ -23,6 +25,7 @@ impl Shaders {
             blend: effects::BlendPrograms::compile()?,
             add_clip: Program::blender("add_clip", include_str!("shaders/add_clip.sksl"))?,
             union: Program::blender("union", include_str!("shaders/union.sksl"))?,
+            ink: Ink::compile()?,
         })
     }
 }

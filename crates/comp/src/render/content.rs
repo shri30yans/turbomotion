@@ -22,14 +22,9 @@ pub fn paint_content(ctx: &Ctx, c: &Canvas, frame: &Frame, _comp: &CompPlan, st:
         c.concat_44(&st.screen.to_m44());
     }
     let r = match &st.content {
-        Content::Solid { color, size } => {
-            let mut p = Paint::default();
-            p.set_color4f(color4f(*color), None).set_anti_alias(true);
-            c.draw_rect(Rect::from_wh(size[0] as f32, size[1] as f32), &p);
-            Ok(())
-        }
-        Content::Shape { items } => shape::paint(c, items, &lp.shapes),
-        Content::Text(t) => text::paint(c, t),
+        Content::Solid { color, size } => paint_solid(ctx, c, *color, *size),
+        Content::Shape { items } => shape::paint(&ctx.shaders.ink, c, items, &lp.shapes),
+        Content::Text(t) => text::paint(&ctx.shaders.ink, c, t),
         Content::Image { view, parallax } => media::paint_image(ctx, c, lp, view, parallax),
         Content::Video { view, src_time } => paint_video(ctx, c, lp, view, *src_time),
         Content::Precomp { frame: Some(inner) } => {
@@ -43,7 +38,7 @@ pub fn paint_content(ctx: &Ctx, c: &Canvas, frame: &Frame, _comp: &CompPlan, st:
             c.draw_image_with_sampling_options(layer.image(), (0, 0), sampling, Some(&p));
             Ok(())
         }
-        Content::Particles(st) => super::particles::paint(c, &ctx.programs.sprite, lp.shapes.first(), st),
+        Content::Particles(st) => super::particles::paint(&ctx.shaders.ink, c, &ctx.programs.sprite, lp.shapes.first(), st),
         Content::Pack { name, params, size } => {
             let pack = ctx.packs.iter().find(|p| p.name() == name).ok_or_else(|| anyhow::anyhow!("no pack called {name:?} is registered"))?;
             let pc = crate::pack::PackCtx { like: c, width: size[0] as i32, height: size[1] as i32, dir: &ctx.plan.dir };
@@ -56,6 +51,14 @@ pub fn paint_content(ctx: &Ctx, c: &Canvas, frame: &Frame, _comp: &CompPlan, st:
     };
     c.restore();
     r
+}
+
+fn paint_solid(ctx: &Ctx, c: &Canvas, color: [f32; 4], size: [f64; 2]) -> Result<()> {
+    let mut p = Paint::default();
+    ctx.shaders.ink.apply(&mut p, c, color4f(color))?;
+    p.set_anti_alias(true);
+    c.draw_rect(Rect::from_wh(size[0] as f32, size[1] as f32), &p);
+    Ok(())
 }
 
 fn paint_video(ctx: &Ctx, c: &Canvas, lp: &LayerPlan, view: &crate::eval::media::View, src_time: f64) -> Result<()> {

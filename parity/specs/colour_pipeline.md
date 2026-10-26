@@ -48,6 +48,14 @@ sRGB curve and gamut matrices in the engine are Skia's, and the tests compare Sk
   stream is BT.709 as players take it, and the BT.709 and BT.2020 10/12-bit curves are read as sRGB's. PQ and HLG are an
   error naming the file and the way out (convert it to SDR first); so are primaries outside the five known.
   A video's RGB conversion still uses ffmpeg's default matrix, as before.
+* **Flat colours** (`core::color::Ink`, test `every_level_painted_into_linear_light_arrives_as_the_light_the_curve_says`):
+  the colour of a solid, a shape fill or stroke, a glyph, a text mark and a particle is painted by a shader that returns
+  its colour as a float uniform (`shaders/ink.sksl`, `layout(color)`), not as the paint's colour. Skia's GPU backend
+  carries a constant paint colour to the fragment stage as an 8-bit attribute of the geometry, after converting it to the
+  picture's colour space; in linear light that holds the colour in 8 bits of *light*, where level 8 and level 16 are both
+  1/255 (level 13). A shader uniform is a float on the GPU and Skia converts it exactly. A full-frame solid is not affected
+  (Skia draws it as a clear), nor a gradient, a background, a mesh, an image or a colour filter's colour (all evaluated in
+  float). A picture that is not tagged is not converted, so `Ink` sets the paint's colour as it always was.
 * **Mesh shading** is display-referred (a light's colour is multiplied by a surface colour as in the original); the batch is
   drawn into a surface with the composition's tag, so its output is converted like any other picture.
 
@@ -102,6 +110,22 @@ On the GPU, end to end through a film (`render/color_tests.rs`, `render/color_me
 | two renders of a linear-light film | identical bytes | identical bytes |
 | `color: {}` against no `color` | identical bytes | |
 
+Dark levels (`render/color_darks_tests.rs`, `render/color_flat_tests.rs`, probes `wp/WP-03/fix-darks/`): 256 small swatches
+(a 4 px solid, then a 4 px shape, in a 128 px frame) over black with the `normal` blend:
+
+| what | measured | bound |
+| --- | --- | --- |
+| every level 0..255, small solid and small shape in light: output against the level drawn | exact (0 levels off), 256 distinct outputs | 1 level; levels 1..32 each within 1; strictly rising |
+| the same sheet on encoded numbers (default film) | exact | 1 level |
+| full-frame solids (levels 0..32, every 15th above, 254, 255) | within 1 | 1 level |
+| 50% white, small solid and small shape, in light | 188 | 187.5 within 1 |
+| levels 8..64 at 50% alpha over black, small solid, in light | half the light of the level, within 1 | 1 level |
+| gradient across a layer smaller than the frame, 256 steps | worst 0.56 off the ideal light ramp, largest step 12 against the ideal 11.1 | 1 level, ideal step + 1 |
+| stroke, text, particle and background of levels 8, 16 and 48 in light against the default film | equal within 1 | 1 level |
+
+Before the fix (same films, baseline binary): 26 levels were more than 1 off (worst 6), 183 distinct outputs of 256, 73
+levels did not rise above the one below it; levels 7..17 all showed 13, 18..25 showed 22, 26..31 showed 28.
+
 Banding: a half-float working picture adds none of its own. The measured gradient is within 0.56 level of the ideal ramp, and the
 largest step is the ideal ramp's own steepest (the dark end of a light-linear ramp is steep when shown in 8 bits: 12 levels
 between the first two pixels), so there is no band beyond 8-bit quantisation. Dithering the 8-bit output is not done.
@@ -112,5 +136,9 @@ between the first two pixels), so there is no band beyond 8-bit quantisation. Di
   the ledger row "Colour management beyond P3" stays `none`.
 * Porting the display-referred plugins of the shipped pack to `@space linear` one by one (each has thresholds or screen
   blends that need re-deriving in light).
+* A layer's opacity is carried to the GPU as the alpha of a paint, which is also 8 bits: in linear light white at 0.2%
+  opacity shows level 13 where the light says 6.6 (0.1% shows 0 against 3.3, 1% shows 28 against 25.5; 2% was within a
+  level). The default film has the same 1/255 step, which costs it far less: its levels are encoded. Moving opacity to a float needs the
+  blend stage to take it as a uniform (the shader blends and the dissolve already read it as one); the ledger row stays `part`.
 * The 8-bit alpha codec still clears opaque black (an existing behaviour); `Codec::Alpha` frames are not colour-converted any
   differently from the others.

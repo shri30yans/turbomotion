@@ -27,6 +27,10 @@ mod backdrop_tests;
 #[cfg(test)]
 mod blend_tests;
 #[cfg(test)]
+mod color_darks_tests;
+#[cfg(test)]
+mod color_flat_tests;
+#[cfg(test)]
 mod color_media_tests;
 #[cfg(test)]
 mod color_tests;

@@ -1,0 +1,7 @@
+// A flat colour held as the four floats it is given in. `layout(color)` makes Skia convert it, in float, into the colour
+// space the picture is in: a colour of 8 bits per channel is only exact in the encoding it was written in.
+layout(color) uniform float4 color;
+
+half4 main(float2 xy) {
+    return half4(half3(color.rgb * color.a), half(color.a));
+}

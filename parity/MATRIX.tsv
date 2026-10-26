@@ -40,6 +40,8 @@ Working colour profile with import conversion (sRGB, Display P3; image ICC, vide
 Output colour tagging (the encoder writes the output profile)	Colour	done	a_managed_film_is_tagged_with_its_profile_and_an_unmanaged_one_is_not	parity/specs/colour_pipeline.md	Output color management	WP-03
 Effect and plugin colour contract (`@space display|linear`)	Colour	done	a_plugin_receives_the_encoding_it_declares	parity/specs/colour_pipeline.md	-	WP-03
 Premultiplication rules (alpha is coverage and is never encoded)	Colour	done	premultiplication_is_undone_before_a_colour_is_converted	parity/specs/colour_pipeline.md	-	WP-03
+Flat colours in linear light keep their darks (solids, shapes, strokes, text and particles painted as float, not 8-bit light)	Colour	done	a_small_solid_shows_the_level_it_is_drawn_in_at_all_256_levels	parity/specs/colour_pipeline.md	-	WP-03
+Layer opacity below a few per cent in linear light (the paint alpha is carried in 8 bits)	Colour	part	-	parity/specs/colour_pipeline.md	-	WP-03
 Output formats	Output	part	-	-	Render queue	WP-50
 Lights and shadows	3D	none	-	-	Lights	WP-23
 Camera f-stop, iris, focus distance	3D	none	-	-	Camera settings	WP-24

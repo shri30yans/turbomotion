@@ -126,6 +126,3 @@ silhouettes, `luminescent_premul` (= over), the classic fade, linear light, vivi
 * Luma stencils and silhouettes weigh the working-space numbers, not display-referred ones (a luma matte, `matte` mode
   `luma`, reads display numbers). In a linear-light film a mid grey stencil keeps less than half.
 * `divide` by zero follows EffectCraft (a black base stays black, a lit base becomes white); After Effects' own result is UNSURE.
-* A sized solid or shape drawn in a linear-light film is quantised to 8 bits of light in the darks before it is blended
-  (level 8 and 16 both show 13, 48 shows 50): a WP-03 property found while testing this, not changed here. Full-frame
-  solids are exact, which is what the linear-light tests use.

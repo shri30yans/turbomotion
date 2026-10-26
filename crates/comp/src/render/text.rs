@@ -2,6 +2,7 @@
 
 use anyhow::Result;
 use skia_safe::{color_filters, image_filters, BlendMode, Canvas, Color4f, ColorMatrix, ContourMeasureIter, Font, Matrix, Paint, PaintJoin, PaintStyle, Path, RRect, Rect, TileMode};
+use turbomotion_core::color::Ink;
 
 use super::color4f;
 use crate::{
@@ -13,14 +14,15 @@ use crate::{
     },
 };
 
-pub fn paint(c: &Canvas, t: &TextState) -> Result<()> {
+pub fn paint(ink: &Ink, c: &Canvas, t: &TextState) -> Result<()> {
     let Some(layout) = &t.layout else { return Ok(()) };
     if let Some(m) = &t.mark {
         if m.progress > 0.002 {
             let w = ((m.rect[2] - m.rect[0]) as f64 * m.progress).max(1.0) as f32;
             let h = (m.rect[3] - m.rect[1]).max(1.0);
             let mut p = Paint::default();
-            p.set_anti_alias(true).set_color4f(color4f([m.color[0], m.color[1], m.color[2], m.color[3]]), None);
+            p.set_anti_alias(true);
+            ink.apply(&mut p, c, color4f(m.color))?;
             if m.rough {
                 c.draw_path(&highlighter_path(m.rect, w, h), &p);
             } else {
@@ -87,7 +89,8 @@ pub fn paint(c: &Canvas, t: &TextState) -> Result<()> {
         if stroke_w > MIN_STROKE_WIDTH {
             let sc = t.stroke.as_ref().map_or(col, |(sc, _)| *sc);
             let mut sp = paint.clone();
-            sp.set_style(PaintStyle::Stroke).set_stroke_width(stroke_w as f32).set_stroke_join(PaintJoin::Round).set_color4f(color4f([sc[0], sc[1], sc[2], sc[3] * g.opacity as f32]), None);
+            sp.set_style(PaintStyle::Stroke).set_stroke_width(stroke_w as f32).set_stroke_join(PaintJoin::Round);
+            ink.apply(&mut sp, c, color4f([sc[0], sc[1], sc[2], sc[3] * g.opacity as f32]))?;
             if let Some(window) = t.trim {
                 sp.set_stroke_cap(skia_safe::PaintCap::Round);
                 if let Some(mut path) = outline(font, g.ch) {
@@ -106,7 +109,7 @@ pub fn paint(c: &Canvas, t: &TextState) -> Result<()> {
             if let Some(sh) = &fill_shader {
                 paint.set_shader(sh.clone()).set_alpha_f(g.opacity as f32);
             } else {
-                paint.set_color4f(fill, None);
+                ink.apply(&mut paint, c, fill)?;
             }
             c.draw_str(&s, (g.x, g.y), font, &paint);
         }
