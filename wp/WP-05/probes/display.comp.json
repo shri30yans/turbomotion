@@ -1,0 +1,185 @@
+{
+ "width": 920,
+ "height": 194,
+ "fps": 30,
+ "dur": 1,
+ "bg": "#0b0d12",
+ "comps": {
+  "multiply": {
+   "width": 270,
+   "height": 150,
+   "dur": 1,
+   "layers": [
+    {
+     "type": "solid",
+     "color": "#4080c0"
+    },
+    {
+     "type": "shape",
+     "pos": [
+      135.0,
+      75.0
+     ],
+     "blend": "multiply",
+     "items": [
+      {
+       "ellipse": [
+        0,
+        0,
+        60,
+        60
+       ],
+       "fill": "#e03080"
+      }
+     ]
+    }
+   ]
+  },
+  "screen": {
+   "width": 270,
+   "height": 150,
+   "dur": 1,
+   "layers": [
+    {
+     "type": "solid",
+     "color": "#4080c0"
+    },
+    {
+     "type": "shape",
+     "pos": [
+      135.0,
+      75.0
+     ],
+     "blend": "screen",
+     "items": [
+      {
+       "ellipse": [
+        0,
+        0,
+        60,
+        60
+       ],
+       "fill": "#e03080"
+      }
+     ]
+    }
+   ]
+  },
+  "overlay": {
+   "width": 270,
+   "height": 150,
+   "dur": 1,
+   "layers": [
+    {
+     "type": "solid",
+     "color": "#4080c0"
+    },
+    {
+     "type": "shape",
+     "pos": [
+      135.0,
+      75.0
+     ],
+     "blend": "overlay",
+     "items": [
+      {
+       "ellipse": [
+        0,
+        0,
+        60,
+        60
+       ],
+       "fill": "#e03080"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "layers": [
+  {
+   "type": "precomp",
+   "comp": "multiply",
+   "anchor": [
+    0,
+    0
+   ],
+   "pos": [
+    51,
+    10
+   ]
+  },
+  {
+   "type": "text",
+   "text": "multiply (display numbers)",
+   "font": "Helvetica Neue",
+   "ui": true,
+   "size": 15,
+   "color": "#ffffff",
+   "anchor": [
+    0,
+    0
+   ],
+   "pos": [
+    55,
+    163
+   ]
+  },
+  {
+   "type": "precomp",
+   "comp": "screen",
+   "anchor": [
+    0,
+    0
+   ],
+   "pos": [
+    325,
+    10
+   ]
+  },
+  {
+   "type": "text",
+   "text": "screen (display numbers)",
+   "font": "Helvetica Neue",
+   "ui": true,
+   "size": 15,
+   "color": "#ffffff",
+   "anchor": [
+    0,
+    0
+   ],
+   "pos": [
+    329,
+    163
+   ]
+  },
+  {
+   "type": "precomp",
+   "comp": "overlay",
+   "anchor": [
+    0,
+    0
+   ],
+   "pos": [
+    599,
+    10
+   ]
+  },
+  {
+   "type": "text",
+   "text": "overlay (display numbers)",
+   "font": "Helvetica Neue",
+   "ui": true,
+   "size": 15,
+   "color": "#ffffff",
+   "anchor": [
+    0,
+    0
+   ],
+   "pos": [
+    603,
+    163
+   ]
+  }
+ ]
+}
