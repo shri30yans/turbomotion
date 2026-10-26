@@ -113,7 +113,7 @@ pub fn state(ev: &Evaluator, c: &CompPlan, l: &LayerPlan, p: &Particles, t: f64,
             let u = (a / life).clamp(0.0, 1.0);
             let (gx, gy) = (p.gravity[0], p.gravity[1]);
             let (mut dx, mut dy, vx, vy);
-            if p.drag > 1e-6 {
+            if p.drag.abs() > 1e-6 {
                 let e = (-p.drag * a).exp();
                 let k = (1.0 - e) / p.drag;
                 dx = gx / p.drag * a + (v0x - gx / p.drag) * k;
@@ -177,6 +177,20 @@ mod tests {
         let a = count(&plan, 3.0);
         let _ = (count(&plan, 1.0), count(&plan, 5.0));
         assert_eq!(a, count(&plan, 3.0));
+    }
+
+    #[test]
+    fn negative_drag_accelerates_outward_in_closed_form() {
+        let at = |drag: f64| {
+            let plan = Plan::from_value(json!({"dur": 6, "layers": [{"type": "particles", "rate": 0, "burst": [{"at": 0, "count": 1}], "life": [3, 3], "speed": [100, 100], "angle": 0, "spread": 0, "drag": drag}]}), std::path::Path::new(".")).unwrap();
+            match &Evaluator::new(&plan).frame(ROOT, 1.0).unwrap().layers[0].content {
+                Content::Particles(p) => p.items[0].x,
+                _ => panic!("not particles"),
+            }
+        };
+        let (still, grow) = (at(0.0), at(-1.0));
+        assert!((still - 100.0).abs() < 1e-6, "{still}");
+        assert!((grow - 100.0 * (1f64.exp() - 1.0)).abs() < 1e-3, "{grow}");
     }
 
     #[test]

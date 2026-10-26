@@ -530,7 +530,7 @@ pub struct Particles {
     pub angle: f64,
     pub spread: f64,
     pub gravity: [f64; 2],
-    /// Fraction of velocity lost per second.
+    /// Fraction of velocity lost per second; negative accelerates (speed grows as e^(-drag t)), for tunnels and warp streaks.
     pub drag: f64,
     /// Start diameter in pixels: `[min, max]`.
     pub size: [f64; 2],

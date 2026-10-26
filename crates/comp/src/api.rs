@@ -36,11 +36,12 @@ pub fn validate(value: Value, dir: &Path) -> Result<Vec<Finding>> {
 }
 
 /// The evaluated frame at `t` seconds, or one layer of it (`"shot/layer"` reaches into nested compositions).
+/// `layer` is an id or a path (`shot/id`); a bare id resolves through `lookup`.
 pub fn inspect(value: Value, dir: &Path, t: f64, layer: Option<&str>) -> Result<Value> {
     let plan = Plan::from_value(value, dir)?;
     let frame = Evaluator::new(&plan).frame(ROOT, t)?;
     let Some(path) = layer else { return Ok(serde_json::to_value(&frame)?) };
-    let (containing, selected) = crate::inspect::select(&frame, path)?;
+    let (containing, selected) = crate::inspect::select(&frame, &crate::lookup::resolve(&plan, path)?)?;
     let mut value = serde_json::to_value(containing)?;
     value["layers"] = serde_json::json!([selected]);
     Ok(value)

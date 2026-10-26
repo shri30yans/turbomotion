@@ -91,7 +91,7 @@ pub enum Command {
         /// Seconds into the composition
         #[arg(long)]
         t: f64,
-        /// Only this layer id or nested path (for example s9/disc); bounds use its containing comp
+        /// Only this layer: its id, or a path through precompositions such as intro/title (a bare id works when only one layer has it); bounds use its containing comp
         #[arg(long)]
         layer: Option<String>,
     },
@@ -383,7 +383,7 @@ pub fn run(command: Command) -> Result<()> {
             let evaluated = Evaluator::new(&plan).frame(ROOT, t)?;
             let frame = match layer {
                 Some(id) => {
-                    let (containing, selected) = crate::inspect::select(&evaluated, &id)?;
+                    let (containing, selected) = crate::inspect::select(&evaluated, &crate::lookup::resolve(&plan, &id)?)?;
                     let mut value = serde_json::to_value(containing)?;
                     value["layers"] = serde_json::json!([selected]);
                     value

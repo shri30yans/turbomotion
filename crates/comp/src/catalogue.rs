@@ -2,6 +2,7 @@
 //! `turbomotion comp catalogue`. It is the agent's API reference and it cannot drift: a test loads every example
 //! through the real planner, so an example that stops working fails the build.
 
+mod expression_support;
 mod property_examples;
 
 use serde::Serialize;
@@ -129,12 +130,14 @@ fn effects() -> Vec<crate::fxlib::Descriptor> {
 }
 
 pub fn all() -> Value {
+    let effects = effects();
     json!({
+        "expression_support": expression_support::expression_support(&effects),
         "layers": layers(),
         "enter_exit_presets": transitions(),
         "eases": eases(),
         "expressions": expression_functions(),
-        "effects": effects(),
+        "effects": effects,
         "effect_composite": crate::fxlib::composite::catalogue(),
         "text_presets": ["rise", "reveal", "rise_words", "fade_up", "blur_in", "pop", "slam", "drop", "typewriter", "scramble", "tracking_in", "wave_in", "spin_in", "elastic", "fade_out", "rise_out"],
         "tokens": {

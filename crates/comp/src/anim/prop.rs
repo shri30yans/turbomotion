@@ -111,6 +111,7 @@ impl Prop {
         match v {
             Value::Number(n) => Ok(Prop::constant(n.as_f64().ok_or_else(|| anyhow!("{n} is not a finite number"))?)),
             Value::String(s) => Ok(Prop { keys: vec![Key { t: 0.0, v: 0.0, ease: Ease::Linear }], looping: Loop::None, expr: Some(Expr::parse(s)?) }),
+            Value::Array(_) if is_number_list(v) => bail!("this property is a scalar, found the list of numbers {v}: that is how a vector (pos, anchor, scale) is written. A scalar is {SCALAR_FORMS}"),
             Value::Array(_) => Ok(Prop { keys: parse_keys(v)?, looping: Loop::None, expr: None }),
             Value::Object(o) => {
                 const VALID: &[&str] = &["keys", "value", "from", "to", "at", "dur", "delay", "ease", "loop", "expr"];
@@ -125,9 +126,9 @@ impl Prop {
                     inner.keys
                 } else if o.contains_key("from") || o.contains_key("to") {
                     let (from, to) = (o.get("from"), o.get("to"));
-                    let (from, to) = (num(from.ok_or_else(|| anyhow!("a tween needs \"from\" and \"to\""))?)?, num(to.ok_or_else(|| anyhow!("a tween needs \"from\" and \"to\""))?)?);
-                    let at = o.get("at").map_or(Ok(0.0), num)? + o.get("delay").map_or(Ok(0.0), num)?;
-                    let dur = o.get("dur").map_or(Ok(0.5), num)?;
+                    let (from, to) = (num("\"from\"", from.ok_or_else(|| anyhow!("a tween needs \"from\" and \"to\""))?)?, num("\"to\"", to.ok_or_else(|| anyhow!("a tween needs \"from\" and \"to\""))?)?);
+                    let at = o.get("at").map_or(Ok(0.0), |v| num("\"at\"", v))? + o.get("delay").map_or(Ok(0.0), |v| num("\"delay\"", v))?;
+                    let dur = o.get("dur").map_or(Ok(0.5), |v| num("\"dur\"", v))?;
                     ensure!(dur >= 0.0, "\"dur\" must not be negative");
                     let ease = o.get("ease").map_or(Ok(Ease::default()), |e| Ease::parse(e.as_str().ok_or_else(|| anyhow!("\"ease\" must be text like \"expo.out\""))?))?;
                     vec![Key { t: at, v: from, ease: Ease::Linear }, Key { t: at + dur.max(1e-6), v: to, ease }]
@@ -151,8 +152,20 @@ impl Prop {
     }
 }
 
-fn num(v: &Value) -> Result<f64> {
-    v.as_f64().ok_or_else(|| anyhow!("expected a number, found {v}"))
+/// The ways to write a scalar property, for errors.
+const SCALAR_FORMS: &str = "a number, an expression (text like \"time * 90\"), keys [[seconds, value, ease?], ..] or a tween {\"from\": a, \"to\": b, \"at\", \"dur\", \"ease\"}";
+
+/// `v` as the one number that `what` ("\"from\"", "a key's value") is. A list is named as a vector, because that is the mix-up.
+fn num(what: &str, v: &Value) -> Result<f64> {
+    v.as_f64().ok_or_else(|| match v {
+        Value::Array(_) => anyhow!("{what} must be one number, found the list {v}: a list is a vector (pos, anchor, scale), and this property is a scalar. A scalar is {SCALAR_FORMS}"),
+        _ => anyhow!("{what} must be a number, found {v}"),
+    })
+}
+
+/// A list of plain numbers: how a vector is written, never a scalar.
+fn is_number_list(v: &Value) -> bool {
+    v.as_array().is_some_and(|a| !a.is_empty() && a.iter().all(Value::is_number))
 }
 
 fn parse_keys(v: &Value) -> Result<Vec<Key>> {
@@ -166,14 +179,14 @@ fn parse_keys(v: &Value) -> Result<Vec<Key>> {
                     ensure!((2..=3).contains(&a.len()), "a key is [seconds, value] or [seconds, value, ease]");
                     ensure!(!a[1].is_array(), "a key's value here is one number, not {}. A vector animates as {VECTOR_FORMS}", a[1]);
                     let ease = a.get(2).map_or(Ok(Ease::default()), |e| Ease::parse(e.as_str().ok_or_else(|| anyhow!("the ease of a key is text like \"expo.out\""))?))?;
-                    Ok(Key { t: num(&a[0])?, v: num(&a[1])?, ease })
+                    Ok(Key { t: num("a key's time", &a[0])?, v: num("a key's value", &a[1])?, ease })
                 }
                 Value::Object(o) => {
                     if !o.contains_key("t") && ["from", "to", "dur", "at"].iter().any(|k| o.contains_key(*k)) {
                         bail!("keys are [seconds, value, ease?] (or {{\"t\", \"v\"}}); this looks like a tween object, and a list of tweens is not keys. Use one tween per property ({{\"from\": 0, \"to\": 1, \"at\": 0.5, \"dur\": 0.4}}), or keys such as [[0, 0], [0.5, 1, \"expo.out\"]]");
                     }
                     let ease = o.get("ease").map_or(Ok(Ease::default()), |e| Ease::parse(e.as_str().unwrap_or("")))?;
-                    Ok(Key { t: num(o.get("t").ok_or_else(|| anyhow!("key needs \"t\""))?)?, v: num(o.get("v").ok_or_else(|| anyhow!("key needs \"v\""))?)?, ease })
+                    Ok(Key { t: num("\"t\"", o.get("t").ok_or_else(|| anyhow!("key needs \"t\""))?)?, v: num("\"v\"", o.get("v").ok_or_else(|| anyhow!("key needs \"v\""))?)?, ease })
                 }
                 other => bail!("a key is [seconds, value, ease?], not {other}"),
             }
@@ -268,6 +281,8 @@ impl VecProp {
                         comps.push(Prop::parse(&Value::Object(obj))?);
                     }
                     Ok(VecProp(comps))
+                } else if o.get("from").is_some_and(Value::is_array) != o.get("to").is_some_and(Value::is_array) {
+                    bail!("a vector tween needs \"from\" and \"to\" both as lists of the same length; found from {} and to {} (a scalar tween has both as numbers). A vector is {VECTOR_FORMS}", o.get("from").unwrap_or(&Value::Null), o.get("to").unwrap_or(&Value::Null))
                 } else {
                     bail!("a vector is {VECTOR_FORMS}; found {v}")
                 }
@@ -304,7 +319,7 @@ pub fn parse_color_static(v: &Value) -> Result<[f64; 4]> {
     match v {
         Value::String(s) => hex(s),
         Value::Array(a) if a.len() == 3 || a.len() == 4 => {
-            let n: Vec<f64> = a.iter().map(num).collect::<Result<_>>()?;
+            let n: Vec<f64> = a.iter().map(|c| num("a colour channel", c)).collect::<Result<_>>()?;
             Ok([n[0], n[1], n[2], n.get(3).copied().unwrap_or(1.0)])
         }
         other => bail!("a colour is \"#rrggbb\", \"#rrggbbaa\", a name like \"white\", or [r, g, b, a?] (0-255, alpha 0-1); found {other}"),
@@ -388,8 +403,8 @@ impl ColorProp {
             Value::Object(o) if o.contains_key("from") => {
                 let from = parse_color_static(&o["from"])?;
                 let to = parse_color_static(o.get("to").ok_or_else(|| anyhow!("a colour tween needs \"to\""))?)?;
-                let at = o.get("at").map_or(Ok(0.0), num)? + o.get("delay").map_or(Ok(0.0), num)?;
-                let dur = o.get("dur").map_or(Ok(0.5), num)?;
+                let at = o.get("at").map_or(Ok(0.0), |v| num("\"at\"", v))? + o.get("delay").map_or(Ok(0.0), |v| num("\"delay\"", v))?;
+                let dur = o.get("dur").map_or(Ok(0.5), |v| num("\"dur\"", v))?;
                 let ease = o.get("ease").cloned().unwrap_or(Value::Null);
                 split(vec![(at, from, Value::Null), (at + dur.max(1e-6), to, ease)])
             }
@@ -400,7 +415,7 @@ impl ColorProp {
                     .map(|k| {
                         let k = k.as_array().ok_or_else(|| anyhow!("colour keys are [seconds, colour, ease?]"))?;
                         ensure!(k.len() >= 2, "colour keys are [seconds, colour, ease?]");
-                        Ok((num(&k[0])?, parse_color_static(&k[1])?, k.get(2).cloned().unwrap_or(Value::Null)))
+                        Ok((num("a colour key's time", &k[0])?, parse_color_static(&k[1])?, k.get(2).cloned().unwrap_or(Value::Null)))
                     })
                     .collect::<Result<Vec<_>>>()?;
                 split(keys)

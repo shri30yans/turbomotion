@@ -19,3 +19,4 @@ pub mod catalogue;
 pub mod cli;
 
 pub mod inspect;
+pub mod lookup;

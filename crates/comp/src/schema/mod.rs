@@ -3,7 +3,9 @@
 
 pub mod bake;
 pub mod blocks;
+mod de;
 pub mod extrude;
+mod item_alias;
 mod kinds;
 pub mod letterbox;
 mod path;
@@ -415,12 +417,11 @@ pub fn parse_layer(index: usize, v: &Value) -> Result<Layer> {
         }
         if COMMON_KEYS.contains(&k.as_str()) { common_map.insert(k.clone(), val.clone()) } else { kind_map.insert(k.clone(), val.clone()) };
     }
-    let common: Common = serde_json::from_value(Value::Object(common_map)).map_err(|e| anyhow!("{}: {e}", label()))?;
+    let common: Common = de::from_value_at(Value::Object(common_map)).with_context(label)?;
     let fx = common.fx.iter().enumerate().map(|(i, f)| Fx::parse(f).with_context(|| format!("fx {i}"))).collect::<Result<Vec<_>>>().with_context(label)?;
     let kv = Value::Object(kind_map);
-    let kind_err = |e: serde_json::Error| anyhow!("{}: {e}", label());
-    let kind = match ty {
-        "solid" => Kind::Solid(serde_json::from_value(kv).map_err(kind_err)?),
+        let kind = match ty {
+        "solid" => Kind::Solid(de::from_value_at(kv).with_context(label)?),
         "shape" => {
             let items = kv.get("items").and_then(Value::as_array).ok_or_else(|| anyhow!("{}: a shape layer needs \"items\": [{{\"rect\": [..], \"fill\": ..}}]", label()))?;
             if let Some(extra) = kv.as_object().and_then(|m| m.keys().find(|k| *k != "items")) {
@@ -428,19 +429,19 @@ pub fn parse_layer(index: usize, v: &Value) -> Result<Layer> {
             }
             Kind::Shape(Shape { items: items.iter().enumerate().map(|(i, it)| ShapeItem::parse(it).with_context(|| format!("item {i}"))).collect::<Result<_>>().with_context(label)? })
         }
-        "text" => Kind::Text(serde_json::from_value(kv).map_err(kind_err)?),
-        "mesh" => Kind::Mesh(serde_json::from_value(kv).map_err(kind_err)?),
-        "image" => Kind::Image(serde_json::from_value(kv).map_err(kind_err)?),
-        "video" => Kind::Video(serde_json::from_value(kv).map_err(kind_err)?),
-        "audio" => Kind::Audio(serde_json::from_value(kv).map_err(kind_err)?),
-        "precomp" => Kind::Precomp(serde_json::from_value(kv).map_err(kind_err)?),
+        "text" => Kind::Text(de::from_value_at(kv).with_context(label)?),
+        "mesh" => Kind::Mesh(de::from_value_at(kv).with_context(label)?),
+        "image" => Kind::Image(de::from_value_at(kv).with_context(label)?),
+        "video" => Kind::Video(de::from_value_at(kv).with_context(label)?),
+        "audio" => Kind::Audio(de::from_value_at(kv).with_context(label)?),
+        "precomp" => Kind::Precomp(de::from_value_at(kv).with_context(label)?),
         "null" => no_fields(&kv, ty, &label).map(|()| Kind::Null)?,
         "adjustment" => no_fields(&kv, ty, &label).map(|()| Kind::Adjustment)?,
-        "camera" => Kind::Camera(serde_json::from_value(kv).map_err(kind_err)?),
-        "light" => Kind::Light(serde_json::from_value(kv).map_err(kind_err)?),
-        "particles" => Kind::Particles(Box::new(serde_json::from_value(kv).map_err(kind_err)?)),
-        "texture" => Kind::Texture(serde_json::from_value(kv).map_err(kind_err)?),
-        "pack" => Kind::Pack(serde_json::from_value(kv).map_err(kind_err)?),
+        "camera" => Kind::Camera(de::from_value_at(kv).with_context(label)?),
+        "light" => Kind::Light(de::from_value_at(kv).with_context(label)?),
+        "particles" => Kind::Particles(Box::new(de::from_value_at(kv).with_context(label)?)),
+        "texture" => Kind::Texture(de::from_value_at(kv).with_context(label)?),
+        "pack" => Kind::Pack(de::from_value_at(kv).with_context(label)?),
         other => bail!("{}: unknown layer type {other:?}; the types are {}", label(), Kind::NAMES.join(", ")),
     };
     Ok(Layer { common, fx, kind })

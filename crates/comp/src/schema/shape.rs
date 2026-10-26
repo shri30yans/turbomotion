@@ -4,7 +4,7 @@ use anyhow::{anyhow, bail, ensure, Result};
 use serde::Deserialize;
 use serde_json::{Map, Value};
 
-use super::{path::PathSpec, wrap::{Col, Pos, Scale, P}};
+use super::{item_alias, path::PathSpec, wrap::{Col, Pos, Scale, P}};
 
 #[derive(Debug, Clone)]
 pub struct ShapeItem {
@@ -37,15 +37,15 @@ impl ShapeItem {
     /// A shape item is its geometry keys (`rect`, `ellipse`, `d`, ...) and its look keys (`fill`, `stroke`, `trim`...) in one object.
     pub fn parse(v: &Value) -> Result<ShapeItem> {
         let o = v.as_object().ok_or_else(|| anyhow!("a shape item is an object like {{\"rect\": [0, 0, 300, 200], \"fill\": \"#fff\"}}"))?;
-        if let Some(bad) = o.keys().find(|k| !PATH_KEYS.contains(&k.as_str()) && !ITEM_KEYS.contains(&k.as_str())) {
-            bail!("unknown shape field {bad:?}; geometry: {}; look: {}", PATH_KEYS.join(", "), ITEM_KEYS.join(", "));
+        if let Some(bad) = o.keys().find(|k| !PATH_KEYS.contains(&k.as_str()) && !ITEM_KEYS.contains(&k.as_str()) && !item_alias::is_alias(k)) {
+            let flat: Vec<&str> = item_alias::ALIASES.iter().map(|(flat, ..)| *flat).collect();
+            bail!("unknown shape field {bad:?}; geometry: {}; look: {}; flat spellings of nested look fields: {}", PATH_KEYS.join(", "), ITEM_KEYS.join(", "), flat.join(", "));
         }
+        let o = &item_alias::nest(o)?;
         let path_map: Map<String, Value> = o.iter().filter(|(k, _)| PATH_KEYS.contains(&k.as_str())).map(|(k, v)| (k.clone(), v.clone())).collect();
         let path: PathSpec = serde_json::from_value(Value::Object(path_map)).map_err(|e| anyhow!("{e}"))?;
         ensure!(path.geometry_count() == 1, "a shape item needs exactly one of d, points, rect, ellipse, polygon, star (found {})", path.geometry_count());
         let get = |k: &str| o.get(k);
-        let de = |k: &str| -> Result<_> { Ok(get(k).cloned()) };
-        let _ = de;
         Ok(ShapeItem {
             path,
             fill: get("fill").map(Fill::parse).transpose().map_err(|e| anyhow!("fill: {e:#}"))?,
