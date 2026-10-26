@@ -4,6 +4,10 @@ version = "0.1.0"
 edition = "2021"
 description = "The platform under every turbomotion renderer: GPU context, video encoder, shader runner, layers, easing and the effects library. Knows nothing about films."
 
+[features]
+# The closed-form values of every blend mode (`effects::blend::closed_form`), for the tests of crates that render them.
+reference = []
+
 [dependencies]
 anyhow.workspace = true
 flate2.workspace = true

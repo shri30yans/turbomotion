@@ -12,3 +12,6 @@ oxc.workspace = true
 oxc_sourcemap.workspace = true
 rquickjs.workspace = true
 turbomotion-comp.workspace = true
+
+[dev-dependencies]
+turbomotion-core.workspace = true

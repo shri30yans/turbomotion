@@ -207,7 +207,11 @@ impl<'a> Builder<'a> {
             return;
         }
         let behind = if uses_backdrop(&comp.layers[i].fx) { Some(self.pass(Stage::Snapshot, frame, vec![])) } else { None };
-        let parts = self.layer_parts(frame, i, behind);
+        let mut parts = self.layer_parts(frame, i, behind);
+        // a mode that reaches past the layer's own pixels (a dissolve, a stencil) sees the layer as the frame sees it
+        if parts.unplaced && blend.is_some_and(|b| b.needs_frame()) {
+            parts = Parts { image: self.pass(Stage::Place { layer: i }, frame, vec![parts.image]), unplaced: false };
+        }
         let placed = parts.unplaced.then_some(i);
         self.modify(Stage::Composite { blend, opacity: st.opacity, placed }, frame, vec![parts.image]);
     }

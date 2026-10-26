@@ -1,0 +1,53 @@
+// Dissolve: each pixel of the layer is kept whole or dropped, by a pattern that depends only on the pixel's place and
+// the seed. A pixel is kept (as its straight colour, fully opaque) when the pattern at that pixel is below the layer's
+// alpha times its opacity, so over a large flat area the fraction kept is that alpha and nothing else.
+uniform shader source;
+// the frame number for a dancing dissolve, 0 for a plain one
+uniform float seed;
+uniform float opacity;
+
+// The pattern is made of whole numbers only. SkSL here has neither unsigned integers nor bit operations, and a float
+// holds a whole number exactly up to 2^24, so the hash is a Feistel network on two 12-bit halves (a "lane" is a whole
+// number below 4096) in which every product stays below 2^24 and every remainder is by a power of two. Nothing is
+// rounded, so the pattern is the same on every backend and in every order of evaluation, and it is a function of the
+// pixel and the seed alone.
+const float LANE = 4096.0;
+
+float lane(float v) {
+    return v - LANE * floor(v / LANE);
+}
+
+// One half's contribution to the other: a product by an odd number (a bijection of the lane), the high bits folded into
+// the low ones, the high bits of the square folded in (the nonlinear step), and the same again.
+float scramble(float v, float key) {
+    v = lane(v * 1373.0 + key);
+    v = lane(v + floor(v / 64.0));
+    v = lane(v + floor(v * v / LANE));
+    v = lane(v * 2531.0 + 1.0);
+    return lane(v + floor(v / 16.0));
+}
+
+// Four Feistel rounds: the halves swap and the old first half takes the scrambled second.
+float2 rounds(float2 halves, float key) {
+    for (int i = 0; i < 4; i++) {
+        float mixed = scramble(halves.y, key + 509.0 * float(i));
+        halves = float2(halves.y, lane(halves.x + mixed));
+    }
+    return halves;
+}
+
+// A pattern value in [0, 1) at a pixel: 24 bits, exact in a float.
+float pattern(float2 pixel, float frame) {
+    float2 halves = rounds(float2(lane(pixel.x), lane(pixel.y)), 11.0);
+    // the seed and what the pixel's place holds above 12 bits go in between the two sets of rounds
+    halves = float2(lane(halves.x + lane(frame) + floor(pixel.x / LANE)), lane(halves.y + floor(frame / LANE) + floor(pixel.y / LANE)));
+    halves = rounds(halves, 1999.0);
+    return (halves.x * LANE + halves.y) / (LANE * LANE);
+}
+
+half4 main(float2 xy) {
+    half4 c = source.eval(xy);
+    float keep = float(c.a) * opacity;
+    if (keep <= 0.0) return half4(0.0);
+    return pattern(floor(xy), seed) < keep ? half4(c.rgb / c.a, 1.0) : half4(0.0);
+}

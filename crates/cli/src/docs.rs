@@ -3,6 +3,7 @@
 //! SDK sources. Nothing here is typed by hand, so a page can only be stale until the next `docs --write`, and the test
 //! in `tests/docs.rs` (and CI) fails until then.
 
+mod blend;
 mod sdk;
 
 use std::{fmt::Write as _, fs, path::Path};
@@ -17,6 +18,7 @@ pub fn pages(ledger: &Path) -> Vec<(String, String)> {
         ("layers.md".to_string(), layers(&c)),
         ("timeline.md".to_string(), timeline(&c)),
         ("effects.md".to_string(), effects(&c)),
+        ("blend-modes.md".to_string(), blend::page_of(&c)),
         ("text-and-motion.md".to_string(), motion(&c)),
         ("sdk.md".to_string(), sdk::page()),
     ];

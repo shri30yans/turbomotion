@@ -3,6 +3,7 @@
 //! masks and matte, and lands on the composite with its opacity and blend mode. With `effect_space: "layer"` the
 //! effects and masks come first, on the layer's own pixels (`local`), and the matrix is applied after them.
 
+mod blend;
 mod composite;
 mod content;
 mod fx;
@@ -23,6 +24,8 @@ mod text;
 
 #[cfg(test)]
 mod backdrop_tests;
+#[cfg(test)]
+mod blend_tests;
 #[cfg(test)]
 mod color_media_tests;
 #[cfg(test)]

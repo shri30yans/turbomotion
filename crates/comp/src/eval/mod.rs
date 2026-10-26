@@ -498,7 +498,7 @@ impl<'p> Evaluator<'p> {
             opacity: props.opacity * m.opacity * if flip_u.is_some_and(|u| u <= 1e-9) { 0.0 } else { 1.0 },
             origin,
             bounds,
-            blend: cm.blend.map(|b| format!("{b:?}").to_lowercase()),
+            blend: cm.blend.map(|b| b.name().to_string()),
             depth,
             blend_mode: cm.blend,
             screen,

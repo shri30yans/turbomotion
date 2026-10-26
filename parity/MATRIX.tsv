@@ -18,7 +18,16 @@ Track mattes	Layers	have	-	-	Track Matte	-
 Matte on an adjustment layer	Layers	part	-	-	Track Matte	WP-14
 Masks	Layers	have	-	-	Masks	-
 Per-vertex mask feather	Layers	none	-	-	Mask Feather tool	WP-30
-Blend modes (17 of about 38)	Compositing	part	-	-	Blending modes	WP-05
+Blend modes: the original 17 (normal to luminosity, drawn by Skia)	Compositing	done	the_original_seventeen_modes_are_drawn_by_the_skia_modes_they_always_were	parity/specs/blend_modes.md	Blending modes	WP-05
+Blend modes: linear burn, darker/lighter colour, linear/vivid/pin light, hard mix, subtract, divide (closed form, every mode, partial alpha)	Compositing	done	every_mode_but_the_dissolves_equals_its_closed_form_on_every_pair	parity/specs/blend_modes.md	Blending modes	WP-05
+Blend modes: classic colour burn, classic colour dodge, classic difference	Compositing	part	the_classic_modes_differ_from_the_new_ones_at_the_edges_and_under_opacity	parity/specs/blend_modes.md	Classic Color Burn	WP-05
+Blend modes: hue, saturation, colour, luminosity keep their invariants	Compositing	done	the_non_separable_modes_keep_the_luminosity_and_hue_they_are_defined_by	parity/specs/blend_modes.md	Blending modes	WP-05
+Blend modes: dissolve and dancing dissolve (seeded exact pattern)	Compositing	done	a_dissolve_keeps_the_share_of_a_large_flat_area_that_its_opacity_says	parity/specs/blend_modes.md	Dissolve	WP-05
+Blend modes: stencil and silhouette, alpha and luma	Compositing	done	the_alpha_stencil_keeps_the_backdrop_by_the_layers_alpha_and_clears_it_where_the_layer_is_not	parity/specs/blend_modes.md	Stencil Alpha	WP-05
+Blend modes: alpha add	Compositing	done	alpha_add_adds_alphas_and_closes_a_seam_that_over_leaves	parity/specs/blend_modes.md	Alpha Add	WP-05
+Blend modes: luminescent premul (equal to normal in a half-float engine)	Compositing	part	luminescent_premul_keeps_light_above_alpha_that_normal_would_clip_to_it	parity/specs/blend_modes.md	Luminescent Premul	WP-05
+Blend modes in linear light (opt-in)	Compositing	done	multiply_screen_and_overlay_in_linear_light_differ_from_display_numbers_by_what_the_curve_says	parity/specs/blend_modes.md	Blending modes	WP-05
+Effect composite blend takes every mode	Compositing	done	an_effects_composite_blend_takes_every_mode_as_a_layer_does	parity/specs/blend_modes.md	Blending modes	WP-05
 Layer markers	Layers	part	-	-	Layer markers	WP-14
 Precomp time remap	Time	have	-	-	Time Remap	-
 Collapse transformations	Layers	unverified	-	-	Collapse Transformations	WP-14

@@ -1,0 +1,90 @@
+// The blend modes Skia has no mode for, in one blender. The host puts one `const int NAME = n;` per mode in front of
+// this source (see effects/blend/table.rs) and sets `mode` to that number.
+//
+// src is the layer, dst what is below; both premultiplied and in the working colour space of the surface, so every
+// mode here is a function of the numbers the pictures hold: encoded numbers in the default film, light in a
+// linear-light one. Colours are taken straight (divided by alpha) and held to 0..1 before a mode sees them.
+//
+// A mode that mixes colours is a function B(cb, cs) of the straight base and layer colours, laid over by the W3C
+// compositing rule (also After Effects'): out = cs*sa*(1-da) + cb*da*(1-sa) + B*sa*da, alpha = sa + da - sa*da.
+uniform float mode;
+
+const float3 LUMA = float3(0.2126, 0.7152, 0.0722);
+
+float burn(float cb, float cs) {
+    if (cb >= 1.0) return 1.0;
+    if (cs <= 0.0) return 0.0;
+    return 1.0 - min(1.0, (1.0 - cb) / cs);
+}
+
+float dodge(float cb, float cs) {
+    if (cb <= 0.0) return 0.0;
+    if (cs >= 1.0) return 1.0;
+    return min(1.0, cb / (1.0 - cs));
+}
+
+// One channel of the modes that treat each channel alone. -1 is returned only for a number that is not one of these
+// modes, which no row of the table has: the table-driven test in effects/blend/tests_modes.rs runs every row.
+float channel(int m, float cb, float cs) {
+    if (m == LINEAR_BURN) return max(cb + cs - 1.0, 0.0);
+    if (m == LINEAR_LIGHT) return clamp(cb + 2.0 * cs - 1.0, 0.0, 1.0);
+    if (m == VIVID_LIGHT) return cs <= 0.5 ? burn(cb, 2.0 * cs) : dodge(cb, 2.0 * (cs - 0.5));
+    if (m == PIN_LIGHT) return cs <= 0.5 ? min(cb, 2.0 * cs) : max(cb, 2.0 * cs - 1.0);
+    if (m == HARD_MIX) return cb + cs >= 1.0 ? 1.0 : 0.0;
+    if (m == SUBTRACT) return max(cb - cs, 0.0);
+    if (m == DIVIDE) return cs <= 0.0 ? (cb > 0.0 ? 1.0 : 0.0) : min(cb / cs, 1.0);
+    return -1.0;
+}
+
+float3 mixed(int m, float3 cb, float3 cs) {
+    if (m == DARKER_COLOR) return cs.r + cs.g + cs.b < cb.r + cb.g + cb.b ? cs : cb;
+    if (m == LIGHTER_COLOR) return cs.r + cs.g + cs.b > cb.r + cb.g + cb.b ? cs : cb;
+    return float3(channel(m, cb.r, cs.r), channel(m, cb.g, cs.g), channel(m, cb.b, cs.b));
+}
+
+float4 mix_over(int m, float4 s, float4 d) {
+    if (s.a <= 0.0) return d;
+    if (d.a <= 0.0) return s;
+    float3 b = mixed(m, clamp(d.rgb / d.a, 0.0, 1.0), clamp(s.rgb / s.a, 0.0, 1.0));
+    return float4(s.rgb * (1.0 - d.a) + d.rgb * (1.0 - s.a) + b * s.a * d.a, s.a + d.a - s.a * d.a);
+}
+
+// The classic modes fade the layer toward the colour that leaves the base alone by its coverage, then apply the
+// formula at full strength; where the base is opaque the result is that formula, not a mix of it by opacity.
+float classic(int m, float cb, float cs) {
+    if (m == CLASSIC_COLOR_BURN) return cs <= 0.0 ? 0.0 : max(1.0 - (1.0 - cb) / cs, 0.0);
+    if (m == CLASSIC_COLOR_DODGE) return cs >= 1.0 ? 1.0 : min(cb / (1.0 - cs), 1.0);
+    if (m == CLASSIC_DIFFERENCE) return abs(cb - cs);
+    return -1.0;
+}
+
+float4 classic_over(int m, float4 s, float4 d) {
+    if (s.a <= 0.0) return d;
+    if (d.a <= 0.0) return s;
+    float neutral = m == CLASSIC_COLOR_BURN ? 1.0 : 0.0;
+    float3 cb = clamp(d.rgb / d.a, 0.0, 1.0);
+    float3 cs = clamp(s.rgb / s.a, 0.0, 1.0);
+    cs = float3(neutral) + s.a * (cs - float3(neutral));
+    float3 b = float3(classic(m, cb.r, cs.r), classic(m, cb.g, cs.g), classic(m, cb.b, cs.b));
+    return float4(s.rgb * (1.0 - d.a) + d.a * b, s.a + d.a - s.a * d.a);
+}
+
+// Over, with the alphas added (to 1) instead of united: the colour is the over colour kept at its own strength.
+float4 alpha_add(float4 s, float4 d) {
+    float4 over = float4(s.rgb + d.rgb * (1.0 - s.a), s.a + d.a - s.a * d.a);
+    if (over.a <= 0.0) return float4(0.0);
+    float a = min(s.a + d.a, 1.0);
+    return float4(over.rgb * (a / over.a), a);
+}
+
+half4 main(half4 src, half4 dst) {
+    float4 s = float4(src);
+    float4 d = float4(dst);
+    int m = int(mode + 0.5);
+    float luma = clamp(dot(s.rgb, LUMA), 0.0, 1.0);
+    if (m == STENCIL_LUMA) return half4(d * luma);
+    if (m == SILHOUETTE_LUMA) return half4(d * (1.0 - luma));
+    if (m == ALPHA_ADD) return half4(alpha_add(s, d));
+    if (m == CLASSIC_COLOR_BURN || m == CLASSIC_COLOR_DODGE || m == CLASSIC_DIFFERENCE) return half4(classic_over(m, s, d));
+    return half4(mix_over(m, s, d));
+}

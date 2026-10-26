@@ -84,3 +84,13 @@ fn the_color_option_is_typed_with_exactly_the_engines_keys_and_names() {
     }
     assert_eq!(const_list(&engine_source, "NAMES"), ["half"], "depth has the one value the SDK types");
 }
+
+#[test]
+fn the_blend_option_is_typed_with_exactly_the_engines_names_in_its_order() {
+    let source = read("sdk/blend-types.ts");
+    let body = &source[source.find("export type BlendMode =").expect("the BlendMode type")..];
+    let typed: Vec<String> = body[..body.find(';').unwrap()].split('"').skip(1).step_by(2).map(str::to_string).collect();
+    assert_eq!(typed, turbomotion_core::effects::blend::NAMES, "the SDK type lists every mode, then the aliases");
+    let layer = read("sdk/types.ts");
+    assert!(layer.lines().any(|l| l.trim() == "blend?: BlendMode;"), "LayerOpts types `blend` as BlendMode");
+}

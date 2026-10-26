@@ -1,5 +1,6 @@
 // Shared types. Everything an author can write is described here, so an editor catches mistakes before the render does.
 
+import type { BlendMode } from "./blend-types";
 import type { ItemFill } from "./shape-types";
 import type { Along, Flip, LayerStagger, Reflect, Wrap } from "./layer-motion-types";
 
@@ -91,7 +92,8 @@ export interface LayerOpts {
   start?: Seconds;
   dur?: Seconds;
   parent?: string | { id: string };
-  blend?: string;
+  /** How the layer combines with what is below (default `"normal"`). In a film with `color.linear_light` it blends light. */
+  blend?: BlendMode;
   fx?: Array<Record<string, unknown>>;
   masks?: Array<Record<string, unknown>>;
   matte?: Record<string, unknown>;

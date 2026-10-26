@@ -18,8 +18,7 @@ pub fn apply(sc: &Scope, input: &Layer, result: Layer, plan: &CompositePlan, sta
         Some(cov) => post::multiply_by(sc.like, &result, &cov)?,
         None => result,
     };
-    let mut paint = Paint::default();
-    paint.set_blend_mode(plan.blend.skia()).set_alpha_f(state.mix);
+    let (masked, paint) = super::blend::prepare(sc.ctx, sc.like, sc.frame, Some(plan.blend), &masked, state.mix)?;
     Layer::try_render(sc.like, input.width(), input.height(), |c| {
         c.draw_image(input.image(), (0, 0), None);
         c.draw_image(masked.image(), (0, 0), Some(&paint));

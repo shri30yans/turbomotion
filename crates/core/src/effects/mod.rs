@@ -9,7 +9,7 @@
 //! so the documentation cannot drift from what the renderer accepts.
 
 mod backdrop;
-mod blend;
+pub mod blend;
 mod blur;
 mod bounds;
 mod color;
@@ -28,7 +28,7 @@ use serde_json::{Map, Value};
 use skia_safe::Canvas;
 
 pub use backdrop::over as backdrop_over;
-pub use blend::Blend;
+pub use blend::{Blend, Programs as BlendPrograms};
 pub use blur::smear;
 pub use bounds::{grown, grows_bounds, Growth, GAUSSIAN_REACH};
 pub use pass::{Ctx, Space};

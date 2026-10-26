@@ -7,7 +7,7 @@ use turbomotion_core::layer::{picture_info, with_working_space, Layer};
 use super::{comp_graph, effect_inputs_graph, layer_graph, FxOwner, Graph, ImageId, Pass, Stage, Write};
 use crate::{
     eval::Frame,
-    render::{color4f, fx, local, post, Ctx},
+    render::{blend, color4f, fx, local, post, Ctx},
 };
 
 struct Run<'a, 'c> {
@@ -79,12 +79,7 @@ impl Run<'_, '_> {
                 Some(Layer::from_image(sum.image_snapshot()))
             }
             Stage::Composite { blend, opacity, placed } => {
-                let mut paint = Paint::default();
-                if let Some(b) = blend {
-                    paint.set_blend_mode(b.skia());
-                }
-                paint.set_alpha_f(*opacity as f32);
-                let img = read(0).clone();
+                let (img, paint) = blend::prepare(ctx, like, frame, *blend, read(0), *opacity as f32)?;
                 match placed {
                     Some(layer) => local::draw_placed(self.composite().canvas(), &frame.layers[*layer], &img, &paint)?,
                     None => {

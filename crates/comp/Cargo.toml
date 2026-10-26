@@ -14,5 +14,8 @@ skia-safe.workspace = true
 turbomotion-core.workspace = true
 lyon_tessellation = "1"
 
+[dev-dependencies]
+turbomotion-core = { workspace = true, features = ["reference"] }
+
 [build-dependencies]
 syn = { version = "2", features = ["full"] }

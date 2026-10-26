@@ -7,6 +7,7 @@ Every page here is generated from the code. Refresh with `turbomotion docs --wri
 * [Layer kinds](layers.md)
 * [Timeline](timeline.md)
 * [Effects](effects.md)
+* [Blend modes](blend-modes.md)
 * [Text, motion and expressions](text-and-motion.md)
 * [TypeScript SDK](sdk.md)
 * [Not supported and not built](parity.md)

@@ -41,7 +41,7 @@ fn stage_name(g: &Graph, s: &Stage) -> String {
         Stage::ShutterAverage { opacities } => format!("average of {} shutter samples", opacities.len()),
         Stage::Composite { blend, opacity, placed } => {
             let how = placed.map_or(String::new(), |l| format!(", placing {} through its matrix", label(&l)));
-            format!("composite {} at opacity {opacity:.2}{how}", blend.map_or("normal".to_string(), |b| format!("{b:?}").to_lowercase()))
+            format!("composite {} at opacity {opacity:.2}{how}", blend.map_or("normal", |b| b.name()))
         }
         Stage::Snapshot => "snapshot of the composite".to_string(),
         Stage::AdjustCoverage { layer } => format!("coverage of adjustment {}", label(layer)),

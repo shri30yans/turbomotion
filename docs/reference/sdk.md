@@ -90,6 +90,15 @@ film.add(pixelSprite(
 export default film;
 ```
 
+## `blend-types`
+
+The layer blend modes (crates/core/src/effects/blend/table.rs): the engine's own names, in its order, then its aliases. `docs/reference/blend-modes.md` says what each one does; a test fails when this list and the engine's differ.
+
+```ts
+export type BlendMode =
+```
+How a layer combines with what is below it. `"linear_dodge"` is another name for `"add"`.
+
 ## `comp`
 
 The film: size, frame rate, layers, and the edit timeline of shots, transitions, overlays and hits.
