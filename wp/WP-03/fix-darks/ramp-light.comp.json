@@ -1,0 +1,48 @@
+{
+ "width": 320,
+ "height": 16,
+ "fps": 10,
+ "dur": 1,
+ "bg": "#000000",
+ "layers": [
+  {
+   "type": "shape",
+   "items": [
+    {
+     "rect": [
+      32,
+      0,
+      256,
+      16
+     ],
+     "fill": {
+      "gradient": {
+       "type": "linear",
+       "from": [
+        32,
+        0
+       ],
+       "to": [
+        288,
+        0
+       ],
+       "stops": [
+        [
+         0,
+         "#000000"
+        ],
+        [
+         1,
+         "#ffffff"
+        ]
+       ]
+      }
+     }
+    }
+   ]
+  }
+ ],
+ "color": {
+  "linear_light": true
+ }
+}

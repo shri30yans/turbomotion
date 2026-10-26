@@ -82,3 +82,7 @@ Open questions for the owner:
 9. The dancing dissolve's seed is `round(t * fps)` of the composition being drawn; inside a nested composition with its own clock that is the nested frame. Acceptable?
 
 Estimated cost to finish (if partial): none, status done.
+
+## Erratum (after the WP-03 darks fix)
+
+The green values quoted for `probes/light.comp.json` (20, 135, 31) came through the 8-bit flat-colour bug fixed in `wp/WP-03/FIX-darks.md`. The exact closed-form values are 19, 134, 30, and the regenerated probe images and README carry them. The dark-level limitation described in this report no longer exists.
