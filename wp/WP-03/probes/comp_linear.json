@@ -1,0 +1,186 @@
+{
+ "width": 960,
+ "height": 540,
+ "fps": 30,
+ "dur": 1,
+ "bg": "#000000",
+ "color": {
+  "linear_light": true
+ },
+ "comps": {
+  "edge": {
+   "width": 240,
+   "height": 540,
+   "dur": 1,
+   "layers": [
+    {
+     "type": "solid",
+     "color": "#000000"
+    },
+    {
+     "type": "solid",
+     "color": "#ffffff",
+     "size": [
+      120,
+      540
+     ],
+     "pos": [
+      180,
+      270
+     ]
+    }
+   ]
+  }
+ },
+ "layers": [
+  {
+   "type": "solid",
+   "id": "half",
+   "color": "#ffffff",
+   "size": [
+    240,
+    540
+   ],
+   "pos": [
+    120,
+    270
+   ],
+   "opacity": 0.5
+  },
+  {
+   "type": "precomp",
+   "comp": "edge",
+   "pos": [
+    360,
+    270
+   ],
+   "fx": [
+    {
+     "effect": "blur",
+     "radius": 24
+    }
+   ]
+  },
+  {
+   "type": "shape",
+   "items": [
+    {
+     "rect": [
+      480,
+      0,
+      240,
+      540
+     ],
+     "fill": {
+      "gradient": {
+       "type": "linear",
+       "from": [
+        480,
+        0
+       ],
+       "to": [
+        720,
+        0
+       ],
+       "stops": [
+        [
+         0,
+         "#000000"
+        ],
+        [
+         1,
+         "#ffffff"
+        ]
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "solid",
+   "color": "#808080",
+   "size": [
+    240,
+    540
+   ],
+   "pos": [
+    840,
+    270
+   ]
+  },
+  {
+   "type": "solid",
+   "color": "#808080",
+   "size": [
+    240,
+    270
+   ],
+   "pos": [
+    840,
+    135
+   ],
+   "blend": "add"
+  },
+  {
+   "type": "solid",
+   "color": "#000000",
+   "size": [
+    960,
+    100
+   ],
+   "pos": [
+    480,
+    490
+   ]
+  },
+  {
+   "type": "text",
+   "text": "50% white",
+   "size": 26,
+   "weight": 700,
+   "color": "#ffffff",
+   "pos": [
+    120,
+    480
+   ],
+   "align": "center"
+  },
+  {
+   "type": "text",
+   "text": "blur edge",
+   "size": 26,
+   "weight": 700,
+   "color": "#ffffff",
+   "pos": [
+    360,
+    480
+   ],
+   "align": "center"
+  },
+  {
+   "type": "text",
+   "text": "ramp",
+   "size": 26,
+   "weight": 700,
+   "color": "#ffffff",
+   "pos": [
+    600,
+    480
+   ],
+   "align": "center"
+  },
+  {
+   "type": "text",
+   "text": "add 2 x 128",
+   "size": 26,
+   "weight": 700,
+   "color": "#ffffff",
+   "pos": [
+    840,
+    480
+   ],
+   "align": "center"
+  }
+ ]
+}
