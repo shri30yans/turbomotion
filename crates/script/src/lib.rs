@@ -6,11 +6,14 @@ pub mod check;
 mod assets;
 mod fallback;
 mod loader;
+mod module_path;
+pub mod scaffold;
 mod measure;
 mod animation;
 pub mod shot;
 pub mod run;
 pub mod strip;
+pub mod summary;
 pub mod watch;
 
 pub use run::{build, build_full, Built, Options};

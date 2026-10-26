@@ -3,11 +3,11 @@
 
 import { checkImage } from "./image-check";
 import { noteSite } from "./site";
-import { compileTweens } from "./timeline";
+import { compileTweens } from "./compile";
 import type { Tween } from "./timeline";
 import { checkVectors, fillVector, vectorComponents } from "./vector-tweens";
 import type {
-  CameraOpts, Color, CounterSpec, ImageOpts, LayerOpts, LightOpts, RectOpts, ShapeOpts, SolidOpts, TextOpts,
+  CameraOpts, Color, CounterSpec, ImageOpts, LayerOpts, LightOpts, RectOpts, ShapeItem, ShapeOpts, SolidOpts, TextOpts,
 } from "./types";
 
 let counter = 0;
@@ -104,7 +104,7 @@ export const solid = (color: Color, o: SolidOpts = {}): Layer => new Layer("soli
 export const image = (src: string, o: ImageOpts = {}): Layer => new Layer("image", { src: checkImage(src, o), ...o });
 
 /** A vector shape from raw items: `{rect: [x, y, w, h], radius, fill, stroke}`, `{ellipse: [...]}`, `{d: "M..."}`. */
-export const shape = (items: Array<Record<string, unknown>>, o: ShapeOpts = {}): Layer => {
+export const shape = (items: ShapeItem[], o: ShapeOpts = {}): Layer => {
   if (!Array.isArray(items)) throw new Error("shape(items, opts): items must be a list like [{ rect: [-50, -50, 100, 100], fill: \"#fff\" }]");
   return new Layer("shape", { items, ...o });
 };

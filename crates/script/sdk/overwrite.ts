@@ -1,5 +1,6 @@
 // Interrupted properties retain their exact easing via the engine's scalar expression form.
 import { relative } from "./relative";
+import type { LayerTime } from "./compile";
 import type { Tween } from "./timeline";
 declare const __tm_ease: (ease: string, progress: number) => number;
 declare const __tm_color: (value: string) => string;
@@ -13,12 +14,13 @@ const numeric = (value: Value, color: boolean): number[] => {
 };
 const expand = (values: number[], count: number): number[] => values.length === 1 ? Array(count).fill(values[0]) : values;
 const at = (segment: Segment, time: number): number[] => {
-  const progress = __tm_ease(segment.ease, (time - segment.at) / (segment.end - segment.at));
+  const progress = segment.end === segment.at ? (time >= segment.at ? 1 : 0) : __tm_ease(segment.ease, (time - segment.at) / (segment.end - segment.at));
   return segment.from.map((value, i) => value + (segment.to[i] - value) * progress);
 };
 
 /** Compile only when an author opts into overwrite; the ordinary key/tween path remains compact. */
-export function overwritten(tweens: Tween[], base: Value | undefined, id: string, prop: string): unknown {
+/** Segment times are on the timeline's clock; the expressions it writes use the layer's own time (`local`). */
+export function overwritten(tweens: Tween[], base: Value | undefined, id: string, prop: string, local: LayerTime): unknown {
   const color = prop === "color";
   const segments: Segment[] = [];
   for (const tween of tweens) {
@@ -45,8 +47,9 @@ export function overwritten(tweens: Tween[], base: Value | undefined, id: string
     for (const segment of segments) {
       const from = expand(segment.from, count)[component];
       const to = expand(segment.to, count)[component];
-      const curve = `ease(${JSON.stringify(segment.ease)},time,${segment.at},${segment.end},${from},${to})`;
-      expression = `(time<${segment.at}?${expression}:${curve})`;
+      const [start, end] = [local(segment.at), local(segment.end)];
+      const after = segment.end === segment.at ? String(to) : `ease(${JSON.stringify(segment.ease)},time,${start},${end},${from},${to})`;
+      expression = `(time<${start}?${expression}:${after})`;
     }
     return expression;
   });

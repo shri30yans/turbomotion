@@ -10,6 +10,7 @@ turbomotion sdk render  film.ts [--out film.mp4] [--sheet sheet.png --times 0.5,
 turbomotion sdk watch   film.ts --sheet out.png --times 0.5,2 [--shot hook] [--interval-ms 400] [--once]
 turbomotion sdk inspect film.ts --t 2.5 [--layer s4/word] [--shot hook]
 turbomotion sdk check   film.ts [--tsc path/to/tsc.js] [--schema]
+turbomotion sdk new scene NAME [--dir DIR] [--probe]
 ```
 
 - `build` and `render` write `film.comp.json` beside the script and record the script folder as the asset root.
@@ -17,6 +18,8 @@ turbomotion sdk check   film.ts [--tsc path/to/tsc.js] [--schema]
 - `watch` re-renders the sheet when the script, anything it imports, an `svgFile`, or the `--sdk-dir` tree changes. It polls modification times; a build error is printed and watching continues.
 - `inspect` prints the evaluated frame at `--t`; `--layer shot/layer` reaches inside shots and precomps (time is the containing comp's).
 - `check` runs strict TypeScript through an installed `tsc` (never installs one). With no `tsc` (or `--schema`) it runs the film, validates every emitted layer with the engine (parse, plan, evaluate, lint) and reports each complaint at the `film.ts:LINE:COL` that created the layer. It prints which mode ran.
+- `new scene NAME` writes `DIR/NAME/index.ts` (a function that takes typed options and returns a `shot(...)`) and `DIR/NAME/types.ts`; with `--probe` it also writes `DIR/probe_NAME.ts`, a film that renders only that scene. NAME is a folder-safe identifier (lowercase letters, digits, `-`, `_`); `chevron-tunnel` gives `chevronTunnel` and `ChevronTunnelOptions`. It never overwrites: if any target exists it lists the conflicts and writes nothing. It prints what it created and the `sdk render` command for the probe.
+- `import ... from "./scenes/vs"` resolves like standard modules: `vs.ts`, then `vs/index.ts`. A miss lists every path tried. `--layer` accepts `id` or `shot/id`; an id two shots hold is an error that lists both.
 - `--sdk-dir crates/script/sdk` loads the SDK from disk (new modules need no rebuild); without it the copy embedded in the binary is used. A chosen directory is authoritative.
 
 ## A film
@@ -49,7 +52,7 @@ Working examples: `examples/sdk/launch/film.ts`, and one per component in `examp
 | Text | `measure(text, {font, size, weight, tracking, width})` returns widths and character/word boxes |
 | Utilities | `rand(seed)`, `range`, `lerp`, `clamp`, `grid(cols, rows, cell)`, `darken` |
 
-Layer options: `id, pos | x,y,z, anchor, scale, rotation, orientation, aim, cull, opacity, three_d, material, parent, start, dur, blend, fx, masks, matte, enter, exit, extra`.
+Layer options: `id, pos | x,y,z, anchor, scale, skew, rotation, orientation, aim, cull, opacity, three_d, lit, material, parent, start, dur, blend, fx, masks, matte, clip_to, enter, exit, wrap, stagger, flip, along, reflect, layout, hidden, mblur, extra`. Shape items (`rect`, `ellipse`, `d`, `points`, fills, strokes, `trim`, `repeat`) and text options are typed too; a test (`tests/sdk_option_types.rs`) fails when the engine gains a field the types lack.
 
 `rotation` is After Effects' X, Y and Z Rotation: one number is the Z Rotation (the turn in the layer's own plane), three numbers turn it about each axis. `orientation` is the layer's own pose and `aim` the point its face turns toward.
 
@@ -63,7 +66,7 @@ tl.to(ring, { items: { 0: { trim_end: 1, stroke_width: "+=4" } }, duration: 1 },
 tl.to(card, { x: 500, duration: 1, overwrite: "auto" }, 0.5);                                      // interrupt the earlier x tween
 ```
 
-Positions: seconds, `"+=0.5"`, `"-=0.2"`, `"<"`, `">"`, or a label. Tweens of one property merge into one key list. Overlapping tweens are an error unless the later one sets `overwrite: "auto"`. Item properties: `trim_start trim_end trim_offset offset rotation scale opacity morph stroke_width stroke_opacity dash_offset stroke_color fill_opacity fill_color` (a rect's size and radius are fixed in the schema).
+Positions: seconds, `"+=0.5"`, `"-=0.2"`, `"<"`, `">"`, or a label, on the clock of the shot (or film) the layer lives in, whatever the layer's `start`. `tl.set(layer, vars, at)` is an exact step. Tweens of one property merge into one key list. Overlapping tweens are an error unless the later one sets `overwrite: "auto"`. Item properties: `trim_start trim_end trim_offset offset rotation scale opacity morph stroke_width stroke_opacity dash_offset stroke_color fill_opacity fill_color` (a rect's size and radius are fixed in the schema).
 
 ## Components
 

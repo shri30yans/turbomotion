@@ -64,7 +64,7 @@ fn prompt_box_types_a_hit_per_visible_character_and_steps_the_caret() {
     assert_eq!(text["preset"]["name"], "typewriter");
     assert_eq!(text["parent"], "prompt");
     let caret_x = layers.iter().find(|l| l["id"] == "prompt-caret").unwrap()["pos"][0]["keys"].as_array().unwrap().len();
-    assert!(caret_x >= 5 * 2, "the caret holds and jumps once per character, got {caret_x} keys");
+    assert!(caret_x >= 5, "the caret jumps once per character (one hold key each), got {caret_x} keys");
 }
 
 #[test]

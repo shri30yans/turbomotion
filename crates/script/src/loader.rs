@@ -9,56 +9,10 @@ use std::{
 
 use rquickjs::{loader::{Loader, Resolver}, module::Declared, Ctx, Error, Module, Result};
 
-use crate::strip::{strip, Stripped};
+use crate::{module_path, strip::{strip, Stripped}};
 
-/// The SDK, compiled into the binary. `index.ts` is what `import ... from "turbomotion"` reaches.
-pub const SDK: &[(&str, &str)] = &[
-    ("index", include_str!("../sdk/index.ts")),
-    ("tween-types", include_str!("../sdk/tween-types.ts")),
-    ("overwrite", include_str!("../sdk/overwrite.ts")),
-    ("film-types", include_str!("../sdk/film-types.ts")),
-    ("types", include_str!("../sdk/types.ts")),
-    ("measure", include_str!("../sdk/measure.ts")),
-    ("site", include_str!("../sdk/site.ts")),
-    ("relative", include_str!("../sdk/relative.ts")),
-    ("item-tweens", include_str!("../sdk/item-tweens.ts")),
-    ("vector-tweens", include_str!("../sdk/vector-tweens.ts")),
-    ("image-check", include_str!("../sdk/image-check.ts")),
-    ("assets", include_str!("../sdk/assets.ts")),
-    ("motion", include_str!("../sdk/motion.ts")),
-    ("layers", include_str!("../sdk/layers.ts")),
-    ("text-fx", include_str!("../sdk/text-fx.ts")),
-    ("three", include_str!("../sdk/three.ts")),
-    ("timeline", include_str!("../sdk/timeline.ts")),
-    ("comp", include_str!("../sdk/comp.ts")),
-    ("sound", include_str!("../sdk/sound.ts")),
-    ("stage", include_str!("../sdk/stage.ts")),
-    ("components/index", include_str!("../sdk/components/index.ts")),
-    ("components/util", include_str!("../sdk/components/util.ts")),
-    ("components/promptBox", include_str!("../sdk/components/promptBox.ts")),
-    ("components/codePanel", include_str!("../sdk/components/codePanel.ts")),
-    ("components/browserWindow", include_str!("../sdk/components/browserWindow.ts")),
-    ("components/statCounter", include_str!("../sdk/components/statCounter.ts")),
-    ("components/barRace", include_str!("../sdk/components/barRace.ts")),
-    ("components/bboxOverlay", include_str!("../sdk/components/bboxOverlay.ts")),
-    ("components/cardWall", include_str!("../sdk/components/cardWall.ts")),
-    ("components/title3d", include_str!("../sdk/components/title3d.ts")),
-    ("components/scribble", include_str!("../sdk/components/scribble.ts")),
-    ("components/waveform", include_str!("../sdk/components/waveform.ts")),
-    ("components/textStack", include_str!("../sdk/components/textStack.ts")),
-    ("components/cutout", include_str!("../sdk/components/cutout.ts")),
-    ("components/appear", include_str!("../sdk/components/appear.ts")),
-    ("components/cube", include_str!("../sdk/components/cube.ts")),
-    ("components/swarm", include_str!("../sdk/components/swarm.ts")),
-    ("components/flipTile", include_str!("../sdk/components/flipTile.ts")),
-    ("components/capsule", include_str!("../sdk/components/capsule.ts")),
-    ("components/hand", include_str!("../sdk/components/hand.ts")),
-    ("components/lens", include_str!("../sdk/components/lens.ts")),
-    ("components/blob", include_str!("../sdk/components/blob.ts")),
-    ("components/montage", include_str!("../sdk/components/montage.ts")),
-    ("components/dollyZoom", include_str!("../sdk/components/dollyZoom.ts")),
-    ("components/glassPanel", include_str!("../sdk/components/glassPanel.ts")),
-];
+// The SDK compiled into the binary: `SDK`, `(module name, source)`. `index` is what `import ... from "turbomotion"` reaches.
+include!(concat!(env!("OUT_DIR"), "/sdk_modules.rs"));
 
 const SDK_PREFIX: &str = "sdk:";
 
@@ -93,38 +47,16 @@ impl Resolver for Resolve {
         if let (Some(module), true) = (base.strip_prefix(SDK_PREFIX), name.starts_with("./") || name.starts_with("../")) {
             // relative to the importing SDK module's folder (`components/`), so components can reach `../layers`
             let dir = Path::new(module).parent().unwrap_or(Path::new(""));
-            let joined = normalise(&dir.join(name));
+            let joined = module_path::normalise(&dir.join(name));
             return Ok(format!("{SDK_PREFIX}{}", joined.to_string_lossy().trim_end_matches(".ts")));
         }
         if name.starts_with("./") || name.starts_with("../") || name.starts_with('/') {
-            let dir = Path::new(base).parent().unwrap_or(Path::new("."));
-            return Ok(with_extension(&normalise(&dir.join(name))).to_string_lossy().into_owned());
+            return module_path::resolve(Path::new(base), name)
+                .map(|file| file.to_string_lossy().into_owned())
+                .map_err(|tried| Error::new_resolving_message(base, name, module_path::not_found(name, &tried)));
         }
         Err(Error::new_resolving_message(base, name, format!("cannot find module \"{name}\": import from \"turbomotion\" or a relative path like \"./scenes\"")))
     }
-}
-
-fn with_extension(p: &Path) -> PathBuf {
-    if p.extension().is_some() {
-        p.to_path_buf()
-    } else {
-        p.with_extension("ts")
-    }
-}
-
-/// Collapse `.` and `..` without touching the disk (module names must be stable keys).
-fn normalise(p: &Path) -> PathBuf {
-    let mut out = PathBuf::new();
-    for c in p.components() {
-        match c {
-            std::path::Component::CurDir => {}
-            std::path::Component::ParentDir => {
-                out.pop();
-            }
-            other => out.push(other),
-        }
-    }
-    out
 }
 
 pub struct Load {

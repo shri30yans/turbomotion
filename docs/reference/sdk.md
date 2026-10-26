@@ -47,6 +47,25 @@ export const comp = (opts: CompOpts): Film
 ```
 The film: `comp({ width, height, fps, bg, ... })`, then `film.add(layers)`, `film.shot(...)` and `export default film`.
 
+## `compile`
+
+Turns the tweens a timeline recorded on a layer into the engine's property forms. Timeline positions are in the clock the layer lives in (shot time, or comp time); the engine reads a layer's keys from the layer's own `start`, so every time written out is shifted by that start here, and nowhere else.
+
+```ts
+export type LayerTime = (t: number)
+```
+Converts a time on the timeline's clock to the layer's own time.
+
+```ts
+export function layerTime(out: Record<string, any>, tweens: Tween[], id: string): LayerTime
+```
+The layer's `start` as a number; tweens cannot be placed against a start the SDK cannot read.
+
+```ts
+export function compileTweens(out: Record<string, any>, tweens: Tween[], id: string): void
+```
+Write the tweens of one layer into `out` (the layer's JSON): one merged property per animated name.
+
 ## `components/appear`
 
 An entrance for a whole component: every visible layer enters with an engine preset ("fade", "slide_up", "pop", ...), optionally one after another. It uses the layers' own `enter`, so it never fights the animation a component already has.
@@ -363,6 +382,15 @@ export function waveform(o: WaveformOpts): Part
 ```
 `waveform({ tl, at: 4.5, pos: [0, 200], w: 700, h: 90, parent: preview })`: one layer per bar, anchored on the baseline.
 
+## `dimension`
+
+A property that can be one number or a list of them (`scale: 2` or `scale: [2, 1]`) must have one shape on every key. A scalar tween against a per-axis value is read as "the same on every axis", so the two always merge.
+
+```ts
+export function matchAxes(prop: string, tweens: Tween[], base: Val | undefined, id: string): { tweens: Tween[]; base: Val | undefined }
+```
+`base` and the tweens of `prop` with every value written for the same number of axes.
+
 ## `film-types`
 
 ```ts
@@ -403,6 +431,35 @@ export function setItem(out: Record<string, any>, key: string, value: unknown): 
 ```
 Write `value` at the item property, copying along the way so the layer's own items stay untouched.
 
+## `layer-motion-types`
+
+Layer-level engine objects that are not keyframes: position wrapping, stagger, flip, motion along a path, floor reflection (crates/comp/src/schema/mod.rs). Everything here is on `LayerOpts`.
+
+```ts
+export interface Wrap
+```
+After the position is evaluated, wrap `x` and/or `y` into `[min, max)`: a ticker is `pos: ["time * -80", 900]` with `wrap: { x: [-1920, 1920] }`.
+
+```ts
+export interface LayerStagger
+```
+Direct children start `each` seconds apart.
+
+```ts
+export interface Flip
+```
+This layer flies from `from`'s transform onto its own, starting at `at`.
+
+```ts
+export interface Along
+```
+The layer's position follows an outline as `t` goes 0 to 1.
+
+```ts
+export interface Reflect
+```
+A faded, softened mirror of the layer on the floor beneath it.
+
 ## `layers`
 
 Layers as builders. A layer holds its static properties and the tweens a timeline attached to it; `toJSON()` turns both into one composition layer.
@@ -438,7 +495,7 @@ export const image = (src: string, o: ImageOpts = {}): Layer
 A picture: `image("photo.jpg", { fit, focus, camera, parallax })`.
 
 ```ts
-export const shape = (items: Array<Record<string, unknown>>, o: ShapeOpts = {}): Layer
+export const shape = (items: ShapeItem[], o: ShapeOpts = {}): Layer
 ```
 A vector shape from raw items: `{rect: [x, y, w, h], radius, fill, stroke}`, `{ellipse: [...]}`, `{d: "M..."}`.
 
@@ -505,9 +562,9 @@ Darken a `#rrggbb` colour by `amount` (0..1); other colour forms come back uncha
 Interrupted properties retain their exact easing via the engine's scalar expression form.
 
 ```ts
-export function overwritten(tweens: Tween[], base: Value | undefined, id: string, prop: string): unknown
+export function overwritten(tweens: Tween[], base: Value | undefined, id: string, prop: string, local: LayerTime): unknown
 ```
-Compile only when an author opts into overwrite; the ordinary key/tween path remains compact.
+Segment times are on the timeline's clock; the expressions it writes use the layer's own time (`local`).
 
 ## `relative`
 
@@ -517,6 +574,25 @@ Relative tween values: `"+=40"` means 40 more than where the property is when th
 export function relative(v: Val, cur: Val | undefined, where: string): Val
 ```
 Resolve `"+=n"` / `"-=n"` (alone or per component of a vector) against `cur`; other values pass through.
+
+## `shape-types`
+
+Shape layers: the items a `shape([...])` takes, as the engine reads them (crates/comp/src/schema/shape.rs and path.rs). An item is one geometry plus how it is painted; `trim`, `offset`, `rotation`, `scale` and `opacity` can be tweened.
+
+```ts
+export interface PathGeometry
+```
+Exactly one of `d`, `points`, `rect`, `ellipse`, `polygon`, `star` names the outline; the rest refine it.
+
+```ts
+export type ItemFill = Color | "metal" | { color?: Color; gradient?: GradientFill; metal?: boolean | { highlight?: Color; mid?: Color; shadow?: Color }; opacity?: Prop; rule?: "nonzero" | "evenodd" };
+```
+A bare colour, `"metal"`, or one of `color`, `gradient`, `metal` with an `opacity` and a winding `rule`.
+
+```ts
+export interface ItemTrim
+```
+Draw only the part of the outline between `start` and `end` (0..1), shifted by `offset`: animate `end` to draw on.
 
 ## `site`
 
@@ -685,7 +761,7 @@ A turntable: the angle of a steady turn as an expression, for the Z Rotation of 
 
 ## `timeline`
 
-A GSAP-style timeline. `tl.to(layer, { rotation: [null, 90, null], duration: 0.8 }, 0.2)` records tweens on the layer; when the layer is written out, all tweens on one property merge into one key list in time order.
+A GSAP-style timeline. `tl.to(layer, { rotation: [null, 90, null], duration: 0.8 }, 0.2)` records tweens on the layer; when the layer is written out (compile.ts), all tweens on one property merge into one key list in time order. Every position on a timeline is the clock of the shot (or comp) the layers live in, whatever a layer's own `start` is.
 
 ```ts
 export class Timeline
@@ -696,11 +772,6 @@ Tweens placed on a time axis, compiled into each layer's keyframes.
 export const timeline = (defaults: { ease?: Ease; duration?: Seconds } = {}): Timeline
 ```
 A GSAP-style timeline: `tl.to(layer, { opacity: 1, duration: 0.5 }, at)`, `from`, `set`, with `stagger` and `overwrite`.
-
-```ts
-export function compileTweens(out: Record<string, any>, tweens: Tween[], id: string): void
-```
-Write the tweens of one layer into `out` (the layer's JSON): one merged property per animated name.
 
 ## `tween-types`
 
@@ -727,6 +798,21 @@ Shared types. Everything an author can write is described here, so an editor cat
 export type Prop<T = number> = T | string | { [key: string]: unknown };
 ```
 A property: a constant, an expression string, or any raw form the engine accepts (tween, keys, loop).
+
+```ts
+export interface Material
+```
+How a lit 3D layer answers to light.
+
+```ts
+export interface Transit
+```
+A named entrance or exit of the layer as a whole. Its times are in the layer's own clock (they start at the layer's `start`).
+
+```ts
+export type Lit = boolean;
+```
+A 3D layer is lit when the composition has lights; `false` keeps it flat.
 
 ```ts
 export interface LayerOpts

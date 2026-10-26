@@ -193,13 +193,3 @@ fn map_line(line: &str, reg: &Registry) -> String {
     }
     line.to_string()
 }
-
-/// One line for the terminal: what was built.
-pub fn summary(film: &Json) -> String {
-    let n = |k: &str| film.get(k).and_then(Json::as_f64).unwrap_or(0.0);
-    let tl = film.get("timeline");
-    let shots = tl.and_then(|t| t.get("shots")).and_then(Json::as_array).map_or(0, Vec::len);
-    let layers = film.get("layers").and_then(Json::as_array).map_or(0, Vec::len);
-    let dur = if n("dur") > 0.0 { format!("{:.2}s", n("dur")) } else { "timeline length".into() };
-    format!("{}x{} at {} fps, {dur}, {shots} shots, {layers} layers", n("width"), n("height"), n("fps"))
-}

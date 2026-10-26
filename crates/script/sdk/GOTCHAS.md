@@ -14,6 +14,11 @@ Things that cost earlier agents iterations. Each has the fix next to it.
 - **Hits made on a timeline are shot-local.** `tl.hit(1.2, "boom")`, `sfx:` on a tween and `shot({ hits: tl.hits() })` all
   use seconds of the shot. The film writes them as `"<shotId>.start+<t>"`, which follows the shot when transitions move it.
   A film-level `timeline({ hits })` takes film time (or such a literal). Do not mix the two clocks.
+- **A timeline position is the clock the layer lives in, whatever the layer's `start`.** `tl.to(layer, ..., 3)` happens at
+  second 3 of the shot even when the layer has `start: 2`; the SDK writes it into the layer's own time (second 1). Times you
+  write straight into a layer's options (`enter`, `exit`, `preset.at`, `animators`, counters, `mark`) are not converted:
+  the engine counts them from the layer's `start`. A layer whose `start` is not a number cannot be tweened (the SDK
+  cannot convert), so give `start` as seconds.
 - **`--shot id` always starts at 0.** `sdk render --shot s4 --times 0.5,1` and `sdk inspect --shot s4 --t 0.5` use shot time.
   An isolated shot has no incoming transition and no `film.add()` layers; render the whole film to review those.
 - **A transition can cover a shot's last beat.** Put the important motion at least one transition length before the shot ends.
@@ -37,6 +42,10 @@ Things that cost earlier agents iterations. Each has the fix next to it.
 - **Overlapping tweens of one property are an error.** Set `overwrite: "auto"` on the later tween to interrupt the first.
 - **`from()` ends at the layer's own value**, so give the layer the value it should end on.
 - **Vectors and colours tween directly:** `scale: [2, 1]`, `pos: [x, y, z]` (a `null` entry leaves that axis alone), `color: "#f00"`.
+- **`tl.set` is an exact step.** The old value holds up to the moment and the new one is read from that frame on (the
+  engine's `hold` ease). A set at 0, or before the layer's `start`, is simply the layer's first value.
+- **One scale, one or two numbers.** `scale: 2` and `scale: [2, 1]` mix freely between the layer, `from`, `to` and `fromTo`:
+  a number against a list means the same on every axis. Lists of different lengths are an error naming the layer.
 - **Relative values:** `x: "+=40"` moves 40 px from wherever the property is when the tween starts. Chained relative tweens add up.
 - **Shape items** tween through `items`: `{ items: { 0: { trim_end: 1, stroke_width: "+=4" } } }`. A rect's size and corner
   radius are fixed numbers in the schema; animate the item's `scale` (about its `anchor`) instead.

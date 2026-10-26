@@ -1,5 +1,8 @@
 // Shared types. Everything an author can write is described here, so an editor catches mistakes before the render does.
 
+import type { ItemFill } from "./shape-types";
+import type { Along, Flip, LayerStagger, Reflect, Wrap } from "./layer-motion-types";
+
 export type Ease = string; // any engine ease: "none", "power2.out", "back.out(1.4)", "elastic.out(1, 0.4)", "steps(8)"...
 export type Vec2 = [number, number];
 export type Vec3 = [number, number, number];
@@ -9,10 +12,12 @@ export type Seconds = number;
 /** A property: a constant, an expression string, or any raw form the engine accepts (tween, keys, loop). */
 export type Prop<T = number> = T | string | { [key: string]: unknown };
 
+/** How a lit 3D layer answers to light. */
 export interface Material {
+  ambient?: number;
+  diffuse?: number;
   specular?: number;
   shininess?: number;
-  [key: string]: unknown;
 }
 
 export interface Extrude {
@@ -21,11 +26,24 @@ export interface Extrude {
   far?: Color;
 }
 
+/** A named entrance or exit of the layer as a whole. Its times are in the layer's own clock (they start at the layer's `start`). */
 export interface Transit {
   preset: string;
   dur?: Seconds;
-  [key: string]: unknown;
+  delay?: Seconds;
+  ease?: Ease;
+  /** Travel in pixels for slides and whips. */
+  dist?: number;
+  /** Blur in pixels at the hidden end. */
+  blur?: number;
+  /** `window` only: where the small portal sits, `[centre x, centre y, width]` as fractions of the frame. */
+  portal?: [number, number, number];
+  /** `window` only: corner radius in px of the small portal. */
+  radius?: number;
 }
+
+/** A 3D layer is lit when the composition has lights; `false` keeps it flat. */
+export type Lit = boolean;
 
 /** What every layer takes. `x`, `y`, `z` are shorthand for `pos`. */
 export interface LayerOpts {
@@ -48,6 +66,7 @@ export interface LayerOpts {
   three_d?: boolean;
   material?: Material;
   extrude?: Extrude;
+  /** Seconds into the composition (or shot) when the layer begins. Timeline positions stay in the composition's clock; the SDK converts them to the layer's own. */
   start?: Seconds;
   dur?: Seconds;
   parent?: string | { id: string };
@@ -59,6 +78,18 @@ export interface LayerOpts {
   exit?: Transit;
   hidden?: boolean;
   mblur?: boolean;
+  lit?: Lit;
+  /** Shear in degrees (GSAP `skewX`); positive leans the top to the right. */
+  skew?: Prop;
+  wrap?: Wrap;
+  stagger?: LayerStagger;
+  flip?: Flip;
+  /** Keep this layer inside another layer's alpha, and still draw that layer. */
+  clip_to?: string;
+  /** How `check --layout` treats this layer. */
+  layout?: "foreground" | "backdrop" | "ignore";
+  along?: Along;
+  reflect?: Reflect;
   /** Anything else the engine takes (see `turbomotion comp catalogue`); merged as written. */
   extra?: Record<string, unknown>;
 }
@@ -66,8 +97,12 @@ export interface LayerOpts {
 export interface TextOpts extends LayerOpts {
   font?: string;
   weight?: number;
-  size?: number;
+  size?: Prop;
   color?: Color | Record<string, unknown>;
+  /** A gradient or `"metal"` that paints the glyphs instead of `color`. */
+  fill?: ItemFill;
+  /** Text that belongs to a mocked interface: a deliberate size, so the phone-legibility rule does not apply. */
+  ui?: boolean;
   align?: "left" | "center" | "right";
   width?: number;
   role?: "display" | "title" | "body";
@@ -236,6 +271,9 @@ export interface AudioOpts extends LayerOpts {
 }
 
 export interface ShapeOpts extends LayerOpts {}
+
+export type { PathGeometry, GradientFill, ItemFill, ItemStroke, ItemTrim, ItemRepeat, ShapeItem } from "./shape-types";
+export type { Wrap, LayerStagger, Flip, Along, Reflect } from "./layer-motion-types";
 export interface SolidOpts extends LayerOpts {
   size?: Vec2;
 }

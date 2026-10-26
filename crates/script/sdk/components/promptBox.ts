@@ -80,7 +80,7 @@ export function promptBox(o: PromptBoxOpts): Part {
   chars.forEach((c, k) => {
     if (c === " ") return; // the caret hops over a space together with the next character
     const t = at + typedCount++ * each;
-    tl.set(caret, { x: x0 + (k + 1) * cw }, t - 0.001); // a hair early, so it moves on the frame the character appears
+    tl.set(caret, { x: x0 + (k + 1) * cw }, t); // a set is exact: the caret moves on the frame the character appears
     tl.hit(t, "type");
   });
   const stop = enterAt ?? end + 2 * beat;

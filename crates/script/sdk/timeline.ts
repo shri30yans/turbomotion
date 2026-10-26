@@ -1,17 +1,17 @@
 // A GSAP-style timeline. `tl.to(layer, { rotation: [null, 90, null], duration: 0.8 }, 0.2)` records tweens on the layer;
-// when the layer is written out, all tweens on one property merge into one key list in time order.
+// when the layer is written out (compile.ts), all tweens on one property merge into one key list in time order.
+// Every position on a timeline is the clock of the shot (or comp) the layers live in, whatever a layer's own `start` is.
 
-import { overwritten } from "./overwrite";
-import { flattenItems, isItemKey, itemBase, setItem } from "./item-tweens";
-import { relative } from "./relative";
+import { flattenItems, isItemKey } from "./item-tweens";
 import type { Val } from "./relative";
 import { callSite } from "./site";
-import { flattenVector, isVectorKey, parseVectorKey, setVector, VECTORS, vectorBase } from "./vector-tweens";
-import { Layer, describe, list } from "./layers";
+import { flattenVector, isVectorKey, VECTORS } from "./vector-tweens";
+import { Layer, list } from "./layers";
 import type { Animatable, Ease, Hit, Seconds, Stagger, TweenVars } from "./types";
 
 export interface Tween {
   prop: string;
+  /** Seconds on the clock of the shot or film the layer lives in (not the layer's own time). */
   at: Seconds;
   dur: Seconds;
   from?: Val;
@@ -25,8 +25,6 @@ export interface Tween {
 const PROPS = ["x", "y", "z", "opacity", "scale", "size", "intensity", "zoom", "color"];
 const VECTOR_PROPS = ["rotation", "orientation", "aim"];
 const CONTROLS = ["duration", "ease", "delay", "stagger", "sfx", "overwrite"];
-const DEFAULTS: Record<string, number> = { opacity: 1, scale: 1, z: 0 };
-const EPS = 1e-4;
 const r6 = (n: number): number => Math.round(n * 1e6) / 1e6;
 
 /** `pos: [x, y, z]` becomes x/y/z tweens, `items: { 0: {...} }` one per item property, and a vector one per component. */
@@ -71,7 +69,7 @@ export class Timeline {
     return this.tween(target, "fromTo", from, to, position);
   }
 
-  /** Jump to these values at a moment. */
+  /** Jump to these values at a moment: the old value up to it, the new one from it, exactly. */
   set(target: Target, vars: Animatable, position?: Position): this {
     return this.tween(target, "to", undefined, { ...vars, duration: 0 }, position);
   }
@@ -137,7 +135,7 @@ export class Timeline {
       if (sfx) this.hit(at, sfx.cue, sfx.volume);
       for (const prop of props) {
         const v = to[prop];
-        const tw: Tween = { prop, at, dur: Math.max(dur, EPS), ease: dur === 0 ? "none" : ease, site, overwrite: vars.overwrite };
+        const tw: Tween = { prop, at, dur, ease: dur === 0 ? "none" : ease, site, overwrite: vars.overwrite };
         if (mode === "to") tw.to = v;
         else if (mode === "from") tw.from = v;
         else {
@@ -163,92 +161,3 @@ function staggerOffsets(n: number, s: Stagger | undefined): number[] {
 
 /** A GSAP-style timeline: `tl.to(layer, { opacity: 1, duration: 0.5 }, at)`, `from`, `set`, with `stagger` and `overwrite`. */
 export const timeline = (defaults: { ease?: Ease; duration?: Seconds } = {}): Timeline => new Timeline(defaults);
-
-const same = (a: Val | undefined, b: Val | undefined): boolean => JSON.stringify(a) === JSON.stringify(b);
-
-/** Write the tweens of one layer into `out` (the layer's JSON): one merged property per animated name. */
-export function compileTweens(out: Record<string, any>, tweens: Tween[], id: string): void {
-  if (!tweens.length) return;
-  const byProp = new Map<string, Tween[]>();
-  for (const t of tweens) byProp.set(t.prop, [...(byProp.get(t.prop) ?? []), t]);
-  const axes: Record<string, any> = {};
-  const vectors = new Map<string, Map<number, unknown>>();
-  for (const [prop, list] of byProp) {
-    const sorted = list.map((t, i) => ({ t, i })).sort((a, b) => a.t.at - b.t.at || a.i - b.i).map((x) => x.t);
-    const value = mergeProp(sorted, baseOf(out, prop, id), id, prop);
-    if (prop === "x" || prop === "y" || prop === "z") axes[prop] = value;
-    else if (isItemKey(prop)) setItem(out, prop, value);
-    else if (isVectorKey(prop)) {
-      const { name, index } = parseVectorKey(prop);
-      const parts = vectors.get(name) ?? new Map<number, unknown>();
-      parts.set(index, value);
-      vectors.set(name, parts);
-    } else out[prop] = value;
-  }
-  for (const [name, parts] of vectors) setVector(out, name, parts);
-  if (Object.keys(axes).length) {
-    const pos = out.pos;
-    if (pos !== undefined && !Array.isArray(pos)) throw new Error(`layer "${id}": cannot animate x/y/z when pos is not a list of numbers`);
-    const comps: any[] = pos ? [...pos] : [];
-    if (comps.length < 3 && axes.z !== undefined) while (comps.length < 3) comps.push(0);
-    ["x", "y", "z"].forEach((a, i) => {
-      if (axes[a] !== undefined) comps[i] = axes[a];
-    });
-    out.pos = comps;
-  }
-}
-
-function baseOf(out: Record<string, any>, prop: string, id: string): Val | undefined {
-  if (isItemKey(prop)) return itemBase(out, prop, id);
-  if (prop === "x" || prop === "y" || prop === "z") {
-    const v = Array.isArray(out.pos) ? out.pos[{ x: 0, y: 1, z: 2 }[prop]!] : undefined;
-    if (typeof v === "number") return v;
-    if (prop === "z") return 0;
-    return undefined;
-  }
-  if (isVectorKey(prop)) {
-    const { name, index } = parseVectorKey(prop);
-    return vectorBase(out, name, index, id);
-  }
-  const v = out[prop];
-  if (v === undefined) return DEFAULTS[prop];
-  if (typeof v === "number" || typeof v === "string" || (Array.isArray(v) && v.every((n) => typeof n === "number"))) return v;
-  throw new Error(`layer "${id}": "${prop}" is already animated or an expression; tween it from the timeline only`);
-}
-
-function mergeProp(tweens: Tween[], base: Val | undefined, id: string, prop: string): unknown {
-  if (tweens.some((tween) => tween.overwrite === "auto")) return overwritten(tweens, base, id, prop);
-  const keys: Array<[number, Val, string?]> = [];
-  let cur = base;
-  let simple = true;
-  for (const tw of tweens) {
-    const where = `layer "${id}": "${prop}"`;
-    const from = tw.from === undefined ? cur : relative(tw.from, cur, where);
-    const end = tw.to === undefined ? base : tw.to;
-    const to = end === undefined ? end : relative(end, from, where);
-    if (from === undefined || to === undefined) {
-      throw new Error(`layer "${id}": cannot tween "${prop}" without a start and an end value; give the layer a starting "${prop}" (or use fromTo)`);
-    }
-    if (keys.length) {
-      const [lastT, lastV] = keys[keys.length - 1];
-      if (tw.at < lastT - 1e-9) {
-        throw new Error(`layer "${id}": two tweens of "${prop}" overlap (one starts at ${tw.at}s, before the previous one ends at ${lastT}s); the later tween was written at ${tw.site}`);
-      }
-      if (tw.at > lastT + EPS) keys.push([tw.at, lastV]);
-      if (!same(lastV, from)) {
-        keys.push([r6(Math.max(tw.at, lastT) + EPS), from]);
-        simple = false;
-      }
-      simple = false;
-    } else {
-      keys.push([tw.at, from]);
-    }
-    keys.push([r6(tw.at + tw.dur), to, tw.ease]);
-    cur = to;
-  }
-  if (simple && tweens.length === 1) {
-    const tw = tweens[0];
-    return { from: keys[0][1], to: keys[1][1], at: tw.at, dur: r6(tw.dur), ease: tw.ease };
-  }
-  return { keys };
-}

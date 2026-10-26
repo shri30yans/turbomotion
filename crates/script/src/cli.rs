@@ -6,7 +6,7 @@ use anyhow::{Context, Result};
 use clap::{Args, Subcommand};
 use turbomotion_comp::cli as comp;
 
-use crate::run::{build_full, summary, Options};
+use crate::{run::{build_full, Options}, summary::summary};
 
 #[derive(Args)]
 pub struct Script {
@@ -61,6 +61,11 @@ pub enum Command {
         #[arg(long)]
         once: bool,
     },
+    /// Write a starting point: a typed scene folder (`new scene NAME`)
+    New {
+        #[command(subcommand)]
+        what: New,
+    },
     /// Run a script and write the composition JSON it produces
     Build {
         #[command(flatten)]
@@ -86,6 +91,21 @@ pub enum Command {
         sheet_only: bool,
         #[arg(long, default_value_t = 3)]
         workers: u32,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum New {
+    /// `DIR/NAME/{index.ts,types.ts}`: a typed options interface and a function that returns a shot
+    Scene {
+        /// Folder-safe name: lowercase letters, digits, - and _
+        name: String,
+        /// Where the scene folder goes
+        #[arg(long, default_value = ".")]
+        dir: PathBuf,
+        /// Also write `DIR/probe_NAME.ts`, a film that renders only this scene
+        #[arg(long)]
+        probe: bool,
     },
 }
 
@@ -159,6 +179,12 @@ pub fn run(command: Command) -> Result<()> {
         Command::Watch { script, sheet, times, interval_ms, once } => crate::watch::run(&crate::watch::Watch {
             script: &script, sheet: &sheet, times: &times, interval: std::time::Duration::from_millis(interval_ms.max(50)), max_renders: once.then_some(1),
         }),
+        Command::New { what: New::Scene { name, dir, probe } } => {
+            let created = crate::scaffold::scene(&name, &dir, probe)?;
+            created.files.iter().for_each(|f| println!("created {}", f.display()));
+            println!("render it with:\n  {}", created.render);
+            Ok(())
+        }
         Command::Build { script, out } => build_to(&script, out).map(|_| ()),
         Command::Render { script, out, sheet, times, sheet_only, workers } => {
             // The recorded film root preserves asset paths independently of the output location.
