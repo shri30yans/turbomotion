@@ -1,0 +1,48 @@
+{
+  "bg": "#1a1d29",
+  "block_path": [
+    "blocks"
+  ],
+  "dur": 2,
+  "fps": 30,
+  "fx_path": [
+    "effects"
+  ],
+  "height": 1080,
+  "layers": [
+    {
+      "align": "center",
+      "color": "#ffffff",
+      "fx": [
+        {
+          "amount": 0.8,
+          "effect": "wobble"
+        }
+      ],
+      "id": "probe",
+      "pos": [
+        960,
+        540
+      ],
+      "size": 240,
+      "text": "wobble",
+      "type": "text",
+      "weight": 800
+    },
+    {
+      "color": "#ff5a1f",
+      "id": "rule",
+      "pos": [
+        960,
+        700
+      ],
+      "size": [
+        640,
+        8
+      ],
+      "type": "solid"
+    }
+  ],
+  "root": ".",
+  "width": 1920
+}
