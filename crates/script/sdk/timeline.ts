@@ -22,7 +22,7 @@ export interface Tween {
   overwrite?: "auto" | false;
 }
 
-const PROPS = ["x", "y", "z", "opacity", "scale", "size", "intensity", "zoom", "color"];
+const PROPS = ["x", "y", "z", "opacity", "scale", "size", "intensity", "zoom", "color", "skew"];
 const VECTOR_PROPS = ["rotation", "orientation", "aim"];
 const CONTROLS = ["duration", "ease", "delay", "stagger", "sfx", "overwrite"];
 const r6 = (n: number): number => Math.round(n * 1e6) / 1e6;

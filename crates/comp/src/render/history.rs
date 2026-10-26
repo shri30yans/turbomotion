@@ -148,7 +148,7 @@ fn output(ctx: &Ctx, like: &Canvas, comp: &str, t: f64, spec: Spec, depth: u32) 
             bail!("effect {} of layer {} reads its own past but is not a shader plugin", spec.effect, plan_comp.layers[spec.layer].label)
         };
         let maps: Vec<(usize, &Layer)> = at.pictures.iter().map(|(l, p)| (*l, p)).collect();
-        let scope = fx::Scope { ctx, like, frame: &at.frame, layer: Some(spec.layer), pictures: &maps };
+        let scope = fx::Scope { ctx, like, frame: &at.frame, layer: Some(spec.layer), behind: None, pictures: &maps };
         let past = lookback(ctx, like, comp, t, &at.image, spec, depth)?;
         fx::plugin_with(&scope, &at.image, plan, state, at.frame.layers[spec.layer].local_t, past)?
     };

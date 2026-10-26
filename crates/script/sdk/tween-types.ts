@@ -36,6 +36,8 @@ export interface Animatable {
   /** The point the layer's face turns toward, in the parent's space. */
   aim?: [Num | null, Num | null, Num | null];
   scale?: Num | [Num, Num];
+  /** Shear in degrees; positive leans the top to the right. */
+  skew?: Num;
   size?: Num;
   intensity?: Num;
   zoom?: Num;

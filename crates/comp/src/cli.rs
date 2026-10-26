@@ -31,12 +31,18 @@ pub enum FxCommand {
         /// The project folder (the one holding `effects/`)
         #[arg(long, default_value = ".")]
         dir: PathBuf,
+        /// Shader plugin folders, relative to `--dir`, exactly as a composition's `"fx_path"` lists them
+        #[arg(long = "fx-path")]
+        fx_path: Vec<String>,
     },
     /// Render one effect or generator with each float parameter swept over five values, as a contact sheet
     Test {
         name: String,
         #[arg(long, default_value = ".")]
         dir: PathBuf,
+        /// Shader plugin folders, relative to `--dir`, exactly as a composition's `"fx_path"` lists them
+        #[arg(long = "fx-path")]
+        fx_path: Vec<String>,
         /// A picture to apply an effect to (default: a built-in test card)
         #[arg(long)]
         on: Option<PathBuf>,
@@ -46,9 +52,28 @@ pub enum FxCommand {
 }
 
 #[derive(Subcommand)]
+pub enum CatalogueCommand {
+    /// One layer type: its own keys and the keys every layer takes, each with its form, plus a runnable example
+    Layer { name: String },
+    /// One effect or generator: parameters with defaults and ranges, and a runnable example
+    Effect {
+        name: String,
+        /// The project folder (the one holding `effects/`), to include its shader plugins
+        #[arg(long, default_value = ".")]
+        dir: PathBuf,
+        /// Shader plugin folders, relative to `--dir`, exactly as a composition's `"fx_path"` lists them
+        #[arg(long = "fx-path")]
+        fx_path: Vec<String>,
+    },
+}
+
+#[derive(Subcommand)]
 pub enum Command {
     /// Print everything a composition can contain, with a working example of each, as JSON
-    Catalogue,
+    Catalogue {
+        #[command(subcommand)]
+        what: Option<CatalogueCommand>,
+    },
     /// Load and validate a composition; print what it contains. Fails with a path to the first mistake
     Check {
         #[command(flatten)]
@@ -208,8 +233,13 @@ pub enum Command {
 
 pub fn run(command: Command) -> Result<()> {
     match command {
-        Command::Catalogue => {
-            println!("{}", serde_json::to_string_pretty(&catalogue::all())?);
+        Command::Catalogue { what } => {
+            let out = match what {
+                None => catalogue::all(),
+                Some(CatalogueCommand::Layer { name }) => catalogue::layer_keys::layer(&name)?,
+                Some(CatalogueCommand::Effect { name, dir, fx_path }) => catalogue::layer_keys::effect(&crate::fxlib::Library::load_with(&dir, &fx_path)?, &name)?,
+            };
+            println!("{}", serde_json::to_string_pretty(&out)?);
             Ok(())
         }
         Command::Fonts => {
@@ -476,15 +506,16 @@ fn watch(file: &std::path::Path, out: &std::path::Path, times: &[f64], interval:
 
 fn fx(command: FxCommand) -> Result<()> {
     match command {
-        FxCommand::List { dir } => {
-            let lib = crate::fxlib::Library::load(&dir)?;
+        FxCommand::List { dir, fx_path } => {
+            let lib = crate::fxlib::Library::load_with(&dir, &fx_path)?;
             let all: Vec<_> = lib.defs().map(crate::fxlib::Def::descriptor).collect();
             println!("{}", serde_json::to_string_pretty(&all)?);
             Ok(())
         }
-        FxCommand::Test { name, dir, on, out } => {
-            let lib = crate::fxlib::Library::load(&dir)?;
-            let sweep = crate::fxlib::sweep::build(lib.get(&name)?, on.as_deref())?;
+        FxCommand::Test { name, dir, fx_path, on, out } => {
+            let lib = crate::fxlib::Library::load_with(&dir, &fx_path)?;
+            let mut sweep = crate::fxlib::sweep::build(lib.get(&name)?, on.as_deref())?;
+            sweep.comp["fx_path"] = serde_json::json!(fx_path);
             let plan = Plan::from_value(sweep.comp, &dir)?;
             let mut renderer = render::Renderer::new(&plan)?;
             fs::write(&out, renderer.sheet(&sweep.times, crate::fxlib::sweep::STEPS as u32, 256)?).with_context(|| format!("writing {}", out.display()))?;

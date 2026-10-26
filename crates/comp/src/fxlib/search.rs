@@ -39,7 +39,7 @@ pub fn include_dirs(dir: &Path, declared: &[String]) -> Result<Vec<PathBuf>> {
     for entry in declared {
         let p = if Path::new(entry).is_absolute() { PathBuf::from(entry) } else { dir.join(entry) };
         if !p.is_dir() {
-            bail!("\"fx_path\" lists {entry:?}, which is not a folder (looked for {}); paths are relative to the film's folder", p.display());
+            bail!("\"fx_path\" lists {entry:?}, which is not a folder (looked for {}); paths are relative to the composition's root (its own folder unless it sets \"root\"), like \"block_path\"", p.display());
         }
         push(p);
     }

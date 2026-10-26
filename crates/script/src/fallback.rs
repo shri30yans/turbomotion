@@ -3,7 +3,7 @@
 use std::{collections::BTreeMap, path::Path};
 
 use anyhow::{Context, Result};
-use turbomotion_comp::{api, check::Severity};
+use turbomotion_comp::{api, check::Severity, schema::Problems};
 
 use crate::{check::Report, run::{build_full, Options}};
 
@@ -21,9 +21,18 @@ pub fn schema(file: &Path, sdk: Option<&Path>) -> Result<Report> {
     match api::validate(built.film, &dir) {
         Err(error) => {
             success = false;
-            let message = format!("{error:#}");
-            let at = locate(&message, &built.sites).map_or(String::new(), |(id, site)| format!("{site}: layer \"{id}\": "));
-            out.push_str(&format!("{at}{message}\n"));
+            match error.downcast_ref::<Problems>() {
+                // one line per mistake, each at the script line that made its layer
+                Some(problems) => for p in &problems.0 {
+                    let site = p.id.as_deref().and_then(|id| built.sites.get(id));
+                    out.push_str(&format!("{}{}\n", site.map_or(String::new(), |s| format!("{s}: ")), p.message));
+                },
+                None => {
+                    let message = format!("{error:#}");
+                    let at = locate(&message, &built.sites).map_or(String::new(), |(id, site)| format!("{site}: layer \"{id}\": "));
+                    out.push_str(&format!("{at}{message}\n"));
+                }
+            }
         }
         Ok(findings) => for f in findings {
             success &= f.severity != Severity::Error;

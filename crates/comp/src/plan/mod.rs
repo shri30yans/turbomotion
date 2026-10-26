@@ -1,8 +1,10 @@
 //! The plan: the composition after every name has been resolved and every impossible thing rejected, once, with a
 //! path to the mistake. Evaluation and rendering never look at a file or a string id again.
 
+mod fonts;
 mod fx_inputs;
 pub mod geometry;
+mod layer;
 
 use std::{
     collections::{BTreeMap, HashMap, HashSet},
@@ -18,8 +20,9 @@ use crate::{
     media::probe::{self, ImageInfo, VideoInfo},
     schema::{self, Fx, Kind, Layer, Marker, MatteMode, MotionBlur, PathSource},
 };
-use crate::fxlib::{Kind as FxKind, Library, PlanFx, PluginPlan};
+use crate::fxlib::{Library, PlanFx, PluginPlan};
 use geometry::PathGeo;
+use layer::{plan_layer, problems_of};
 
 pub struct Plan {
     /// Where relative paths (`src`, fonts, plugins) are resolved from.
@@ -113,13 +116,19 @@ impl Plan {
         schema::tokens::publish_palette(&mut value);
         schema::timeline::expand(&mut value).context("timeline")?;
         schema::blocks::expand(&mut value, dir).context("expanding blocks")?;
+        schema::repeat::expand(&mut value).context("repeat")?;
         schema::extrude::expand(&mut value).context("extrude")?;
         schema::time::preprocess(&mut value).context("resolving times and variables")?;
         // the library comes first: which fields of an effect are colours is its own declaration, and the tokens need it
         let fx_path: Vec<String> = value.get("fx_path").map_or(Ok(vec![]), |v| serde_json::from_value(v.clone())).context("fx_path is a list of folders")?;
         let fx = Library::load_with(dir, &fx_path)?;
         schema::tokens::apply(&mut value, &|name| fx.colour_params(name)).context("tokens")?;
-        let root: schema::Composition = serde_json::from_value(value).map_err(|e| anyhow!("{e}")).context("the composition")?;
+        if let (Some(keys), Some(given)) = (schema::fields::of::<schema::Composition>(), value.as_object()) {
+            if let Some(message) = schema::fields::stray_keys("the composition", given.keys(), keys.keys) {
+                bail!("{message}");
+            }
+        }
+        let root: schema::Composition = schema::de::from_value_at(value).context("the composition")?;
         let mut comps = BTreeMap::new();
         for (name, c) in &root.comps {
             ensure!(!name.is_empty(), "a nested composition needs a name");
@@ -128,6 +137,7 @@ impl Plan {
         comps.insert(ROOT.into(), CompPlan::build(ROOT, &root, &root, dir, &fx).context("the root composition")?);
         let plan = Plan { dir: dir.to_path_buf(), fps: root.fps.max(1), comps, fonts: root.fonts.clone(), fx };
         plan.check_references()?;
+        fonts::check(&plan)?;
         Ok(plan)
     }
 
@@ -184,49 +194,14 @@ impl CompPlan {
         ensure!(c.dur > 0.0, "dur (seconds) must be positive");
         let mut layers = Vec::with_capacity(c.layers.len());
         let (kit_order, spread_seed) = kit_spread(name, c);
+        let mut problems: Vec<schema::Problem> = Vec::new();
         for (i, v) in c.layers.iter().enumerate() {
-            let def = schema::parse_layer(i, v)?;
-            let ty = v.get("type").and_then(Value::as_str).unwrap_or("?");
-            let label = format!("layer {i} ({ty}{})", def.common.id.as_deref().map_or(String::new(), |id| format!(" {id:?}")));
-            let start = def.common.start;
-            let media = probe_media(&def.kind, dir, kit_order.get(&i).map(|&o| (o, spread_seed))).with_context(|| label.clone())?;
-            let natural = match (&media, &def.kind) {
-                (Media::Video { info, .. }, Kind::Video(v)) if !v.looping => Some((info.dur - v.src_in).max(0.0) / v.speed.max(1e-6)),
-                (Media::Audio { dur, rate, .. }, Kind::Audio(a)) => Some((dur - a.src_in).max(0.0) / (a.speed * rate).max(1e-6)),
-                _ => None,
-            };
-            let end = match (def.common.dur, &def.kind) {
-                (Some(d), _) => {
-                    ensure!(d >= 0.0, "{label}: dur must not be negative");
-                    start + d
-                }
-                (None, _) if natural.is_some() => (start + natural.unwrap_or(0.0)).min(c.dur.max(start)),
-                (None, Kind::Precomp(p)) => root.comps.get(&p.comp).map_or(c.dur, |n| (start + (n.dur - p.offset) / p.speed.max(1e-6)).min(c.dur.max(start))),
-                (None, _) => c.dur,
-            };
-            let shapes = match &def.kind {
-                Kind::Shape(s) => s.items.iter().enumerate().map(|(k, it)| PathGeo::build(&it.path).with_context(|| format!("item {k}"))).collect::<Result<_>>().with_context(|| label.clone())?,
-                _ => vec![],
-            };
-            let masks = def.common.masks.iter().enumerate().map(|(k, m)| PathGeo::build(&m.path).with_context(|| format!("mask {k}"))).collect::<Result<_>>().with_context(|| label.clone())?;
-            if def.common.aim.is_some() && def.common.along.as_ref().is_some_and(|a| a.orient) {
-                bail!("{label}: \"aim\" and \"along.orient\" both decide where the layer faces; use one");
+            match plan_layer(i, v, c, root, dir, lib, kit_order.get(&i).map(|&o| (o, spread_seed))) {
+                Ok(layer) => layers.push(layer),
+                Err(e) => problems.extend(problems_of(i, v, name, e)),
             }
-            let along = def.common.along.as_ref().map(|a| PathGeo::build(&a.path)).transpose().context("along").with_context(|| label.clone())?;
-            if let Kind::Pack(pk) = &def.kind {
-                crate::pack::check(&pk.name, &pk.params).with_context(|| label.clone())?;
-            }
-            let fx = def.fx.iter().enumerate().map(|(k, f)| lib.plan_fx(f).with_context(|| format!("fx {k}"))).collect::<Result<Vec<_>>>().with_context(|| label.clone())?;
-            let texture = match &def.kind {
-                Kind::Texture(t) => {
-                    let plan = lib.plan(&t.shader, &t.params).with_context(|| label.clone())?;
-                    ensure!(lib.get(&t.shader)?.kind == FxKind::Generator, "{label}: {:?} is an effect that needs an input layer; a texture layer takes a generator", t.shader);
-                    Some(plan)
-                }
-                _ => None,
-            };
-            layers.push(LayerPlan { index: i, label, def, start, end, parent: None, matte: None, is_matte_source: false, clip_to: None, shapes, masks, along, flip_from: None, in_3d: false, media, fx, texture, text_path: None });
         }
+        schema::Problems::finish(problems)?;
         // names → indices
         let mut ids: HashMap<String, usize> = HashMap::new();
         for l in &layers {
@@ -471,7 +446,7 @@ mod tests {
     #[test]
     fn schema_mistakes_show_the_valid_names() {
         let e = format!("{:#}", plan(json!({"layers": [{"type": "solid", "colour": "#fff"}]})).err().unwrap());
-        assert!(e.contains("unknown field"), "{e}");
+        assert!(e.contains("unknown key \"colour\". Did you mean \"color\"?") && e.contains("A solid layer takes color, size"), "{e}");
         let e = format!("{:#}", plan(json!({"layers": [{"type": "blob"}]})).err().unwrap());
         assert!(e.contains("solid, shape, text"), "{e}");
     }

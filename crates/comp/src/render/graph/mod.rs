@@ -52,7 +52,7 @@ pub enum Stage {
     Paint { layer: usize },
     /// Effects `0..upto` of an effect list. Reads the picture they start from, then the pictures of the layers the
     /// effects read as inputs (`pictures`, in the same order).
-    Effects { owner: FxOwner, upto: usize, pictures: Vec<usize> },
+    Effects { owner: FxOwner, upto: usize, pictures: Vec<usize>, behind: bool },
     /// A layer's masks as coverage. Reads nothing.
     MaskCoverage { layer: usize },
     /// A track matte's or clip's coverage from the picture of its source layer; the source's opacity is applied here.

@@ -260,6 +260,8 @@ fn visible_effect_inputs(plan: &Plan, ev: &Evaluator) -> anyhow::Result<Vec<Find
             }
         }
     }
+    super::behind_camera::run(plan, &ev, &mut out)?;
+    super::text_animators::run(plan, &ev, &mut out)?;
     Ok(out)
 }
 

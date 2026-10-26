@@ -10,7 +10,7 @@ import type { Val } from "./relative";
 import { isVectorKey, parseVectorKey, setVector, vectorBase } from "./vector-tweens";
 import type { Tween } from "./timeline";
 
-const DEFAULTS: Record<string, number> = { opacity: 1, scale: 1, z: 0 };
+const DEFAULTS: Record<string, number> = { opacity: 1, scale: 1, z: 0, skew: 0 };
 const TIE = 1e-9;
 const r6 = (n: number): number => Math.round(n * 1e6) / 1e6;
 const same = (a: Val | undefined, b: Val | undefined): boolean => JSON.stringify(a) === JSON.stringify(b);

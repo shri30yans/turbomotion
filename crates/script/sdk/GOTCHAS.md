@@ -33,9 +33,28 @@ Things that cost earlier agents iterations. Each has the fix next to it.
 - **Aim with `poi`.** The camera looks at `poi`; `pos` only places it. Move both for a truck, only `pos` for an orbit.
 - **Lights.** A 3D layer is lit only when the film has a light; add `light({ kind: "ambient" })` and a `directional` one.
 - **Groups pass transforms, not opacity.** `group()` is a `null` layer: children follow its position, scale and rotation,
-  but its `opacity`, `fx` and `start` do not reach them. Fade the children, or use a precomp.
+  but its `opacity` and `start` do not reach them, and `fx` on a group is an error (it draws nothing, so the effect would
+  never run). Fade the children, put the effect on each child or on an `adjustment` layer above them, or use a precomp.
+- **Text on a card needs a negative z.** Positive z is away from the lens: `text(..., { pos: [x, y, 1] })` on a card at
+  z = 0 is hidden behind it except where it sticks out. Use `z: -1` for the text.
+- **A 3D layer with a corner behind the lens is dropped whole.** A very wide layer (a long marquee row) on a parent that
+  turns can lose one corner behind the camera and vanish partway through the move; `check` reports it as
+  `passes-behind-camera`. Shorten the layer, turn the parent less, or move the camera back.
+- **`extrude` keeps `fx` on the front face only.** The slices behind it are plain colour, so an `outline` ring lies over
+  the first slices and hides the sides at shallow angles; the depth is covered, not lost.
+- **Text animator values are deltas.** `props: { opacity: -1 }` hides a character, a positive opacity changes nothing,
+  `scale: -1` shrinks it to nothing. A `selector` reaches the characters between `start + offset` and `end + offset`
+  (0 to 1 along the text): animate `offset` to sweep. `check` warns when nothing is ever reached.
 - **A shape item rotates about the layer origin.** Give the item an `anchor` (its pivot), or draw it as a path.
 - **Image anchors are top-left**; shapes centre on their position.
+
+## Builders and errors
+
+- **`solid("#fff", opts)`, `text("words", opts)`, `rect(w, h, opts)`, `group(opts, children)`**: the first argument is
+  positional (see sdk/README.md "Builders"). A plain `{ type: "adjustment" }` object is not a layer: write `raw({ type: ... })`.
+- **`check` and `build` list every mistake.** Each unknown key is reported at the line that made its layer, with the nearest
+  valid name; `turbomotion comp catalogue layer <type>` lists a type's keys with their forms and
+  `comp catalogue effect <name>` an effect's parameters.
 
 ## Tweens
 
@@ -54,6 +73,12 @@ Things that cost earlier agents iterations. Each has the fix next to it.
 
 - **Assets resolve against the film's folder, not where the JSON lands.** `comp({ root: "assets" })` moves the root, relative to
   the script. Fonts, images, audio, blocks and `fx_path` all use it. `svgFile("icons/play.svg")` uses it too.
+- **Film options are fixed by `comp({ ... })`.** `fx_path`, `block_path`, `fonts`, `root`... are read once there; assigning
+  `film.fx_path = [...]` afterwards throws instead of being ignored. `fx_path` and `block_path` resolve against the film's
+  root exactly like images and fonts (the script's folder unless `root` moves it).
+- **A font name must be installed, declared or a file.** `comp fonts` lists installed families; otherwise declare it:
+  `comp({ fonts: { "Mono": "../lib/fonts/JetBrainsMono-Regular.woff" } })`. A missing font is reported by `check` and
+  `sdk build` with the files it found in the root, never first at render time.
 - **`--sdk-dir` is authoritative.** With it, a missing SDK module is an error, never silently the embedded one.
 - **Name fonts by file for portable films:** `comp({ fonts: { Mono: "../lib/fonts/JetBrainsMono-Regular.woff" } })`.
   `measure()` and rendering then agree on widths.

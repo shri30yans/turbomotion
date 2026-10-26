@@ -11,8 +11,18 @@ use serde_json::Value;
 pub fn from_value_at<T: DeserializeOwned>(value: Value) -> Result<T> {
     serde_path_to_error::deserialize(value).map_err(|e| {
         let path = e.path().to_string();
-        if path == "." { anyhow!("{}", e.inner()) } else { anyhow!("{path}: {}", e.inner()) }
+        let message = with_suggestion(&e.inner().to_string());
+        if path == "." { anyhow!("{message}") } else { anyhow!("{path}: {message}") }
     })
+}
+
+/// serde words a misspelt key as "unknown field `colour`, expected one of `color`, `fill`"; add the nearest valid name.
+fn with_suggestion(message: &str) -> String {
+    let names: Vec<&str> = message.split('`').skip(1).step_by(2).collect();
+    match (message.strip_prefix("unknown field `"), names.split_first()) {
+        (Some(_), Some((wrong, valid))) => format!("{message}.{}", turbomotion_core::suggest::hint(wrong, valid)),
+        _ => message.to_string(),
+    }
 }
 
 #[cfg(test)]
@@ -25,6 +35,23 @@ mod tests {
     struct Probe {
         #[allow(dead_code)]
         opacity: Option<P>,
+    }
+
+    #[derive(Debug, Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct Strict {
+        #[allow(dead_code)]
+        radius: f64,
+        #[allow(dead_code)]
+        height: f64,
+    }
+
+    #[test]
+    fn a_misspelt_key_gets_the_nearest_valid_one() {
+        let err = from_value_at::<Strict>(serde_json::json!({"radius": 1, "heigth": 2})).unwrap_err().to_string();
+        assert!(err.contains("Did you mean \"height\"?"), "{err}");
+        let far = from_value_at::<Strict>(serde_json::json!({"radius": 1, "height": 1, "zzzzzz": 2})).unwrap_err().to_string();
+        assert!(far.contains("unknown field") && !far.contains("Did you mean"), "{far}");
     }
 
     #[test]

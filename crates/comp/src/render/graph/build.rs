@@ -11,6 +11,11 @@ use crate::{
     schema::MatteMode,
 };
 
+/// Whether an effect list samples the composite below the layer (`backdrop`).
+pub fn uses_backdrop(fx: &[PlanFx]) -> bool {
+    fx.iter().any(|f| f.name() == "backdrop")
+}
+
 /// Where a layer's picture comes from: the frame itself or one of the shutter samples.
 const MAIN: usize = 0;
 
@@ -59,25 +64,30 @@ impl<'a> Builder<'a> {
     }
 
     /// Effects `0..upto` of `owner`'s list applied to `from`, with the pictures they read drawn first.
-    fn effects(&mut self, frame: usize, owner: FxOwner, fx: &[PlanFx], upto: usize, from: ImageId) -> ImageId {
+    fn effects(&mut self, frame: usize, owner: FxOwner, fx: &[PlanFx], upto: usize, from: ImageId, behind: Option<ImageId>) -> ImageId {
         let layers = Self::distinct(fx[..upto].iter().flat_map(PlanFx::layers_read));
         let mut reads = vec![from];
-        for &l in &layers {
-            reads.push(self.layer_picture(frame, l));
+        if let Some(b) = behind {
+            reads.push(b);
         }
-        self.pass(Stage::Effects { owner, upto, pictures: layers }, frame, reads)
+        for &l in &layers {
+            reads.push(self.layer_picture(frame, l, None));
+        }
+        self.pass(Stage::Effects { owner, upto, pictures: layers, behind: behind.is_some() }, frame, reads)
     }
 
     /// The layer fully processed except for its opacity and blend: content, effects, masks and its own matte.
-    fn layer_picture(&mut self, frame: usize, i: usize) -> ImageId {
-        if let Some(&done) = self.pictures.get(&(frame, i)) {
-            return done;
+    fn layer_picture(&mut self, frame: usize, i: usize, behind: Option<ImageId>) -> ImageId {
+        if behind.is_none() {
+            if let Some(&done) = self.pictures.get(&(frame, i)) {
+                return done;
+            }
         }
         let (comp, f) = (self.comp, self.frames[frame]);
         let (st, lp) = (&f.layers[i], &comp.layers[i]);
         let mut img = self.pass(Stage::Paint { layer: i }, frame, vec![]);
         if !lp.fx.is_empty() {
-            img = self.effects(frame, FxOwner::Layer(i), &lp.fx, lp.fx.len(), img);
+            img = self.effects(frame, FxOwner::Layer(i), &lp.fx, lp.fx.len(), img, behind);
         }
         if !lp.masks.is_empty() {
             let cov = self.pass(Stage::MaskCoverage { layer: i }, frame, vec![]);
@@ -95,12 +105,14 @@ impl<'a> Builder<'a> {
         if let (Some(clip), Some(bounds)) = (st.clip, st.bounds) {
             img = self.pass(Stage::Wipe { bounds, clip }, frame, vec![img]);
         }
-        self.pictures.insert((frame, i), img);
+        if behind.is_none() {
+            self.pictures.insert((frame, i), img);
+        }
         img
     }
 
     fn through_matte(&mut self, frame: usize, img: ImageId, src: usize, mode: MatteMode) -> ImageId {
-        let source = self.layer_picture(frame, src);
+        let source = self.layer_picture(frame, src, None);
         let opacity = self.frames[frame].layers[src].opacity;
         let cov = self.pass(Stage::MatteCoverage { mode, opacity }, frame, vec![source]);
         self.pass(Stage::Multiply, frame, vec![img, cov])
@@ -110,7 +122,7 @@ impl<'a> Builder<'a> {
     fn adjustment(&mut self, i: usize) {
         let lp = &self.comp.layers[i];
         let below = self.pass(Stage::Snapshot, MAIN, vec![]);
-        let changed = self.effects(MAIN, FxOwner::Adjustment(i), &lp.fx, lp.fx.len(), below);
+        let changed = self.effects(MAIN, FxOwner::Adjustment(i), &lp.fx, lp.fx.len(), below, None);
         let cov = self.pass(Stage::AdjustCoverage { layer: i }, MAIN, vec![]);
         self.modify(Stage::AdjustMix, MAIN, vec![below, changed, cov]);
     }
@@ -122,11 +134,35 @@ impl<'a> Builder<'a> {
         for frame in 1..self.frames.len() {
             let s = &self.frames[frame].layers[i];
             if s.visible && s.opacity > 0.0 {
-                reads.push(self.layer_picture(frame, i));
+                reads.push(self.layer_picture(frame, i, None));
                 opacities.push(s.opacity);
             }
         }
         self.pass(Stage::ShutterAverage { opacities }, MAIN, reads)
+    }
+
+    /// Lay one visible layer on the composite (adjustment, motion-blur shutter, or a normal layer).
+    fn composite_layer(&mut self, frame: usize, i: usize) {
+        let (comp, f) = (self.comp, self.frames[frame]);
+        let st = &f.layers[i];
+        if matches!(st.content, Content::Adjustment) {
+            if st.active && st.opacity > 0.0 {
+                self.adjustment(i);
+            }
+            return;
+        }
+        if !st.visible || st.opacity <= 0.0 {
+            return;
+        }
+        let blend = st.blend_mode;
+        if comp.layers[i].def.common.mblur && self.frames.len() > 1 && f.comp == crate::plan::ROOT {
+            let averaged = self.shutter(i);
+            self.modify(Stage::Composite { blend, opacity: 1.0 }, frame, vec![averaged]);
+            return;
+        }
+        let behind = if uses_backdrop(&comp.layers[i].fx) { Some(self.pass(Stage::Snapshot, frame, vec![])) } else { None };
+        let picture = self.layer_picture(frame, i, behind);
+        self.modify(Stage::Composite { blend, opacity: st.opacity }, frame, vec![picture]);
     }
 
     /// Every layer composited in paint order, then the composition's look.
@@ -134,30 +170,13 @@ impl<'a> Builder<'a> {
         let (comp, frame) = (self.comp, self.frames[MAIN]);
         self.modify(Stage::Backdrop, MAIN, vec![]);
         for i in draw_order(frame) {
-            let st = &frame.layers[i];
-            if matches!(st.content, Content::Adjustment) {
-                if st.active && st.opacity > 0.0 {
-                    self.adjustment(i);
-                }
-                continue;
-            }
-            if !st.visible || st.opacity <= 0.0 {
-                continue;
-            }
-            let blend = st.blend_mode;
-            if comp.layers[i].def.common.mblur && self.frames.len() > 1 && frame.comp == crate::plan::ROOT {
-                let averaged = self.shutter(i);
-                self.modify(Stage::Composite { blend, opacity: 1.0 }, MAIN, vec![averaged]);
-            } else {
-                let picture = self.layer_picture(MAIN, i);
-                self.modify(Stage::Composite { blend, opacity: st.opacity }, MAIN, vec![picture]);
-            }
+            self.composite_layer(MAIN, i);
         }
         let flat = self.pass(Stage::Snapshot, MAIN, vec![]);
         if comp.look.is_empty() {
             flat
         } else {
-            self.effects(MAIN, FxOwner::Look, &comp.look, comp.look.len(), flat)
+            self.effects(MAIN, FxOwner::Look, &comp.look, comp.look.len(), flat, None)
         }
     }
 }
@@ -172,7 +191,16 @@ pub fn comp_graph<'a>(comp: &'a CompPlan, frame: &'a Frame, samples: &'a [Frame]
 /// The graph that draws one layer's finished picture (before opacity and blend).
 pub fn layer_graph<'a>(comp: &'a CompPlan, frame: &'a Frame, layer: usize) -> Graph<'a> {
     let mut b = Builder::new(comp, vec![frame]);
-    let out = b.layer_picture(MAIN, layer);
+    let order = draw_order(frame);
+    let pos = order.iter().position(|&l| l == layer).expect("the layer is in paint order");
+    if uses_backdrop(&comp.layers[layer].fx) {
+        b.modify(Stage::Backdrop, MAIN, vec![]);
+        for &i in order.iter().take(pos) {
+            b.composite_layer(MAIN, i);
+        }
+    }
+    let behind = if uses_backdrop(&comp.layers[layer].fx) { Some(b.pass(Stage::Snapshot, MAIN, vec![])) } else { None };
+    let out = b.layer_picture(MAIN, layer, behind);
     b.finish(vec![out])
 }
 
@@ -182,12 +210,22 @@ pub fn layer_graph<'a>(comp: &'a CompPlan, frame: &'a Frame, layer: usize) -> Gr
 pub fn effect_inputs_graph<'a>(comp: &'a CompPlan, frame: &'a Frame, layer: usize, effect: usize) -> (Graph<'a>, Vec<usize>) {
     let mut b = Builder::new(comp, vec![frame]);
     let fx = &comp.layers[layer].fx;
+    let needs_behind = uses_backdrop(&fx[..effect]);
+    if needs_behind {
+        let order = draw_order(frame);
+        let pos = order.iter().position(|&l| l == layer).expect("the layer is in paint order");
+        b.modify(Stage::Backdrop, MAIN, vec![]);
+        for &i in order.iter().take(pos) {
+            b.composite_layer(MAIN, i);
+        }
+    }
+    let behind = if needs_behind { Some(b.pass(Stage::Snapshot, MAIN, vec![])) } else { None };
     let mut img = b.pass(Stage::Paint { layer }, MAIN, vec![]);
     if effect > 0 {
-        img = b.effects(MAIN, FxOwner::Layer(layer), fx, effect, img);
+        img = b.effects(MAIN, FxOwner::Layer(layer), fx, effect, img, behind);
     }
     let read = Builder::distinct(fx[effect].inputs_read());
     let mut outputs = vec![img];
-    outputs.extend(read.iter().map(|&l| b.layer_picture(MAIN, l)));
+    outputs.extend(read.iter().map(|&l| b.layer_picture(MAIN, l, None)));
     (b.finish(outputs), read)
 }

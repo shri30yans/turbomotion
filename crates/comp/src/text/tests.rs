@@ -474,6 +474,30 @@ fn a_selector_drives_the_cipher_and_settle_locks_on_early() {
     assert_eq!(&shown[4..], &real[4..], "settled past the threshold: {shown:?}");
 }
 
+#[test]
+fn a_wiggly_selector_gives_each_character_its_own_seeded_amount() {
+    let word = "ABCDEFGH";
+    let wiggle = |w: Value| {
+        plan(json!([{"type": "text", "text": word, "size": 50, "color": "#fff", "pos": [320, 180], "align": "center",
+            "animators": [{"by": "chars", "props": {"rotation": 30}, "selector": {"start": 0, "end": 1, "wiggle": w}}]}]))
+    };
+    let turns = |p: &Plan, t: f64| -> Vec<f64> { let s = text_at(p, t); (0..word.len()).map(|i| baseline_centre(&s, i).1).collect() };
+    // signed range: every turn lies in min..=max degrees * 30 and they are not all alike
+    let signed = turns(&wiggle(json!({"min": -1, "max": 1, "seed": 4})), 0.0);
+    assert!(signed.iter().all(|a| a.abs() <= 30.0 + 1e-3), "{signed:?}");
+    assert!(signed.iter().any(|a| *a > 1.0) && signed.iter().any(|a| *a < -1.0), "both directions: {signed:?}");
+    // the same seed repeats, another seed differs, and a fixed wiggle (rate 0) does not move over time
+    assert_eq!(signed, turns(&wiggle(json!({"min": -1, "max": 1, "seed": 4})), 0.0));
+    assert_ne!(signed, turns(&wiggle(json!({"min": -1, "max": 1, "seed": 5})), 0.0));
+    assert_eq!(signed, turns(&wiggle(json!({"min": -1, "max": 1, "seed": 4})), 0.7));
+    // a drifting wiggle (rate > 0) changes over time
+    let drift = wiggle(json!({"min": -1, "max": 1, "seed": 4, "rate": 2}));
+    assert_ne!(turns(&drift, 0.0), turns(&drift, 0.7));
+    // without a wiggle every unit gets the same full amount
+    let flat = turns(&wiggle(json!(null)), 0.0);
+    assert!(flat.iter().all(|a| (a - 30.0).abs() < 1e-3), "{flat:?}");
+}
+
 // ---- T6: surfaces --------------------------------------------------------------------------------------------------
 
 fn drum(kind: &str, extra: Value, text: &str) -> Plan {

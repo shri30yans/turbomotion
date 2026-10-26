@@ -9,7 +9,7 @@ use super::{Evaluator, LayerEnv};
 use crate::{
     anim::noise::{noise1, rand01},
     plan::{CompPlan, LayerPlan},
-    schema::Particles,
+    schema::{ParticleShape, Particles},
 };
 
 #[derive(Debug, Clone, Copy)]
@@ -28,7 +28,7 @@ pub struct Particle {
 #[derive(Serialize)]
 pub struct ParticleState {
     pub count: usize,
-    pub shape: String,
+    pub shape: ParticleShape,
     #[serde(skip)]
     pub items: Vec<Particle>,
 }

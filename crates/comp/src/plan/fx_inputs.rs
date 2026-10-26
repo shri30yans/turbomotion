@@ -44,7 +44,29 @@ pub fn resolve(layers: &mut [LayerPlan], look: &mut [PlanFx], ids: &HashMap<Stri
     }
     resolve_one(None, "look", look)?;
     ensure!(!reads_history(look, lib)?, "look: a composition's look cannot use history inputs (put the effect on a layer)");
+    reject_backdrop(layers, look)?;
     reject_loops(layers)
+}
+
+fn reject_backdrop(layers: &[LayerPlan], look: &[PlanFx]) -> Result<()> {
+    for l in layers {
+        if uses_backdrop(&l.fx) {
+            ensure!(
+                !matches!(l.def.kind, Kind::Adjustment),
+                "{}: the backdrop effect samples what is behind a layer's picture; put it on a shape, solid, text or image layer",
+                l.label
+            );
+        }
+    }
+    ensure!(
+        !uses_backdrop(look),
+        "look: the backdrop effect belongs on a layer, not on the composition's look"
+    );
+    Ok(())
+}
+
+fn uses_backdrop(fx: &[PlanFx]) -> bool {
+    fx.iter().any(|f| f.name() == "backdrop")
 }
 
 fn reads_history(fx: &[PlanFx], lib: &Library) -> Result<bool> {

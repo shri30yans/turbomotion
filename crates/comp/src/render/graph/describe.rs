@@ -15,13 +15,19 @@ fn stage_name(g: &Graph, s: &Stage) -> String {
     match s {
         Stage::Backdrop => "backdrop".to_string(),
         Stage::Paint { layer } => format!("paint {}", label(layer)),
-        Stage::Effects { owner, upto, pictures } => {
+        Stage::Effects { owner, upto, pictures, behind } => {
             let on = match owner {
                 super::FxOwner::Layer(l) | super::FxOwner::Adjustment(l) => label(l).to_string(),
                 super::FxOwner::Look => "look".to_string(),
             };
             let reads: Vec<&str> = pictures.iter().map(label).collect();
-            format!("effects 0..{upto} of {on}{}", if reads.is_empty() { String::new() } else { format!(" (reads {})", reads.join(", ")) })
+            let extra = match (behind, reads.is_empty()) {
+                (true, true) => " (reads composite below)".to_string(),
+                (true, false) => format!(" (reads composite below, {})", reads.join(", ")),
+                (false, true) => String::new(),
+                (false, false) => format!(" (reads {})", reads.join(", ")),
+            };
+            format!("effects 0..{upto} of {on}{extra}")
         }
         Stage::MaskCoverage { layer } => format!("masks of {}", label(layer)),
         Stage::MatteCoverage { mode, opacity } => format!("matte {mode:?} at opacity {opacity:.2}"),

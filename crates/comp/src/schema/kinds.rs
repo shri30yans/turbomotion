@@ -4,6 +4,7 @@ use serde::Deserialize;
 use serde_json::{Map, Value};
 
 use super::{
+    particle_shape::ParticleShape,
     shape::ShapeItem,
     text::{Align, Animator, TextSource, TextStroke},
     wrap::{Col, Pos, P},
@@ -540,8 +541,8 @@ pub struct Particles {
     pub colors: Vec<(f64, Col)>,
     /// Opacity multiplier over life.
     pub opacity_over_life: Vec<[f64; 2]>,
-    /// `circle`, `soft`, `square`, `spark`, `star`, `ring`.
-    pub shape: String,
+    /// `soft`, `circle`, `square`, `spark`, `star`, `ring`, or your own outline: `{"path": {"d": "..."}}`.
+    pub shape: ParticleShape,
     /// Degrees per second: `[min, max]`.
     pub spin: [f64; 2],
     pub turbulence: Option<Turbulence>,
@@ -570,7 +571,7 @@ impl Default for Particles {
             size_over_life: vec![],
             colors: vec![],
             opacity_over_life: vec![],
-            shape: "soft".into(),
+            shape: ParticleShape::Soft,
             spin: [0.0, 0.0],
             turbulence: None,
             trail: 1,

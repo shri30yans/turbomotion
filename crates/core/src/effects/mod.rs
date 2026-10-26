@@ -8,6 +8,7 @@
 //! `[[seconds, value], ...]`. `turbomotion studio effects` prints the catalogue; the registry below is its only source,
 //! so the documentation cannot drift from what the renderer accepts.
 
+mod backdrop;
 mod blend;
 mod blur;
 mod color;
@@ -25,6 +26,7 @@ use serde::Deserialize;
 use serde_json::{Map, Value};
 use skia_safe::Canvas;
 
+pub use backdrop::over as backdrop_over;
 pub use blend::Blend;
 pub use blur::smear;
 pub use pass::Ctx;
@@ -74,6 +76,9 @@ registry! {
     Blur(blur::Blur) = "blur", blur::blur, "Gaussian blur.",
         [float("radius", 8.0, "Gaussian sigma in pixels.").at_least(0.0)],
         {"effect": "blur", "radius": 8};
+    Backdrop(backdrop::Backdrop) = "backdrop", backdrop::backdrop, "Blurs what has already been composited behind this layer and draws the layer on top (frosted glass).",
+        [float("blur", 24.0, "Gaussian sigma in pixels.").at_least(0.0)],
+        {"effect": "backdrop", "blur": 24};
     DirectionalBlur(blur::DirectionalBlur) = "directional_blur", blur::directional_blur, "Motion blur: smears the layer along an angle.",
         [float("distance", 40.0, "Length of the smear in pixels."), float("angle", 0.0, "Direction of the smear in degrees (0 = horizontal, 90 = vertical).")],
         {"effect": "directional_blur", "distance": 40, "angle": 0};

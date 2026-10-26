@@ -28,8 +28,8 @@ pub fn parse_trans(v: &Value, default: Option<&Trans>) -> Result<Trans> {
         Value::Object(o) => (o.get("type").and_then(Value::as_str).ok_or_else(|| anyhow!("a transition object needs \"type\""))?.to_string(), o.clone()),
         other => bail!("a transition is a name or {{\"type\": ..., \"dur\": ...}}, not {other}"),
     };
-    for k in o.keys() {
-        ensure!(["type", "dur", "ease", "color", "sfx", "portal", "radius"].contains(&k.as_str()), "transition: unknown field {k:?}; fields are type, dur, ease, color, sfx, portal, radius");
+    if let Some(message) = crate::schema::fields::stray_keys("transition", o.keys(), &["type", "dur", "ease", "color", "sfx", "portal", "radius"]) {
+        bail!("{message}");
     }
     let entry = TRANSITIONS.iter().find(|t| t.0 == kind).ok_or_else(|| anyhow!("unknown transition {kind:?}; transitions are {}", TRANSITIONS.iter().map(|t| t.0).collect::<Vec<_>>().join(", ")))?;
     let default_dur = default.map_or(0.6, |d| d.dur);

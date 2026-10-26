@@ -24,6 +24,11 @@ pub struct ShapeItem {
 const PATH_KEYS: &[&str] = &["d", "points", "closed", "smooth", "rect", "radius", "ellipse", "polygon", "star", "rotate", "morph_to", "morph"];
 const ITEM_KEYS: &[&str] = &["fill", "stroke", "trim", "offset", "anchor", "rotation", "scale", "opacity", "repeat"];
 
+/// Every key a shape item accepts and which half it belongs to: `outline` keys say where the line goes, `look` keys how it is painted.
+pub fn item_keys() -> Vec<(&'static str, &'static str)> {
+    PATH_KEYS.iter().map(|k| (*k, "outline")).chain(ITEM_KEYS.iter().map(|k| (*k, "look"))).collect()
+}
+
 /// A brushed-metal ramp: highlight, mid, shadow. Used as a fill on big numbers and on metal edges.
 #[derive(Debug, Deserialize, Clone, Default)]
 #[serde(default, deny_unknown_fields)]
@@ -37,9 +42,10 @@ impl ShapeItem {
     /// A shape item is its geometry keys (`rect`, `ellipse`, `d`, ...) and its look keys (`fill`, `stroke`, `trim`...) in one object.
     pub fn parse(v: &Value) -> Result<ShapeItem> {
         let o = v.as_object().ok_or_else(|| anyhow!("a shape item is an object like {{\"rect\": [0, 0, 300, 200], \"fill\": \"#fff\"}}"))?;
-        if let Some(bad) = o.keys().find(|k| !PATH_KEYS.contains(&k.as_str()) && !ITEM_KEYS.contains(&k.as_str()) && !item_alias::is_alias(k)) {
-            let flat: Vec<&str> = item_alias::ALIASES.iter().map(|(flat, ..)| *flat).collect();
-            bail!("unknown shape field {bad:?}; geometry: {}; look: {}; flat spellings of nested look fields: {}", PATH_KEYS.join(", "), ITEM_KEYS.join(", "), flat.join(", "));
+        let flat: Vec<&str> = item_alias::ALIASES.iter().map(|(flat, ..)| *flat).collect();
+        let valid: Vec<&str> = PATH_KEYS.iter().chain(ITEM_KEYS).chain(&flat).copied().collect();
+        if let Some(message) = super::fields::stray_keys("shape item", o.keys(), &valid) {
+            bail!("{message}");
         }
         let o = &item_alias::nest(o)?;
         let path_map: Map<String, Value> = o.iter().filter(|(k, _)| PATH_KEYS.contains(&k.as_str())).map(|(k, v)| (k.clone(), v.clone())).collect();

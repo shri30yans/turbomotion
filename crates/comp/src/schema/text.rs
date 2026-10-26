@@ -206,6 +206,13 @@ impl<'de> Deserialize<'de> for TextSource {
         match v {
             serde_json::Value::String(s) => Ok(TextSource::Fixed(s)),
             serde_json::Value::Object(ref o) => {
+                if !o.contains_key("from") && !o.contains_key("to") {
+                    let keys: Vec<&str> = o.keys().map(String::as_str).collect();
+                    return Err(serde::de::Error::custom(format!(
+                        "an object here must be a counter {{\"from\": 0, \"to\": 100, \"dur\": 1}} or a swap {{\"from\": \"BUYER\", \"to\": \"SELLER\"}}, but it has the keys {}; the words themselves go in as a plain string (\"text\": \"Hello\"), and other options sit beside \"text\", not inside it",
+                        keys.join(", ")
+                    )));
+                }
                 let is_swap = o.get("from").is_some_and(serde_json::Value::is_string) || o.get("to").is_some_and(serde_json::Value::is_string);
                 if is_swap {
                     serde_json::from_value(v).map(TextSource::Swap).map_err(serde::de::Error::custom)
@@ -323,11 +330,30 @@ pub struct Selector {
     pub smooth: f64,
     pub random: bool,
     pub seed: u32,
+    /// After Effects' Wiggly selector: scales each unit's weight by its own random factor between `min` and `max`.
+    pub wiggle: Option<Wiggle>,
 }
 
 impl Default for Selector {
     fn default() -> Self {
-        Selector { start: None, end: None, offset: None, shape: SelectorShape::Square, smooth: 0.0, random: false, seed: 1 }
+        Selector { start: None, end: None, offset: None, shape: SelectorShape::Square, smooth: 0.0, random: false, seed: 1, wiggle: None }
+    }
+}
+
+/// A random factor per unit, `min..=max` (either may be negative, so a prop can go both ways). With `rate` 0 each unit keeps
+/// its factor for good; above 0 the factor drifts smoothly, `rate` new random targets per second. The same seed gives the same factors.
+#[derive(Debug, Deserialize, Clone)]
+#[serde(default, deny_unknown_fields)]
+pub struct Wiggle {
+    pub min: f64,
+    pub max: f64,
+    pub rate: f64,
+    pub seed: u32,
+}
+
+impl Default for Wiggle {
+    fn default() -> Self {
+        Wiggle { min: 0.0, max: 1.0, rate: 0.0, seed: 1 }
     }
 }
 

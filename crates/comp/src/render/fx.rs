@@ -4,7 +4,7 @@
 
 use anyhow::{anyhow, bail, ensure, Context, Result};
 use skia_safe::{Canvas, Image, Matrix, Paint, Rect, Shader, TileMode};
-use turbomotion_core::{effects, layer::Layer};
+use turbomotion_core::{effects::{self, backdrop_over, Effect}, layer::Layer};
 
 use super::{composite, history, Ctx};
 use crate::{
@@ -22,6 +22,8 @@ pub struct Scope<'a> {
     pub like: &'a Canvas,
     pub frame: &'a Frame,
     pub layer: Option<usize>,
+    /// What has been composited below this layer, when an effect needs it (`backdrop`).
+    pub behind: Option<&'a Layer>,
     pub pictures: &'a [(usize, &'a Layer)],
 }
 
@@ -39,6 +41,10 @@ pub fn chain(sc: &Scope, mut img: Layer, fx: &[PlanFx], states: &[FxState], t: f
         let input = img.clone();
         let result = match (&f.op, &state.op) {
             (FxOp::Plugin(plan), FxOpState::Plugin(p)) => plugin(sc, &img, plan, p, t, at).with_context(|| format!("effect {:?}", p.name))?,
+            (FxOp::Builtin(Effect::Backdrop(e)), FxOpState::Builtin) => {
+                let behind = sc.behind.ok_or_else(|| anyhow!("effect {:?} needs a picture of what is behind the layer", f.name()))?;
+                backdrop_over(sc.like, &img, behind, e.blur.at(t))?
+            }
             (FxOp::Builtin(e), FxOpState::Builtin) => effects::apply(sc.ctx.shaders, sc.like, img, std::slice::from_ref(e), t)?,
             _ => bail!("effect {:?} was evaluated as a different kind of effect than the plan has", f.name()),
         };

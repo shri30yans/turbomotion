@@ -48,6 +48,16 @@ export class Film {
       if (!(typeof opts?.[k] === "number" && opts[k] > 0)) throw new Error(`comp({ width, height, fps }): "${k}" must be a positive number, got ${describe(opts?.[k])}`);
     }
     configureMeasure(opts.fonts, opts.root);
+    // Film options are read once, when comp({...}) is called. A property assigned afterwards would be written nowhere,
+    // so it is refused where it is written, naming the place it belongs.
+    return new Proxy(this, {
+      set(film, key, value, receiver) {
+        if (key !== "edit") {
+          throw new Error(`film.${String(key)} = ... has no effect: the film's options are fixed by comp({ ... }); put it there, like comp({ width, height, fps, ${String(key)}: ... })`);
+        }
+        return Reflect.set(film, key, value, receiver);
+      },
+    });
   }
 
   /** Add layers (or arrays of layers, or groups) to the film's own layer list, bottom first. */

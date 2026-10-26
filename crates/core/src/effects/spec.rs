@@ -2,7 +2,7 @@
 //! The effect's struct, the plan's validation, the descriptor the documentation is written from and `comp fx test`
 //! all read this declaration, so none of them can disagree about it.
 
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{anyhow, bail, Result};
 use serde::Deserialize;
 use serde_json::{json, Map, Value};
 
@@ -89,27 +89,50 @@ impl ParamSpec {
     }
 }
 
-/// Every key written in a use of effect `effect` must be one of `names`; a stray one is named, with the nearest valid
-/// name and the whole list.
+/// Every key written in a use of effect `effect` must be one of `names`; each stray one is named, with the nearest
+/// valid name, and the whole list closes the message.
 pub fn check_names<'a>(effect: &str, given: impl IntoIterator<Item = &'a String>, names: &[&str]) -> Result<()> {
-    match given.into_iter().find(|k| !names.contains(&k.as_str())) {
-        Some(k) => bail!("effect {effect:?} has no parameter {k:?}.{} Its parameters are: {}", hint(k, names), if names.is_empty() { "none".to_string() } else { names.join(", ") }),
-        None => Ok(()),
+    let strays: Vec<String> = given.into_iter().filter(|k| !names.contains(&k.as_str())).map(|k| format!("effect {effect:?} has no parameter {k:?}.{}", hint(k, names))).collect();
+    if strays.is_empty() {
+        return Ok(());
+    }
+    bail!("{} Its parameters are: {}", strays.join(" "), if names.is_empty() { "none".to_string() } else { names.join(", ") })
+}
+
+impl ParamKind {
+    /// The forms a value of this kind is written in, for an error message.
+    pub fn accepts(&self) -> &'static str {
+        match self {
+            ParamKind::Float { .. } => "a number, or [[seconds, value], ...] keys that animate it",
+            ParamKind::Color { .. } => "[r, g, b] with each channel 0 to 255",
+        }
     }
 }
 
 /// `given` checked against `specs` of effect `name`, with every parameter present or defaulted, as one JSON object that
-/// carries `"effect": name`.
+/// carries `"effect": name`. Every wrong name and every wrong value is reported together, each with the parameter and
+/// the forms it accepts.
 pub fn resolve_all(name: &str, specs: &[ParamSpec], given: &Map<String, Value>) -> Result<Map<String, Value>> {
-    check_names(name, given.keys(), &specs.iter().map(|s| s.name).collect::<Vec<_>>())?;
+    let mut problems: Vec<String> = Vec::new();
+    if let Err(e) = check_names(name, given.keys(), &specs.iter().map(|s| s.name).collect::<Vec<_>>()) {
+        problems.push(e.to_string());
+    }
     let mut out = Map::new();
     out.insert("effect".to_string(), json!(name));
     for spec in specs {
-        if let Some(v) = spec.resolve(given.get(spec.name)).with_context(|| format!("effect {name:?} parameter {:?}", spec.name))? {
-            out.insert(spec.name.to_string(), v);
+        match spec.resolve(given.get(spec.name)) {
+            Ok(Some(v)) => {
+                out.insert(spec.name.to_string(), v);
+            }
+            Ok(None) => {}
+            Err(e) => problems.push(format!("effect {name:?} parameter {:?}: {e:#}; accepted: {}", spec.name, spec.kind.accepts())),
         }
     }
-    Ok(out)
+    match problems.as_slice() {
+        [] => Ok(out),
+        [one] => Err(anyhow!("{one}")),
+        many => Err(anyhow!("effect {name:?} has {} problems:\n  - {}", many.len(), many.join("\n  - "))),
+    }
 }
 
 #[cfg(test)]
@@ -139,6 +162,16 @@ mod tests {
         assert!(RADIUS.resolve(Some(&json!("big"))).is_err());
         assert!(INK.resolve(Some(&json!([1, 2]))).unwrap_err().to_string().contains("[r, g, b]"));
         assert!(INK.resolve(Some(&json!([1, 2, 300]))).is_err());
+    }
+
+    #[test]
+    fn every_wrong_name_and_value_is_reported_in_one_message() {
+        let given = json!({"radis": 3, "ink": [1, 2]}).as_object().unwrap().clone();
+        let e = resolve_all("blur", &[RADIUS, INK], &given).unwrap_err().to_string();
+        assert!(e.contains("2 problems") && e.contains("\"radis\"") && e.contains("parameter \"ink\"") && e.contains("[r, g, b] with each channel"), "{e}");
+        let given = json!({"radius": "big", "ink": "red"}).as_object().unwrap().clone();
+        let e = resolve_all("blur", &[RADIUS, INK], &given).unwrap_err().to_string();
+        assert!(e.contains("parameter \"radius\"") && e.contains("parameter \"ink\"") && e.contains("accepted: a number"), "{e}");
     }
 
     #[test]

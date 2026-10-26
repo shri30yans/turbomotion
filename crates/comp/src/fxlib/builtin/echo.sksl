@@ -1,9 +1,15 @@
 // @effect echo
-// @summary Ghosts of the layer along a direction: a fast card, a tumbling ticket.
-// @param amount float 0.55 0 1 -- 0 is the original, 1 is a long trail
-// @param copies float 5 2 10 -- how many ghosts
-// @param travel float 36 4 120 -- how far the last ghost sits, px
-// @param angle float -18 -180 180 -- direction the ghosts fall back, degrees
+// @summary A soft fading trail of the layer toward one side: up to 8 faint ghosts that overlap into a smear, not separate hard copies.
+// `copies` counts the layer itself and the farthest ghost has weight 0, so `copies` 5 shows the layer and 3 visible ghosts
+// and the most (10) shows 8; with the default spacing (a few px) they overlap into a blur. Ghost k sits `travel * amount * k / (copies - 1)` px from the layer
+// along `angle` and is added at weight `(1 - k / (copies - 1)) * amount * 0.55`, so the nearest ghost is brightest and
+// the farthest is nothing. For hard, separate copies use a large `travel` and few `copies`.
+// `angle` is in screen degrees measured from +x, and y points DOWN: 0 puts the trail to the right, 90 below the layer,
+// 180 to the left and -90 above it. `amount` scales both the distance and the opacity (0 = the layer as it was).
+// @param amount float 0.55 0 1 -- 0 is the original, 1 is the full trail length and brightness
+// @param copies float 5 2 10 -- pictures in total, the layer included; the farthest has no weight, so copies - 2 ghosts show (at most 8)
+// @param travel float 36 4 120 -- px from the layer to the farthest ghost at amount 1 (the farthest sits at travel * amount)
+// @param angle float -18 -180 180 -- direction of the trail in degrees from +x with y down: 0 right, 90 down, -90 up
 half4 main(float2 xy) {
     float4 src = straight(xy);
     if (amount < 0.001) {

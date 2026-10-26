@@ -3,6 +3,7 @@
 //! through the real planner, so an example that stops working fails the build.
 
 mod expression_support;
+pub mod layer_keys;
 mod property_examples;
 
 use serde::Serialize;
@@ -23,7 +24,7 @@ pub fn layers() -> Vec<Entry> {
         Entry { name: "solid", summary: "A flat rectangle: backgrounds, flashes, mattes. Size defaults to the composition.", example: json!({"type": "solid", "color": "#101828"}) },
         Entry {
             name: "text",
-            summary: "Text with real shaping. `font` is a family or a file; `align` left|center|right (the layer's pos is the alignment edge, vertically centred); `width` wraps. Characters the designed font does not have take a fallback face and are painted in the same colour as the rest of the line. `preset` is a named per-character animation (see `text_presets`); `animators` build your own (GSAP staggers or After Effects range selectors). `text` can also be a counter {from, to, at, dur, ease, decimals, sep, prefix, suffix}. Animator props include per-character 3D (`z`, `rotation_x|y|z`, `scale_z`, seen through `perspective`), `fill_hue|saturation|brightness` and `stroke_width`; an animator's `cipher` {charset, rate, seed, settle} decodes noise into the real characters. `path` {an ellipse/points/d/... geometry or a `layer` id, reverse, perpendicular, force_align, first_margin, last_margin, travel} sets the text along a path (`travel` 0..1 is one exact lap of a closed path); `surface` {kind: cylinder|sphere, radius, turn, back} wraps it on a drum or ball; `marquee` {speed, gap, repeat} scrolls a seamless row; `outline_only` with `stroke_trim` [start, end] draws the glyph outlines on.",
+            summary: "Text with real shaping. `font` is a family or a file; `align` left|center|right (the layer's pos is the alignment edge, vertically centred); `width` wraps. Characters the designed font does not have take a fallback face and are painted in the same colour as the rest of the line. `preset` is a named per-character animation (see `text_presets`); `animators` build your own (GSAP staggers or After Effects range selectors). `text` can also be a counter {from, to, at, dur, ease, decimals, sep, prefix, suffix}. Animator props include per-character 3D (`z`, `rotation_x|y|z`, `scale_z`, seen through `perspective`), `fill_hue|saturation|brightness` and `stroke_width`; an animator's `cipher` {charset, rate, seed, settle} decodes noise into the real characters. Animator `props` are DELTAS added to each character's rest state: `opacity: -1` hides it, a positive opacity changes nothing (rest is already full), `scale: -1` shrinks it to nothing. A `selector` {start, end, offset, shape, smooth, random} gives weight 1 to the characters whose place along the text (0 to 1) lies between `start + offset` and `end + offset`, so a window that never reaches a character leaves the text untouched: animate `offset` (for example {from: -0.2, to: 1, dur: 2}) to sweep a window along the line. `check` warns (animator-never-applies, animator-opacity-delta) when an animator can change nothing. `path` {an ellipse/points/d/... geometry or a `layer` id, reverse, perpendicular, force_align, first_margin, last_margin, travel} sets the text along a path (`travel` 0..1 is one exact lap of a closed path); `surface` {kind: cylinder|sphere, radius, turn, back} wraps it on a drum or ball; `marquee` {speed, gap, repeat} scrolls a seamless row; `outline_only` with `stroke_trim` [start, end] draws the glyph outlines on.",
             example: json!({"type": "text", "text": "Make it move\nlike you mean it", "font": "Avenir Next", "weight": 800, "role": "title", "color": "#ffffff", "pos": [960, 540], "align": "center", "preset": {"name": "reveal", "at": 0.3}, "mark": {"word": "move", "at": 1.0}}),
         },
         Entry {
@@ -79,7 +80,7 @@ pub fn layers() -> Vec<Entry> {
         },
         Entry {
             name: "particles",
-            summary: "A particle system where every particle is a closed-form function of its age (so any frame renders alone). The emitter sits at the layer's position. Emit continuously (`rate`) and/or in `burst`s; `prewarm` starts it already running. Shapes: soft, circle, square, spark (streak along travel), star, ring. Use blend `add` or `screen` for light.",
+            summary: "A particle system where every particle is a closed-form function of its age (so any frame renders alone). The emitter sits at the layer's position. Emit continuously (`rate`) and/or in `burst`s; `prewarm` starts it already running. Shapes: soft, circle, square, spark (streak along travel), star, ring, or your own outline `{\"path\": {\"d\": \"M0 -1 L1 1 L-1 1 Z\"}}` (any path geometry, fitted to the particle's size and turned by its spin: a snowflake, a leaf). Use blend `add` or `screen` for light.",
             example: json!({"type": "particles", "pos": [960, 900], "blend": "add", "rate": 90, "life": [1, 2.5], "speed": [180, 420], "angle": -90, "spread": 40, "gravity": [0, 160], "drag": 0.4,
                 "size": [4, 10], "shape": "spark", "trail": 3, "colors": [[0, "#ffffff"], [0.4, "#ffd36b"], [1, "#ff4a3d"]], "opacity_over_life": [[0, 1], [0.8, 1], [1, 0]]}),
         },
@@ -134,6 +135,7 @@ pub fn all() -> Value {
     json!({
         "expression_support": expression_support::expression_support(&effects),
         "layers": layers(),
+        "layer_common_keys": layer_keys::common_keys(),
         "enter_exit_presets": transitions(),
         "eases": eases(),
         "expressions": expression_functions(),
@@ -157,8 +159,10 @@ pub fn all() -> Value {
         },
         "sound_kit": crate::media::kit::kit().catalogue(),
         "timeline": timeline(),
-        "extrude": {"summary": "Depth for a three_d text, shape or solid layer: copies stepping back in z, coloured from `color` to `far`. Show it with a camera move or a Y Rotation.",
+        "extrude": {"summary": "Depth for a three_d text, shape or solid layer: copies stepping back in z, coloured from `color` to `far`. Show it with a camera move or a Y Rotation. `fx` apply to the front face only; the slices behind it stay plain colour, so an outline ring lies over the first slices and hides the sides at shallow angles.",
             "example": {"type": "text", "text": "88888", "three_d": true, "pos": [960, 540], "rotation": [0, 18, 0], "extrude": {"depth": 60, "color": "#7a1d14"}}},
+        "repeat": {"summary": "Repeater for any layer: `count` copies in all, each one step further along (`offset`, `rotation`, `scale` and `opacity` per copy), turning and scaling about `origin`. Each copy keeps the layer's animation and effects; `offset` and `rotation` may be expressions. Needs an `id`. Later copies sit behind the original unless `order` is \"above\".",
+            "example": {"type": "solid", "id": "slab", "color": "#8a5cff", "size": [400, 240], "pos": [760, 500], "repeat": {"count": 6, "offset": [36, -24], "opacity": 0.85}}},
         "packs": crate::pack::catalogue().into_iter().map(|(n, s)| json!({"name": n, "summary": s})).collect::<Vec<_>>(),
         "make_a_new_effect": "Write effects/<name>.sksl beside comp.json: header comments `// @effect name`, `// @kind effect|generator`, `// @summary ...`, `// @param name float|vec2|color default [min max] -- doc`, `// @param name choice default a,b,c -- doc` (written as a name), `// @input name layer` (another layer's picture, named by id in the use), `// @input name history=N [depth=D]` (the effect's own output N frames ago), `// @pass name [scale=S]` (several passes, each sees the earlier ones by name), `// @example {json}`, then `half4 main(float2 xy)`. You get `image` (effects), `resolution`, `time` and a library (hash21, vnoise, fbm, worley, rot2, luma, hsv2rgb, straight, premul). Try it with `comp fx test <name> --out sheet.png`; then use it like any effect: {\"effect\": \"name\", \"param\": value}.",
         "time_literals": ["1.5s", "45f", "beat:8", "bar:2", "marker:drop", "title.end", "title.start", "prev.end", "comp.end", "any of those followed by +0.25 or -3f"],

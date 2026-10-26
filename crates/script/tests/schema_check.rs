@@ -19,7 +19,7 @@ fn a_good_film_passes_and_a_bad_layer_is_mapped_to_the_line_that_made_it() {
     let report = auto(&bad, None, None, true).unwrap();
     assert!(!report.success);
     assert!(report.diagnostics.contains("film.ts:4:"), "{}", report.diagnostics);
-    assert!(report.diagnostics.contains("layer \"broken\""), "{}", report.diagnostics);
+    assert!(report.diagnostics.contains("(shape \"broken\")"), "{}", report.diagnostics);
 }
 
 #[test]

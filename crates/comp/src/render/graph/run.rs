@@ -46,9 +46,17 @@ impl Run<'_, '_> {
                 None
             }
             Stage::Paint { layer } => Some(post::paint_stage(ctx, like, frame, comp, *layer).with_context(|| comp.layers[*layer].label.clone())?),
-            Stage::Effects { owner, upto, pictures } => {
-                let maps: Vec<(usize, &Layer)> = pictures.iter().zip(&pass.reads[1..]).map(|(&l, &id)| (l, self.picture(id))).collect();
-                Some(self.effects(frame, *owner, *upto, read(0).clone(), &maps)?)
+            Stage::Effects { owner, upto, pictures, behind } => {
+                let mut at = 1;
+                let behind_layer = if *behind {
+                    let b = read(at);
+                    at += 1;
+                    Some(b)
+                } else {
+                    None
+                };
+                let maps: Vec<(usize, &Layer)> = pictures.iter().zip(&pass.reads[at..]).map(|(&l, &id)| (l, self.picture(id))).collect();
+                Some(self.effects(frame, *owner, *upto, read(0).clone(), behind_layer, &maps)?)
             }
             Stage::MaskCoverage { layer } => Some(post::mask_coverage(like, frame, comp, &frame.layers[*layer])?),
             Stage::MatteCoverage { mode, opacity } => Some(post::matte_coverage(like, frame, read(0), *mode, *opacity)?),
@@ -89,13 +97,13 @@ impl Run<'_, '_> {
     }
 
     /// Effects `0..upto` of an effect list on `img`.
-    fn effects(&self, frame: &Frame, owner: FxOwner, upto: usize, img: Layer, maps: &[(usize, &Layer)]) -> Result<Layer> {
+    fn effects(&self, frame: &Frame, owner: FxOwner, upto: usize, img: Layer, behind: Option<&Layer>, maps: &[(usize, &Layer)]) -> Result<Layer> {
         let comp = self.graph.comp;
         let (layer, fx_list, states, t) = match owner {
             FxOwner::Layer(i) | FxOwner::Adjustment(i) => (Some(i), &comp.layers[i].fx, &frame.layers[i].fx, frame.layers[i].local_t),
             FxOwner::Look => (None, &comp.look, &frame.look, frame.t),
         };
-        let scope = fx::Scope { ctx: self.ctx, like: self.like, frame, layer, pictures: maps };
+        let scope = fx::Scope { ctx: self.ctx, like: self.like, frame, layer, behind, pictures: maps };
         let label = match owner {
             FxOwner::Look => "look".to_string(),
             FxOwner::Layer(i) | FxOwner::Adjustment(i) => comp.layers[i].label.clone(),

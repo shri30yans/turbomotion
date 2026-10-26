@@ -3,6 +3,10 @@
 //! 55 % brightness), behind the face. Copies keep the layer's animation, enter and exit, so the solid moves as one;
 //! under a camera move or a Y Rotation the sides show. This is the slice method After Effects plug-ins used before
 //! its ray-traced renderer: cheap, exact in silhouette, and it lights like the face does.
+//!
+//! `fx` (an `outline`, a glow) apply to the front face only: the slices behind it stay plain flat colour, so an
+//! effect that draws outside the glyph (an outline ring) lies over the first slices and hides the sides at shallow
+//! angles. Depth is not lost, it is covered: a thinner outline shows more of it.
 
 use anyhow::{anyhow, bail, ensure, Context, Result};
 use serde_json::{json, Map, Value};
@@ -201,6 +205,16 @@ mod tests {
         assert_eq!(ls[0]["color"], "#464646");
         assert_eq!(ls[3]["id"], "t");
         assert!(ls[3].get("extrude").is_none());
+    }
+
+    #[test]
+    fn effects_stay_on_the_face_and_the_slices_behind_it_are_plain() {
+        let mut v = json!({"layers": [{"type": "text", "id": "t", "text": "8", "three_d": true, "pos": [0, 0], "color": "#fff",
+            "fx": [{"effect": "outline"}], "extrude": {"depth": 10, "steps": 2}}]});
+        expand(&mut v).unwrap();
+        let ls = v["layers"].as_array().unwrap();
+        assert!(ls[..2].iter().all(|l| l.get("fx").is_none()));
+        assert_eq!(ls[2]["fx"][0]["effect"], "outline");
     }
 
     #[test]

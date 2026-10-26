@@ -163,16 +163,7 @@ pub fn resolve_typeface(book: &dyn FontBook, font: Option<&str>, weight: u16, it
                 let (file, index) = s.split_once('#').map_or((s, 0), |(f, i)| (f, i.parse().unwrap_or(0)));
                 typeface::from_file(&book.resolve(file), index)
             }
-            Some(family) => typeface::from_family(family, weight, italic).map_err(|_| {
-                let all = typeface::families();
-                let near: Vec<_> = all.iter().filter(|f| f.to_lowercase().contains(&family.to_lowercase().split_whitespace().next().unwrap_or("").to_string())).take(8).cloned().collect();
-                let roles = book.roles();
-                anyhow!(
-                    "no installed font family, declared font role or font file {family:?}{}. Declared roles: {}. Run `turbomotion comp fonts` to list installed families, or give a path to a .ttf/.otf/.woff file (relative to the film's folder).",
-                    if near.is_empty() { String::new() } else { format!(" (similar installed: {})", near.join(", ")) },
-                    if roles.is_empty() { "none (declare them in comp({ fonts: { name: \"path\" } }))".to_string() } else { roles.join(", ") }
-                )
-            }),
+            Some(family) => typeface::from_family(family, weight, italic).map_err(|_| anyhow!("{}", super::missing_font::explain(book, family, &typeface::families()))),
         }
     }
     .with_context(|| format!("font {:?}", font.unwrap_or("(default)")))

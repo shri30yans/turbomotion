@@ -70,7 +70,13 @@ export interface ItemRepeat {
   opacity?: number;
 }
 
-export interface ShapeItem extends PathGeometry {
+type GeometryKey = "d" | "points" | "rect" | "ellipse" | "polygon" | "star";
+
+/** An item names exactly one outline: giving two, or none, is a type error here and an engine error at render. */
+type OneOutline = { [K in GeometryKey]: Required<Pick<PathGeometry, K>> & { [Other in Exclude<GeometryKey, K>]?: never } }[GeometryKey];
+
+/** How an item is refined and painted. A stroke is `stroke: { color, width }`, a fill is `fill`; there is no `stroke_width` here. */
+export interface ItemPaint extends Omit<PathGeometry, GeometryKey> {
   fill?: ItemFill;
   stroke?: ItemStroke;
   trim?: ItemTrim;
@@ -82,3 +88,6 @@ export interface ShapeItem extends PathGeometry {
   opacity?: Prop;
   repeat?: ItemRepeat;
 }
+
+/** One piece of a `shape()`: one outline plus how it is painted, e.g. `{ ellipse: [0, 0, 80, 50], fill: "#fff", stroke: { color: "#000", width: 4 } }`. */
+export type ShapeItem = OneOutline & ItemPaint;

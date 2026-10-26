@@ -32,6 +32,8 @@ pub struct TextState {
     pub height: f32,
     pub anchor: [f32; 2],
     pub glyphs: Vec<GlyphState>,
+    /// Some animator is changing at least one character right now (`false` for a layer with no animators).
+    pub animated: bool,
     /// Paint the stroke only.
     pub outline_only: bool,
     /// `[start, end]` fractions of the outline length that are drawn.
@@ -185,6 +187,7 @@ pub fn state(ev: &Evaluator, c: &CompPlan, l: &LayerPlan, tx: &Text, t: f64) -> 
     let inks = run_colors(tx, &text, layout.glyphs.len(), lt, &env)?;
     let placement = placement_of(c, l, tx, &layout, lt, &env)?;
     let glyphs = glyph_states(&layout, &resolved, lt, color, &inks, &placement)?;
+    let animated = !resolved.is_empty() && glyphs != glyph_states(&layout, &[], lt, color, &inks, &placement)?;
     let placed_bounds = if placement.moves_glyphs() { place::bounds(&layout, &glyphs) } else { None };
     let span = Some(([0.0, 0.0], [layout.width as f64 * 0.12, layout.height as f64]));
     let fill = tx.fill.as_ref().map(|f| super::shape::fill_state(f, lt, &env, span)).transpose()?;
@@ -206,6 +209,7 @@ pub fn state(ev: &Evaluator, c: &CompPlan, l: &LayerPlan, tx: &Text, t: f64) -> 
         height: layout.height,
         anchor: layout.anchor,
         glyphs,
+        animated,
         outline_only: tx.outline_only,
         trim,
         trim_each: tx.stroke_trim_each,

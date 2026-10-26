@@ -3,10 +3,12 @@
 //! author writes down (`comp.assert.json`) so intent becomes a test.
 
 pub mod assertions;
+mod behind_camera;
 pub mod cost;
 pub mod cover;
 pub mod layout;
 pub mod lint;
+mod text_animators;
 
 use serde::Serialize;
 

@@ -20,6 +20,23 @@ export interface Material {
   shininess?: number;
 }
 
+export interface Repeat {
+  /** Layers in all, the original included (2 to 256). */
+  count: number;
+  /** Move per copy: a number or an expression (`"time * 20"`) per axis. */
+  offset?: Prop | [Prop, Prop] | [Prop, Prop, Prop];
+  /** Degrees per copy (one number, or three for a `three_d` layer). */
+  rotation?: Prop | [Prop, Prop, Prop];
+  /** Each copy is this fraction of the one before (1). */
+  scale?: number;
+  /** Each copy is this fraction as opaque as the one before (1). */
+  opacity?: number;
+  /** The point the steps turn and scale about, in the parent's space ([0, 0]). */
+  origin?: [number, number] | [number, number, number];
+  /** "below" (default): later copies sit behind the original. */
+  order?: "below" | "above";
+}
+
 export interface Extrude {
   depth: number;
   color?: Color;
@@ -63,9 +80,13 @@ export interface LayerOpts {
   /** Which side of a 3D layer is hidden. After Effects draws both sides. */
   cull?: "none" | "front" | "back";
   opacity?: Prop;
+  /** Shear in degrees; positive leans the top to the right. Tweenable. */
+  skew?: Prop;
   three_d?: boolean;
   material?: Material;
   extrude?: Extrude;
+  /** Draw `count` copies of this layer, each one step further on (After Effects' Repeater). Needs an `id`. */
+  repeat?: Repeat;
   /** Seconds into the composition (or shot) when the layer begins. Timeline positions stay in the composition's clock; the SDK converts them to the layer's own. */
   start?: Seconds;
   dur?: Seconds;
@@ -168,6 +189,16 @@ export interface TextSelector {
   shape?: "square" | "ramp_up" | "ramp_down" | "triangle" | "round" | "smooth";
   smooth?: number;
   random?: boolean;
+  seed?: number;
+  /** Wiggly selector: each unit's weight is scaled by its own random factor between `min` and `max`. */
+  wiggle?: TextWiggle;
+}
+
+/** A random factor per unit (`min` 0, `max` 1; either may be negative). `rate` 0 keeps each unit's factor, above 0 it drifts, that many new targets a second. */
+export interface TextWiggle {
+  min?: number;
+  max?: number;
+  rate?: number;
   seed?: number;
 }
 

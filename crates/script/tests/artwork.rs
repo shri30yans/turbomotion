@@ -66,6 +66,15 @@ fn image_options_are_checked_where_they_are_written() {
 }
 
 #[test]
+fn skew_tweens_like_any_other_property_and_starts_unsheared() {
+    let v = run("skew", "const t = text('a', { id: 't', pos: [0, 0] }); tl.to(t, { skew: 20, duration: 1 }, 0); tl.to(t, { skew: '-=5', duration: 1 }, 1); film.add(t);");
+    let keys = v["layers"][0]["skew"]["keys"].as_array().unwrap_or_else(|| panic!("two skew tweens merge into keys: {}", v["layers"][0]["skew"]));
+    assert_eq!(keys[0][1], 0);
+    assert!(keys.iter().any(|k| k[1] == 20));
+    assert_eq!(keys.last().unwrap()[1], 15);
+}
+
+#[test]
 fn tweens_take_vector_positions_relative_values_and_shape_items() {
     let v = run("tweens", r##"
 const t = text('a', { id: 't', pos: [100, 200, 0], scale: [1, 1] });

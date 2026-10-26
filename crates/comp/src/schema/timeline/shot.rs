@@ -22,8 +22,8 @@ fn default_camera(layers: &[Value]) -> Option<Value> {
 
 pub fn shot_layer(shot: &Shot, w: f64, h: f64, fps: f64, comps: &mut Vec<(String, Value)>) -> Result<Map<String, Value>> {
     let d = &shot.def;
-    if let Some(bad) = d.keys().find(|k| !SHOT_KEYS.contains(&k.as_str())) {
-        bail!("unknown shot field {bad:?}; fields are {}", SHOT_KEYS.join(", "));
+    if let Some(message) = crate::schema::fields::stray_keys(&format!("shot {:?}", shot.id), d.keys(), SHOT_KEYS) {
+        bail!("{message}");
     }
     let offset = d.get("offset").map_or(Ok(0.0), |v| time(v, "offset"))?;
     // the speed curve, as source seconds per output second

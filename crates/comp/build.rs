@@ -1,5 +1,9 @@
-//! Finds the shipped shader plugins: every `src/fxlib/builtin/*.sksl` becomes one entry of `BUILTIN_PLUGINS`, so adding
+//! Two generated tables. The schema table (`schema_docs`) is the parser's own field list with docs, for `comp catalogue layer`.
+//! The plugin table: finds the shipped shader plugins: every `src/fxlib/builtin/*.sksl` becomes one entry of `BUILTIN_PLUGINS`, so adding
 //! a plugin is adding a file. The generated table is `(file stem, source)`, sorted by name.
+
+#[path = "build/schema_docs.rs"]
+mod schema_docs;
 
 use std::{env, fs, path::PathBuf};
 
@@ -18,4 +22,10 @@ fn main() {
     table.push_str("];\n");
     let out = PathBuf::from(env::var("OUT_DIR").expect("cargo sets OUT_DIR")).join("builtin_plugins.rs");
     fs::write(&out, table).unwrap_or_else(|e| panic!("writing {}: {e}", out.display()));
+
+    let manifest = PathBuf::from(env::var("CARGO_MANIFEST_DIR").expect("cargo sets CARGO_MANIFEST_DIR"));
+    println!("cargo:rerun-if-changed=src/schema");
+    println!("cargo:rerun-if-changed=build/schema_docs.rs");
+    let out = PathBuf::from(env::var("OUT_DIR").expect("cargo sets OUT_DIR")).join("schema_docs.rs");
+    fs::write(&out, schema_docs::generate(&manifest)).unwrap_or_else(|e| panic!("writing {}: {e}", out.display()));
 }

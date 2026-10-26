@@ -92,7 +92,7 @@ fn search_dirs(dir: &Path, declared: &[String]) -> Result<Vec<PathBuf>> {
     }
     for entry in declared {
         let p = if Path::new(entry).is_absolute() { PathBuf::from(entry) } else { dir.join(entry) };
-        ensure!(p.is_dir(), "\"block_path\" lists {entry:?}, which is not a folder (looked for {}); paths are relative to the composition's folder", p.display());
+        ensure!(p.is_dir(), "\"block_path\" lists {entry:?}, which is not a folder (looked for {}); paths are relative to the composition's root (its own folder unless it sets \"root\"), like \"fx_path\"", p.display());
         out.push(p);
     }
     Ok(out)

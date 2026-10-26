@@ -106,7 +106,6 @@ const s = stage({a, g}, {
 const tl = timeline();
 const end = s.go(tl, 'next', {at: 1, dur: 0.5, ease: {default: 'power2.out', opacity: 'none'}});
 film.add(a, g);
-film.extra = {end};
 export default film;
 "#);
     let v = build(&path, &Options::default()).unwrap();

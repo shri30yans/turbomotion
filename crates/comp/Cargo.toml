@@ -13,3 +13,6 @@ serde_path_to_error = "0.1"
 skia-safe.workspace = true
 turbomotion-core.workspace = true
 lyon_tessellation = "1"
+
+[build-dependencies]
+syn = { version = "2", features = ["full"] }

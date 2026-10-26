@@ -1,9 +1,13 @@
 //! Painting particle sprites: one soft-edged sprite for glows, vector shapes for the rest.
 
 use anyhow::Result;
-use skia_safe::{color_filters, gradient_shader, BlendMode, Canvas, Color, Color4f, Image, Paint, PaintCap, PaintStyle, Path, Point, Rect, TileMode};
+use skia_safe::{color_filters, gradient_shader, BlendMode, Canvas, Color, Color4f, Image, Matrix, Paint, PaintCap, PaintStyle, Path, Point, Rect, TileMode};
 
-use crate::eval::particles::{Particle, ParticleState};
+use crate::{
+    eval::particles::{Particle, ParticleState},
+    plan::geometry::PathGeo,
+    schema::ParticleShape,
+};
 
 /// A white sprite with a smooth radial falloff, tinted per particle.
 pub fn soft_sprite() -> Result<Image> {
@@ -33,7 +37,18 @@ fn star(r: f32) -> Path {
     path
 }
 
-pub fn paint(c: &Canvas, sprite: &Image, st: &ParticleState) -> Result<()> {
+/// The sprite outline fitted to a unit diameter and centred, so a particle's size is its width.
+fn unit_outline(path: &Path) -> Path {
+    let b = path.bounds();
+    let span = b.width().max(b.height()).max(1e-6);
+    let mut to_unit = Matrix::scale((1.0 / span, 1.0 / span));
+    to_unit.pre_translate((-b.center_x(), -b.center_y()));
+    path.with_transform(&to_unit)
+}
+
+/// `sprite` is the layer's own outline when its shape is a `path`.
+pub fn paint(c: &Canvas, sprite: &Image, outline: Option<&PathGeo>, st: &ParticleState) -> Result<()> {
+    let outline = outline.map(|g| unit_outline(&g.path));
     let mut paint = Paint::default();
     paint.set_anti_alias(true);
     for p in &st.items {
@@ -44,42 +59,45 @@ pub fn paint(c: &Canvas, sprite: &Image, st: &ParticleState) -> Result<()> {
         }
         paint.set_style(PaintStyle::Fill).set_color(color).set_alpha_f(alpha).set_color_filter(None);
         let at = (p.x as f32, p.y as f32);
-        match st.shape.as_str() {
-            "soft" => {
+        c.save();
+        c.translate(at);
+        match &st.shape {
+            ParticleShape::Soft => {
                 paint.set_color_filter(color_filters::blend(color, BlendMode::SrcIn));
                 paint.set_color(Color::WHITE).set_alpha_f(alpha);
-                c.draw_image_rect(sprite, None, Rect::from_xywh(at.0 - r * 2.0, at.1 - r * 2.0, r * 4.0, r * 4.0), &paint);
+                c.draw_image_rect(sprite, None, Rect::from_xywh(-r * 2.0, -r * 2.0, r * 4.0, r * 4.0), &paint);
             }
-            "square" | "star" | "spark" | "ring" => {
-                c.save();
-                c.translate(at);
-                match st.shape.as_str() {
-                    "square" => {
-                        c.rotate(p.rotation as f32, None);
-                        c.draw_rect(Rect::from_xywh(-r, -r, r * 2.0, r * 2.0), &paint);
-                    }
-                    "star" => {
-                        c.rotate(p.rotation as f32, None);
-                        c.draw_path(&star(r), &paint);
-                    }
-                    "ring" => {
-                        paint.set_style(PaintStyle::Stroke).set_stroke_width((r * 0.25).max(0.75));
-                        c.draw_circle((0.0, 0.0), r, &paint);
-                    }
-                    _ => {
-                        // a streak along the direction of travel, longer when faster
-                        let v = (p.vx * p.vx + p.vy * p.vy).sqrt().max(1e-6);
-                        let len = (r * 2.0 + (v as f32) * 0.04).max(r * 2.0);
-                        paint.set_style(PaintStyle::Stroke).set_stroke_width((r * 0.7).max(0.75)).set_stroke_cap(PaintCap::Round);
-                        c.draw_line((0.0, 0.0), (-(p.vx / v) as f32 * len, -(p.vy / v) as f32 * len), &paint);
-                    }
+            ParticleShape::Circle => {
+                c.draw_circle((0.0, 0.0), r, &paint);
+            }
+            ParticleShape::Square => {
+                c.rotate(p.rotation as f32, None);
+                c.draw_rect(Rect::from_xywh(-r, -r, r * 2.0, r * 2.0), &paint);
+            }
+            ParticleShape::Star => {
+                c.rotate(p.rotation as f32, None);
+                c.draw_path(&star(r), &paint);
+            }
+            ParticleShape::Ring => {
+                paint.set_style(PaintStyle::Stroke).set_stroke_width((r * 0.25).max(0.75));
+                c.draw_circle((0.0, 0.0), r, &paint);
+            }
+            ParticleShape::Spark => {
+                // a streak along the direction of travel, longer when faster
+                let v = (p.vx * p.vx + p.vy * p.vy).sqrt().max(1e-6);
+                let len = (r * 2.0 + (v as f32) * 0.04).max(r * 2.0);
+                paint.set_style(PaintStyle::Stroke).set_stroke_width((r * 0.7).max(0.75)).set_stroke_cap(PaintCap::Round);
+                c.draw_line((0.0, 0.0), (-(p.vx / v) as f32 * len, -(p.vy / v) as f32 * len), &paint);
+            }
+            ParticleShape::Path(_) => {
+                c.rotate(p.rotation as f32, None);
+                c.scale((r * 2.0, r * 2.0));
+                if let Some(path) = &outline {
+                    c.draw_path(path, &paint);
                 }
-                c.restore();
-            }
-            _ => {
-                c.draw_circle(at, r, &paint);
             }
         }
+        c.restore();
     }
     Ok(())
 }

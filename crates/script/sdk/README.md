@@ -56,6 +56,41 @@ Layer options: `id, pos | x,y,z, anchor, scale, skew, rotation, orientation, aim
 
 `rotation` is After Effects' X, Y and Z Rotation: one number is the Z Rotation (the turn in the layer's own plane), three numbers turn it about each axis. `orientation` is the layer's own pose and `aim` the point its face turns toward.
 
+## Builders: what goes first
+
+The first arguments are positional, everything else is an options object. A wrong guess is refused where it is written, with the form below.
+
+```ts
+solid("#101828", { size: [1920, 1080] });          // colour FIRST ("#hex", or [r, g, b]); size defaults to the whole frame
+text("Hello", { size: 96, color: "#fff" });         // the words FIRST; size, font, weight, color, align, width... are options
+text({ from: 0, to: 100, dur: 1.2, suffix: "%" });  // a counter instead of words ({ from: "A", to: "B" } swaps the string)
+rect(260, 340, { fill: "#ff6b3d", radius: 18 });    // width, height, then options
+image("photo.jpg", { fit: "cover" });               // a file path, then options
+group({ id: "rig", pos: [960, 540] }, [a, b]);      // options, then the children
+raw({ type: "adjustment", fx: [{ effect: "vignette" }] });  // any other kind, as `comp catalogue layer <type>` prints it
+```
+
+An unknown option (`colour`, `sizee`) is reported with the nearest valid name and the full list. `raw()` is the only way to
+write a plain `{ type: ... }` object as a layer.
+
+## Shapes
+
+`shape(items)` takes items; each names exactly one outline (`rect`, `ellipse`, `polygon`, `star`, `d`, `points`) plus how it is
+painted. Outline numbers are `rect: [x, y, w, h]`, `ellipse: [cx, cy, rx, ry]` (radii, not diameters), `polygon: [cx, cy, radius, sides]`,
+`star: [cx, cy, outer, inner, points]`, all from the layer's origin. A stroke is the object `stroke: { color, width, cap, join, dash }`
+(write the object; the flat names `stroke_width`, `stroke_color`... are the keys a tween animates: `tl.to(s, { items: { 0: { stroke_width: "+=4" } } })`, and the types do not take them on a static item).
+
+```ts
+shape([
+  { rect: [-200, -120, 400, 240], radius: 24, fill: "#101828" },                              // a rounded card
+  { ellipse: [0, 0, 90, 60], fill: "#ff6b3d", stroke: { color: "#fff", width: 6 } },          // 180 x 120 oval
+  { ellipse: [0, 0, 120, 120], stroke: { color: "#fff", width: 4, cap: "round" }, trim: { end: 0.75 } }, // a three-quarter ring
+  { d: "M -40 0 L 0 -40 L 40 0 Z", fill: { gradient: { type: "linear", from: [0, -40], to: [0, 0], stops: [[0, "#fff"], [1, "#f90"]] } } },
+], { pos: [960, 540] });
+```
+
+The types reject two outlines in one item, none, and a misspelt key.
+
 ## Tweens
 
 `tl.to(layer, vars, position?)`. `vars`: `x y z opacity rotation scale size intensity zoom color`, plus `pos`, `items`, `orientation`, `aim`, and `duration ease delay stagger sfx overwrite`.
@@ -100,8 +135,7 @@ Positions: seconds, `"+=0.5"`, `"-=0.2"`, `"<"`, `">"`, or a label, on the clock
 | `glassPanel` | `glassPanel({ id: "card", pos: [960, 540], size: [640, 360], radius: 28, tint: "#cfe1ff" })`: translucent panel with sheen and rim (see note) |
 | `appear` | `appear(layers, "slide_up", at)`: the entrance used by the **appear** option, for any list of layers |
 
-Note: `glassPanel` is translucent only. The engine has no `backdrop` blur effect yet; `blur` is passed through as
-`{ effect: "backdrop", blur }` for when it has one, and the plan will not load with it until then.
+`glassPanel` uses the engine's `backdrop` effect (`{ effect: "backdrop", blur }`) to frost whatever is already composited behind the panel.
 
 Fonts: `comp({ fonts: { "JetBrains Mono": "../kit/fonts/JetBrainsMono-Regular.woff" } })` takes `.woff` and `.ttf`.
 
@@ -119,4 +153,4 @@ from `--sdk-dir` or embedded), `run.rs` (QuickJS, deterministic globals, error m
 Errors name the original file, line and column; SDK frames show as `turbomotion/timeline.ts:LINE`, and tween mistakes quote
 the line that wrote the tween.
 
-Not yet: a `precomp` builder (use `raw`), nested timelines, a backdrop-blur effect.
+Not yet: a `precomp` builder (use `raw`), nested timelines.

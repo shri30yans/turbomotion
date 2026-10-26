@@ -41,7 +41,7 @@ Building a script takes 0.01-0.7 s, a sheet under 1.5 s, and full renders run at
 | 7 | **An asset path in the SDK:** `svg("<path d>")` and `svgFile("icon.svg")` (the `comp svg` importer, callable from TS), `pixelSprite(rows, palette)`, `image()` with fit and focus | SDK + `comp svg` as a library call | done (`svg`, `svgFile`, `pixelSprite`) |
 | 8 | **An icon and illustration library in `kit/`:** UI icons, hands, cursor, devices, cubes, sprites; drawn once, reusable | `kit/` | partial (`hand`, cube faces and icons are components; no shared UI-icon set) |
 | 9 | **Promote the rebuild's components:** `cube({size, faces})`, `puzzleCube`, `letterCube`, `swarm`, `flipTile`, hands | `sdk/components/` | done |
-| 10 | **Surfaces:** glass panels that blur what is behind them, radial and mesh-gradient backdrops, a studio backdrop, reflective floors (in the docs) | engine + SDK | done (glass = adjustment + mask + blur, `glassPanel`; `aura` mesh gradient; `floor`) |
+| 10 | **Surfaces:** glass panels that blur what is behind them, radial and mesh-gradient backdrops, a studio backdrop, reflective floors (in the docs) | engine + SDK | done (`backdrop` effect + `glassPanel`; `aura` mesh gradient; `floor`) |
 
 ### Tier 3: API semantics that caused wrong guesses
 

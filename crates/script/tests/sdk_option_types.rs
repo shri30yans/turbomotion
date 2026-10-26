@@ -51,6 +51,6 @@ fn every_shape_item_key_has_an_sdk_type() {
     let schema = read("../comp/src/schema/shape.rs");
     let engine: Vec<String> = [const_list(&schema, "PATH_KEYS"), const_list(&schema, "ITEM_KEYS")].concat();
     let types = read("sdk/shape-types.ts");
-    let sdk: Vec<String> = [interface_keys(&types, "PathGeometry"), interface_keys(&types, "ShapeItem")].concat();
+    let sdk: Vec<String> = [interface_keys(&types, "PathGeometry"), interface_keys(&types, "ItemPaint")].concat();
     assert!(missing(&engine, &sdk, &[]).is_empty(), "shape types lack {:?}", missing(&engine, &sdk, &[]));
 }

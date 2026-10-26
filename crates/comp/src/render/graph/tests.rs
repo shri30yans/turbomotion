@@ -82,6 +82,18 @@ fn the_description_lists_every_pass_and_goes_into_nested_compositions() {
 }
 
 #[test]
+fn a_backdrop_effect_snapshots_the_composite_below_the_layer() {
+    let plan = plan_of(vec![
+        json!({"type": "solid", "color": "#ff0000", "size": [64, 32], "pos": [32, 16]}),
+        json!({"type": "shape", "pos": [32, 16], "items": [{"rect": [-20, -10, 40, 20], "radius": 4, "fill": {"color": "#ffffff", "opacity": 0.2}}], "fx": [{"effect": "backdrop", "blur": 4}]}),
+    ]);
+    let ps = passes(&plan);
+    assert!(ps.iter().any(|p| matches!(&p.stage, Stage::Effects { behind: true, .. })), "the glass layer's effects read the composite below");
+    let snaps = ps.iter().filter(|p| matches!(&p.stage, Stage::Snapshot)).count();
+    assert!(snaps >= 2, "one snapshot for behind and one for the finished frame, got {snaps}");
+}
+
+#[test]
 fn the_inputs_of_an_effect_are_the_layers_its_shader_samples_not_its_composite_mask() {
     let plan = plan_of(vec![
         json!({"type": "solid", "id": "map", "color": "#fff", "hidden": true}),

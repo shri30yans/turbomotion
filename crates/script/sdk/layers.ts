@@ -1,6 +1,7 @@
 // Layers as builders. A layer holds its static properties and the tweens a timeline attached to it; `toJSON()` turns
 // both into one composition layer.
 
+import { checkGroupOpts, checkRectSize, checkSolidColor, checkTextContent } from "./arg-check";
 import { checkImage } from "./image-check";
 import { noteSite } from "./site";
 import { compileTweens } from "./compile";
@@ -82,11 +83,17 @@ export function list(items: unknown, where = "layers"): Layer[] {
   if (items instanceof Layer) return [items];
   // a component's result ({ layers, ... }) stands for its layers
   if (typeof items === "object" && Array.isArray((items as { layers?: unknown }).layers)) return list((items as { layers: unknown[] }).layers, where);
-  throw new Error(`${where}: expected a layer (text(), shape(), group()...) but got ${describe(items)}`);
+  throw new Error(`${where}: expected a layer (text(), shape(), group()...) but got ${describe(items)}${plainSpecHint(items)}`);
 }
 
 /** Every layer in `items`, groups opened so children follow their parent. */
 export const flatten = (items: unknown, where = "layers"): Layer[] => list(items, where).flatMap((l) => l.flat());
+
+/** A plain `{ type: "adjustment", ... }` object is a layer spec, which only `raw()` turns into a layer. */
+function plainSpecHint(v: unknown): string {
+  const type = v && typeof v === "object" ? (v as { type?: unknown }).type : undefined;
+  return typeof type === "string" ? `; a plain layer spec needs raw(): raw(${JSON.stringify(v).slice(0, 80)})` : "";
+}
 
 export function describe(v: unknown): string {
   if (v === null) return "null";
@@ -95,10 +102,16 @@ export function describe(v: unknown): string {
 }
 
 /** A text layer: `text("Hello", { size, font, weight, color, pos, preset })`. Also takes a counter `{ from, to, dur }`. */
-export const text = (content: string | CounterSpec, o: TextOpts = {}): Layer => new Layer("text", { text: content, ...o });
+export const text = (content: string | CounterSpec, o: TextOpts = {}): Layer => {
+  checkTextContent(content);
+  return new Layer("text", { text: content, ...o });
+};
 
 /** A flat rectangle: backgrounds, flashes, mattes. */
-export const solid = (color: Color, o: SolidOpts = {}): Layer => new Layer("solid", { color, ...o });
+export const solid = (color: Color, o: SolidOpts = {}): Layer => {
+  checkSolidColor(color);
+  return new Layer("solid", { color, ...o });
+};
 
 /** A picture: `image("photo.jpg", { fit, focus, camera, parallax })`. */
 export const image = (src: string, o: ImageOpts = {}): Layer => new Layer("image", { src: checkImage(src, o), ...o });
@@ -111,6 +124,7 @@ export const shape = (items: ShapeItem[], o: ShapeOpts = {}): Layer => {
 
 /** A rectangle centred on its position, optionally rounded: `rect(260, 340, { fill: "#ff6b3d", radius: 18 })`. */
 export function rect(w: number, h: number, o: RectOpts = {}): Layer {
+  checkRectSize(w, h);
   const { fill, radius, stroke, ...layer } = o;
   const item: Record<string, unknown> = { rect: [-w / 2, -h / 2, w, h] };
   if (radius !== undefined) item.radius = radius;
@@ -121,6 +135,7 @@ export function rect(w: number, h: number, o: RectOpts = {}): Layer {
 
 /** An invisible handle: parent layers to it to move, scale or rotate them as one. */
 export function group(o: LayerOpts = {}, children: unknown = []): Layer {
+  checkGroupOpts(o);
   const g = new Layer("null", o);
   g.children = list(children, "group children");
   return g;

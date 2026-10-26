@@ -705,6 +705,10 @@ mod tests {
         let value = serde_json::json!({"fx_path": ["shared"], "layers": [{"type": "texture", "shader": "declared"}]});
         let plan = crate::plan::Plan::from_value(value, &dir).unwrap();
         assert!(plan.fx.get("declared").is_ok());
+        // relative to the composition's root, as "block_path" is
+        let rooted = serde_json::json!({"root": "assets", "fx_path": ["../shared"], "layers": [{"type": "texture", "shader": "declared"}]});
+        fs::create_dir_all(dir.join("assets")).unwrap();
+        assert!(crate::plan::Plan::from_value(rooted, &dir).unwrap().fx.get("declared").is_ok());
         let invalid = serde_json::json!({"fx_path": ["missing"], "layers": []});
         let error = crate::plan::Plan::from_value(invalid, &dir).err().unwrap();
         assert!(error.to_string().contains("not a folder"), "{error:#}");

@@ -3,12 +3,17 @@
 
 pub mod bake;
 pub mod blocks;
-mod de;
+pub(crate) mod de;
+pub mod docs;
+pub mod fields;
 pub mod extrude;
+pub mod repeat;
 mod item_alias;
 mod kinds;
+mod particle_shape;
 pub mod letterbox;
 mod path;
+pub mod problems;
 mod shape;
 mod text;
 pub mod time;
@@ -18,16 +23,19 @@ mod wrap;
 
 use std::collections::BTreeMap;
 
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{anyhow, Result};
 use serde::Deserialize;
 use serde_json::{Map, Value};
 use turbomotion_core::effects::{self, Blend, Effect};
 
 pub use kinds::*;
 pub use path::PathSpec;
+pub use problems::{Problem, Problems};
+pub use shape::item_keys as shape_item_keys;
 pub use shape::{Fill, Gradient, Metal, Repeat, ShapeItem, Stroke, Trim};
+pub use particle_shape::ParticleShape;
 pub use text::TextRun;
-pub use text::{Align, Animator, Charset, Cipher, Counter, Marquee, PathSource, Perspective, SelectorShape, SurfaceKind, TextPath, TextSurface, Direction, Mark, Role, Selector, Stagger, StaggerFrom, TextSource, TextStroke, TextSwap, Unit, UnitProps, Verdict};
+pub use text::{Align, Animator, Charset, Cipher, Counter, Marquee, PathSource, Perspective, SelectorShape, SurfaceKind, TextPath, TextSurface, Direction, Mark, Role, Selector, Stagger, StaggerFrom, TextSource, TextStroke, TextSwap, Unit, UnitProps, Verdict, Wiggle};
 pub use tokens::TypeScale;
 pub use wrap::{Col, Orient, Pos, Rot, Scale, P};
 
@@ -405,52 +413,87 @@ const COMMON_KEYS: &[&str] = &[
     "id", "start", "dur", "parent", "hidden", "three_d", "lit", "material", "pos", "anchor", "scale", "rotation", "orientation", "aim", "cull", "skew", "opacity", "wrap", "stagger", "flip", "blend", "fx", "masks", "matte", "clip_to", "mblur", "layout", "along", "enter", "exit", "reflect",
 ];
 
-/// Parse layer number `index` of a composition.
+/// Parse layer number `index` of a composition. Every mistake in the layer is reported, not the first: all unknown keys
+/// (each with the nearest valid one), then what is wrong with the common fields, the kind's own fields and each effect.
 pub fn parse_layer(index: usize, v: &Value) -> Result<Layer> {
-    let o = v.as_object().ok_or_else(|| anyhow!("a layer is an object like {{\"type\": \"text\", ...}}"))?;
-    let ty = o.get("type").and_then(Value::as_str).ok_or_else(|| anyhow!("every layer needs \"type\": one of {}", Kind::NAMES.join(", ")))?;
-    let label = || format!("layer {index} ({ty}{})", o.get("id").and_then(Value::as_str).map_or(String::new(), |i| format!(" {i:?}")));
+    let problem = |id: Option<String>, message: String| Problem { comp: String::new(), layer: Some(index), id, message };
+    let Some(o) = v.as_object() else { return Err(Problems(vec![problem(None, format!("layer {index}: a layer is an object like {{\"type\": \"text\", ...}}"))]).into()) };
+    let id = o.get("id").and_then(Value::as_str).map(str::to_string);
+    let Some(ty) = o.get("type").and_then(Value::as_str) else {
+        return Err(Problems(vec![problem(id, format!("layer {index}: every layer needs \"type\": one of {}", Kind::NAMES.join(", ")))]).into());
+    };
+    let label = format!("layer {index} ({ty}{})", id.as_deref().map_or(String::new(), |i| format!(" {i:?}")));
+    let Some(own) = fields::of_kind(ty) else {
+        return Err(Problems(vec![problem(id, format!("{label}: unknown layer type {ty:?}.{} The types are {}", turbomotion_core::suggest::hint(ty, Kind::NAMES), Kind::NAMES.join(", ")))]).into());
+    };
+    let mut messages: Vec<String> = Vec::new();
+    let valid: Vec<&str> = COMMON_KEYS.iter().chain(own.keys).copied().collect();
     let (mut common_map, mut kind_map) = (Map::new(), Map::new());
     for (k, val) in o {
         if k == "type" {
             continue;
         }
-        if COMMON_KEYS.contains(&k.as_str()) { common_map.insert(k.clone(), val.clone()) } else { kind_map.insert(k.clone(), val.clone()) };
-    }
-    let common: Common = de::from_value_at(Value::Object(common_map)).with_context(label)?;
-    let fx = common.fx.iter().enumerate().map(|(i, f)| Fx::parse(f).with_context(|| format!("fx {i}"))).collect::<Result<Vec<_>>>().with_context(label)?;
-    let kv = Value::Object(kind_map);
-        let kind = match ty {
-        "solid" => Kind::Solid(de::from_value_at(kv).with_context(label)?),
-        "shape" => {
-            let items = kv.get("items").and_then(Value::as_array).ok_or_else(|| anyhow!("{}: a shape layer needs \"items\": [{{\"rect\": [..], \"fill\": ..}}]", label()))?;
-            if let Some(extra) = kv.as_object().and_then(|m| m.keys().find(|k| *k != "items")) {
-                bail!("{}: unknown field {extra:?}; a shape layer has only \"items\" besides the common fields", label());
-            }
-            Kind::Shape(Shape { items: items.iter().enumerate().map(|(i, it)| ShapeItem::parse(it).with_context(|| format!("item {i}"))).collect::<Result<_>>().with_context(label)? })
+        if COMMON_KEYS.contains(&k.as_str()) {
+            common_map.insert(k.clone(), val.clone());
+        } else if own.keys.contains(&k.as_str()) {
+            kind_map.insert(k.clone(), val.clone());
+        } else {
+            messages.push(format!(
+                "{label}: unknown key {k:?}.{} A {ty} layer takes {}, and every layer takes the common keys (`turbomotion comp catalogue layer {ty}` lists both with their forms)",
+                turbomotion_core::suggest::hint(k, &valid),
+                if own.keys.is_empty() { "no keys of its own".to_string() } else { own.keys.join(", ") }
+            ));
         }
-        "text" => Kind::Text(de::from_value_at(kv).with_context(label)?),
-        "mesh" => Kind::Mesh(de::from_value_at(kv).with_context(label)?),
-        "image" => Kind::Image(de::from_value_at(kv).with_context(label)?),
-        "video" => Kind::Video(de::from_value_at(kv).with_context(label)?),
-        "audio" => Kind::Audio(de::from_value_at(kv).with_context(label)?),
-        "precomp" => Kind::Precomp(de::from_value_at(kv).with_context(label)?),
-        "null" => no_fields(&kv, ty, &label).map(|()| Kind::Null)?,
-        "adjustment" => no_fields(&kv, ty, &label).map(|()| Kind::Adjustment)?,
-        "camera" => Kind::Camera(de::from_value_at(kv).with_context(label)?),
-        "light" => Kind::Light(de::from_value_at(kv).with_context(label)?),
-        "particles" => Kind::Particles(Box::new(de::from_value_at(kv).with_context(label)?)),
-        "texture" => Kind::Texture(de::from_value_at(kv).with_context(label)?),
-        "pack" => Kind::Pack(de::from_value_at(kv).with_context(label)?),
-        other => bail!("{}: unknown layer type {other:?}; the types are {}", label(), Kind::NAMES.join(", ")),
-    };
-    Ok(Layer { common, fx, kind })
+    }
+    let common: Option<Common> = de::from_value_at(Value::Object(common_map)).map_err(|e| messages.push(format!("{label}: {e:#}"))).ok();
+    let mut fx = Vec::new();
+    for (i, f) in common.iter().flat_map(|c| c.fx.iter()).enumerate() {
+        match Fx::parse(f) {
+            Ok(parsed) => fx.push(parsed),
+            Err(e) => messages.push(format!("{label}: fx {i} ({}): {e:#}", f.get("effect").and_then(Value::as_str).unwrap_or("no effect name"))),
+        }
+    }
+    let kv = Value::Object(kind_map);
+    let kind = parse_kind(ty, kv, &label).map_err(|e| messages.push(e)).ok();
+    match (common, kind) {
+        (Some(common), Some(kind)) if messages.is_empty() => Ok(Layer { common, fx, kind }),
+        _ => Err(Problems(messages.into_iter().map(|m| problem(id.clone(), m)).collect()).into()),
+    }
 }
 
-
-fn no_fields(kv: &Value, ty: &str, label: &dyn Fn() -> String) -> Result<()> {
-    match kv.as_object().and_then(|m| m.keys().next()) {
-        Some(extra) => bail!("{}: unknown field {extra:?}; a {ty} layer has only the common fields", label()),
-        None => Ok(()),
-    }
+/// The layer's own fields; the message starts with the layer's label.
+fn parse_kind(ty: &str, kv: Value, label: &str) -> Result<Kind, String> {
+    let at = |e: anyhow::Error| format!("{label}: {e:#}");
+    Ok(match ty {
+        "solid" => Kind::Solid(de::from_value_at(kv).map_err(at)?),
+        "shape" => {
+            let Some(items) = kv.get("items").and_then(Value::as_array) else { return Err(format!("{label}: a shape layer needs \"items\": [{{\"rect\": [..], \"fill\": ..}}]")) };
+            let mut parsed = Vec::with_capacity(items.len());
+            let mut errors = Vec::new();
+            for (i, it) in items.iter().enumerate() {
+                match ShapeItem::parse(it) {
+                    Ok(item) => parsed.push(item),
+                    Err(e) => errors.push(format!("{label}: item {i}: {e:#}")),
+                }
+            }
+            if !errors.is_empty() {
+                return Err(errors.join("\n"));
+            }
+            Kind::Shape(Shape { items: parsed })
+        }
+        "text" => Kind::Text(de::from_value_at(kv).map_err(at)?),
+        "mesh" => Kind::Mesh(de::from_value_at(kv).map_err(at)?),
+        "image" => Kind::Image(de::from_value_at(kv).map_err(at)?),
+        "video" => Kind::Video(de::from_value_at(kv).map_err(at)?),
+        "audio" => Kind::Audio(de::from_value_at(kv).map_err(at)?),
+        "precomp" => Kind::Precomp(de::from_value_at(kv).map_err(at)?),
+        "null" => Kind::Null,
+        "adjustment" => Kind::Adjustment,
+        "camera" => Kind::Camera(de::from_value_at(kv).map_err(at)?),
+        "light" => Kind::Light(de::from_value_at(kv).map_err(at)?),
+        "particles" => Kind::Particles(Box::new(de::from_value_at(kv).map_err(at)?)),
+        "texture" => Kind::Texture(de::from_value_at(kv).map_err(at)?),
+        "pack" => Kind::Pack(de::from_value_at(kv).map_err(at)?),
+        other => return Err(format!("{label}: unknown layer type {other:?}")),
+    })
 }

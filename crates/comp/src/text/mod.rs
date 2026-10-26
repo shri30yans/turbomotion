@@ -4,6 +4,7 @@
 pub mod animate;
 pub mod layout;
 pub mod measure;
+pub mod missing_font;
 pub mod place;
 pub mod presets;
 

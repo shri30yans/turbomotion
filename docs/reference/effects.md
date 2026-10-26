@@ -44,6 +44,22 @@ Gaussian blur. (effect, platform)
 }
 ```
 
+## `backdrop`
+
+Blurs what has already been composited behind this layer and draws the layer on top (frosted glass). (effect, platform)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `blur` | float | 24.0 | 0 or more | Gaussian sigma in pixels. |
+
+
+```json
+{
+  "blur": 24,
+  "effect": "backdrop"
+}
+```
+
 ## `directional_blur`
 
 Motion blur: smears the layer along an angle. (effect, platform)
@@ -1050,14 +1066,14 @@ Motes rising through a beam: stage dust, not weather. (generator, shader plugin)
 
 ## `echo`
 
-Ghosts of the layer along a direction: a fast card, a tumbling ticket. (effect, shader plugin)
+A soft fading trail of the layer toward one side: up to 8 faint ghosts that overlap into a smear, not separate hard copies. (effect, shader plugin)
 
 | parameter | type | default | range | what it does |
 | --- | --- | --- | --- | --- |
-| `amount` | float | 0.55 | 0 to 1 | 0 is the original, 1 is a long trail |
-| `copies` | float | 5.0 | 2 to 10 | how many ghosts |
-| `travel` | float | 36.0 | 4 to 120 | how far the last ghost sits, px |
-| `angle` | float | -18.0 | -180 to 180 | direction the ghosts fall back, degrees |
+| `amount` | float | 0.55 | 0 to 1 | 0 is the original, 1 is the full trail length and brightness |
+| `copies` | float | 5.0 | 2 to 10 | pictures in total, the layer included; the farthest has no weight, so copies - 2 ghosts show (at most 8) |
+| `travel` | float | 36.0 | 4 to 120 | px from the layer to the farthest ghost at amount 1 (the farthest sits at travel * amount) |
+| `angle` | float | -18.0 | -180 to 180 | direction of the trail in degrees from +x with y down: 0 right, 90 down, -90 up |
 
 
 ```json

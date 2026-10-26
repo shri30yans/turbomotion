@@ -15,7 +15,7 @@ use super::place::{self, Placement};
 use crate::{
     anim::{ease::Ease, noise},
     eval::{mat4::Mat4, pose::euler_matrix},
-    schema::{Animator, Charset, Direction, Selector, SelectorShape, StaggerFrom, Unit},
+    schema::{Animator, Charset, Direction, Selector, SelectorShape, StaggerFrom, Unit, Wiggle},
 };
 
 /// A 2D affine map: `x' = a x + c y + e`, `y' = b x + d y + f`.
@@ -78,7 +78,7 @@ impl Aff {
 }
 
 /// How one character is drawn at one instant.
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct GlyphState {
     /// Which glyph of the layout this draws (a marquee draws each one several times).
     pub src: usize,
@@ -135,7 +135,22 @@ pub(crate) fn stagger_order(from: StaggerFrom, i: usize, n: usize, seed: u32) ->
     }
 }
 
-fn selector_weight(sel: &Selector, start: f64, end: f64, offset: f64, i: usize, n: usize) -> f64 {
+fn selector_weight(sel: &Selector, start: f64, end: f64, offset: f64, i: usize, n: usize, t: f64) -> f64 {
+    wiggle_factor(sel.wiggle.as_ref(), i, t) * range_weight(sel, start, end, offset, i, n)
+}
+
+/// The unit's own random factor in `min..=max`: fixed for `rate` 0, a smooth drift through random targets otherwise.
+fn wiggle_factor(wiggle: Option<&Wiggle>, i: usize, t: f64) -> f64 {
+    let Some(w) = wiggle else { return 1.0 };
+    let unit = if w.rate <= 0.0 {
+        noise::rand01(w.seed, i as i32, WIGGLE_SALT)
+    } else {
+        (noise::noise1(noise::hash(w.seed, i as i32, WIGGLE_SALT), t * w.rate) + 1.0) / 2.0
+    };
+    w.min + (w.max - w.min) * unit
+}
+
+fn range_weight(sel: &Selector, start: f64, end: f64, offset: f64, i: usize, n: usize) -> f64 {
     // position of the unit's centre along the text, 0..1; random reorders the units
     let slot = if sel.random { (noise::rand01(sel.seed, i as i32, 17) * n as f64).floor().min(n as f64 - 1.0) } else { i as f64 };
     let p = (slot + 0.5) / n as f64;
@@ -154,6 +169,9 @@ fn selector_weight(sel: &Selector, start: f64, end: f64, offset: f64, i: usize, 
         SelectorShape::Square => edge(p - s) * edge(e - p),
     }
 }
+
+/// Keeps a unit's wiggle numbers apart from the other draws made with the same seed.
+const WIGGLE_SALT: i32 = 53;
 
 /// A weight this small counts as none.
 const NO_WEIGHT: f64 = 1e-9;
@@ -231,7 +249,7 @@ pub fn glyph_states(layout: &Layout, animators: &[Resolved], t: f64, base_color:
         let max_order = (0..n).map(|i| stagger_order(from, slots[i], total, seed)).fold(0.0, f64::max).max(1e-9);
         for (i, (ids, rect)) in list.iter().enumerate() {
             let w = match &a.selector {
-                Some(sel) => selector_weight(sel, r.start, r.end, r.offset, i, n),
+                Some(sel) => selector_weight(sel, r.start, r.end, r.offset, i, n, t),
                 None => {
                     let order = stagger_order(from, slots[i], total, seed);
                     let order = match &sease {

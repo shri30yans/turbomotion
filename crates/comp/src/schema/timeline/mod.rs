@@ -94,8 +94,8 @@ pub fn expand(root: &mut Value) -> Result<()> {
     let Some(o) = root.as_object_mut() else { return Ok(()) };
     let Some(tl) = o.remove("timeline") else { return Ok(()) };
     let tl = tl.as_object().ok_or_else(|| anyhow!("\"timeline\" must be an object"))?.clone();
-    if let Some(bad) = tl.keys().find(|k| !FIELDS.contains(&k.as_str())) {
-        bail!("timeline: unknown field {bad:?}; fields are {}", FIELDS.join(", "));
+    if let Some(message) = super::fields::stray_keys("timeline", tl.keys(), FIELDS) {
+        bail!("{message}");
     }
     let frame = Frame {
         w: o.get("width").and_then(Value::as_f64).unwrap_or(1920.0),

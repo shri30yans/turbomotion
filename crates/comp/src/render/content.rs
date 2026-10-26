@@ -38,7 +38,7 @@ pub fn paint_content(ctx: &Ctx, c: &Canvas, _frame: &Frame, _comp: &CompPlan, st
             c.draw_image_with_sampling_options(layer.image(), (0, 0), sampling, Some(&p));
             Ok(())
         }
-        Content::Particles(st) => super::particles::paint(c, &ctx.programs.sprite, st),
+        Content::Particles(st) => super::particles::paint(c, &ctx.programs.sprite, lp.shapes.first(), st),
         Content::Pack { name, params, size } => {
             let pack = ctx.packs.iter().find(|p| p.name() == name).ok_or_else(|| anyhow::anyhow!("no pack called {name:?} is registered"))?;
             let pc = crate::pack::PackCtx { like: c, width: size[0] as i32, height: size[1] as i32, dir: &ctx.plan.dir };

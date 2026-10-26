@@ -17,6 +17,8 @@ mod shape;
 mod text;
 
 #[cfg(test)]
+mod backdrop_tests;
+#[cfg(test)]
 mod composite_tests;
 #[cfg(test)]
 mod fx_tests;

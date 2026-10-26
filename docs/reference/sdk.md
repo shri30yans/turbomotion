@@ -4,6 +4,35 @@
 
 The functions a film imports from `"turbomotion"`, taken from the doc comments on the exports in `crates/script/sdk`. Only documented exports are listed.
 
+## `arg-check`
+
+Checks on the positional arguments of the layer builders, so a wrong guess names the right form where it was written instead of surfacing as an engine schema error about a property the author never typed.
+
+```ts
+export function show(v: unknown): string
+```
+What was passed, short enough for a message.
+
+```ts
+export function checkSolidColor(color: unknown): asserts color is Color
+```
+`solid("#101828")`: the colour is the first argument, not an option.
+
+```ts
+export function checkTextContent(content: unknown): void
+```
+`text("Hello", opts)` or `text({ from: 0, to: 100 }, opts)`: the words (or a counter or swap) come first.
+
+```ts
+export function checkRectSize(w: unknown, h: unknown): void
+```
+`rect(260, 340, opts)`: width and height in pixels.
+
+```ts
+export function checkGroupOpts(o: unknown): void
+```
+`group(opts, children)`: options first, then the layers that follow it.
+
 ## `assets`
 
 Artwork from code: SVG through the engine's importer (`svg`, `svgFile`) and pixel art from rows of characters.
@@ -236,7 +265,7 @@ export function flipTile(o: FlipTileOpts): FlipTilePart
 
 ## `components/glassPanel`
 
-A frosted-glass panel: a soft shadow, a translucent body with a sheen, and a bright rim. When the engine offers a `backdrop` effect, `blur` asks the body to blur whatever is behind it; without one the panel is translucent only.
+A frosted-glass panel: a soft shadow, a translucent body with a sheen, and a bright rim. The `backdrop` effect blurs whatever is already composited behind the panel body.
 
 ```ts
 export function glassPanel(o: GlassPanelOpts): GlassPanelPart
@@ -594,6 +623,16 @@ export interface ItemTrim
 ```
 Draw only the part of the outline between `start` and `end` (0..1), shifted by `offset`: animate `end` to draw on.
 
+```ts
+export interface ItemPaint extends Omit<PathGeometry, GeometryKey>
+```
+How an item is refined and painted. A stroke is `stroke: { color, width }`, a fill is `fill`; there is no `stroke_width` here.
+
+```ts
+export type ShapeItem = OneOutline & ItemPaint;
+```
+One piece of a `shape()`: one outline plus how it is painted, e.g. `{ ellipse: [0, 0, 80, 50], fill: "#fff", stroke: { color: "#000", width: 4 } }`.
+
 ## `site`
 
 Where in the author's script something was created, for errors found later (a tween merged at write-out, a layer the engine rejects). `sdk check` turns tracking on; otherwise nothing is recorded.
@@ -823,6 +862,11 @@ What every layer takes. `x`, `y`, `z` are shorthand for `pos`.
 export interface TextUnitProps
 ```
 What a text animator does to a unit at full weight. Rotations share the layer's `rotation: [x, y, z]` axes and signs.
+
+```ts
+export interface TextWiggle
+```
+A random factor per unit (`min` 0, `max` 1; either may be negative). `rate` 0 keeps each unit's factor, above 0 it drifts, that many new targets a second.
 
 ```ts
 export type CipherCharset = "auto" | "upper" | "lower" | "digits" | "alnum" | "hex" | "binary" | "symbols" | "matrix" | (string & {});

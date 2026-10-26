@@ -17,7 +17,7 @@ fn run(name: &str, src: &str) -> Value {
     build(&write(name, src), &Options::default()).unwrap_or_else(|e| panic!("{e:#}"))
 }
 
-const HEAD: &str = "import { comp, shot, timeline, text, audio, hit, promptBox, codePanel, browserWindow, statCounter, barRace, bboxOverlay, cardWall, title3d } from \"turbomotion\";\nconst film = comp({ width: 1280, height: 720, fps: 30, fonts: { \"JetBrains Mono\": \"../../kit/fonts/JetBrainsMono-Regular.woff\" } });\n";
+const HEAD: &str = "import { comp, shot, timeline, text, audio, hit, promptBox, codePanel, browserWindow, statCounter, barRace, bboxOverlay, cardWall, title3d } from \"turbomotion\";\nconst film = comp({ width: 1280, height: 720, fps: 30, fonts: { \"JetBrains Mono\": \"Menlo\" } });\n";
 
 fn hits(v: &Value) -> Vec<(String, String)> {
     v["timeline"]["hits"].as_array().unwrap().iter().map(|h| (h["at"].as_str().map_or_else(|| h["at"].to_string(), String::from), h["cue"].as_str().unwrap().to_string())).collect()
@@ -86,7 +86,7 @@ fn code_panel_colours_tokens_with_runs_and_lights_one_line_at_a_time() {
 fn every_component_builds_and_the_engine_accepts_the_result() {
     let src = format!("{HEAD}const tl = timeline();\nconst parts = [\n  browserWindow({{ tl }}), statCounter({{ tl, value: 373, suffix: \" fps\", label: \"FPS\", at: 0.2 }}),\n  barRace({{ tl, at: 0, bars: [{{ label: \"a\", value: 10, color: \"#fff\" }}, {{ label: \"b\", value: 3, color: \"#888\", dur: 0.5 }}] }}),\n  bboxOverlay({{ tl, at: 0, boxes: [{{ x: 10, y: 10, w: 100, h: 50, label: \"t\", change: {{ at: 1, state: \"fixed\", dx: 10 }} }}] }}),\n  cardWall({{ tl, cols: 4, rows: 3, hero: 5, heroLabel: \"3D\" }}), title3d(\"HI\", {{ tl }}),\n];\nfilm.timeline({{ shots: [shot({{ id: \"all\", dur: 3, layers: parts, hits: tl.hits() }})] }});\nexport default film;\n");
     let v = run("all", &src);
-    let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../launch");
+    let dir = common::scratch("component-plan", "all");
     turbomotion_comp::plan::Plan::from_value(v.clone(), &dir).unwrap_or_else(|e| panic!("the engine rejected the film: {e:#}"));
     let h = hits(&v);
     assert!(h.iter().any(|(_, c)| c == "stamp") && h.iter().any(|(_, c)| c == "counter") && h.iter().any(|(_, c)| c == "card-in") && h.iter().any(|(_, c)| c == "tick"));
@@ -103,5 +103,5 @@ fn components_are_deterministic() {
 #[test]
 fn the_font_map_passes_through_to_the_composition() {
     let v = run("fonts", &format!("{HEAD}film.add(text(\"x\", {{ font: \"JetBrains Mono\" }}));\nexport default film;\n"));
-    assert_eq!(v["fonts"]["JetBrains Mono"], "../../kit/fonts/JetBrainsMono-Regular.woff");
+    assert_eq!(v["fonts"]["JetBrains Mono"], "Menlo");
 }
