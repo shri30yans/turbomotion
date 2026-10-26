@@ -1,5 +1,6 @@
 // @effect displacement_map
 // @summary Moves the layer's pixels by the colours of another layer, as After Effects' Displacement Map does.
+// @bounds expand_x=abs(max_x) expand_y=abs(max_y)
 // @input map layer -- the layer whose colours steer the pixels; hide it to use it only as a map
 // @param horizontal choice red off,red,green,blue,alpha,luma -- the map channel that moves pixels along x (off: none)
 // @param vertical choice green off,red,green,blue,alpha,luma -- the map channel that moves pixels along y (off: none)

@@ -1,5 +1,6 @@
 // @effect holo
 // @summary Holographic pane: a neon tube on the silhouette, a tinted wash inside, bloom just outside, a top-left sheen.
+// @bounds expand=40
 // @param tint color #5cffd2 -- neon of the rim and the interior wash
 // @param edge float 1.85 0 5 -- brightness of the tube
 // @param width float 5.5 1 20 -- tube half-width, px

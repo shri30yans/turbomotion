@@ -14,9 +14,12 @@
 
 mod build;
 mod describe;
+mod local;
 mod run;
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod layer_space_tests;
 
 pub use build::{comp_graph, effect_inputs_graph, layer_graph};
 pub use describe::describe;
@@ -50,11 +53,19 @@ pub enum Stage {
     Backdrop,
     /// A layer's own picture: content, lighting, the blur or smear of a transition. Reads nothing.
     Paint { layer: usize },
+    /// Layer space: a layer's content in its own pixels, in a picture sized by the evaluator (`LocalBuffer`). Reads nothing.
+    PaintLocal { layer: usize },
     /// Effects `0..upto` of an effect list. Reads the picture they start from, then the pictures of the layers the
     /// effects read as inputs (`pictures`, in the same order).
     Effects { owner: FxOwner, upto: usize, pictures: Vec<usize>, behind: bool },
     /// A layer's masks as coverage. Reads nothing.
     MaskCoverage { layer: usize },
+    /// Layer space: a layer's masks as coverage in its own picture. Reads nothing.
+    MaskCoverageLocal { layer: usize },
+    /// Layer space: carry a layer's picture into the frame through the layer's matrix.
+    Place { layer: usize },
+    /// Lighting and the blur or smear of a transition, on a layer that has been placed in the frame.
+    Finish { layer: usize },
     /// A track matte's or clip's coverage from the picture of its source layer; the source's opacity is applied here.
     MatteCoverage { mode: MatteMode, opacity: f64 },
     /// Keep a picture where a coverage has alpha. Reads the picture, then the coverage.
@@ -65,8 +76,9 @@ pub enum Stage {
     Wipe { bounds: [f64; 4], clip: Clip },
     /// Average the layer over the open shutter: reads one picture per sample, each with its opacity.
     ShutterAverage { opacities: Vec<f64> },
-    /// Lay a picture on the composite with a blend mode and opacity. Modifies the composite.
-    Composite { blend: Option<Blend>, opacity: f64 },
+    /// Lay a picture on the composite with a blend mode and opacity. Modifies the composite. `placed` is the layer whose
+    /// matrix carries a layer-space picture there (so the picture is never made frame-sized); none: it is in the frame.
+    Composite { blend: Option<Blend>, opacity: f64, placed: Option<usize> },
     /// What has been composited so far, as a picture.
     Snapshot,
     /// An adjustment layer's coverage: its masks (or everywhere) times its opacity.

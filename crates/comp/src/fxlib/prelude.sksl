@@ -70,6 +70,11 @@ float sdBox(float2 p, float2 half_size) { float2 d = abs(p) - half_size; return 
 
 // Straight colour plus alpha back to the premultiplied colour the renderer expects.
 half4 premul(float3 rgb, float a) { return half4(half3(rgb * a), half(a)); }
+// The nearest point of the picture to p. The picture is the whole layer unless the layer's effects grew it (layer
+// space), in which case it reaches `layer_origin` past the layer's top-left corner and is `buffer_size` big.
+float2 in_buffer(float2 p) { return clamp(p, layer_origin, layer_origin + buffer_size); }
+float in_buffer_x(float x) { return clamp(x, layer_origin.x, layer_origin.x + buffer_size.x); }
+
 // The input layer at a point, as straight (not premultiplied) colour plus alpha.
 float4 straight(float2 p) { half4 c = image.eval(p); return float4(c.a > 0.0 ? c.rgb / c.a : float3(0.0), c.a); }
 // ---- end of standard library ----

@@ -1,5 +1,6 @@
 // @effect liquid
 // @summary Warps the picture like heat over water or a slow melt; good for dream and memory cuts.
+// @bounds expand=amount
 // @param amount float 12 0 60 -- displacement in px
 // @param scale float 0.006 0.001 0.03 -- size of the swirls (smaller is bigger swirls)
 // @param speed float 0.4 0 3 -- how fast it moves

@@ -5,6 +5,7 @@ use anyhow::{anyhow, bail, ensure, Context, Result};
 use serde_json::Value;
 use turbomotion_core::effects;
 
+use super::bounds::Bounds;
 use super::{is_full_size, InputDecl, InputKind, Kind, Param, Ty, DEFAULT_DEPTH, FULL_SIZE, MAX_DEPTH, MAX_HISTORY};
 use crate::anim::prop::parse_color_static;
 
@@ -24,10 +25,12 @@ pub struct Header {
     pub inputs: Vec<InputDecl>,
     pub example: Option<Value>,
     pub marks: Vec<PassMark>,
+    /// What `// @bounds` says about the output's reach past its input (see [`Bounds`]).
+    pub bounds: Bounds,
 }
 
 /// Names a shader cannot declare because the platform does.
-const RESERVED: [&str; 4] = ["image", "resolution", "time", crate::schema::COMPOSITE_KEY];
+const RESERVED: [&str; 6] = ["image", "resolution", "time", "layer_origin", "buffer_size", crate::schema::COMPOSITE_KEY];
 
 fn is_ident(s: &str) -> bool {
     !s.is_empty() && s.chars().all(|c| c.is_ascii_alphanumeric() || c == '_') && !s.starts_with(|c: char| c.is_ascii_digit())
@@ -48,6 +51,7 @@ impl Header {
         let mut inputs = vec![];
         let mut example = None;
         let mut marks = vec![];
+        let mut bounds_tag: Option<(usize, String)> = None;
         for (n, line) in src.lines().enumerate() {
             let Some(rest) = line.trim().strip_prefix("//") else { continue };
             let Some(tag) = rest.trim().strip_prefix('@') else { continue };
@@ -66,12 +70,23 @@ impl Header {
                 "param" => params.push(parse_param(value).with_context(|| format!("{}: @param {value}", at()))?),
                 "input" => inputs.push(parse_input(value).with_context(|| format!("{}: @input {value}", at()))?),
                 "pass" => marks.push(parse_pass(value, n).with_context(|| format!("{}: @pass {value}", at()))?),
+                "bounds" => {
+                    ensure!(bounds_tag.is_none(), "{}: @bounds is given twice", at());
+                    bounds_tag = Some((n, value.trim().to_string()));
+                }
                 "example" => example = Some(serde_json::from_str::<Value>(value).map_err(|e| anyhow!("{}: @example is not JSON: {e}", at()))?),
-                other => bail!("{}: unknown header tag @{other}; the tags are @effect, @kind, @summary, @param, @input, @pass, @example", at()),
+                other => bail!("{}: unknown header tag @{other}; the tags are @effect, @kind, @summary, @param, @input, @pass, @bounds, @example", at()),
             }
         }
         let name = name.ok_or_else(|| anyhow!("the file needs a header line `// @effect <name>`"))?;
-        let header = Header { name, kind, summary, params, inputs, example, marks };
+        let bounds = match bounds_tag {
+            None => Bounds::Undeclared,
+            Some((n, text)) => {
+                let layers: Vec<&str> = inputs.iter().filter(|i| matches!(i.kind, InputKind::Layer)).map(|i| i.name.as_str()).collect();
+                Bounds::parse(&text, &params, &layers).with_context(|| format!("line {}: @bounds {text}", n + 1))?
+            }
+        };
+        let header = Header { name, kind, summary, params, inputs, example, marks, bounds };
         header.check()?;
         Ok(header)
     }
@@ -88,7 +103,7 @@ impl Header {
         let children: Vec<String> = self.inputs.iter().flat_map(InputDecl::children).collect();
         let named = self.params.iter().map(|p| ("parameter", p.name.as_str())).chain(children.iter().map(|c| ("input", c.as_str()))).chain(self.marks.iter().map(|m| ("pass", m.name.as_str())));
         for (what, n) in named {
-            ensure!(!taken.contains(&n), "{what} {n:?} is a reserved or repeated name (image, resolution, time and every parameter, input and pass name are one namespace)");
+            ensure!(!taken.contains(&n), "{what} {n:?} is a reserved or repeated name (image, resolution, time, layer_origin, buffer_size and every parameter, input and pass name are one namespace)");
             taken.push(n);
         }
         if let Some(last) = self.marks.last() {

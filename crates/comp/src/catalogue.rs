@@ -2,6 +2,7 @@
 //! `turbomotion comp catalogue`. It is the agent's API reference and it cannot drift: a test loads every example
 //! through the real planner, so an example that stops working fails the build.
 
+mod effect_space;
 mod expression_support;
 pub mod layer_keys;
 mod property_examples;
@@ -141,6 +142,7 @@ pub fn all() -> Value {
         "expressions": expression_functions(),
         "effects": effects,
         "effect_composite": crate::fxlib::composite::catalogue(),
+        "effect_space": effect_space::entry(),
         "text_presets": ["rise", "reveal", "rise_words", "fade_up", "blur_in", "pop", "slam", "drop", "typewriter", "scramble", "tracking_in", "wave_in", "spin_in", "elastic", "fade_out", "rise_out"],
         "tokens": {
             "palette": "Named colours any kind can use: {\"accent\": \"#e2c48a\", \"ink\": \"#f4f7ff\", \"plate\": \"#10161f\"}. Write \"color\": \"accent\" or \"$accent\".",

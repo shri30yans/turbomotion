@@ -60,11 +60,18 @@ pub fn catalogue_effects() -> BTreeSet<String> {
     c["effects"].as_array().into_iter().flatten().filter_map(|e| e["name"].as_str().map(str::to_string)).collect()
 }
 
+/// Each catalogue effect's `bounds` tag, by name.
+pub fn catalogue_bounds() -> std::collections::BTreeMap<String, String> {
+    let c = turbomotion_comp::catalogue::all();
+    c["effects"].as_array().into_iter().flatten().filter_map(|e| Some((e["name"].as_str()?.to_string(), e["bounds"].as_str()?.to_string()))).collect()
+}
+
 pub fn run(command: Command) -> Result<()> {
     match command {
         Command::Check(at) => {
             let ledger = Ledger::load(&at.dir)?;
-            let problems = check::check(&ledger, &catalogue_effects());
+            let mut problems = check::check(&ledger, &catalogue_effects());
+            problems.extend(check::bounds(&ledger, &catalogue_bounds()));
             if !problems.is_empty() {
                 for p in &problems {
                     eprintln!("{p}");

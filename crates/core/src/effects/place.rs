@@ -4,7 +4,7 @@ use anyhow::Result;
 use serde::Deserialize;
 
 use super::{param::Param, pass::Ctx};
-use crate::layer::{place, Layer, Place};
+use crate::layer::{place, place_about, Layer, Place};
 
 #[derive(Debug, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
@@ -28,9 +28,10 @@ pub struct Transform {
 }
 
 pub fn transform(ctx: &Ctx, e: &Transform, layer: &Layer) -> Result<Layer> {
-    let (w, h) = (f64::from(layer.width()), f64::from(layer.height()));
-    let (ax, ay) = (e.anchor_x.at(ctx.t), e.anchor_y.at(ctx.t));
-    let mut at = Place::at(ax * w + e.x.at(ctx.t), ay * h + e.y.at(ctx.t)).scale(e.scale.at(ctx.t)).rot(e.rotation.at(ctx.t));
-    at.anchor = (ax, ay);
-    Layer::render(ctx.like, layer.width(), layer.height(), |c| place(c, layer, &at))
+    let space = ctx.space_of(layer);
+    // the pivot is a fraction of the layer's content, found in the picture's own pixels
+    let (px, py) = space.at(e.anchor_x.at(ctx.t), e.anchor_y.at(ctx.t));
+    let pivot = (px - space.origin[0], py - space.origin[1]);
+    let at = (pivot.0 + e.x.at(ctx.t), pivot.1 + e.y.at(ctx.t));
+    Layer::render(ctx.like, layer.width(), layer.height(), |c| place_about(c, layer, pivot, at, e.scale.at(ctx.t), e.rotation.at(ctx.t), 1.0))
 }

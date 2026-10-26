@@ -160,12 +160,17 @@ pub fn draw_warped(canvas: &Canvas, layer: &Layer, m: &Mat3, opacity: f64) {
 
 /// The reference `place`: a similarity transform of the layer composited over the canvas.
 pub fn place(canvas: &Canvas, layer: &Layer, p: &Place) {
-    if p.opacity <= 0.003 || p.scale <= 0.001 {
+    let pivot = (f64::from(layer.width()) * p.anchor.0, f64::from(layer.height()) * p.anchor.1);
+    place_about(canvas, layer, pivot, (p.cx, p.cy), p.scale, p.rot, p.opacity);
+}
+
+/// `place` with the pivot given as a pixel of the layer instead of fractions of its size: the pivot lands on `at`.
+pub fn place_about(canvas: &Canvas, layer: &Layer, pivot: (f64, f64), at: (f64, f64), scale: f64, rot: f64, opacity: f64) {
+    if opacity <= 0.003 || scale <= 0.001 {
         return;
     }
-    let (ax, ay) = (f64::from(layer.width()) * p.anchor.0, f64::from(layer.height()) * p.anchor.1);
-    let m = Mat3::rotation_about(ax, ay, -p.rot, p.scale).then_translate(p.cx - ax, p.cy - ay);
-    draw_warped(canvas, layer, &m, p.opacity);
+    let m = Mat3::rotation_about(pivot.0, pivot.1, -rot, scale).then_translate(at.0 - pivot.0, at.1 - pivot.1);
+    draw_warped(canvas, layer, &m, opacity);
 }
 
 /// Composite `layer` with its top-left pixel at integer (`x`, `y`): the reference `alpha_over`.

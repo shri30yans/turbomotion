@@ -1,6 +1,7 @@
 // @effect rain
 // @kind generator
 // @summary Fine rain streaks. Blend `screen`. Not anime speed-lines: thin, fast, sparse.
+// @bounds none
 // @param amount float 0.55 0 1 -- how many streaks
 // @param speed float 1.0 0.2 3 -- how fast they fall
 // @param tint color #b8c8dc -- colour of the rain

@@ -1,5 +1,6 @@
 // @effect ripple
 // @summary Rings of displacement spreading from a point, like a drop in water.
+// @bounds expand=amplitude
 // @param x float 0.5 0 1 -- centre, share of the width
 // @param y float 0.5 0 1 -- centre, share of the height
 // @param amplitude float 14 0 80 -- displacement in px
@@ -12,5 +13,5 @@ half4 main(float2 xy) {
     float r = length(d);
     float k = sin((r - time * speed) / wavelength * TAU) * amplitude * exp(-r / falloff);
     float2 dir = r > 0.001 ? d / r : float2(0.0);
-    return image.eval(clamp(xy + dir * k, float2(0.0), resolution));
+    return image.eval(in_buffer(xy + dir * k));
 }

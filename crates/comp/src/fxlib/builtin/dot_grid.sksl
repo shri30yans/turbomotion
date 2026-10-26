@@ -1,6 +1,7 @@
 // @effect dot_grid
 // @kind generator
 // @summary A regular field of dots: the quiet dotted ground of a notebook, a UI canvas or a pictogram card.
+// @bounds none
 // @param size float 48 8 300 -- distance between dot centres in px
 // @param radius float 2.5 0.5 40 -- dot radius in px
 // @param ink color #ffffff40 -- dot colour

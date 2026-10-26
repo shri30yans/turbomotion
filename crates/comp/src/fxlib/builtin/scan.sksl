@@ -1,5 +1,6 @@
 // @effect scan
 // @summary A scan line that turns what it has passed into a code grid, with a bright front.
+// @bounds none
 // @param position float 0.5 0 1 -- 0 is the top of the layer, 1 is the bottom (animate this)
 // @param amount float 1 0 1 -- how fully the passed region becomes code
 // @param tint color #7dffd2 -- colour of the bits and the front

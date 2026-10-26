@@ -1,5 +1,6 @@
 // @effect edge_glow
 // @summary Finds the edges in the picture and lights them: a blueprint, circuit or neon-outline look.
+// @bounds expand=width
 // @param strength float 1 0 3 -- edge brightness
 // @param width float 1.5 0.5 6 -- edge thickness in px
 // @param tint color #5ad2ff -- edge colour

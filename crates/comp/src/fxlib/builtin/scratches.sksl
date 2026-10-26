@@ -1,5 +1,6 @@
 // @effect scratches
 // @summary Hairline scuffs in the paint: a slapped-on sticker, not a clean shape.
+// @bounds none
 // @param amount float 0.45 0 1 -- how visible the scratches are
 // @param seed float 2 0 50 -- which set of scratches
 half4 main(float2 xy) {

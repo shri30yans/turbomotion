@@ -1,5 +1,6 @@
 // @effect tilt_shift
 // @summary Blurs everything outside a horizontal band so a scene reads as a miniature.
+// @bounds expand=blur
 // @param focus float 0.5 0 1 -- vertical centre of the sharp band (fraction of the height)
 // @param band float 0.18 0.02 0.6 -- half-height of the sharp band
 // @param blur float 14 0 60 -- maximum blur radius in px

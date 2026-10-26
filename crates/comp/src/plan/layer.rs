@@ -6,10 +6,10 @@ use std::path::Path;
 use anyhow::{anyhow, Result};
 use serde_json::Value;
 
-use super::{probe_media, LayerPlan, Media};
+use super::{layer_space, probe_media, LayerPlan, Media};
 use crate::{
     fxlib::{Kind as FxKind, Library},
-    schema::{self, Kind, Problem, Problems},
+    schema::{self, EffectSpace, Kind, Problem, Problems},
 };
 
 /// The layer kinds that draw nothing: whatever is asked of their picture never happens.
@@ -23,7 +23,7 @@ fn draws_nothing(kind: &Kind) -> Option<&'static str> {
 }
 
 /// Plan layer `i` (`v`) of composition `c`.
-pub(super) fn plan_layer(i: usize, v: &Value, c: &schema::Composition, root: &schema::Composition, dir: &Path, lib: &Library, kit: Option<(usize, u64)>) -> Result<LayerPlan> {
+pub(super) fn plan_layer(i: usize, v: &Value, c: &schema::Composition, root: &schema::Composition, dir: &Path, lib: &Library, kit: Option<(usize, u64)>, space: EffectSpace) -> Result<LayerPlan> {
     let def = schema::parse_layer(i, v)?;
     let ty = v.get("type").and_then(Value::as_str).unwrap_or("?");
     let label = format!("layer {i} ({ty}{})", def.common.id.as_deref().map_or(String::new(), |id| format!(" {id:?}")));
@@ -100,6 +100,12 @@ pub(super) fn plan_layer(i: usize, v: &Value, c: &schema::Composition, root: &sc
             Err(e) => note(Err(e.context(format!("fx {k}")))),
         }
     }
+    let in_layer_space = layer_space::applies(space, &def.kind, &fx, masks.len());
+    if in_layer_space {
+        for problem in layer_space::problems(&def.kind, &fx, masks.len(), lib) {
+            note(Err(anyhow!("{problem}")));
+        }
+    }
     let texture = match &def.kind {
         Kind::Texture(t) => match lib.plan(&t.shader, &t.params).and_then(|plan| lib.get(&t.shader).map(|d| (plan, d.kind))) {
             Ok((plan, FxKind::Generator)) => Some(plan),
@@ -117,7 +123,7 @@ pub(super) fn plan_layer(i: usize, v: &Value, c: &schema::Composition, root: &sc
     if !issues.is_empty() {
         return Err(Problems(issues.into_iter().map(|message| Problem { comp: String::new(), layer: Some(i), id: def.common.id.clone(), message }).collect()).into());
     }
-    Ok(LayerPlan { index: i, label, def, start, end, parent: None, matte: None, is_matte_source: false, clip_to: None, shapes, masks, along, flip_from: None, in_3d: false, media, fx, texture, text_path: None })
+    Ok(LayerPlan { index: i, label, def, start, end, parent: None, matte: None, is_matte_source: false, clip_to: None, shapes, masks, along, flip_from: None, in_3d: false, media, fx, in_layer_space, texture, text_path: None })
 }
 
 /// The problems an error from [`plan_layer`] stands for, tagged with the composition `comp`.

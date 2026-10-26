@@ -7,7 +7,7 @@ use crate::{
     eval::{Content, Frame},
     fxlib::PlanFx,
     plan::CompPlan,
-    render::draw_order,
+    render::{draw_order, post},
     schema::MatteMode,
 };
 
@@ -19,18 +19,28 @@ pub fn uses_backdrop(fx: &[PlanFx]) -> bool {
 /// Where a layer's picture comes from: the frame itself or one of the shutter samples.
 const MAIN: usize = 0;
 
-struct Builder<'a> {
-    comp: &'a CompPlan,
-    frames: Vec<&'a Frame>,
+pub(super) struct Builder<'a> {
+    pub(super) comp: &'a CompPlan,
+    pub(super) frames: Vec<&'a Frame>,
     passes: Vec<Pass>,
     images: usize,
     /// A layer's finished picture per frame, so a layer that is a matte, a clip and a map is drawn once.
     pictures: HashMap<(usize, usize), ImageId>,
+    /// A layer's picture per frame as the builder first made it: in layer space it may not be placed in the frame yet.
+    parts: HashMap<(usize, usize), Parts>,
+}
+
+/// A layer's picture, and whether it is still in the layer's own pixels (layer space, with nothing in the frame's space to
+/// apply yet), so that compositing can place it directly.
+#[derive(Clone, Copy)]
+pub(super) struct Parts {
+    pub image: ImageId,
+    pub unplaced: bool,
 }
 
 impl<'a> Builder<'a> {
     fn new(comp: &'a CompPlan, frames: Vec<&'a Frame>) -> Self {
-        Builder { comp, frames, passes: vec![], images: 0, pictures: HashMap::new() }
+        Builder { comp, frames, passes: vec![], images: 0, pictures: HashMap::new(), parts: HashMap::new() }
     }
 
     fn image(&mut self) -> ImageId {
@@ -38,7 +48,7 @@ impl<'a> Builder<'a> {
         ImageId(self.images - 1)
     }
 
-    fn pass(&mut self, stage: Stage, frame: usize, reads: Vec<ImageId>) -> ImageId {
+    pub(super) fn pass(&mut self, stage: Stage, frame: usize, reads: Vec<ImageId>) -> ImageId {
         let out = self.image();
         self.passes.push(Pass { stage, frame, reads, write: Write::New(out) });
         out
@@ -64,7 +74,7 @@ impl<'a> Builder<'a> {
     }
 
     /// Effects `0..upto` of `owner`'s list applied to `from`, with the pictures they read drawn first.
-    fn effects(&mut self, frame: usize, owner: FxOwner, fx: &[PlanFx], upto: usize, from: ImageId, behind: Option<ImageId>) -> ImageId {
+    pub(super) fn effects(&mut self, frame: usize, owner: FxOwner, fx: &[PlanFx], upto: usize, from: ImageId, behind: Option<ImageId>) -> ImageId {
         let layers = Self::distinct(fx[..upto].iter().flat_map(PlanFx::layers_read));
         let mut reads = vec![from];
         if let Some(b) = behind {
@@ -77,21 +87,42 @@ impl<'a> Builder<'a> {
     }
 
     /// The layer fully processed except for its opacity and blend: content, effects, masks and its own matte.
-    fn layer_picture(&mut self, frame: usize, i: usize, behind: Option<ImageId>) -> ImageId {
+    pub(super) fn layer_picture(&mut self, frame: usize, i: usize, behind: Option<ImageId>) -> ImageId {
         if behind.is_none() {
             if let Some(&done) = self.pictures.get(&(frame, i)) {
                 return done;
             }
         }
+        let parts = self.layer_parts(frame, i, behind);
+        let done = if parts.unplaced { self.pass(Stage::Place { layer: i }, frame, vec![parts.image]) } else { parts.image };
+        if behind.is_none() {
+            self.pictures.insert((frame, i), done);
+        }
+        done
+    }
+
+    /// As [`Self::layer_picture`], but a layer-space layer with nothing to do in the frame's space after its effects is
+    /// returned still in its own pixels, for the composite to place.
+    pub(super) fn layer_parts(&mut self, frame: usize, i: usize, behind: Option<ImageId>) -> Parts {
+        if behind.is_none() {
+            if let Some(&made) = self.parts.get(&(frame, i)) {
+                return made;
+            }
+        }
         let (comp, f) = (self.comp, self.frames[frame]);
         let (st, lp) = (&f.layers[i], &comp.layers[i]);
-        let mut img = self.pass(Stage::Paint { layer: i }, frame, vec![]);
-        if !lp.fx.is_empty() {
-            img = self.effects(frame, FxOwner::Layer(i), &lp.fx, lp.fx.len(), img, behind);
-        }
-        if !lp.masks.is_empty() {
-            let cov = self.pass(Stage::MaskCoverage { layer: i }, frame, vec![]);
-            img = self.pass(Stage::Multiply, frame, vec![img, cov]);
+        let reflect = st.reflect.zip(st.bounds);
+        let wipe = st.clip.zip(st.bounds);
+        let in_frame_space = lp.clip_to.is_some() || lp.matte.is_some() || reflect.is_some() || wipe.is_some() || post::needs_finish(st);
+        let local = st.local.is_some();
+        let mut img = if local { self.local_content(frame, i, behind) } else { self.screen_content(frame, i, behind) };
+        let mut unplaced = local;
+        if local && in_frame_space {
+            img = self.pass(Stage::Place { layer: i }, frame, vec![img]);
+            if post::needs_finish(st) {
+                img = self.pass(Stage::Finish { layer: i }, frame, vec![img]);
+            }
+            unplaced = false;
         }
         if let Some(src) = lp.clip_to {
             img = self.through_matte(frame, img, src, MatteMode::Alpha);
@@ -99,14 +130,29 @@ impl<'a> Builder<'a> {
         if let Some((src, mode)) = lp.matte {
             img = self.through_matte(frame, img, src, mode);
         }
-        if let (Some(reflect), Some(bounds)) = (st.reflect, st.bounds) {
+        if let Some((reflect, bounds)) = reflect {
             img = self.pass(Stage::Reflect { bounds, reflect }, frame, vec![img]);
         }
-        if let (Some(clip), Some(bounds)) = (st.clip, st.bounds) {
+        if let Some((clip, bounds)) = wipe {
             img = self.pass(Stage::Wipe { bounds, clip }, frame, vec![img]);
         }
+        let made = Parts { image: img, unplaced };
         if behind.is_none() {
-            self.pictures.insert((frame, i), img);
+            self.parts.insert((frame, i), made);
+        }
+        made
+    }
+
+    /// Content, effects and masks of a layer in the frame's space: painted frame-sized through the layer's matrix.
+    fn screen_content(&mut self, frame: usize, i: usize, behind: Option<ImageId>) -> ImageId {
+        let lp = &self.comp.layers[i];
+        let mut img = self.pass(Stage::Paint { layer: i }, frame, vec![]);
+        if !lp.fx.is_empty() {
+            img = self.effects(frame, FxOwner::Layer(i), &lp.fx, lp.fx.len(), img, behind);
+        }
+        if !lp.masks.is_empty() {
+            let cov = self.pass(Stage::MaskCoverage { layer: i }, frame, vec![]);
+            img = self.pass(Stage::Multiply, frame, vec![img, cov]);
         }
         img
     }
@@ -157,12 +203,13 @@ impl<'a> Builder<'a> {
         let blend = st.blend_mode;
         if comp.layers[i].def.common.mblur && self.frames.len() > 1 && f.comp == crate::plan::ROOT {
             let averaged = self.shutter(i);
-            self.modify(Stage::Composite { blend, opacity: 1.0 }, frame, vec![averaged]);
+            self.modify(Stage::Composite { blend, opacity: 1.0, placed: None }, frame, vec![averaged]);
             return;
         }
         let behind = if uses_backdrop(&comp.layers[i].fx) { Some(self.pass(Stage::Snapshot, frame, vec![])) } else { None };
-        let picture = self.layer_picture(frame, i, behind);
-        self.modify(Stage::Composite { blend, opacity: st.opacity }, frame, vec![picture]);
+        let parts = self.layer_parts(frame, i, behind);
+        let placed = parts.unplaced.then_some(i);
+        self.modify(Stage::Composite { blend, opacity: st.opacity, placed }, frame, vec![parts.image]);
     }
 
     /// Every layer composited in paint order, then the composition's look.

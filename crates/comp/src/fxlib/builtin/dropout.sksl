@@ -1,5 +1,6 @@
 // @effect dropout
 // @summary Tape dropouts: thin bands of missing picture. News archive, a damaged recording.
+// @bounds none
 // @param amount float 0 0 1 -- 0 is the original, 1 is heavy dropouts
 // @param rate float 9 1 40 -- how often the pattern changes, times per second
 // @param density float 0.08 0 0.5 -- share of bands that drop
@@ -12,7 +13,7 @@ half4 main(float2 xy) {
     float tick = floor(time * rate);
     float on = step(1.0 - density, hash21(float2(band, tick))) * amount;
     float dx = (hash21(float2(band + 11.0, tick)) * 2.0 - 1.0) * 18.0 * on;
-    float4 hit = straight(float2(clamp(xy.x + dx, 0.0, resolution.x), xy.y));
+    float4 hit = straight(float2(in_buffer_x(xy.x + dx), xy.y));
     float3 rgb = mix(src.rgb, hit.rgb * 0.15, on);
     rgb = mix(rgb, float3(0.02, 0.03, 0.04), on * 0.7);
     return premul(rgb, src.a);

@@ -1,6 +1,7 @@
 // @effect dust
 // @kind generator
 // @summary Motes rising through a beam: stage dust, not weather.
+// @bounds none
 // @param tint color #d9ecff -- colour of the motes
 // @param density float 0.55 0.05 1 -- how many of the 40 slots light up
 // @param speed float 0.12 0.02 0.8 -- how fast they rise

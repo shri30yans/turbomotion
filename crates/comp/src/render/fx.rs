@@ -4,9 +4,9 @@
 
 use anyhow::{anyhow, bail, ensure, Context, Result};
 use skia_safe::{Canvas, Image, Matrix, Paint, Rect, Shader, TileMode};
-use turbomotion_core::{effects::{self, backdrop_over, Effect}, layer::Layer};
+use turbomotion_core::{effects::{self, backdrop_over, Effect, Space}, layer::Layer};
 
-use super::{composite, history, Ctx};
+use super::{composite, history, passgeo::Geometry, Ctx};
 use crate::{
     eval::{
         fx::{FxOpState, FxState, PluginState},
@@ -25,6 +25,9 @@ pub struct Scope<'a> {
     /// What has been composited below this layer, when an effect needs it (`backdrop`).
     pub behind: Option<&'a Layer>,
     pub pictures: &'a [(usize, &'a Layer)],
+    /// Where the picture the chain runs on sits in the layer's own pixels, in layer space (none: the picture is the whole
+    /// layer, or the whole frame).
+    pub space: Option<Space>,
 }
 
 impl Scope<'_> {
@@ -45,7 +48,10 @@ pub fn chain(sc: &Scope, mut img: Layer, fx: &[PlanFx], states: &[FxState], t: f
                 let behind = sc.behind.ok_or_else(|| anyhow!("effect {:?} needs a picture of what is behind the layer", f.name()))?;
                 backdrop_over(sc.like, &img, behind, e.blur.at(t))?
             }
-            (FxOp::Builtin(e), FxOpState::Builtin) => effects::apply(sc.ctx.shaders, sc.like, img, std::slice::from_ref(e), t)?,
+            (FxOp::Builtin(e), FxOpState::Builtin) => match sc.space {
+                Some(space) => effects::apply_in(sc.ctx.shaders, sc.like, img, std::slice::from_ref(e), t, space)?,
+                None => effects::apply(sc.ctx.shaders, sc.like, img, std::slice::from_ref(e), t)?,
+            },
             _ => bail!("effect {:?} was evaluated as a different kind of effect than the plan has", f.name()),
         };
         img = match (&f.composite, &state.composite) {
@@ -54,14 +60,6 @@ pub fn chain(sc: &Scope, mut img: Layer, fx: &[PlanFx], states: &[FxState], t: f
         };
     }
     Ok(img)
-}
-
-/// The values every plugin pass is given: its parameters, the pass size and the clock.
-fn values(p: &PluginState, w: f32, h: f32, t: f64) -> Vec<(String, Vec<f32>)> {
-    let mut values: Vec<(String, Vec<f32>)> = p.values.clone();
-    values.push(("resolution".to_string(), vec![w, h]));
-    values.push(("time".to_string(), vec![t as f32]));
-    values
 }
 
 /// An image that a pass samples, and where it sits relative to the layer the effect is on.
@@ -130,18 +128,19 @@ fn run_passes(sc: &Scope, def: &Def, p: &PluginState, w: i32, h: i32, t: f64, so
     for pass in &def.passes {
         let (pw, ph) = if is_full_size(pass.scale) { (w, h) } else { (((f64::from(w) * pass.scale).ceil() as i32).max(1), ((f64::from(h) * pass.scale).ceil() as i32).max(1)) };
         let to_pass = Matrix::scale((pw as f32 / w as f32, ph as f32 / h as f32));
+        let geometry = Geometry::of(sc.space, (w, h), (pw, ph));
         let mut kids: Vec<(String, Shader)> = Vec::with_capacity(sources.len() + done.len());
         for s in sources {
-            kids.push((s.name.clone(), shader_of(&s.image, &Matrix::concat(&to_pass, &s.place))?));
+            kids.push((s.name.clone(), shader_of(&s.image, &geometry.child(Matrix::concat(&to_pass, &s.place)))?));
         }
         for (n, l) in &done {
             let m = Matrix::scale((pw as f32 / l.width() as f32, ph as f32 / l.height() as f32));
-            kids.push((n.clone(), shader_of(l.image(), &m)?));
+            kids.push((n.clone(), shader_of(l.image(), &geometry.child(m))?));
         }
-        let vals = values(p, pw as f32, ph as f32, t);
+        let vals = geometry.values(p, t);
         let refs: Vec<(&str, &[f32])> = vals.iter().map(|(n, v)| (n.as_str(), v.as_slice())).collect();
         let kid_refs: Vec<(&str, Shader)> = kids.iter().map(|(n, s)| (n.as_str(), s.clone())).collect();
-        let shader = pass.program.instance_with(&refs, &kid_refs).with_context(|| format!("pass {:?}", pass.name))?;
+        let shader = geometry.shader(pass.program.instance_with(&refs, &kid_refs).with_context(|| format!("pass {:?}", pass.name))?);
         let out = Layer::try_render(sc.like, pw, ph, |c| {
             let mut paint = Paint::default();
             paint.set_shader(shader);
@@ -181,7 +180,7 @@ pub fn plugin_with(sc: &Scope, img: &Layer, plan: &PluginPlan, p: &PluginState, 
 /// A generator plugin painted into `size` of the current canvas (the caller has set the layer's matrix).
 pub fn generate(ctx: &Ctx, c: &Canvas, p: &PluginState, size: [f64; 2], t: f64) -> Result<()> {
     let def = ctx.plan.fx.get(&p.name)?;
-    let vals = values(p, size[0] as f32, size[1] as f32, t);
+    let vals = Geometry::whole(size).values(p, t);
     let refs: Vec<(&str, &[f32])> = vals.iter().map(|(n, v)| (n.as_str(), v.as_slice())).collect();
     let shader = def.passes[0].program.instance_with(&refs, &[])?;
     let mut paint = Paint::default();

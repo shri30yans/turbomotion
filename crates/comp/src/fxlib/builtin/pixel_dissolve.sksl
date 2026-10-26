@@ -1,5 +1,6 @@
 // @effect pixel_dissolve
 // @summary Dissolves the layer away in blocks. Animate `progress` 0 to 1 to remove it, 1 to 0 to bring it in.
+// @bounds none
 // @param progress float 0.5 0 1 -- 0 shows everything, 1 shows nothing
 // @param block float 24 4 120 -- block size in px
 // @param edge float 0.08 0 0.3 -- softness of the leading edge

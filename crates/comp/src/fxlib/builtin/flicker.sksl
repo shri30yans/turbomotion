@@ -1,5 +1,6 @@
 // @effect flicker
 // @summary Exposure flutter: a failing bulb, a projector, a strike that has not quite gone.
+// @bounds none
 // @param amount float 0 0 1 -- 0 is the original, 1 is a violent flutter
 // @param rate float 18 2 60 -- how many times a second it samples a new level
 half4 main(float2 xy) {

@@ -1,6 +1,7 @@
 // @effect halftone_field
 // @kind generator
 // @summary A screen of ink dots that swell from one side to the other: the print ground of a zine or a dossier.
+// @bounds none
 // @param size float 18 4 80 -- cell size in px
 // @param angle float 25 -90 90 -- screen angle in degrees
 // @param ink color #101010 -- dot colour

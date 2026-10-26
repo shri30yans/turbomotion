@@ -1,5 +1,6 @@
 // @effect rim
 // @summary A coloured rim light along the silhouette, facing `angle`.
+// @bounds none
 // @param angle float -40 -180 180 -- direction the light comes from, degrees (0 = from the right)
 // @param width float 5 1 24 -- how far the rim reaches in, px
 // @param strength float 0.9 0 3 -- brightness of the rim

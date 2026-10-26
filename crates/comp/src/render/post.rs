@@ -22,19 +22,32 @@ pub fn blank(like: &Canvas, w: i32, h: i32) -> Result<Surface> {
 /// A transition's motion smear runs along the frame's x axis (degrees).
 const HORIZONTAL: f64 = 0.0;
 
+/// A blur or smear of this many pixels or fewer is not applied.
+const MIN_BLUR: f64 = 0.3;
+
 /// The layer's own picture before its effects: content, lighting, and the blur or smear a transition adds.
 pub fn paint_stage(ctx: &Ctx, like: &Canvas, frame: &Frame, comp: &CompPlan, i: usize) -> Result<Layer> {
     let st = &frame.layers[i];
     let lp = &comp.layers[i];
-    let mut img = Layer::try_render(like, frame.width as i32, frame.height as i32, |c| paint_content(ctx, c, frame, comp, st, lp))?;
+    let img = Layer::try_render(like, frame.width as i32, frame.height as i32, |c| paint_content(ctx, c, frame, comp, st, lp, true))?;
+    finish(ctx, like, frame, st, img)
+}
+
+/// Whether anything of [`finish`] applies to the layer.
+pub fn needs_finish(st: &LayerState) -> bool {
+    st.lit.is_some() || st.extra_blur > MIN_BLUR || st.extra_smear > MIN_BLUR
+}
+
+/// What is done to a layer's picture in the frame once it is placed: lighting, and the blur or smear of a transition.
+pub fn finish(ctx: &Ctx, like: &Canvas, frame: &Frame, st: &LayerState, mut img: Layer) -> Result<Layer> {
     if st.lit.is_some() {
         img = super::light::apply(ctx, like, img, frame, st)?;
     }
-    if st.extra_blur > 0.3 {
+    if st.extra_blur > MIN_BLUR {
         img = img.blurred(like, st.extra_blur)?;
     }
-    if st.extra_smear > 0.3 {
-        img = effects::smear(&effects::Ctx { shaders: ctx.shaders, like, t: st.local_t }, &img, st.extra_smear, HORIZONTAL)?;
+    if st.extra_smear > MIN_BLUR {
+        img = effects::smear(&effects::Ctx::new(ctx.shaders, like, st.local_t), &img, st.extra_smear, HORIZONTAL)?;
     }
     Ok(img)
 }
@@ -108,8 +121,8 @@ pub fn floor_reflect(like: &Canvas, img: Layer, bounds: [f64; 4], r: crate::eval
 }
 
 /// `img` where `cov` has alpha.
-pub fn multiply_by(like: &Canvas, frame: &Frame, img: &Layer, cov: &Layer) -> Result<Layer> {
-    let mut out = blank(like, frame.width as i32, frame.height as i32)?;
+pub fn multiply_by(like: &Canvas, img: &Layer, cov: &Layer) -> Result<Layer> {
+    let mut out = blank(like, img.width(), img.height())?;
     out.canvas().draw_image(img.image(), (0, 0), None);
     let mut keep = Paint::default();
     keep.set_blend_mode(BlendMode::DstIn);
@@ -119,8 +132,15 @@ pub fn multiply_by(like: &Canvas, frame: &Frame, img: &Layer, cov: &Layer) -> Re
 
 /// The union of a layer's masks as an alpha coverage layer.
 pub fn mask_coverage(like: &Canvas, frame: &Frame, comp: &CompPlan, st: &LayerState) -> Result<Layer> {
+    mask_coverage_in(like, (frame.width as i32, frame.height as i32), comp, st, |c| {
+        c.concat_44(&st.screen.to_m44());
+    })
+}
+
+/// The masks as coverage in a `w` x `h` picture; `place` sets the canvas up so the mask paths (layer pixels) land where
+/// the picture is: through the screen matrix, or shifted to the layer's own buffer.
+pub fn mask_coverage_in(like: &Canvas, (w, h): (i32, i32), comp: &CompPlan, st: &LayerState, place: impl Fn(&Canvas)) -> Result<Layer> {
     let lp = &comp.layers[st.index];
-    let (w, h) = (frame.width as i32, frame.height as i32);
     let mut cov = blank(like, w, h)?;
     if matches!(lp.def.common.masks.first().map(|m| m.mode), Some(MaskMode::Subtract | MaskMode::Difference)) {
         cov.canvas().clear(skia_safe::Color::WHITE);
@@ -135,7 +155,7 @@ pub fn mask_coverage(like: &Canvas, frame: &Frame, comp: &CompPlan, st: &LayerSt
         paint.set_anti_alias(true).set_color4f(skia_safe::Color4f::new(1.0, 1.0, 1.0, ms.opacity as f32), None);
         {
             let c = one.canvas();
-            c.concat_44(&st.screen.to_m44());
+            place(c);
             c.draw_path(&path, &paint);
             if ms.expansion > 0.0 {
                 paint.set_style(PaintStyle::Stroke).set_stroke_width((ms.expansion * 2.0) as f32);
@@ -217,7 +237,7 @@ pub fn adjust_mix(like: &Canvas, frame: &Frame, acc: &mut Surface, below: &Layer
     let mut out_of = Paint::default();
     out_of.set_blend_mode(BlendMode::DstOut);
     keep.canvas().draw_image(cov.image(), (0, 0), Some(&out_of));
-    let inside = multiply_by(like, frame, changed, cov)?;
+    let inside = multiply_by(like, changed, cov)?;
     let mut plus = Paint::default();
     plus.set_blend_mode(BlendMode::Plus);
     keep.canvas().draw_image(inside.image(), (0, 0), Some(&plus));

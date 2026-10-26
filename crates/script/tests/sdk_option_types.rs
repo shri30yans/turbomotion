@@ -54,3 +54,14 @@ fn every_shape_item_key_has_an_sdk_type() {
     let sdk: Vec<String> = [interface_keys(&types, "PathGeometry"), interface_keys(&types, "ItemPaint")].concat();
     assert!(missing(&engine, &sdk, &[]).is_empty(), "shape types lack {:?}", missing(&engine, &sdk, &[]));
 }
+
+#[test]
+fn the_effect_space_option_is_typed_with_exactly_the_engines_names() {
+    let engine = const_list(&read("../comp/src/schema/effect_space.rs"), "NAMES");
+    assert_eq!(engine, ["screen", "layer"]);
+    let source = read("sdk/film-types.ts");
+    assert!(interface_keys(&source, "CompOpts").contains(&"effect_space".to_string()), "CompOpts lacks effect_space");
+    let line = source.lines().find(|l| l.trim_start().starts_with("effect_space?:")).expect("the effect_space option");
+    let typed: Vec<String> = line.split('"').skip(1).step_by(2).map(str::to_string).collect();
+    assert_eq!(typed, engine, "the SDK type is `\"screen\" | \"layer\"`, in the engine's order");
+}

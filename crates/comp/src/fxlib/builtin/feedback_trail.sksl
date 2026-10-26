@@ -1,5 +1,6 @@
 // @effect feedback_trail
 // @summary A fading trail: every frame keeps a fraction of what the effect drew one frame earlier.
+// @bounds none
 // @input prev history=1 depth=12 -- the effect's own picture one frame ago
 // @param decay float 0.85 0 0.98 -- the fraction of the earlier picture that survives each frame
 // @example {"effect": "feedback_trail", "decay": 0.85}

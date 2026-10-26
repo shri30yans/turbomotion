@@ -1,6 +1,7 @@
 // @effect cells
 // @kind generator
 // @summary Cellular (worley) pattern: caustics, cracked ground, scales, bokeh when thresholded.
+// @bounds none
 // @param scale float 90 10 600 -- cell size in px
 // @param speed float 0.2 0 3 -- how fast the cells wander
 // @param edge float 0.08 0.01 0.5 -- thickness of the bright lines between cells

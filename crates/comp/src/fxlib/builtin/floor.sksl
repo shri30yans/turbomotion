@@ -1,6 +1,7 @@
 // @effect floor
 // @kind generator
 // @summary A receding grid, as if looking across a dark floor.
+// @bounds none
 // @param horizon float 0.48 0.12 0.85 -- where the floor meets the dark
 // @param vanish vec2 0.5,0.44 -- vanishing point, share of the frame
 // @param cells float 7 2 24 -- how many cells across near the camera

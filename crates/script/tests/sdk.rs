@@ -179,3 +179,12 @@ fn a_rotation_left_half_given_keeps_the_axes_it_does_not_name() {
     let v = run("rot-holes", &format!("{HEAD}film.add(group({{ id: \"l\", rotation: [null, 90, null] }}));\nexport default film;\n"));
     assert_eq!(v["layers"][0]["rotation"], serde_json::json!([0, 90, 0]));
 }
+
+#[test]
+fn comp_effect_space_reaches_the_json_and_is_left_out_by_default() {
+    let body = "film.add(text(\"x\", { pos: [10, 20] }));\nexport default film;\n";
+    let v = run("effect-space", &format!("import {{ comp, text }} from \"turbomotion\";\nconst film = comp({{ width: 64, height: 48, fps: 30, dur: 1, effect_space: \"layer\" }});\n{body}"));
+    assert_eq!(v["effect_space"], "layer");
+    let v = run("effect-space-default", &format!("import {{ comp, text }} from \"turbomotion\";\nconst film = comp({{ width: 64, height: 48, fps: 30, dur: 1 }});\n{body}"));
+    assert!(v.get("effect_space").is_none(), "left out, the key is not written: the engine's default (screen) applies");
+}

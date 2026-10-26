@@ -1,5 +1,6 @@
 // @effect datamosh
 // @summary Blocks stop updating and keep their old pixels, smearing along a drifting vector, like video that lost its keyframes.
+// @bounds expand=smear
 // @input prev history=1 depth=12 -- the effect's own picture one frame ago; a block can hold at most `depth` frames
 // @param block float 32 8 256 -- block size in px
 // @param hold float 0.35 0 1 -- the share of blocks that keep their old pixels

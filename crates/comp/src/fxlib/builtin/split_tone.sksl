@@ -1,5 +1,6 @@
 // @effect split_tone
 // @summary Tints the shadows one colour and the highlights another: the quickest way to make mixed sources look graded together.
+// @bounds none
 // @param shadows color #1a3a5c -- colour pushed into the darks
 // @param highlights color #ffb066 -- colour pushed into the lights
 // @param amount float 0.5 0 1 -- strength

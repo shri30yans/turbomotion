@@ -1,5 +1,6 @@
 // @effect interference
 // @summary Broadcast breakup: a rolling bar and fine snow. Not VHS; this is the signal dying.
+// @bounds none
 // @param amount float 0 0 1 -- 0 is the original, 1 is a broken signal
 // @param speed float 0.35 0 2 -- how fast the bar rolls
 half4 main(float2 xy) {
@@ -12,7 +13,7 @@ half4 main(float2 xy) {
     float bar = smoothstep(0.06, 0.0, abs(roll - 0.5) - 0.02);
     float snow = (hash21(float2(xy.x, xy.y + floor(time * 50.0))) - 0.5) * amount;
     float wob = (vnoise(float2(floor(xy.y * 0.5), time * 8.0)) - 0.5) * 12.0 * amount * bar;
-    float4 hit = straight(float2(clamp(xy.x + wob, 0.0, resolution.x), xy.y));
+    float4 hit = straight(float2(in_buffer_x(xy.x + wob), xy.y));
     float3 rgb = mix(src.rgb, hit.rgb, amount * 0.7);
     rgb += snow * 0.35 + bar * amount * float3(0.08, 0.1, 0.12);
     return premul(clamp(rgb, 0.0, 1.2), src.a);

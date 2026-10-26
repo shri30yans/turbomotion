@@ -1,5 +1,6 @@
 // @effect echo
 // @summary A soft fading trail of the layer toward one side: up to 8 faint ghosts that overlap into a smear, not separate hard copies.
+// @bounds expand=abs(travel)*amount
 // `copies` counts the layer itself and the farthest ghost has weight 0, so `copies` 5 shows the layer and 3 visible ghosts
 // and the most (10) shows 8; with the default spacing (a few px) they overlap into a blur. Ghost k sits `travel * amount * k / (copies - 1)` px from the layer
 // along `angle` and is added at weight `(1 - k / (copies - 1)) * amount * 0.55`, so the nearest ghost is brightest and

@@ -11,12 +11,13 @@
 //! // @input map layer -- another layer whose picture steers the effect (a displacement map, a matte)
 //! // @input prev history=1 depth=8 -- the effect's own output one frame ago (feedback, trails, datamosh)
 //! // @pass blur_h scale=0.5 -- a named pass; a later pass samples it as `uniform shader blur_h`
+//! // @bounds expand=blur*3                   (layer space: pixels the output reaches past the input on each side; or `none`)
 //! // @example {"effect": "duotone", "amount": 1}     (the doc example; one is generated from the defaults if absent)
 //! half4 main(float2 xy) { ... }
 //! ```
 //!
-//! Always available: `image` (effects), `resolution` (px), `time` (seconds on the layer's clock), and the library in
-//! `prelude.sksl` (hash, noise, fbm, worley, rotations, colour and shape helpers).
+//! Always available: `image` (effects), `resolution` (px), `time` (seconds on the layer's clock), `layer_origin` and
+//! `buffer_size` (see below), and the library in `prelude.sksl` (hash, noise, fbm, worley, rotations, colour and shape helpers).
 //!
 //! One declaration describes an effect completely: see [`Descriptor`]. Rust built-ins (the `registry!` in
 //! `turbomotion-core`) and plugins both produce one, and every generator of documentation reads only descriptors.
@@ -28,6 +29,11 @@
 //! * `@input name history=N [depth=D]` adds shader children `name`, `name2` .. `nameN`: the effect's own output at
 //!   `t-1/fps` .. `t-N/fps`, each defined by recursion `D` levels deep (level 0 is the effect's input), so a frame is
 //!   still a pure function of time and seeking gives the pixels playing from the start would give.
+//! * In layer space (`effect_space: layer`) the picture an effect gets is the layer's pixels grown by the chain's
+//!   `@bounds`, and `xy` stays in *layer pixels*: `resolution` is the layer's own content size (so `xy / resolution` is
+//!   0..1 over the content whatever the other effects grow), `layer_origin` is where the picture's top-left corner is in
+//!   layer pixels (negative when it grew up or left) and `buffer_size` is the picture's size. In screen space
+//!   `layer_origin` is 0 and `buffer_size` is `resolution`.
 //! * `@pass name [scale=S]` starts a pass. Passes run in order; each sees `image`, the inputs and every earlier pass by
 //!   name; the last one (scale 1) is the effect's output. Text before the first `@pass` is shared by all passes. A pass
 //!   reads a bigger picture bilinearly with no mipmaps, so it skips pixels rather than averaging them: `scale=0.5` is
@@ -39,8 +45,10 @@ use anyhow::{anyhow, bail, ensure, Context, Result};
 use serde_json::{Map, Value};
 use turbomotion_core::{effects, shader::Program, suggest::hint};
 
+pub use bounds::{Bounds, Expr};
 use crate::anim::prop::{ColorProp, Prop, VecProp};
 
+mod bounds;
 mod compile;
 pub mod composite;
 mod header;
@@ -144,6 +152,9 @@ pub struct Descriptor {
     /// The most frames of own-output history any input asks for (0: the effect is stateless).
     pub history: u32,
     pub example: Value,
+    /// How far the output reaches past its input, for layer space: `none`, `grows` (a platform effect), `expand=...`
+    /// (a plugin's tag) or `undeclared` (a plugin without `@bounds`).
+    pub bounds: String,
 }
 
 impl Param {
@@ -183,6 +194,8 @@ pub struct Def {
     pub origin: String,
     pub passes: Vec<Pass>,
     pub example: Option<Value>,
+    /// How far the output reaches past the input (`// @bounds`).
+    pub bounds: Bounds,
 }
 
 #[derive(Default)]
@@ -458,7 +471,7 @@ fn builtin_descriptor(e: &effects::Entry) -> Descriptor {
             Param { name: p.name.to_string(), ty, optional: default.is_empty(), default, min: p.min, max: p.max, options: vec![], doc: p.doc.to_string() }
         })
         .collect();
-    Descriptor { name: e.effect.to_string(), kind: Kind::Effect, origin: PLATFORM_ORIGIN.to_string(), summary: e.summary.to_string(), params, inputs: vec![], passes: vec![PassInfo { name: "main".into(), scale: 1.0, doc: String::new() }], history: 0, example: (e.example)() }
+    Descriptor { name: e.effect.to_string(), kind: Kind::Effect, origin: PLATFORM_ORIGIN.to_string(), summary: e.summary.to_string(), params, inputs: vec![], passes: vec![PassInfo { name: "main".into(), scale: 1.0, doc: String::new() }], history: 0, example: (e.example)(), bounds: (if effects::grows_bounds(e.effect) { "grows" } else { "none" }).to_string() }
 }
 
 impl InputDecl {
@@ -486,6 +499,7 @@ impl Def {
             passes: self.passes.iter().map(|p| PassInfo { name: p.name.clone(), scale: p.scale, doc: p.doc.clone() }).collect(),
             history,
             example,
+            bounds: self.bounds.describe(),
         }
     }
 

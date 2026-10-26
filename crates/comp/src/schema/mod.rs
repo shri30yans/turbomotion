@@ -12,6 +12,7 @@ pub mod repeat;
 mod item_alias;
 mod kinds;
 mod particle_shape;
+pub mod effect_space;
 pub mod letterbox;
 mod path;
 pub mod problems;
@@ -29,6 +30,7 @@ use serde::Deserialize;
 use serde_json::{Map, Value};
 use turbomotion_core::effects::{self, Blend, Effect};
 
+pub use effect_space::EffectSpace;
 pub use kinds::*;
 pub use path::PathSpec;
 pub use problems::{Problem, Problems};
@@ -97,6 +99,10 @@ pub struct Composition {
     pub fx_path: Vec<String>,
     /// Root only. Extra folders of blocks (`<job>/<name>.json`), relative to the root folder; see `comp blocks`.
     pub block_path: Vec<String>,
+    /// Where layers' effects and masks run: `"screen"` (the default: on the picture already placed in the frame) or
+    /// `"layer"` (After Effects' order: on the layer's own pixels, grown to fit what the effects spread, before its
+    /// transform). A nested composition that does not say takes the root's.
+    pub effect_space: Option<EffectSpace>,
     /// Root only. Black bars (or a safe-area matte) drawn over the shots and their transitions: `[w, h]` of the
     /// picture that stays visible, centred. Overlays and film-level layers sit above the bars.
     pub letterbox: Option<[f64; 2]>,
@@ -104,7 +110,7 @@ pub struct Composition {
 
 impl Default for Composition {
     fn default() -> Self {
-        Composition { width: 1920, height: 1080, fps: 30, dur: 5.0, bg: None, bpm: None, beat_offset: 0.0, markers: vec![], comps: BTreeMap::new(), vars: Map::new(), fonts: BTreeMap::new(), palette: Map::new(), type_scale: None, image: None, surface: Map::new(), space: Map::new(), motion: None, mblur: None, look: vec![], layout: false, layers: vec![], root: None, fx_path: vec![], block_path: vec![], letterbox: None }
+        Composition { width: 1920, height: 1080, fps: 30, dur: 5.0, bg: None, bpm: None, beat_offset: 0.0, markers: vec![], comps: BTreeMap::new(), vars: Map::new(), fonts: BTreeMap::new(), palette: Map::new(), type_scale: None, image: None, surface: Map::new(), space: Map::new(), motion: None, mblur: None, look: vec![], layout: false, layers: vec![], root: None, fx_path: vec![], block_path: vec![], effect_space: None, letterbox: None }
     }
 }
 

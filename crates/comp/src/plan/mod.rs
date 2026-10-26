@@ -5,6 +5,7 @@ mod fonts;
 mod fx_inputs;
 pub mod geometry;
 mod layer;
+pub mod layer_space;
 
 use std::{
     collections::{BTreeMap, HashMap, HashSet},
@@ -18,7 +19,7 @@ use serde_json::Value;
 use crate::{
     anim::prop::ColorProp,
     media::probe::{self, ImageInfo, VideoInfo},
-    schema::{self, Fx, Kind, Layer, Marker, MatteMode, MotionBlur, PathSource},
+    schema::{self, EffectSpace, Fx, Kind, Layer, Marker, MatteMode, MotionBlur, PathSource},
 };
 use crate::fxlib::{Library, PlanFx, PluginPlan};
 use geometry::PathGeo;
@@ -48,6 +49,8 @@ pub struct CompPlan {
     pub beat_offset: f64,
     pub markers: Vec<Marker>,
     pub mblur: Option<MotionBlur>,
+    /// Where this composition's layers run their effects and masks (the root's unless the composition says its own).
+    pub effect_space: EffectSpace,
     /// `check --layout` looks at this composition's layers.
     pub layout: bool,
     pub type_scale: crate::schema::tokens::ResolvedScale,
@@ -81,6 +84,8 @@ pub struct LayerPlan {
     pub media: Media,
     /// The layer's effect chain, in order.
     pub fx: Vec<PlanFx>,
+    /// Its effects and masks run on its own pixels before its transform (`effect_space: layer`, and it has any).
+    pub in_layer_space: bool,
     /// A texture layer's generator and parameters.
     pub texture: Option<PluginPlan>,
     /// The path a text layer sets its text on, whether written out or borrowed from another layer's first shape item.
@@ -195,8 +200,9 @@ impl CompPlan {
         let mut layers = Vec::with_capacity(c.layers.len());
         let (kit_order, spread_seed) = kit_spread(name, c);
         let mut problems: Vec<schema::Problem> = Vec::new();
+        let effect_space = c.effect_space.or(root.effect_space).unwrap_or_default();
         for (i, v) in c.layers.iter().enumerate() {
-            match plan_layer(i, v, c, root, dir, lib, kit_order.get(&i).map(|&o| (o, spread_seed))) {
+            match plan_layer(i, v, c, root, dir, lib, kit_order.get(&i).map(|&o| (o, spread_seed)), effect_space) {
                 Ok(layer) => layers.push(layer),
                 Err(e) => problems.extend(problems_of(i, v, name, e)),
             }
@@ -331,6 +337,7 @@ impl CompPlan {
             beat_offset: if c.bpm.is_none() && !name.is_empty() && root.bpm.is_some() { root.beat_offset } else { c.beat_offset },
             markers: c.markers.clone(),
             mblur: c.mblur,
+            effect_space,
             layout: c.layout,
             look,
             layers,

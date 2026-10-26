@@ -1,5 +1,6 @@
 // @effect shockwave
 // @summary One expanding ring of refraction, like a blast or a stamp landing. Animate `progress` 0→1.
+// @bounds none
 // @param progress float 0 0 1 -- 0 is nothing, 1 is the ring at the edge of the frame
 // @param x float 0.5 0 1 -- centre, share of the width
 // @param y float 0.5 0 1 -- centre, share of the height
@@ -17,7 +18,7 @@ half4 main(float2 xy) {
     float ring = r - progress * maxr;
     float k = exp(-(ring * ring) / (width * width * maxr * maxr + 1.0)) * amplitude;
     float2 dir = r > 0.001 ? d / r : float2(0.0);
-    float4 hit = straight(clamp(xy + dir * k, float2(0.0), resolution));
+    float4 hit = straight(in_buffer(xy + dir * k));
     float3 rgb = mix(src.rgb, hit.rgb, src.a);
     rgb += float3(0.08, 0.09, 0.1) * k * 0.02 * src.a;
     return premul(clamp(rgb, 0.0, 1.5), src.a);

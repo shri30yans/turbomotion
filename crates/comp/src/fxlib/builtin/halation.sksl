@@ -1,5 +1,6 @@
 // @effect halation
 // @summary The warm red-orange fringe film shows around bright highlights.
+// @bounds expand=radius
 // @param amount float 0.5 0 1.5 -- strength of the fringe
 // @param radius float 20 2 80 -- reach in px
 // @param tint color #ff5a28 -- colour of the fringe

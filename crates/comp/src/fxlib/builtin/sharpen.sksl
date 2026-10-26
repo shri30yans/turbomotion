@@ -1,5 +1,6 @@
 // @effect sharpen
 // @summary Unsharp mask from four neighbours. A document, a number that must read.
+// @bounds none
 // @param amount float 0 0 2 -- 0 is the original, 1 is a firm snap
 half4 main(float2 xy) {
     float4 src = straight(xy);

@@ -1,5 +1,6 @@
 // @effect duotone
 // @summary Maps brightness onto two colours: darks become `shadow`, lights become `light`.
+// @bounds none
 // @param shadow color #101030 -- colour of the darkest tones
 // @param light color #ffd6a0 -- colour of the lightest tones
 // @param amount float 1 0 1 -- 0 keeps the original, 1 is fully mapped

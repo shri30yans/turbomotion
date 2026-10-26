@@ -1,6 +1,7 @@
 // @effect aura
 // @kind generator
 // @summary Soft mesh-gradient light: up to six coloured points blended into one smooth, band-free field.
+// @bounds none
 // @param base color #0a0c18 -- ground colour where no point reaches
 // @param c1 color #5b3df5 -- colour of point 1 (alpha 0 turns a point off)
 // @param p1 vec2 0.22,0.28 -- position of point 1, share of the frame (0..1)

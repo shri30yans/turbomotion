@@ -88,6 +88,13 @@ export interface CompOpts {
   block_path?: string[];
   /** Cinematic bars, applied after transitions. */
   letterbox?: [number, number];
+  /**
+   * Where layers run their effects and masks. `"screen"` (the default) runs them on the picture already placed in the frame, so
+   * a 10 px blur is 10 screen pixels at any scale. `"layer"` is After Effects' order: effects and masks run on the layer's own
+   * pixels (grown to fit what the effects spread) and the layer's transform comes after, so a blur scales and turns with the
+   * layer and content outside the frame still feeds it. Nested compositions take the film's unless they say their own.
+   */
+  effect_space?: "screen" | "layer";
   width: number;
   height: number;
   fps: number;

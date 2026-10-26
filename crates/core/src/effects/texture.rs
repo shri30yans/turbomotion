@@ -47,6 +47,7 @@ pub struct Vignette {
 }
 
 pub fn vignette(ctx: &Ctx, e: &Vignette, layer: &Layer) -> Result<Layer> {
-    let u = Uniforms::new().v2(f64::from(layer.width()), f64::from(layer.height())).f(e.strength.at(ctx.t)).f(e.softness.at(ctx.t));
+    let space = ctx.space_of(layer);
+    let u = Uniforms::new().v4(space.content[0], space.content[1], space.width(), space.height()).f(e.strength.at(ctx.t)).f(e.softness.at(ctx.t));
     run(ctx, layer, &ctx.shaders.effects.vignette, u, &[])
 }

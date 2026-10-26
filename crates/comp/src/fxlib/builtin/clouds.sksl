@@ -1,6 +1,7 @@
 // @effect clouds
 // @kind generator
 // @summary Layered fractal noise: smoke, fog, nebula, paper grain at a larger scale.
+// @bounds none
 // @param scale float 300 20 2000 -- size of the largest billows in px
 // @param speed float 0.1 0 2 -- drift per second
 // @param low color #05060c -- colour of the clear parts

@@ -1,6 +1,7 @@
 // @effect stripes
 // @kind generator
 // @summary Diagonal or straight bars; animate `offset` to make them travel.
+// @bounds none
 // @param width float 40 2 400 -- bar width in px
 // @param angle float 45 -90 90 -- direction of the bars in degrees
 // @param offset float 0 -1000 1000 -- shifts the pattern, px

@@ -1,4 +1,4 @@
-//! Painting a layer's own content into a comp-sized layer, through the layer's screen matrix.
+//! Painting a layer's own content: into a frame-sized picture through the layer's screen matrix, or in its own pixels.
 
 use anyhow::Result;
 use skia_safe::{Canvas, Paint, Rect};
@@ -10,12 +10,17 @@ use crate::{
     schema::{Kind, RasterSampling},
 };
 
-pub fn paint_content(ctx: &Ctx, c: &Canvas, _frame: &Frame, _comp: &CompPlan, st: &LayerState, lp: &LayerPlan) -> Result<()> {
+/// Paint the layer's content. `placed` draws it through the layer's screen matrix (a frame-sized picture); not placed, the
+/// content is drawn in its own layer pixels and the caller says where the canvas puts them (layer space).
+pub fn paint_content(ctx: &Ctx, c: &Canvas, frame: &Frame, _comp: &CompPlan, st: &LayerState, lp: &LayerPlan, placed: bool) -> Result<()> {
     if let Content::Mesh(t) = &st.content {
-        return paint_mesh(c, _frame, st, t);
+        anyhow::ensure!(placed, "a mesh has no picture of its own to draw in layer space (the plan rejects this)");
+        return paint_mesh(c, frame, st, t);
     }
     c.save();
-    c.concat_44(&st.screen.to_m44());
+    if placed {
+        c.concat_44(&st.screen.to_m44());
+    }
     let r = match &st.content {
         Content::Solid { color, size } => {
             let mut p = Paint::default();

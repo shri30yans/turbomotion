@@ -15,8 +15,9 @@ const WAVE: f64 = 0.0;
 const TWIRL: f64 = 1.0;
 const BULGE: f64 = 2.0;
 
+/// The layer pixel at fractions `(x, y)` of the layer's content.
 fn centre(ctx: &Ctx, layer: &Layer, x: &Param, y: &Param) -> (f64, f64) {
-    (x.at(ctx.t) * f64::from(layer.width()), y.at(ctx.t) * f64::from(layer.height()))
+    ctx.space_of(layer).at(x.at(ctx.t), y.at(ctx.t))
 }
 
 fn distort(ctx: &Ctx, layer: &Layer, mode: f64, shape: [f64; 4], at: (f64, f64)) -> Result<Layer> {
@@ -79,8 +80,10 @@ pub fn pixelate(ctx: &Ctx, e: &Pixelate, layer: &Layer) -> Result<Layer> {
 const MIN_FRINGE: f64 = 0.05;
 
 fn fringe(ctx: &Ctx, layer: &Layer, shift: (f64, f64), radial: f64) -> Result<Layer> {
-    let (w, h) = (f64::from(layer.width()), f64::from(layer.height()));
-    run(ctx, layer, &ctx.shaders.effects.fringe, Uniforms::new().v2(w / 2.0, h / 2.0).v2(shift.0, shift.1).f(radial).f(w.hypot(h) / 2.0), &[])
+    let space = ctx.space_of(layer);
+    let (w, h) = (space.width(), space.height());
+    let (cx, cy) = space.centre();
+    run(ctx, layer, &ctx.shaders.effects.fringe, Uniforms::new().v2(cx, cy).v2(shift.0, shift.1).f(radial).f(w.hypot(h) / 2.0), &[])
 }
 
 #[derive(Debug, Deserialize, Clone)]

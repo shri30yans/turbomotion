@@ -1,6 +1,7 @@
 // @effect glow_field
 // @kind generator
 // @summary Two soft colour glows drifting on a dark ground: the ambient light behind a product shot.
+// @bounds none
 // @param base color #0b0f17 -- ground colour
 // @param a color #5a3fc8 -- first glow
 // @param b color #1fa6c8 -- second glow

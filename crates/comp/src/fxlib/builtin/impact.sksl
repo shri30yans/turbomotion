@@ -1,5 +1,6 @@
 // @effect impact
 // @summary A hit of light and a chromatic split: the number landing, the stamp.
+// @bounds none
 // @param amount float 0 0 1 -- 0 is the original, 1 is a hard flash
 // @param angle float 18 -90 90 -- tilt of the split, degrees
 half4 main(float2 xy) {

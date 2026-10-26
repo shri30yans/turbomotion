@@ -13,7 +13,7 @@ Generated from `parity/MATRIX.tsv` and `parity/effects.tsv`. `turbomotion parity
 * **3D**: Lights and shadows (WP-23), Camera f-stop, iris, focus distance (WP-24), Environment, reflection, refraction (WP-21), Per-pixel mesh rasteriser and G-buffer (WP-20), Mesh materials: chrome, glass, toon, matcap (WP-21), 3D layers intersect (depth compositing) (WP-22)
 * **Animation**: Per-component orientation vs rotation order (WP-14), Spatial bezier paths (WP-10), Roving keyframes (WP-10), Auto-orient along path (WP-10), Separate dimensions (WP-10), Temporal and spatial ease split (WP-10), Speed and influence handles (WP-10)
 * **Colour**: Colour management (WP-03)
-* **Effects**: Effect bounds (effects grow the layer) (WP-01), Blur kernels (correct sigma, disc, box) (WP-02), Warps: corner pin, mesh warp, liquify, puppet (WP-34), Keying and matte tools (WP-35)
+* **Effects**: Blur kernels (correct sigma, disc, box) (WP-02), Warps: corner pin, mesh warp, liquify, puppet (WP-34), Keying and matte tools (WP-35)
 * **Expressions**: Expressions: full object model (WP-12), Expression controls (WP-11)
 * **Import**: Subject matte import (WP-40), Lottie import (WP-51)
 * **Layers**: Per-vertex mask feather (WP-30), Collapse transformations (WP-14), Order of operations: masks before effects (WP-14)

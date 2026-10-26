@@ -6,6 +6,7 @@ pub mod assertions;
 mod behind_camera;
 pub mod cost;
 pub mod cover;
+mod fx_bounds;
 pub mod layout;
 pub mod lint;
 mod text_animators;

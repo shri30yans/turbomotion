@@ -1,6 +1,7 @@
 // @effect ridgeline
 // @kind generator
 // @summary A live ridgeline: P&L, mark-to-market, a quiet-money chart.
+// @bounds none
 // @param tint color #e2c48a -- colour of the stroke and the wash
 // @param amp float 0.22 0.04 0.6 -- how tall the waves are
 // @param seed float 2 0 80 -- which series

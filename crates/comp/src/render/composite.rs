@@ -15,7 +15,7 @@ use crate::{
 /// `result` laid over `input`: through the mask, with the blend mode, at `mix`.
 pub fn apply(sc: &Scope, input: &Layer, result: Layer, plan: &CompositePlan, state: &CompositeState) -> Result<Layer> {
     let masked = match coverage(sc, input, state)? {
-        Some(cov) => post::multiply_by(sc.like, sc.frame, &result, &cov)?,
+        Some(cov) => post::multiply_by(sc.like, &result, &cov)?,
         None => result,
     };
     let mut paint = Paint::default();

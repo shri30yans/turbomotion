@@ -1,6 +1,7 @@
 // @effect light_leak
 // @kind generator
 // @summary Warm out-of-focus film light bleeding in from an edge. Blend it with `screen` or `add`.
+// @bounds none
 // @param color_a color #ff7a2a -- main glow colour
 // @param color_b color #ff2a6a -- second glow colour
 // @param x float 0 -0.5 1.5 -- glow centre, share of the width (animate to sweep)

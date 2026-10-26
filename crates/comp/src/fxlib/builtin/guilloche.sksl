@@ -1,6 +1,7 @@
 // @effect guilloche
 // @kind generator
 // @summary Security-print rosettes: the ground of a certificate, a contract, a ticket.
+// @bounds none
 // @param ink color #1a4a6e -- colour of the engraving
 // @param paper color #f3ead8 -- colour of the stock
 // @param density float 7 2 18 -- how tight the roses are

@@ -1,5 +1,6 @@
 // @effect dots
 // @summary An LED / dot-matrix of the layer: a tape, a pit screen, a board.
+// @bounds none
 // @param size float 8 3 28 -- cell size, px
 // @param tint color #ffd37a -- colour of a lit cell
 // @param amount float 1 0 1 -- 0 keeps the original, 1 is only the matrix

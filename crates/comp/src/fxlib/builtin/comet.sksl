@@ -1,5 +1,6 @@
 // @effect comet
 // @summary A highlight racing the silhouette: the neon border of a pane catching a pass of light.
+// @bounds expand=3
 // @param tint color #eafff8 -- colour of the comet
 // @param speed float 0.22 0.02 2 -- laps per second
 // @param strength float 1.4 0 4 -- brightness of the head

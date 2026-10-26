@@ -72,7 +72,7 @@ pub fn radial_blur(ctx: &Ctx, e: &RadialBlur, layer: &Layer) -> Result<Layer> {
     if amount.abs() < MIN_ZOOM {
         return Ok(Layer::from_image(layer.image().clone()));
     }
-    let centre = (e.x.at(ctx.t) * f64::from(layer.width()), e.y.at(ctx.t) * f64::from(layer.height()));
+    let centre = ctx.space_of(layer).at(e.x.at(ctx.t), e.y.at(ctx.t));
     run(ctx, layer, &ctx.shaders.effects.radial_blur, Uniforms::new().v2(centre.0, centre.1).f(amount).f(ZOOM_TAPS), &[])
 }
 

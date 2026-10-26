@@ -1,6 +1,7 @@
 // @effect spotlight
 // @kind generator
 // @summary Two conic stage lights from above, falling onto a dark floor.
+// @bounds none
 // @param tint color #c8e4ff -- colour of the beams
 // @param amount float 0.7 0 2 -- brightness of the cones
 // @param spread float 0.16 0.04 0.45 -- how wide each cone is

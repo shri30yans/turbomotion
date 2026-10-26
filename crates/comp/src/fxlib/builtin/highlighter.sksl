@@ -1,5 +1,6 @@
 // @effect highlighter
 // @summary Roughens a flat mark into a real highlighter: the edge is displaced, the fill stays the ink.
+// @bounds expand=3.5*amount
 // @param amount float 0.7 0 2 -- how ragged the stroke is
 half4 main(float2 xy) {
     float n = (fbm(xy * 0.09) - 0.5) * 7.0 * amount;

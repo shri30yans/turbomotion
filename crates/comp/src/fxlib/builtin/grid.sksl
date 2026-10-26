@@ -1,6 +1,7 @@
 // @effect grid
 // @kind generator
 // @summary Lines on a regular grid, for blueprint backgrounds and HUD overlays.
+// @bounds none
 // @param size float 60 8 400 -- cell size in px
 // @param thickness float 1.5 0.5 12 -- line thickness in px
 // @param line color #5aa9ff -- line colour

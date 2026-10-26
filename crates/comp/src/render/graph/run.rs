@@ -7,7 +7,7 @@ use turbomotion_core::layer::Layer;
 use super::{comp_graph, effect_inputs_graph, layer_graph, FxOwner, Graph, ImageId, Pass, Stage, Write};
 use crate::{
     eval::Frame,
-    render::{color4f, fx, post, Ctx},
+    render::{color4f, fx, local, post, Ctx},
 };
 
 struct Run<'a, 'c> {
@@ -46,6 +46,10 @@ impl Run<'_, '_> {
                 None
             }
             Stage::Paint { layer } => Some(post::paint_stage(ctx, like, frame, comp, *layer).with_context(|| comp.layers[*layer].label.clone())?),
+            Stage::PaintLocal { layer } => Some(local::paint(ctx, like, frame, comp, *layer).with_context(|| comp.layers[*layer].label.clone())?),
+            Stage::MaskCoverageLocal { layer } => Some(local::mask_coverage(like, comp, &frame.layers[*layer])?),
+            Stage::Place { layer } => Some(local::place(like, frame, &frame.layers[*layer], read(0))?),
+            Stage::Finish { layer } => Some(post::finish(ctx, like, frame, &frame.layers[*layer], read(0).clone())?),
             Stage::Effects { owner, upto, pictures, behind } => {
                 let mut at = 1;
                 let behind_layer = if *behind {
@@ -60,7 +64,7 @@ impl Run<'_, '_> {
             }
             Stage::MaskCoverage { layer } => Some(post::mask_coverage(like, frame, comp, &frame.layers[*layer])?),
             Stage::MatteCoverage { mode, opacity } => Some(post::matte_coverage(like, frame, read(0), *mode, *opacity)?),
-            Stage::Multiply => Some(post::multiply_by(like, frame, read(0), read(1))?),
+            Stage::Multiply => Some(post::multiply_by(like, read(0), read(1))?),
             Stage::Reflect { bounds, reflect } => Some(post::floor_reflect(like, read(0).clone(), *bounds, *reflect)?),
             Stage::Wipe { bounds, clip } => Some(post::apply_clip(like, frame, read(0), *bounds, *clip)?),
             Stage::ShutterAverage { opacities } => {
@@ -76,14 +80,19 @@ impl Run<'_, '_> {
                 }
                 Some(Layer::from_image(sum.image_snapshot()))
             }
-            Stage::Composite { blend, opacity } => {
+            Stage::Composite { blend, opacity, placed } => {
                 let mut paint = Paint::default();
                 if let Some(b) = blend {
                     paint.set_blend_mode(b.skia());
                 }
                 paint.set_alpha_f(*opacity as f32);
                 let img = read(0).clone();
-                self.composite().canvas().draw_image(img.image(), (0, 0), Some(&paint));
+                match placed {
+                    Some(layer) => local::draw_placed(self.composite().canvas(), &frame.layers[*layer], &img, &paint)?,
+                    None => {
+                        self.composite().canvas().draw_image(img.image(), (0, 0), Some(&paint));
+                    }
+                }
                 None
             }
             Stage::Snapshot => Some(Layer::from_image(self.composite().image_snapshot())),
@@ -103,7 +112,11 @@ impl Run<'_, '_> {
             FxOwner::Layer(i) | FxOwner::Adjustment(i) => (Some(i), &comp.layers[i].fx, &frame.layers[i].fx, frame.layers[i].local_t),
             FxOwner::Look => (None, &comp.look, &frame.look, frame.t),
         };
-        let scope = fx::Scope { ctx: self.ctx, like: self.like, frame, layer, behind, pictures: maps };
+        let space = match owner {
+            FxOwner::Layer(i) => frame.layers[i].local.map(|b| b.space()),
+            FxOwner::Adjustment(_) | FxOwner::Look => None,
+        };
+        let scope = fx::Scope { ctx: self.ctx, like: self.like, frame, layer, behind, pictures: maps, space };
         let label = match owner {
             FxOwner::Look => "look".to_string(),
             FxOwner::Layer(i) | FxOwner::Adjustment(i) => comp.layers[i].label.clone(),

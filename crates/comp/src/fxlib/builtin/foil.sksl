@@ -1,5 +1,6 @@
 // @effect foil
 // @summary Iridescent conic foil on the layer: a die-cut hologram, a security stripe.
+// @bounds none
 // @param amount float 0.7 0 1 -- 0 keeps the original, 1 is fully foiled
 // @param shift float 0 0 1 -- rotates the rainbow (animate for a tilt)
 half4 main(float2 xy) {

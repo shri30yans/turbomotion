@@ -1,5 +1,6 @@
 // @effect gate_weave
 // @summary Film-gate jitter: the frame sits a few pixels off, twenty-four times a second.
+// @bounds expand=2.5*amount
 // @param amount float 0 0 1 -- 0 is the original, 1 is a loose gate
 // @param seed float 1 0 99 -- which weave
 half4 main(float2 xy) {
@@ -8,6 +9,6 @@ half4 main(float2 xy) {
         return premul(src.rgb, src.a);
     }
     float2 j = (hash22(float2(floor(time * 24.0), seed)) - 0.5) * amount * 5.0;
-    float4 hit = straight(clamp(xy + j, float2(0.0), resolution));
+    float4 hit = straight(in_buffer(xy + j));
     return premul(hit.rgb, hit.a);
 }

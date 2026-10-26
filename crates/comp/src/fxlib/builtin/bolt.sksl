@@ -1,6 +1,7 @@
 // @effect bolt
 // @kind generator
 // @summary A photoreal branched strike on a clear plate. Blend `add` or `screen` over the scene.
+// @bounds none
 // @param x float 0.5 0 1 -- origin, share of the width
 // @param y float 0.0 0 1 -- origin, share of the height (0 is the top)
 // @param seed float 2 0 40 -- which fork pattern

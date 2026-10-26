@@ -1,5 +1,6 @@
 // @effect bleach
 // @summary Skip-bleach: silver retained in the highlights, blacks crushed. A cold news look.
+// @bounds none
 // @param amount float 0 0 1 -- 0 is the original, 1 is a hard skip-bleach
 half4 main(float2 xy) {
     float4 src = straight(xy);

@@ -20,6 +20,35 @@ pub fn check(ledger: &Ledger, catalogue: &BTreeSet<String>) -> Vec<String> {
     out
 }
 
+/// What the engine says about whether an effect reaches past its input (`catalogue effects[].bounds`: `none`, `grows`,
+/// `expand=...`, or `undeclared`), against the ledger's `grows_bounds` for every row that names engine effects (a row still
+/// `todo` or `in_progress` may say `?`).
+pub fn bounds(ledger: &Ledger, bounds: &BTreeMap<String, String>) -> Vec<String> {
+    let t = &ledger.effects;
+    let mut out = Vec::new();
+    for r in &t.rows {
+        let engine: Vec<&str> = t.val(r, "engine").split(',').filter(|s| !s.is_empty() && bounds.contains_key(*s)).collect();
+        if engine.is_empty() {
+            continue;
+        }
+        let tags: Vec<&str> = engine.iter().map(|e| bounds[*e].as_str()).collect();
+        let truth = if tags.iter().any(|b| !matches!(*b, "none" | "undeclared")) {
+            "yes"
+        } else if tags.contains(&"undeclared") {
+            "?"
+        } else {
+            "no"
+        };
+        let said = t.val(r, "grows_bounds");
+        // a row being worked on (`init-effect` scaffolds `?`) may still say so; one that claims to exist may not
+        let started = matches!(t.val(r, "status"), "todo" | "in_progress");
+        if said != truth && !(said == "?" && started) {
+            out.push(at(t, r.line, format!("{:?} says grows_bounds {said:?} but the engine says {truth:?} ({})", t.val(r, "name"), engine.iter().zip(&tags).map(|(e, b)| format!("{e}: {b}")).collect::<Vec<_>>().join(", "))));
+        }
+    }
+    out
+}
+
 fn at(t: &Table, line: usize, msg: String) -> String {
     format!("{}:{line}: {msg}", t.path.display())
 }
@@ -210,6 +239,24 @@ mod tests {
         let p = check(&Ledger::load(&dir).unwrap(), &names(&["blur"]));
         assert!(p.iter().any(|m| m.contains("parity/specs/blur_two.md does not exist")), "{p:?}");
         assert!(p.iter().any(|m| m.contains("parity/probes/blur_two.json does not exist")), "{p:?}");
+    }
+
+    fn bound_map(pairs: &[(&str, &str)]) -> BTreeMap<String, String> {
+        pairs.iter().map(|(n, b)| (n.to_string(), b.to_string())).collect()
+    }
+
+    #[test]
+    fn grows_bounds_must_say_what_the_engine_says() {
+        let rows = ["Blur\tBlur\tB\tT0\thave\tno\t?\t-\tblur\t-", "Wave\tDistort\tA\tT1\thave\tyes\t?\t-\tflat\t-", "Mix\tX\tA\tT1\thave\t?\t?\t-\tplain,odd\t-", "Todo\tX\tA\tT1\ttodo\t?\t?\t-\t-\t-"];
+        let dir = fixture::write("bounds", &[], &rows);
+        let p = bounds(&Ledger::load(&dir).unwrap(), &bound_map(&[("blur", "grows"), ("flat", "none"), ("plain", "none"), ("odd", "undeclared")]));
+        assert_eq!(p.len(), 2, "{p:?}");
+        let started = fixture::write("bounds_started", &[], &["Blur\tBlur\tB\tT0\tin_progress\t?\t?\t-\tblur\t-"]);
+        assert!(bounds(&Ledger::load(&started).unwrap(), &bound_map(&[("blur", "grows")])).is_empty(), "a row in progress may still say ?");
+        assert!(p[0].contains("\"Blur\" says grows_bounds \"no\" but the engine says \"yes\" (blur: grows)"), "{p:?}");
+        assert!(p[1].contains("\"Wave\"") && p[1].contains("\"no\""), "{p:?}");
+        let p = bounds(&Ledger::load(&dir).unwrap(), &bound_map(&[("blur", "expand=amount*2"), ("flat", "yes-it-grows"), ("plain", "none"), ("odd", "undeclared")]));
+        assert!(p.len() == 1 && p[0].contains("\"Blur\"") && p[0].contains("blur: expand=amount*2"), "a plugin's expansion counts as growing, so only the Blur row is wrong: {p:?}");
     }
 
     #[test]

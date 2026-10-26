@@ -1,5 +1,6 @@
 // @effect anamorphic
 // @summary Horizontal streak flare on the highlights, like a cinema anamorphic lens.
+// @bounds none
 // @param amount float 0 0 1 -- 0 is the original, 1 is a long streak
 // @param threshold float 0.62 0.2 0.95 -- how bright a pixel must be to flare
 // @param tint color #cfe4ff -- colour of the streak

@@ -1,5 +1,6 @@
 // @effect light_sweep
 // @summary A soft band of light that travels across the layer, brightening what is under it.
+// @bounds none
 // @param position float 0 -0.3 1.3 -- where the band is, 0 = left/top edge, 1 = opposite edge (animate this)
 // @param width float 0.18 0.02 1 -- band width as a share of the layer
 // @param angle float 20 -90 90 -- tilt of the band in degrees

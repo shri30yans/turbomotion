@@ -1,6 +1,7 @@
 // @effect haze
 // @kind generator
 // @summary Soft atmospheric haze. Blend `screen` at low opacity over a room or a map.
+// @bounds none
 // @param amount float 0.4 0 1 -- density
 // @param height float 0.55 0.1 1 -- how high the haze sits, share of the frame
 // @param tint color #9aadc8 -- colour of the air

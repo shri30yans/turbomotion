@@ -1,6 +1,7 @@
 // @effect bokeh
 // @kind generator
 // @summary Soft discs of light: a night-city floor, a lens wide open.
+// @bounds none
 // @param density float 0.4 0.05 1 -- how many discs (share of the 48 slots that light up)
 // @param scale float 70 12 240 -- typical disc radius, px
 // @param brightness float 0.55 0 2 -- how hot the cores are

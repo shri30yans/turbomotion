@@ -1,5 +1,6 @@
 // @effect crumble
 // @summary The layer turns to dust from left to right: grains drift and fade (a card coming apart).
+// @bounds expand=abs(travel)*0.5
 // @param amount float 0 0 1 -- 0 is intact, 1 is gone
 // @param seed float 3 0 80 -- which grain pattern
 // @param travel float 36 4 120 -- how far a grain flies, px

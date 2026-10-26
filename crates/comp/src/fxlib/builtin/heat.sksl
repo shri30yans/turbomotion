@@ -1,5 +1,6 @@
 // @effect heat
 // @summary A warm glow hugging the silhouette, as if the layer is still hot.
+// @bounds none
 // @param amount float 0.75 0 3 -- how strong the glow is
 // @param width float 7 2 28 -- how far the heat reaches in, px
 // @param color color #ff6a24 -- colour of the heat

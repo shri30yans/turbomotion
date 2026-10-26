@@ -1,6 +1,7 @@
 // @effect hud
 // @kind generator
 // @summary A reticle: rings, crosshair and corner brackets. Numbers stay on text layers.
+// @bounds none
 // @param tint color #3dffe0 -- colour of the marks
 // @param amount float 0.85 0 2 -- brightness
 half4 main(float2 xy) {

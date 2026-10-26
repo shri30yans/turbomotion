@@ -107,6 +107,9 @@ fn effects(c: &Value) -> String {
     }
     s.push('\n');
     json_block(&mut s, &composite["example"]);
+    let space = &c["effect_space"];
+    let _ = writeln!(s, "## Effect space (`effect_space`, a composition key)\n\n{}\n", str_of(space, "summary"));
+    json_block(&mut s, &space["example"]["composition"]);
     for e in c["effects"].as_array().into_iter().flatten() {
         let (what, origin) = (str_of(e, "kind"), str_of(e, "origin"));
         let _ = writeln!(s, "## `{}`\n\n{} ({what}, {})\n", str_of(e, "name"), str_of(e, "summary"), if origin == "rust" { "platform" } else { "shader plugin" });
@@ -120,10 +123,21 @@ fn effects(c: &Value) -> String {
             let names: Vec<String> = e["passes"].as_array().into_iter().flatten().map(|p| format!("`{}` (x{})", str_of(p, "name"), p["scale"])).collect();
             let _ = writeln!(s, "* passes: {}", names.join(", "));
         }
+        let _ = writeln!(s, "* layer space (`effect_space: \"layer\"`): {}", bounds_of(str_of(e, "bounds")));
         s.push('\n');
         json_block(&mut s, &e["example"]);
     }
     s
+}
+
+/// How an effect's reach past its input reads on the page.
+fn bounds_of(tag: &str) -> String {
+    match tag {
+        "none" => "does not reach past the layer's own pixels".to_string(),
+        "grows" => "grows the layer's picture by its reach (blur radius, distance, offset)".to_string(),
+        "undeclared" => "reach not declared (`// @bounds`): the picture is cut at the layer's box".to_string(),
+        expand => format!("grows the layer's picture by `@bounds {expand}` pixels"),
+    }
 }
 
 /// A choice's default is shown by name, an optional parameter's as `none`, a float's as the bare number; a vector or a

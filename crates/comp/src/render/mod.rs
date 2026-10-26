@@ -1,6 +1,7 @@
 //! Rendering: `Frame → pixels`. A layer is painted into its own comp-sized half-float image through its screen matrix
 //! (so vectors and text stay sharp at any scale and 3D layers are projected by the GPU), then takes its effects,
-//! masks and matte, and lands on the composite with its opacity and blend mode.
+//! masks and matte, and lands on the composite with its opacity and blend mode. With `effect_space: "layer"` the
+//! effects and masks come first, on the layer's own pixels (`local`), and the matrix is applied after them.
 
 mod composite;
 mod content;
@@ -8,8 +9,10 @@ mod fx;
 pub mod graph;
 mod history;
 mod light;
+mod local;
 mod media;
 mod particles;
+mod passgeo;
 mod post;
 mod programs;
 mod res;
@@ -24,6 +27,10 @@ mod composite_tests;
 mod fx_tests;
 #[cfg(test)]
 mod history_tests;
+#[cfg(test)]
+mod layer_space_plugin_tests;
+#[cfg(test)]
+mod layer_space_tests;
 #[cfg(test)]
 mod testkit;
 #[cfg(test)]

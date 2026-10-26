@@ -46,7 +46,7 @@ fn declarations(h: &Header, earlier: &[Section]) -> String {
     for s in earlier {
         head.push_str(&format!("uniform shader {};\n", s.name));
     }
-    head.push_str("uniform float2 resolution;\nuniform float time;\n");
+    head.push_str("uniform float2 resolution;\nuniform float time;\nuniform float2 layer_origin;\nuniform float2 buffer_size;\n");
     for p in &h.params {
         let ty = match p.ty {
             Ty::Float | Ty::Choice => "float",
@@ -85,7 +85,7 @@ impl Def {
         for u in ["resolution", "time"].into_iter().chain(h.params.iter().map(|p| p.name.as_str())) {
             ensure!(used_uniforms.iter().any(|used| used == u), "uniform {u:?} is unused by the shader, so the compiler dropped it; use it or remove it from the header");
         }
-        Ok(Def { name: h.name, kind: h.kind, summary: h.summary, params: h.params, inputs: h.inputs, origin: origin.to_string(), passes, example: h.example })
+        Ok(Def { name: h.name, kind: h.kind, summary: h.summary, params: h.params, inputs: h.inputs, origin: origin.to_string(), passes, example: h.example, bounds: h.bounds })
     }
 }
 

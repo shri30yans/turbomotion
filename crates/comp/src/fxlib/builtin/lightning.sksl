@@ -1,5 +1,6 @@
 // @effect lightning
 // @summary A strike: cool branched light and an exposure spike. Animate `amount` in a few frames, not a cartoon bolt.
+// @bounds none
 // @param amount float 0 0 1 -- 0 is the original, 1 is the hit
 // @param x float 0.5 0 1 -- where the strike is aimed, share of the width
 // @param y float 0.0 0 1 -- origin, share of the height (0 is the top)

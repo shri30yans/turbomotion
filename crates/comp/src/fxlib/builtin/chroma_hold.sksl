@@ -1,5 +1,6 @@
 // @effect chroma_hold
 // @summary Keep one hue, drain the rest. The red loss number on a grey room.
+// @bounds none
 // @param amount float 0 0 1 -- 0 is the original, 1 is a hard hold
 // @param hue float 8 0 360 -- hue to keep, degrees (8 is the channel accent)
 // @param width float 0.35 0.05 1 -- how wide the kept band is

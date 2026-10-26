@@ -1,6 +1,7 @@
 // @effect film_burn
 // @kind generator
 // @summary Heat at the frame edge, as if the print is catching. Blend `add` or `screen`.
+// @bounds none
 // @param amount float 0.6 0 1 -- how far the burn reaches in
 // @param x float 0.0 0 1 -- which edge, 0 left, 1 right
 // @param tint color #ff6a24 -- colour of the burn

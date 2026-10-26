@@ -1,6 +1,7 @@
 // @effect noise
 // @kind generator
 // @summary Smooth monochrome value noise, drifting over time. Use as a matte, a displacement source or a texture.
+// @bounds none
 // @param scale float 120 4 1000 -- feature size in px
 // @param speed float 0.3 0 5 -- drift per second
 // @param low color #000000 -- colour of the low values

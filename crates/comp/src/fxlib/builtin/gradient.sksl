@@ -1,6 +1,7 @@
 // @effect gradient
 // @kind generator
 // @summary Smooth two-colour gradient with film-style dither (no banding).
+// @bounds none
 // @param from color #1a1f3a -- colour at the start
 // @param to color #e0603a -- colour at the end
 // @param angle float 90 -180 180 -- direction in degrees; 90 runs top to bottom
