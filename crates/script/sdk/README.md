@@ -43,7 +43,7 @@ Working examples: `examples/sdk/launch/film.ts`, and one per component in `examp
 
 | Area | Names |
 | --- | --- |
-| Film | `comp({width, height, fps, bg?, dur?, root?, fonts?, bpm?, look?})`; `film.add(...layers)`; `film.timeline({shots, overlays?, hits?, transition?, mblur?})` |
+| Film | `comp({width, height, fps, bg?, dur?, root?, fonts?, bpm?, look?, effect_space?, color?})`; `film.add(...layers)`; `film.timeline({shots, overlays?, hits?, transition?, mblur?})` |
 | Layers | `text`, `rect(w, h, {fill, radius, stroke})`, `shape(items, o)`, `image(src, o)`, `solid(color, opts)`, `texture(shader, opts)`, `group(o, children)`, `camera`, `light`, `raw({type, ...})` for any other kind |
 | Artwork | `svg(markup \| pathData, {width, fill, stroke, viewBox})`, `svgFile("icons/x.svg", opts)` (engine SVG importer), `pixelSprite(rows, palette, {px})`, `image()` checks `fit`, `sampling`, `size`, `focus`, `camera`, `parallax` |
 | 3D | `mesh`, `text3d`, `letters3d(word, {pos, tracking})`, `box`, `sphere`, `torus`, `cylinder`, `extrude`, `spin(deg_per_s)` |
@@ -57,6 +57,8 @@ Working examples: `examples/sdk/launch/film.ts`, and one per component in `examp
 Layer options: `id, pos | x,y,z, anchor, scale, skew, rotation, orientation, aim, cull, opacity, three_d, lit, material, parent, start, dur, blend, fx, masks, matte, clip_to, enter, exit, wrap, stagger, flip, along, reflect, layout, hidden, mblur, extra`. Shape items (`rect`, `ellipse`, `d`, `points`, fills, strokes, `trim`, `repeat`) and text options are typed too; a test (`tests/sdk_option_types.rs`) fails when the engine gains a field the types lack.
 
 `rotation` is After Effects' X, Y and Z Rotation: one number is the Z Rotation (the turn in the layer's own plane), three numbers turn it about each axis. `orientation` is the layer's own pose and `aim` the point its face turns toward.
+
+Colour: `comp({ ..., color: { linear_light: true } })` keeps pictures as light, so blends, blurs, glows and gradients are computed on light (50% white over black shows level 188, not 128); `working_profile` and `space` (`"srgb"` or `"display_p3"`) set the gamut pictures are kept in and the one the file leaves in and is tagged with. Left out, nothing changes. A shader plugin says which encoding it computes in with `// @space display|linear`. See `docs/reference/effects.md`.
 
 ## Builders: what goes first
 

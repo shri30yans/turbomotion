@@ -23,7 +23,7 @@ pub struct Shadow {
 pub fn shadow(ctx: &Ctx, e: &Shadow, layer: &Layer) -> Result<Layer> {
     let blur = e.blur.at(ctx.t) as f32;
     let mut paint = Paint::default();
-    paint.set_color_filter(solid_color(e.color, e.opacity.at(ctx.t) as f32));
+    paint.set_color_filter(solid_color(ctx.like, e.color, e.opacity.at(ctx.t) as f32)?);
     paint.set_image_filter(image_filters::blur((blur, blur), TileMode::Decal, None, None));
     let offset = (e.dx.at(ctx.t) as f32, e.dy.at(ctx.t) as f32);
     Layer::render(ctx.like, layer.width(), layer.height(), |c| {
@@ -43,7 +43,7 @@ pub struct Outline {
 pub fn outline(ctx: &Ctx, e: &Outline, layer: &Layer) -> Result<Layer> {
     let width = e.width.at(ctx.t) as f32;
     let mut paint = Paint::default();
-    paint.set_color_filter(solid_color(e.color, e.opacity.at(ctx.t) as f32));
+    paint.set_color_filter(solid_color(ctx.like, e.color, e.opacity.at(ctx.t) as f32)?);
     paint.set_image_filter(image_filters::dilate((width, width), None, None).context("outline filter")?);
     Layer::render(ctx.like, layer.width(), layer.height(), |c| {
         c.draw_image(layer.image(), (0, 0), Some(&paint));

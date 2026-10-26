@@ -3,7 +3,7 @@
 
 use anyhow::{Context, Result};
 use skia_safe::{Paint, Rect};
-use turbomotion_core::layer::{linear, Layer};
+use turbomotion_core::{color::Encoding, layer::{linear, Layer}};
 
 use super::{fx::Scope, post};
 use crate::{
@@ -46,13 +46,13 @@ fn coverage(sc: &Scope, input: &Layer, state: &CompositeState) -> Result<Option<
     })
 }
 
-/// Run a mask program over `input`.
+/// Run a mask program over `input`, which it reads as the eye sees it (a luma band is a band of displayed brightness).
 fn band(sc: &Scope, program: &turbomotion_core::shader::Program, input: &Layer, values: &[(&str, f32)]) -> Result<Layer> {
     let (w, h) = (input.width(), input.height());
     let source = input.image().to_shader((skia_safe::TileMode::Clamp, skia_safe::TileMode::Clamp), linear(), None).context("the layer image has no shader form")?;
     let floats: Vec<[f32; 1]> = values.iter().map(|(_, v)| [*v]).collect();
     let named: Vec<(&str, &[f32])> = values.iter().zip(&floats).map(|((n, _), f)| (*n, f.as_slice())).collect();
-    let shader = program.instance_with(&named, &[("source", source)])?;
+    let shader = Encoding::Display.shader(sc.like, program.instance_with(&named, &[("source", source)])?);
     Layer::try_render(sc.like, w, h, |c| {
         let mut paint = Paint::default();
         paint.set_shader(shader);

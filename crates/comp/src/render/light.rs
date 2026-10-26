@@ -2,7 +2,7 @@
 
 use anyhow::{Context, Result};
 use skia_safe::{Canvas, Paint, Rect};
-use turbomotion_core::layer::{linear, Layer};
+use turbomotion_core::{color::Encoding, layer::{linear, Layer}};
 
 use super::Ctx;
 use crate::eval::{Frame, LayerState};
@@ -37,7 +37,8 @@ pub fn apply(ctx: &Ctx, like: &Canvas, img: Layer, frame: &Frame, st: &LayerStat
     let f3 = |v: [f64; 3]| v.map(|x| x as f32).to_vec();
     let mat: Vec<f32> = lit.material.iter().map(|v| *v as f32).collect();
     let input = img.image().to_shader((skia_safe::TileMode::Clamp, skia_safe::TileMode::Clamp), linear(), None).context("the layer image has no shader form")?;
-    let shader = ctx.programs.lighting.instance_named(
+    // lights and surfaces are authored as colours the eye sees, so the shading multiplies display numbers
+    let shader = Encoding::Display.shader(like, ctx.programs.lighting.instance_named(
         &[
             ("inv", &inv),
             ("origin", &f3(lit.origin)),
@@ -51,7 +52,7 @@ pub fn apply(ctx: &Ctx, like: &Canvas, img: Layer, frame: &Frame, st: &LayerStat
             ("light_params", &params),
         ],
         &[input],
-    )?;
+    )?);
     Layer::try_render(like, w, h, |c| {
         let mut p = Paint::default();
         p.set_shader(shader);

@@ -2,8 +2,8 @@
 //! reflection, and the two halves of an adjustment layer. The frame graph (`graph/`) decides the order and what feeds what.
 
 use anyhow::{Context, Result};
-use skia_safe::{color_filters, image_filters, AlphaType, BlendMode, Canvas, ColorType, ISize, ImageInfo, Paint, PaintStyle, Path, PathFillType, Rect, Surface, TileMode};
-use turbomotion_core::{effects, layer::Layer};
+use skia_safe::{color_filters, image_filters, BlendMode, Canvas, Paint, PaintStyle, Path, PathFillType, Rect, Surface, TileMode};
+use turbomotion_core::{color::Encoding, effects, layer::{picture_info, Layer}};
 
 use super::{content::paint_content, Ctx};
 use crate::{
@@ -13,10 +13,18 @@ use crate::{
 };
 
 pub fn blank(like: &Canvas, w: i32, h: i32) -> Result<Surface> {
-    let info = ImageInfo::new(ISize::new(w, h), ColorType::RGBAF16, AlphaType::Premul, None);
-    let mut s = like.new_surface(&info, None).with_context(|| format!("no GPU memory for a {w}x{h} layer"))?;
+    let mut s = like.new_surface(&picture_info(like, w, h), None).with_context(|| format!("no GPU memory for a {w}x{h} layer"))?;
     s.canvas().clear(skia_safe::Color::TRANSPARENT);
     Ok(s)
+}
+
+/// The picture laid over opaque black, in its own colour space: the frame as the film shows it, before it is converted
+/// to what the file holds. Blending there instead would mix the picture with black in the wrong encoding.
+pub fn over_black(like: &Canvas, layer: &Layer) -> Result<Layer> {
+    Layer::render(like, layer.image().width(), layer.image().height(), |c| {
+        c.clear(skia_safe::Color::BLACK);
+        c.draw_image(layer.image(), (0, 0), None);
+    })
 }
 
 /// A transition's motion smear runs along the frame's x axis (degrees).
@@ -198,11 +206,12 @@ pub fn matte_coverage(like: &Canvas, frame: &Frame, matte: &Layer, mode: MatteMo
             flat.canvas().clear(skia_safe::Color::BLACK);
             flat.canvas().draw_image(matte.image(), (0, 0), Some(&paint));
             let (k, off) = if mode == MatteMode::Luma { (1.0f32, 0.0f32) } else { (-1.0, 1.0) };
+            // the luma is the brightness the eye sees, so the matrix reads display numbers
             let mut p = Paint::default();
-            p.set_color_filter(color_filters::matrix_row_major(
-                &[1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.2126 * k, 0.7152 * k, 0.0722 * k, 0.0, off],
-                None,
-            ));
+            p.set_color_filter(Encoding::Display.filter(
+                like,
+                color_filters::matrix_row_major(&[1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.2126 * k, 0.7152 * k, 0.0722 * k, 0.0, off], None),
+            )?);
             cov.canvas().draw_image(flat.image_snapshot(), (0, 0), Some(&p))
         }
     };

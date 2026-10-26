@@ -14,6 +14,7 @@ use serde_json::json;
 pub mod check;
 pub mod init_effect;
 pub mod ledger;
+pub mod linear;
 pub mod report;
 
 use ledger::{gaps, Gap, Ledger};
@@ -66,12 +67,19 @@ pub fn catalogue_bounds() -> std::collections::BTreeMap<String, String> {
     c["effects"].as_array().into_iter().flatten().filter_map(|e| Some((e["name"].as_str()?.to_string(), e["bounds"].as_str()?.to_string()))).collect()
 }
 
+/// Each catalogue effect's `space` (`display` or `linear`), by name.
+pub fn catalogue_spaces() -> std::collections::BTreeMap<String, String> {
+    let c = turbomotion_comp::catalogue::all();
+    c["effects"].as_array().into_iter().flatten().filter_map(|e| Some((e["name"].as_str()?.to_string(), e["space"].as_str()?.to_string()))).collect()
+}
+
 pub fn run(command: Command) -> Result<()> {
     match command {
         Command::Check(at) => {
             let ledger = Ledger::load(&at.dir)?;
             let mut problems = check::check(&ledger, &catalogue_effects());
             problems.extend(check::bounds(&ledger, &catalogue_bounds()));
+            problems.extend(linear::linear(&ledger, &catalogue_spaces()));
             if !problems.is_empty() {
                 for p in &problems {
                     eprintln!("{p}");

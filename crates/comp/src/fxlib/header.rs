@@ -3,7 +3,7 @@
 
 use anyhow::{anyhow, bail, ensure, Context, Result};
 use serde_json::Value;
-use turbomotion_core::effects;
+use turbomotion_core::{color::Encoding, effects};
 
 use super::bounds::Bounds;
 use super::{is_full_size, InputDecl, InputKind, Kind, Param, Ty, DEFAULT_DEPTH, FULL_SIZE, MAX_DEPTH, MAX_HISTORY};
@@ -27,6 +27,8 @@ pub struct Header {
     pub marks: Vec<PassMark>,
     /// What `// @bounds` says about the output's reach past its input (see [`Bounds`]).
     pub bounds: Bounds,
+    /// The encoding the shader computes in (`// @space`).
+    pub space: Encoding,
 }
 
 /// Names a shader cannot declare because the platform does.
@@ -52,6 +54,7 @@ impl Header {
         let mut example = None;
         let mut marks = vec![];
         let mut bounds_tag: Option<(usize, String)> = None;
+        let mut space = None;
         for (n, line) in src.lines().enumerate() {
             let Some(rest) = line.trim().strip_prefix("//") else { continue };
             let Some(tag) = rest.trim().strip_prefix('@') else { continue };
@@ -74,8 +77,13 @@ impl Header {
                     ensure!(bounds_tag.is_none(), "{}: @bounds is given twice", at());
                     bounds_tag = Some((n, value.trim().to_string()));
                 }
+                "space" => {
+                    ensure!(space.is_none(), "{}: @space is given twice", at());
+                    let given = value.trim();
+                    space = Some(Encoding::from_name(given).ok_or_else(|| anyhow!("{}: @space is {}, not {given:?}", at(), Encoding::NAMES.join(" or ")))?);
+                }
                 "example" => example = Some(serde_json::from_str::<Value>(value).map_err(|e| anyhow!("{}: @example is not JSON: {e}", at()))?),
-                other => bail!("{}: unknown header tag @{other}; the tags are @effect, @kind, @summary, @param, @input, @pass, @bounds, @example", at()),
+                other => bail!("{}: unknown header tag @{other}; the tags are @effect, @kind, @summary, @param, @input, @pass, @bounds, @space, @example", at()),
             }
         }
         let name = name.ok_or_else(|| anyhow!("the file needs a header line `// @effect <name>`"))?;
@@ -86,7 +94,7 @@ impl Header {
                 Bounds::parse(&text, &params, &layers).with_context(|| format!("line {}: @bounds {text}", n + 1))?
             }
         };
-        let header = Header { name, kind, summary, params, inputs, example, marks, bounds };
+        let header = Header { name, kind, summary, params, inputs, example, marks, bounds, space: space.unwrap_or_default() };
         header.check()?;
         Ok(header)
     }

@@ -31,8 +31,10 @@ struct Source {
     last: Option<(i64, Rc<Image>)>,
 }
 
+/// Decoded video frames. In a colour-managed film each source's frames are tagged with the colours its stream declares.
 #[derive(Default)]
 pub struct Videos {
+    managed: bool,
     sources: RefCell<HashMap<PathBuf, Source>>,
 }
 
@@ -44,8 +46,13 @@ impl Drop for Decoder {
 }
 
 impl Videos {
+    pub fn new(managed: bool) -> Self {
+        Videos { managed, sources: Default::default() }
+    }
+
     /// The frame of `path` showing at `src_time` seconds.
     pub fn frame(&self, path: &Path, info: &VideoInfo, src_time: f64, max_width: i32) -> Result<Rc<Image>> {
+        let space = if self.managed { Some(info.color.space(&path.display().to_string())?) } else { None };
         let mut map = self.sources.borrow_mut();
         let src = map.entry(path.to_path_buf()).or_insert_with(|| {
             let scale = if info.w as i32 > max_width { f64::from(max_width) / f64::from(info.w) } else { 1.0 };
@@ -80,7 +87,7 @@ impl Videos {
                 break;
             }
         }
-        let info = ImageInfo::new(ISize::new(w, h), ColorType::RGBA8888, AlphaType::Unpremul, None);
+        let info = ImageInfo::new(ISize::new(w, h), ColorType::RGBA8888, AlphaType::Unpremul, space);
         let img = images::raster_from_data(&info, Data::new_copy(&buf), (w * 4) as usize).context("uploading a video frame")?;
         let img = Rc::new(img);
         src.last = Some((n, img.clone()));

@@ -485,6 +485,11 @@ export interface Hit
 ```
 A sound on a moment. `at` is film time (a number, or a literal like `"title.start+0.8"`); inside `shot({ hits })` it is shot-local seconds.
 
+```ts
+export interface ColorOpts
+```
+The `color` option of a composition: see `CompOpts.color`.
+
 ## `image-check`
 
 `image()` options, checked where the author wrote them instead of by the engine's schema error at render time.

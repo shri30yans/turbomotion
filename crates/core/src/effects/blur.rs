@@ -10,7 +10,7 @@ use super::{
     pass::{run, Ctx},
 };
 use crate::{
-    color::Rgb,
+    color::{Encoding, Rgb},
     layer::{solid_color, Layer},
     shader::Uniforms,
 };
@@ -42,6 +42,7 @@ const PIXELS_PER_TAP: f64 = 2.0;
 
 /// Smear `layer` `distance` pixels along `angle` degrees.
 pub fn smear(ctx: &Ctx, layer: &Layer, distance: f64, angle: f64) -> Result<Layer> {
+    let ctx = &ctx.computing_in(Encoding::Linear);
     if distance.abs() < MIN_SMEAR {
         return Ok(Layer::from_image(layer.image().clone()));
     }
@@ -88,7 +89,8 @@ pub struct Glow {
 pub fn glow(ctx: &Ctx, e: &Glow, layer: &Layer) -> Result<Layer> {
     let (strength, threshold) = (e.strength.at(ctx.t), e.threshold.at(ctx.t));
     let source = if threshold > 0.0 {
-        run(ctx, layer, &ctx.shaders.effects.bright, Uniforms::new().f(threshold), &[])?
+        // the threshold is a brightness as the eye reports it; what passes it is spread as light
+        run(&ctx.computing_in(Encoding::Display), layer, &ctx.shaders.effects.bright, Uniforms::new().f(threshold), &[])?
     } else {
         Layer::from_image(layer.image().clone())
     };
@@ -96,7 +98,7 @@ pub fn glow(ctx: &Ctx, e: &Glow, layer: &Layer) -> Result<Layer> {
     let mut paint = Paint::default();
     paint.set_blender(ctx.shaders.union.blend(Uniforms::new())?);
     paint.set_color_filter(match e.color {
-        Some(color) => solid_color(color, strength as f32),
+        Some(color) => solid_color(ctx.like, color, strength as f32)?,
         None => {
             let k = strength as f32;
             #[rustfmt::skip]

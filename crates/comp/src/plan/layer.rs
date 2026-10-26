@@ -6,7 +6,7 @@ use std::path::Path;
 use anyhow::{anyhow, Result};
 use serde_json::Value;
 
-use super::{layer_space, probe_media, LayerPlan, Media};
+use super::{layer_space, probe_media::probe_media, LayerPlan, Media};
 use crate::{
     fxlib::{Kind as FxKind, Library},
     schema::{self, EffectSpace, Kind, Problem, Problems},

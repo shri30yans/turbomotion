@@ -1,8 +1,8 @@
 //! Running a graph: each pass in order, each image dropped after its last reader.
 
 use anyhow::{Context, Result};
-use skia_safe::{AlphaType, Canvas, Color4f, ColorType, ISize, ImageInfo, Paint, Surface};
-use turbomotion_core::layer::Layer;
+use skia_safe::{Canvas, Color4f, Paint, Surface};
+use turbomotion_core::layer::{picture_info, with_working_space, Layer};
 
 use super::{comp_graph, effect_inputs_graph, layer_graph, FxOwner, Graph, ImageId, Pass, Stage, Write};
 use crate::{
@@ -36,8 +36,7 @@ impl Run<'_, '_> {
         let read = |k: usize| self.picture(pass.reads[k]);
         Ok(match &pass.stage {
             Stage::Backdrop => {
-                let info = ImageInfo::new(ISize::new(w, h), ColorType::RGBAF16, AlphaType::Premul, None);
-                let mut acc = like.new_surface(&info, None).with_context(|| format!("no GPU memory for a {w}x{h} composite"))?;
+                let mut acc = like.new_surface(&picture_info(like, w, h), None).with_context(|| format!("no GPU memory for a {w}x{h} composite"))?;
                 match frame.bg {
                     Some(bg) => acc.canvas().clear(premul(color4f(bg))),
                     None => acc.canvas().clear(skia_safe::Color::TRANSPARENT),
@@ -68,8 +67,7 @@ impl Run<'_, '_> {
             Stage::Reflect { bounds, reflect } => Some(post::floor_reflect(like, read(0).clone(), *bounds, *reflect)?),
             Stage::Wipe { bounds, clip } => Some(post::apply_clip(like, frame, read(0), *bounds, *clip)?),
             Stage::ShutterAverage { opacities } => {
-                let info = ImageInfo::new(ISize::new(w, h), ColorType::RGBAF16, AlphaType::Premul, None);
-                let mut sum = like.new_surface(&info, None).with_context(|| format!("no GPU memory for a {w}x{h} blur accumulator"))?;
+                let mut sum = like.new_surface(&picture_info(like, w, h), None).with_context(|| format!("no GPU memory for a {w}x{h} blur accumulator"))?;
                 sum.canvas().clear(skia_safe::Color::TRANSPARENT);
                 let mut plus = Paint::default();
                 plus.set_blend_mode(skia_safe::BlendMode::Plus);
@@ -146,8 +144,10 @@ fn premul(c: Color4f) -> Color4f {
     Color4f::new(c.r * c.a, c.g * c.a, c.b * c.a, c.a)
 }
 
+/// Run `graph` with pictures in the colour space its composition works in (see `schema::color`): when that is not the
+/// space of `like`, a nested composition's own, the pictures are made beside a canvas that has it.
 fn execute(ctx: &Ctx, like: &Canvas, graph: &Graph) -> Result<Vec<Layer>> {
-    Run { ctx, like, graph, slots: vec![None; graph.images], composite: None }.run()
+    with_working_space(like, graph.comp.color.working_space(), |like| Run { ctx, like, graph, slots: vec![None; graph.images], composite: None }.run())
 }
 
 /// Composite one composition frame into a transparent-or-backgrounded layer of the composition's size.

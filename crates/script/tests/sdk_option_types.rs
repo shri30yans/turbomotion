@@ -24,7 +24,8 @@ fn struct_fields(source: &str, name: &str) -> Vec<String> {
 fn interface_keys(source: &str, name: &str) -> Vec<String> {
     let start = source.find(&format!("export interface {name}")).unwrap_or_else(|| panic!("no interface {name}"));
     let body = &source[start..start + source[start..].find("\n}").unwrap()];
-    body.lines().filter(|l| l.starts_with("  ") && !l.starts_with("   ")).filter_map(|l| l.trim().split(['?', ':']).next()).map(str::to_string).collect()
+    let is_key = |l: &&str| l.starts_with("  ") && !l.starts_with("   ") && !l.trim_start().starts_with("/**");
+    body.lines().filter(is_key).filter_map(|l| l.trim().split(['?', ':']).next()).map(str::to_string).collect()
 }
 
 fn missing(engine: &[String], sdk: &[String], exempt: &[&str]) -> Vec<String> {
@@ -64,4 +65,22 @@ fn the_effect_space_option_is_typed_with_exactly_the_engines_names() {
     let line = source.lines().find(|l| l.trim_start().starts_with("effect_space?:")).expect("the effect_space option");
     let typed: Vec<String> = line.split('"').skip(1).step_by(2).map(str::to_string).collect();
     assert_eq!(typed, engine, "the SDK type is `\"screen\" | \"layer\"`, in the engine's order");
+}
+
+#[test]
+fn the_color_option_is_typed_with_exactly_the_engines_keys_and_names() {
+    let engine_source = read("../comp/src/schema/color.rs");
+    let source = read("sdk/film-types.ts");
+    assert!(interface_keys(&source, "CompOpts").contains(&"color".to_string()), "CompOpts lacks color");
+    let engine = struct_fields(&engine_source, "ColorBlock");
+    let typed = interface_keys(&source, "ColorOpts");
+    assert!(missing(&engine, &typed, &[]).is_empty() && missing(&typed, &engine, &[]).is_empty(), "engine keys {engine:?} against SDK keys {typed:?}");
+    let gamuts = const_list(&engine_source[engine_source.find("impl Gamut").unwrap()..], "NAMES");
+    assert_eq!(gamuts, ["srgb", "display_p3"]);
+    for key in ["space", "working_profile"] {
+        let line = source.lines().find(|l| l.trim_start().starts_with(&format!("{key}?:"))).unwrap_or_else(|| panic!("the {key} option"));
+        let typed: Vec<String> = line.split('"').skip(1).step_by(2).map(str::to_string).collect();
+        assert_eq!(typed, gamuts, "{key} is typed with the engine's gamut names, in its order");
+    }
+    assert_eq!(const_list(&engine_source, "NAMES"), ["half"], "depth has the one value the SDK types");
 }

@@ -2,6 +2,7 @@
 //! `turbomotion comp catalogue`. It is the agent's API reference and it cannot drift: a test loads every example
 //! through the real planner, so an example that stops working fails the build.
 
+mod color;
 mod effect_space;
 mod expression_support;
 pub mod layer_keys;
@@ -143,6 +144,7 @@ pub fn all() -> Value {
         "effects": effects,
         "effect_composite": crate::fxlib::composite::catalogue(),
         "effect_space": effect_space::entry(),
+        "color": color::entry(),
         "text_presets": ["rise", "reveal", "rise_words", "fade_up", "blur_in", "pop", "slam", "drop", "typewriter", "scramble", "tracking_in", "wave_in", "spin_in", "elastic", "fade_out", "rise_out"],
         "tokens": {
             "palette": "Named colours any kind can use: {\"accent\": \"#e2c48a\", \"ink\": \"#f4f7ff\", \"plate\": \"#10161f\"}. Write \"color\": \"accent\" or \"$accent\".",
@@ -166,7 +168,7 @@ pub fn all() -> Value {
         "repeat": {"summary": "Repeater for any layer: `count` copies in all, each one step further along (`offset`, `rotation`, `scale` and `opacity` per copy), turning and scaling about `origin`. Each copy keeps the layer's animation and effects; `offset` and `rotation` may be expressions. Needs an `id`. Later copies sit behind the original unless `order` is \"above\".",
             "example": {"type": "solid", "id": "slab", "color": "#8a5cff", "size": [400, 240], "pos": [760, 500], "repeat": {"count": 6, "offset": [36, -24], "opacity": 0.85}}},
         "packs": crate::pack::catalogue().into_iter().map(|(n, s)| json!({"name": n, "summary": s})).collect::<Vec<_>>(),
-        "make_a_new_effect": "Write effects/<name>.sksl beside comp.json: header comments `// @effect name`, `// @kind effect|generator`, `// @summary ...`, `// @param name float|vec2|color default [min max] -- doc`, `// @param name choice default a,b,c -- doc` (written as a name), `// @input name layer` (another layer's picture, named by id in the use), `// @input name history=N [depth=D]` (the effect's own output N frames ago), `// @pass name [scale=S]` (several passes, each sees the earlier ones by name), `// @example {json}`, then `half4 main(float2 xy)`. You get `image` (effects), `resolution`, `time` and a library (hash21, vnoise, fbm, worley, rot2, luma, hsv2rgb, straight, premul). Try it with `comp fx test <name> --out sheet.png`; then use it like any effect: {\"effect\": \"name\", \"param\": value}.",
+        "make_a_new_effect": "Write effects/<name>.sksl beside comp.json: header comments `// @effect name`, `// @kind effect|generator`, `// @summary ...`, `// @param name float|vec2|color default [min max] -- doc`, `// @param name choice default a,b,c -- doc` (written as a name), `// @input name layer` (another layer's picture, named by id in the use), `// @input name history=N [depth=D]` (the effect's own output N frames ago), `// @pass name [scale=S]` (several passes, each sees the earlier ones by name), `// @space display|linear` (the encoding the shader computes in; see the colour key), `// @example {json}`, then `half4 main(float2 xy)`. You get `image` (effects), `resolution`, `time` and a library (hash21, vnoise, fbm, worley, rot2, luma, hsv2rgb, straight, premul). Try it with `comp fx test <name> --out sheet.png`; then use it like any effect: {\"effect\": \"name\", \"param\": value}.",
         "time_literals": ["1.5s", "45f", "beat:8", "bar:2", "marker:drop", "title.end", "title.start", "prev.end", "comp.end", "any of those followed by +0.25 or -3f"],
         "runnable_property_examples": property_examples::examples(),
         "property_forms": {

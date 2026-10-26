@@ -2,7 +2,7 @@
 
 # Effects
 
-Every effect and generator, from its descriptor: platform effects first, then the shipped shader plugins. Write effects/<name>.sksl beside comp.json: header comments `// @effect name`, `// @kind effect|generator`, `// @summary ...`, `// @param name float|vec2|color default [min max] -- doc`, `// @param name choice default a,b,c -- doc` (written as a name), `// @input name layer` (another layer's picture, named by id in the use), `// @input name history=N [depth=D]` (the effect's own output N frames ago), `// @pass name [scale=S]` (several passes, each sees the earlier ones by name), `// @example {json}`, then `half4 main(float2 xy)`. You get `image` (effects), `resolution`, `time` and a library (hash21, vnoise, fbm, worley, rot2, luma, hsv2rgb, straight, premul). Try it with `comp fx test <name> --out sheet.png`; then use it like any effect: {"effect": "name", "param": value}.
+Every effect and generator, from its descriptor: platform effects first, then the shipped shader plugins. Write effects/<name>.sksl beside comp.json: header comments `// @effect name`, `// @kind effect|generator`, `// @summary ...`, `// @param name float|vec2|color default [min max] -- doc`, `// @param name choice default a,b,c -- doc` (written as a name), `// @input name layer` (another layer's picture, named by id in the use), `// @input name history=N [depth=D]` (the effect's own output N frames ago), `// @pass name [scale=S]` (several passes, each sees the earlier ones by name), `// @space display|linear` (the encoding the shader computes in; see the colour key), `// @example {json}`, then `half4 main(float2 xy)`. You get `image` (effects), `resolution`, `time` and a library (hash21, vnoise, fbm, worley, rot2, luma, hsv2rgb, straight, premul). Try it with `comp fx test <name> --out sheet.png`; then use it like any effect: {"effect": "name", "param": value}.
 
 ## Composite options (every effect)
 
@@ -69,6 +69,57 @@ Where a layer's effects and masks run. "screen" (the default) paints every layer
 }
 ```
 
+## Colour (`color`, a composition key)
+
+What the numbers of a composition's pictures mean. Left out, nothing changes: every picture, colour and effect works on display-encoded sRGB numbers as it always did, and the render is byte-for-byte what it was. With `linear_light`, pictures are kept as light: blends, blurs, glows, gradients and resampling are computed on light, so 50% white over black is the mid-grey a lamp at half power gives (level 188 on screen, not 128), a blur across a black/white edge is half as bright as the pair on average (188, not 128), and an additive blend adds light. Colour literals, gradients, images and video are converted into the working profile as they are drawn, and the finished frame is converted to the output profile when it leaves, with alpha kept as coverage throughout (it is never encoded). Effects that move or spread light (blur, glow, shadow, exposure, the warps) run in light; effects written against what the eye sees (brightness, contrast, hue, tint, grain, grade) always run on display numbers, converted in and out around them, so their sliders feel the same in either mode. A shader plugin says which it wants with `// @space display|linear`. A nested composition takes the root's values field by field unless it says its own; `space` is the finished frame's profile, so only the root has it. The encoder tags the file with the output profile, so a player shows the colours the film was made with.
+
+* `depth`: Numeric depth of every picture: `half` (half-float, the only one, and what the engine always used).
+* `linear_light`: true keeps pictures in linear light (default false: display-encoded numbers).
+* `space`: Root only. The gamut the finished frame is encoded in, with the sRGB curve, and the file is tagged with: `srgb` or `display_p3` (default srgb).
+* `working_profile`: The gamut pictures are kept in: `srgb` or `display_p3` (default srgb). Images with an embedded profile and video tagged with their primaries keep their colours when it is wider than the file's.
+
+```json
+{
+  "bg": "#000000",
+  "color": {
+    "linear_light": true
+  },
+  "dur": 2,
+  "fps": 30,
+  "height": 720,
+  "layers": [
+    {
+      "color": "#ffffff",
+      "pos": [
+        320,
+        360
+      ],
+      "size": [
+        640,
+        720
+      ],
+      "type": "solid"
+    },
+    {
+      "color": "#ffffff",
+      "fx": [
+        {
+          "effect": "blur",
+          "radius": 24
+        }
+      ],
+      "opacity": 0.5,
+      "size": [
+        1280,
+        720
+      ],
+      "type": "solid"
+    }
+  ],
+  "width": 1280
+}
+```
+
 ## `blur`
 
 Gaussian blur. (effect, platform)
@@ -78,6 +129,7 @@ Gaussian blur. (effect, platform)
 | `radius` | float | 8.0 | 0 or more | Gaussian sigma in pixels. |
 
 * layer space (`effect_space: "layer"`): grows the layer's picture by its reach (blur radius, distance, offset)
+* colour (`color.linear_light`): computes in linear numbers
 
 ```json
 {
@@ -95,6 +147,7 @@ Blurs what has already been composited behind this layer and draws the layer on 
 | `blur` | float | 24.0 | 0 or more | Gaussian sigma in pixels. |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in linear numbers
 
 ```json
 {
@@ -113,6 +166,7 @@ Motion blur: smears the layer along an angle. (effect, platform)
 | `angle` | float | 0.0 |  | Direction of the smear in degrees (0 = horizontal, 90 = vertical). |
 
 * layer space (`effect_space: "layer"`): grows the layer's picture by its reach (blur radius, distance, offset)
+* colour (`color.linear_light`): computes in linear numbers
 
 ```json
 {
@@ -133,6 +187,7 @@ Zoom blur from a point. (effect, platform)
 | `y` | float | 0.5 |  | Centre down the frame, as a fraction. |
 
 * layer space (`effect_space: "layer"`): grows the layer's picture by its reach (blur radius, distance, offset)
+* colour (`color.linear_light`): computes in linear numbers
 
 ```json
 {
@@ -155,6 +210,7 @@ Adds a blurred copy back on top, so bright parts bleed light. (effect, platform)
 | `color` | color | none |  | Colour of the halo; leave out to glow in the layer's own colours. |
 
 * layer space (`effect_space: "layer"`): grows the layer's picture by its reach (blur radius, distance, offset)
+* colour (`color.linear_light`): computes in linear numbers
 
 ```json
 {
@@ -183,6 +239,7 @@ Soft drop shadow behind the layer's shape. (effect, platform)
 | `opacity` | float | 0.5 | 0 to 1 | How dark the shadow is. |
 
 * layer space (`effect_space: "layer"`): grows the layer's picture by its reach (blur radius, distance, offset)
+* colour (`color.linear_light`): computes in linear numbers
 
 ```json
 {
@@ -210,6 +267,7 @@ Solid outline around the layer's shape. (effect, platform)
 | `opacity` | float | 1.0 | 0 to 1 | How solid the outline is. |
 
 * layer space (`effect_space: "layer"`): grows the layer's picture by its reach (blur radius, distance, offset)
+* colour (`color.linear_light`): computes in linear numbers
 
 ```json
 {
@@ -233,6 +291,7 @@ Adds a fixed amount to every channel. (effect, platform)
 | `amount` | float | 0.0 |  | Added to every channel (0..1 scale): 0.2 is a clear lift, negative darkens. |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -250,6 +309,7 @@ Spreads or squeezes the tones around mid-grey. (effect, platform)
 | `amount` | float | 1.0 |  | 1 leaves the layer alone, 0 is flat grey, 2 is punchy. |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -267,6 +327,7 @@ Strengthens or drains colour. (effect, platform)
 | `amount` | float | 1.0 |  | 1 leaves the layer alone, 0 is black and white, 2 is vivid. |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -284,6 +345,7 @@ Rotates colours around the wheel. (effect, platform)
 | `degrees` | float | 0.0 |  | Degrees around the colour wheel. |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -301,6 +363,7 @@ Photographic stops of light. (effect, platform)
 | `amount` | float | 0.0 |  | Photographic stops: +1 doubles the light, -1 halves it. |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in linear numbers
 
 ```json
 {
@@ -318,6 +381,7 @@ Mid-tone curve. (effect, platform)
 | `amount` | float | 1.0 |  | Above 1 lightens the mid-tones, below 1 darkens them. |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -335,6 +399,7 @@ Negative. (effect, platform)
 | `amount` | float | 1.0 |  | How far to the negative: 1 fully inverts, 0.5 is flat grey. |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -353,6 +418,7 @@ Paints the layer toward a colour, keeping its shape. (effect, platform)
 | `amount` | float | 1.0 | 0 to 1 | 0 keeps the layer's colours, 1 paints it all in `color` (the alpha shape stays). |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -381,6 +447,7 @@ The scene colour grade on one layer. (effect, platform)
 | `tint_k` | float | 0.0 |  | How far toward `tint` (0..1); ignored without a tint. |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -411,6 +478,7 @@ Sine wave displacement. (effect, platform)
 | `angle` | float | 0.0 |  | Direction the wave travels in degrees (0 = left to right); pixels move across it. |
 
 * layer space (`effect_space: "layer"`): grows the layer's picture by its reach (blur radius, distance, offset)
+* colour (`color.linear_light`): computes in linear numbers
 
 ```json
 {
@@ -434,6 +502,7 @@ Swirls the picture around a point. (effect, platform)
 | `y` | float | 0.5 |  | Centre down the frame, as a fraction. |
 
 * layer space (`effect_space: "layer"`): grows the layer's picture by its reach (blur radius, distance, offset)
+* colour (`color.linear_light`): computes in linear numbers
 
 ```json
 {
@@ -457,6 +526,7 @@ Magnifies or pinches the picture around a point. (effect, platform)
 | `y` | float | 0.5 |  | Centre down the frame, as a fraction. |
 
 * layer space (`effect_space: "layer"`): grows the layer's picture by its reach (blur radius, distance, offset)
+* colour (`color.linear_light`): computes in linear numbers
 
 ```json
 {
@@ -477,6 +547,7 @@ Mosaic of square blocks. (effect, platform)
 | `size` | float | 16.0 | 1 or more | Block size in pixels. |
 
 * layer space (`effect_space: "layer"`): grows the layer's picture by its reach (blur radius, distance, offset)
+* colour (`color.linear_light`): computes in linear numbers
 
 ```json
 {
@@ -494,6 +565,7 @@ Red and blue part ways toward the corners, like a cheap lens. (effect, platform)
 | `amount` | float | 6.0 |  | Red/blue separation in pixels at the frame corners (zero at the centre). |
 
 * layer space (`effect_space: "layer"`): grows the layer's picture by its reach (blur radius, distance, offset)
+* colour (`color.linear_light`): computes in linear numbers
 
 ```json
 {
@@ -512,6 +584,7 @@ Red and blue shift apart along an angle; green stays. (effect, platform)
 | `angle` | float | 0.0 |  | Direction in degrees (0 = horizontal). |
 
 * layer space (`effect_space: "layer"`): grows the layer's picture by its reach (blur radius, distance, offset)
+* colour (`color.linear_light`): computes in linear numbers
 
 ```json
 {
@@ -531,6 +604,7 @@ Film grain, redrawn 24 times a second. (effect, platform)
 | `seed` | float | 0.0 | 0 or more | Pattern seed. |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -551,6 +625,7 @@ CRT scanlines. (effect, platform)
 | `thickness` | float | 0.5 | 0.05 to 0.85 | Fraction of each spacing that is dark. |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -571,6 +646,7 @@ Darkens toward the corners. (effect, platform)
 | `softness` | float | 0.45 |  | How far from the centre the falloff starts, as a fraction of the half diagonal (0..1). |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -589,6 +665,7 @@ Fades the whole layer. (effect, platform)
 | `value` | float | 1.0 | 0 to 1 | 0 = invisible, 1 = unchanged. |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in linear numbers
 
 ```json
 {
@@ -611,6 +688,7 @@ Moves, scales and rotates the layer about an anchor. (effect, platform)
 | `anchor_y` | float | 0.5 |  | The same point, down the frame. |
 
 * layer space (`effect_space: "layer"`): grows the layer's picture by its reach (blur radius, distance, offset)
+* colour (`color.linear_light`): computes in linear numbers
 
 ```json
 {
@@ -635,6 +713,7 @@ Horizontal streak flare on the highlights, like a cinema anamorphic lens. (effec
 | `tint` | color | [207.0,228.0,255.0,1.0] |  | colour of the streak |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -672,6 +751,7 @@ Soft mesh-gradient light: up to six coloured points blended into one smooth, ban
 | `vivid` | float | 0.15 | 0 to 1 | pushes the blend away from grey, so opposite hues stay clean |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -730,6 +810,7 @@ Lens barrel (positive) or pincushion (negative). A cheap CCTV lens, a stills dis
 | `y` | float | 0.5 | 0 to 1 | optical centre, share of the height |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -749,6 +830,7 @@ Skip-bleach: silver retained in the highlights, blacks crushed. A cold news look
 | `amount` | float | 0.0 | 0 to 1 | 0 is the original, 1 is a hard skip-bleach |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -768,6 +850,7 @@ Bright areas bleed soft light into their surroundings, like a lens does. Keeps m
 | `threshold` | float | 0.65 | 0 to 1 | brightness above which light spreads |
 
 * layer space (`effect_space: "layer"`): grows the layer's picture by `@bounds expand=radius` pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -791,6 +874,7 @@ Soft discs of light: a night-city floor, a lens wide open. (generator, shader pl
 | `seed` | float | 3.0 | 0 to 80 | which arrangement |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -819,6 +903,7 @@ A photoreal branched strike on a clear plate. Blend `add` or `screen` over the s
 | `tint` | color | [215.0,232.0,255.0,1.0] |  | colour of the light |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -847,6 +932,7 @@ Cellular (worley) pattern: caustics, cracked ground, scales, bokeh when threshol
 | `fill` | color | [8.0,32.0,56.0,1.0] |  | colour inside the cells |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -873,6 +959,7 @@ Keep one hue, drain the rest. The red loss number on a grey room. (effect, shade
 | `width` | float | 0.35 | 0.05 to 1 | how wide the kept band is |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -895,6 +982,7 @@ Removes a background colour (a green screen) and pulls the colour spill out of t
 | `spill` | float | 0.6 | 0 to 1 | how much of the key colour is removed from what stays |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -920,6 +1008,7 @@ Layered fractal noise: smoke, fog, nebula, paper grain at a larger scale. (gener
 | `softness` | float | 0.4 | 0.01 to 1 | how gradually density rises above the threshold |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -948,6 +1037,7 @@ A highlight racing the silhouette: the neon border of a pane catching a pass of 
 | `width` | float | 10.0 | 2 to 40 | how far the head reaches off the edge, px |
 
 * layer space (`effect_space: "layer"`): grows the layer's picture by `@bounds expand=3` pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -970,6 +1060,7 @@ The layer turns to dust from left to right: grains drift and fade (a card coming
 | `travel` | float | 36.0 | 4 to 120 | how far a grain flies, px |
 
 * layer space (`effect_space: "layer"`): grows the layer's picture by `@bounds expand=abs(travel)*0.5` pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -993,6 +1084,7 @@ Blocks stop updating and keep their old pixels, smearing along a drifting vector
 
 * input `prev`: its own output 1 frame(s) back, recursion 12 deep -- the effect's own picture one frame ago; a block can hold at most `depth` frames
 * layer space (`effect_space: "layer"`): grows the layer's picture by `@bounds expand=smear` pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -1018,6 +1110,7 @@ Moves the layer's pixels by the colours of another layer, as After Effects' Disp
 
 * input `map`: the picture of another layer, named by id -- the layer whose colours steer the pixels; hide it to use it only as a map
 * layer space (`effect_space: "layer"`): grows the layer's picture by `@bounds expand_x=abs(max_x) expand_y=abs(max_y)` pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -1044,6 +1137,7 @@ A regular field of dots: the quiet dotted ground of a notebook, a UI canvas or a
 | `fade` | float | 0.0 | 0 to 1 | 0 uniform, 1 fades the dots toward the frame edges |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -1074,6 +1168,7 @@ An LED / dot-matrix of the layer: a tape, a pit screen, a board. (effect, shader
 | `amount` | float | 1.0 | 0 to 1 | 0 keeps the original, 1 is only the matrix |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -1095,6 +1190,7 @@ Tape dropouts: thin bands of missing picture. News archive, a damaged recording.
 | `density` | float | 0.08 | 0 to 0.5 | share of bands that drop |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -1116,6 +1212,7 @@ Maps brightness onto two colours: darks become `shadow`, lights become `light`. 
 | `amount` | float | 1.0 | 0 to 1 | 0 keeps the original, 1 is fully mapped |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -1138,6 +1235,7 @@ Motes rising through a beam: stage dust, not weather. (generator, shader plugin)
 | `seed` | float | 2.0 | 0 to 80 | which arrangement |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -1164,6 +1262,7 @@ A soft fading trail of the layer toward one side: up to 8 faint ghosts that over
 | `angle` | float | -18.0 | -180 to 180 | direction of the trail in degrees from +x with y down: 0 right, 90 down, -90 up |
 
 * layer space (`effect_space: "layer"`): grows the layer's picture by `@bounds expand=abs(travel)*amount` pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -1187,6 +1286,7 @@ Finds the edges in the picture and lights them: a blueprint, circuit or neon-out
 | `keep` | float | 0.35 | 0 to 1 | how much of the original picture stays |
 
 * layer space (`effect_space: "layer"`): grows the layer's picture by `@bounds expand=width` pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -1208,6 +1308,7 @@ A fading trail: every frame keeps a fraction of what the effect drew one frame e
 
 * input `prev`: its own output 1 frame(s) back, recursion 12 deep -- the effect's own picture one frame ago
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -1227,6 +1328,7 @@ Heat at the frame edge, as if the print is catching. Blend `add` or `screen`. (g
 | `tint` | color | [255.0,106.0,36.0,1.0] |  | colour of the burn |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -1250,6 +1352,7 @@ Photographic strobe: a brief white exposure from the centre. Animate `amount` 1â
 | `warmth` | float | 0.12 | 0 to 1 | 0 is paper-white, 1 is tungsten |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -1269,6 +1372,7 @@ Exposure flutter: a failing bulb, a projector, a strike that has not quite gone.
 | `rate` | float | 18.0 | 2 to 60 | how many times a second it samples a new level |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -1292,6 +1396,7 @@ A receding grid, as if looking across a dark floor. (generator, shader plugin)
 | `glow` | float | 0.4 | 0 to 2 | extra brightness on the lines |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -1321,6 +1426,7 @@ Iridescent conic foil on the layer: a die-cut hologram, a security stripe. (effe
 | `shift` | float | 0.0 | 0 to 1 | rotates the rainbow (animate for a tilt) |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -1340,6 +1446,7 @@ Film-gate jitter: the frame sits a few pixels off, twenty-four times a second. (
 | `seed` | float | 1.0 | 0 to 99 | which weave |
 
 * layer space (`effect_space: "layer"`): grows the layer's picture by `@bounds expand=2.5*amount` pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -1361,6 +1468,7 @@ Horizontal bands jump sideways at random, with a colour split on the displaced o
 | `density` | float | 0.35 | 0 to 1 | share of bands that jump |
 
 * layer space (`effect_space: "layer"`): grows the layer's picture by `@bounds expand_x=amount*1.12 expand_y=0` pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -1386,6 +1494,7 @@ Two soft colour glows drifting on a dark ground: the ambient light behind a prod
 | `amount` | float | 0.8 | 0 to 1 | strength |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -1414,6 +1523,7 @@ Smooth two-colour gradient with film-style dither (no banding). (generator, shad
 | `mid` | float | 0.5 | 0.05 to 0.95 | where the halfway colour sits |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -1441,6 +1551,7 @@ Lines on a regular grid, for blueprint backgrounds and HUD overlays. (generator,
 | `offset` | vec2 | [0.0,0.0] |  | scrolls the grid in px |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -1471,6 +1582,7 @@ Security-print rosettes: the ground of a certificate, a contract, a ticket. (gen
 | `amount` | float | 0.55 | 0 to 1 | ink coverage |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -1496,6 +1608,7 @@ The warm red-orange fringe film shows around bright highlights. (effect, shader 
 | `tint` | color | [255.0,90.0,40.0,1.0] |  | colour of the fringe |
 
 * layer space (`effect_space: "layer"`): grows the layer's picture by `@bounds expand=radius` pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -1519,6 +1632,7 @@ Newspaper dot screen: dots grow with brightness. (effect, shader plugin)
 | `amount` | float | 1.0 | 0 to 1 | 0 = original, 1 = dots only |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -1546,6 +1660,7 @@ A screen of ink dots that swell from one side to the other: the print ground of 
 | `direction` | float | 0.0 | -180 to 180 | direction of the ramp in degrees |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -1574,6 +1689,7 @@ Soft atmospheric haze. Blend `screen` at low opacity over a room or a map. (gene
 | `tint` | color | [154.0,173.0,200.0,1.0] |  | colour of the air |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -1598,6 +1714,7 @@ A warm glow hugging the silhouette, as if the layer is still hot. (effect, shade
 | `color` | color | [255.0,106.0,36.0,1.0] |  | colour of the heat |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -1617,6 +1734,7 @@ Roughens a flat mark into a real highlighter: the edge is displaced, the fill st
 | `amount` | float | 0.7 | 0 to 2 | how ragged the stroke is |
 
 * layer space (`effect_space: "layer"`): grows the layer's picture by `@bounds expand=3.5*amount` pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -1639,6 +1757,7 @@ Holographic pane: a neon tube on the silhouette, a tinted wash inside, bloom jus
 | `frost` | float | 0.03 | 0 to 0.4 | residual grain in the pane |
 
 * layer space (`effect_space: "layer"`): grows the layer's picture by `@bounds expand=40` pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -1662,6 +1781,7 @@ A reticle: rings, crosshair and corner brackets. Numbers stay on text layers. (g
 | `amount` | float | 0.85 | 0 to 2 | brightness |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -1684,6 +1804,7 @@ A hit of light and a chromatic split: the number landing, the stamp. (effect, sh
 | `angle` | float | 18.0 | -90 to 90 | tilt of the split, degrees |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -1703,6 +1824,7 @@ Broadcast breakup: a rolling bar and fine snow. Not VHS; this is the signal dyin
 | `speed` | float | 0.35 | 0 to 2 | how fast the bar rolls |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -1723,6 +1845,7 @@ Mirrors a wedge of the picture around the centre. (effect, shader plugin)
 | `zoom` | float | 1.0 | 0.25 to 4 | magnification of the source |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -1746,6 +1869,7 @@ Warm out-of-focus film light bleeding in from an edge. Blend it with `screen` or
 | `flicker` | float | 0.15 | 0 to 1 | how much it breathes |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -1774,6 +1898,7 @@ A soft band of light that travels across the layer, brightening what is under it
 | `tint` | color | [255.0,243.0,214.0,1.0] |  | colour of the light |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -1799,6 +1924,7 @@ A strike: cool branched light and an exposure spike. Animate `amount` in a few f
 | `tint` | color | [197.0,220.0,255.0,1.0] |  | colour of the light |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -1822,6 +1948,7 @@ Warps the picture like heat over water or a slow melt; good for dream and memory
 | `speed` | float | 0.4 | 0 to 3 | how fast it moves |
 
 * layer space (`effect_space: "layer"`): grows the layer's picture by `@bounds expand=amount` pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -1842,6 +1969,7 @@ Reflects one half of the layer onto the other. (effect, shader plugin)
 | `vertical` | float | 0.0 | 0 to 1 | 0 mirrors left/right, 1 mirrors top/bottom |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -1864,6 +1992,7 @@ Smooth monochrome value noise, drifting over time. Use as a matte, a displacemen
 | `contrast` | float | 1.0 | 0.2 to 4 | 1 = natural, higher = harder |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -1890,6 +2019,7 @@ Dissolves the layer away in blocks. Animate `progress` 0 to 1 to remove it, 1 to
 | `edge` | float | 0.08 | 0 to 0.3 | softness of the leading edge |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -1909,6 +2039,7 @@ Reduces each channel to a few flat levels. (effect, shader plugin)
 | `levels` | float | 4.0 | 2 to 16 | number of levels per channel |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -1927,6 +2058,7 @@ Spectral split on contrast edges, like light through glass. Quiet, not a party f
 | `angle` | float | 18.0 | -90 to 90 | direction of the split, degrees |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -1947,6 +2079,7 @@ Fine rain streaks. Blend `screen`. Not anime speed-lines: thin, fast, sparse. (g
 | `tint` | color | [184.0,200.0,220.0,1.0] |  | colour of the rain |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -1972,6 +2105,7 @@ A live ridgeline: P&L, mark-to-market, a quiet-money chart. (generator, shader p
 | `fill` | float | 0.18 | 0 to 1 | wash under the line |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -1998,6 +2132,7 @@ A coloured rim light along the silhouette, facing `angle`. (effect, shader plugi
 | `color` | color | [234.0,242.0,255.0,1.0] |  | colour of the light |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -2023,6 +2158,7 @@ Rings of displacement spreading from a point, like a drop in water. (effect, sha
 | `falloff` | float | 900.0 | 100 to 4000 | distance at which the ripple has faded, px |
 
 * layer space (`effect_space: "layer"`): grows the layer's picture by `@bounds expand=amplitude` pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -2048,6 +2184,7 @@ A scan line that turns what it has passed into a code grid, with a bright front.
 | `seed` | float | 1.0 | 0 to 80 | which bit pattern |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -2069,6 +2206,7 @@ Hairline scuffs in the paint: a slapped-on sticker, not a clean shape. (effect, 
 | `seed` | float | 2.0 | 0 to 50 | which set of scratches |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -2091,6 +2229,7 @@ Volumetric light shafts from a point. Blend `screen` or `add` over a dark plate.
 | `tint` | color | [200.0,216.0,240.0,1.0] |  | colour of the light |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -2115,6 +2254,7 @@ Unsharp mask from four neighbours. A document, a number that must read. (effect,
 | `amount` | float | 0.0 | 0 to 2 | 0 is the original, 1 is a firm snap |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -2136,6 +2276,7 @@ One expanding ring of refraction, like a blast or a stamp landing. Animate `prog
 | `width` | float | 0.045 | 0.01 to 0.2 | thickness of the ring as a share of the frame |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -2160,6 +2301,7 @@ Tints the shadows one colour and the highlights another: the quickest way to mak
 | `balance` | float | 0.0 | -1 to 1 | negative favours shadows, positive favours highlights |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -2182,6 +2324,7 @@ Two conic stage lights from above, falling onto a dark floor. (generator, shader
 | `spread` | float | 0.16 | 0.04 to 0.45 | how wide each cone is |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -2205,6 +2348,7 @@ Broadcast snow. Blend `add` or `overlay` over a dead monitor. (generator, shader
 | `tint` | color | [208.0,214.0,224.0,1.0] |  | colour of the snow |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -2231,6 +2375,7 @@ Diagonal or straight bars; animate `offset` to make them travel. (generator, sha
 | `softness` | float | 1.0 | 0.5 to 40 | edge blur in px |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -2258,6 +2403,7 @@ Blurs everything outside a horizontal band so a scene reads as a miniature. (eff
 | `blur` | float | 14.0 | 0 to 60 | maximum blur radius in px |
 
 * layer space (`effect_space: "layer"`): grows the layer's picture by `@bounds expand=blur` pixels
+* colour (`color.linear_light`): computes in linear numbers
 
 ```json
 {
@@ -2279,6 +2425,7 @@ Wobbles the layer by a noise layer, like After Effects' Turbulent Displace; driv
 
 * input `noise`: the picture of another layer, named by id -- a noise picture, for example a `noise` texture layer (hidden); its brightness is the field
 * layer space (`effect_space: "layer"`): grows the layer's picture by `@bounds expand=abs(amount)` pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {
@@ -2299,6 +2446,7 @@ Worn tape: wobbling lines, colour bleed, tracking noise and a rolling bar. (effe
 | `noise` | float | 0.25 | 0 to 1 | tracking noise strength |
 
 * layer space (`effect_space: "layer"`): grows the layer's picture by `@bounds expand_x=(29+bleed)*amount expand_y=0` pixels
+* colour (`color.linear_light`): computes in display numbers
 
 ```json
 {

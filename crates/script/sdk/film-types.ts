@@ -79,6 +79,18 @@ export interface TimelineOpts {
   mblur?: boolean | { samples?: number; shutter?: number };
 }
 
+/** The `color` option of a composition: see `CompOpts.color`. */
+export interface ColorOpts {
+  /** Numeric depth of every picture; half-float is the only one. */
+  depth?: "half";
+  /** Film only. The gamut the finished frame is encoded in (with the sRGB curve), which the file is tagged with. Default `"srgb"`. */
+  space?: "srgb" | "display_p3";
+  /** Blend, blur, resample and add in linear light instead of on display-encoded numbers. Default `false`. */
+  linear_light?: boolean;
+  /** The gamut pictures are kept in. Default `"srgb"`. */
+  working_profile?: "srgb" | "display_p3";
+}
+
 export interface CompOpts {
   /** Asset directory relative to the script; defaults to the script's folder. */
   root?: string;
@@ -95,6 +107,12 @@ export interface CompOpts {
    * layer and content outside the frame still feeds it. Nested compositions take the film's unless they say their own.
    */
   effect_space?: "screen" | "layer";
+  /**
+   * What the numbers of the pictures mean. Left out, nothing changes: colours, blends and blurs work on display-encoded sRGB
+   * numbers. `{ linear_light: true }` keeps pictures as light, so blends, blurs, glows and gradients are computed on light
+   * (50% white over black shows as level 188, not 128). Nested compositions take the film's unless they say their own.
+   */
+  color?: ColorOpts;
   width: number;
   height: number;
   fps: number;

@@ -140,7 +140,7 @@ fn run_passes(sc: &Scope, def: &Def, p: &PluginState, w: i32, h: i32, t: f64, so
         let vals = geometry.values(p, t);
         let refs: Vec<(&str, &[f32])> = vals.iter().map(|(n, v)| (n.as_str(), v.as_slice())).collect();
         let kid_refs: Vec<(&str, Shader)> = kids.iter().map(|(n, s)| (n.as_str(), s.clone())).collect();
-        let shader = geometry.shader(pass.program.instance_with(&refs, &kid_refs).with_context(|| format!("pass {:?}", pass.name))?);
+        let shader = geometry.shader(def.space.shader(sc.like, pass.program.instance_with(&refs, &kid_refs).with_context(|| format!("pass {:?}", pass.name))?));
         let out = Layer::try_render(sc.like, pw, ph, |c| {
             let mut paint = Paint::default();
             paint.set_shader(shader);
@@ -182,7 +182,7 @@ pub fn generate(ctx: &Ctx, c: &Canvas, p: &PluginState, size: [f64; 2], t: f64) 
     let def = ctx.plan.fx.get(&p.name)?;
     let vals = Geometry::whole(size).values(p, t);
     let refs: Vec<(&str, &[f32])> = vals.iter().map(|(n, v)| (n.as_str(), v.as_slice())).collect();
-    let shader = def.passes[0].program.instance_with(&refs, &[])?;
+    let shader = def.space.shader(c, def.passes[0].program.instance_with(&refs, &[])?);
     let mut paint = Paint::default();
     paint.set_shader(shader);
     c.draw_rect(Rect::from_wh(size[0] as f32, size[1] as f32), &paint);

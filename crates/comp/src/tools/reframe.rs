@@ -34,7 +34,7 @@ pub struct Options {
 }
 
 /// Keys that describe the whole project and so move up to the new root (they stay on the nested copy too, which is harmless).
-const PROJECT_KEYS: &[&str] = &["fps", "bg", "bpm", "beat_offset", "markers", "vars", "fonts", "palette", "type", "image", "surface", "space", "motion", "mblur", "effect_space"];
+const PROJECT_KEYS: &[&str] = &["fps", "bg", "bpm", "beat_offset", "markers", "vars", "fonts", "palette", "type", "image", "surface", "space", "motion", "mblur", "effect_space", "color"];
 
 pub fn reframe(source: &Value, o: &Options) -> Result<Value> {
     ensure!(o.width > 0 && o.height > 0, "the target size must be positive");

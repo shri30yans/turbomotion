@@ -110,6 +110,13 @@ fn effects(c: &Value) -> String {
     let space = &c["effect_space"];
     let _ = writeln!(s, "## Effect space (`effect_space`, a composition key)\n\n{}\n", str_of(space, "summary"));
     json_block(&mut s, &space["example"]["composition"]);
+    let color = &c["color"];
+    let _ = writeln!(s, "## Colour (`color`, a composition key)\n\n{}\n", str_of(color, "summary"));
+    for (key, what) in color["keys"].as_object().into_iter().flatten() {
+        let _ = writeln!(s, "* `{key}`: {}", what.as_str().unwrap_or_default());
+    }
+    s.push('\n');
+    json_block(&mut s, &color["example"]["composition"]);
     for e in c["effects"].as_array().into_iter().flatten() {
         let (what, origin) = (str_of(e, "kind"), str_of(e, "origin"));
         let _ = writeln!(s, "## `{}`\n\n{} ({what}, {})\n", str_of(e, "name"), str_of(e, "summary"), if origin == "rust" { "platform" } else { "shader plugin" });
@@ -124,6 +131,7 @@ fn effects(c: &Value) -> String {
             let _ = writeln!(s, "* passes: {}", names.join(", "));
         }
         let _ = writeln!(s, "* layer space (`effect_space: \"layer\"`): {}", bounds_of(str_of(e, "bounds")));
+        let _ = writeln!(s, "* colour (`color.linear_light`): computes in {} numbers", str_of(e, "space"));
         s.push('\n');
         json_block(&mut s, &e["example"]);
     }

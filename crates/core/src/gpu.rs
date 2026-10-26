@@ -4,7 +4,7 @@ use anyhow::{Context, Result};
 use metal::foreign_types::ForeignType;
 use skia_safe::{
     gpu::{self, direct_contexts, mtl, Budgeted, DirectContext, SurfaceOrigin},
-    AlphaType, ColorType, ISize, ImageInfo, Surface,
+    AlphaType, ColorSpace, ColorType, ISize, ImageInfo, Surface,
 };
 
 pub struct Gpu {
@@ -24,9 +24,10 @@ impl Gpu {
         Ok(Self { context, _device: device, _queue: queue })
     }
 
-    /// An opaque BGRA render target, the byte order ffmpeg ingests as `bgra`.
-    pub fn frame_surface(&mut self, size: ISize) -> Result<Surface> {
-        let info = ImageInfo::new(size, ColorType::BGRA8888, AlphaType::Premul, None);
+    /// A BGRA render target, the byte order ffmpeg ingests as `bgra`, tagged `space` (none: untagged, so what is drawn into
+    /// it is stored as it is).
+    pub fn frame_surface(&mut self, size: ISize, space: Option<ColorSpace>) -> Result<Surface> {
+        let info = ImageInfo::new(size, ColorType::BGRA8888, AlphaType::Premul, space);
         gpu::surfaces::render_target(&mut self.context, Budgeted::Yes, &info, None, SurfaceOrigin::TopLeft, None, false, false)
             .context("could not allocate the frame surface")
     }

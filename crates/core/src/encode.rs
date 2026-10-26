@@ -9,6 +9,8 @@ use std::{
 
 use anyhow::{bail, Context, Result};
 
+use crate::color::Profile;
+
 /// How frames become H.264.
 pub enum Codec {
     /// Apple's media engine via VideoToolbox: encoding costs almost no CPU. Quality is set by bitrate.
@@ -60,6 +62,16 @@ pub struct VideoFormat {
     pub width: i32,
     pub height: i32,
     pub fps: u32,
+    /// What the frames' numbers mean, when the film is colour-managed: the file is tagged with it, and the RGB to YUV
+    /// conversion uses the BT.709 matrix the tag promises. `None` leaves the file untagged, as it always was.
+    pub profile: Option<Profile>,
+}
+
+impl VideoFormat {
+    /// Output options that tag the file (gamut, curve and matrix) and convert with the matrix named.
+    fn tags(&self) -> Vec<String> {
+        self.profile.map_or_else(Vec::new, |p| ["-vf", "scale=out_color_matrix=bt709", "-colorspace", "bt709", "-color_primaries", p.primaries.tag(), "-color_trc", p.transfer.tag()].map(String::from).to_vec())
+    }
 }
 
 pub struct Encoder {
@@ -69,12 +81,13 @@ pub struct Encoder {
 
 impl Encoder {
     pub fn spawn(out: &Path, format: VideoFormat, codec: &Codec) -> Result<Self> {
-        let VideoFormat { width, height, fps } = format;
+        let VideoFormat { width, height, fps, .. } = format;
         let mut child = Command::new("ffmpeg")
             .args(["-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "bgra"])
             .args(["-s", &format!("{width}x{height}"), "-r", &fps.to_string(), "-i", "-"])
             .args(codec.args())
             .args(["-pix_fmt", codec.pix_fmt(), "-an"])
+            .args(format.tags())
             .arg(out)
             .stdin(Stdio::piped())
             .spawn()
@@ -139,5 +152,32 @@ mod tests {
     fn alpha_codec_keeps_alpha() {
         assert!(Codec::Alpha.has_alpha() && !Codec::Hardware { bitrate: "1M".into() }.has_alpha());
         assert_eq!(Codec::Alpha.pix_fmt(), "yuva444p10le");
+    }
+
+    /// What ffprobe reports for the first video stream of `path`.
+    fn stream_tags(path: &Path) -> String {
+        let out = Command::new("ffprobe").args(["-v", "error", "-select_streams", "v:0", "-show_entries", "stream=color_space,color_transfer,color_primaries", "-of", "default=nw=1"]).arg(path).output().expect("ffprobe runs");
+        String::from_utf8(out.stdout).expect("text")
+    }
+
+    fn encoded(name: &str, profile: Option<Profile>) -> String {
+        let out = std::env::temp_dir().join(format!("tm-encode-{name}-{}.mp4", std::process::id()));
+        let mut enc = Encoder::spawn(&out, VideoFormat { width: 64, height: 64, fps: 10, profile }, &Codec::Software { crf: 30, preset: "ultrafast".into() }).expect("ffmpeg starts");
+        for _ in 0..3 {
+            enc.write(&vec![0x40; 64 * 64 * 4]).expect("a frame");
+        }
+        enc.finish().expect("ffmpeg finishes");
+        let tags = stream_tags(&out);
+        fs::remove_file(&out).ok();
+        tags
+    }
+
+    #[test]
+    fn a_managed_film_is_tagged_with_its_profile_and_an_unmanaged_one_is_not() {
+        use crate::color::{Primaries, Transfer};
+        let p3 = Profile { primaries: Primaries::DisplayP3, transfer: Transfer::Srgb };
+        assert_eq!(encoded("p3", Some(p3)), "color_space=bt709\ncolor_transfer=iec61966-2-1\ncolor_primaries=smpte432\n");
+        assert_eq!(encoded("srgb", Some(Profile::SRGB)), "color_space=bt709\ncolor_transfer=iec61966-2-1\ncolor_primaries=bt709\n");
+        assert_eq!(encoded("none", None), "color_space=unknown\ncolor_transfer=unknown\ncolor_primaries=unknown\n", "no profile: the file says nothing about its colours, as before");
     }
 }

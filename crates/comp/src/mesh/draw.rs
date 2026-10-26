@@ -2,7 +2,8 @@
 //! and hand Skia one coloured-triangle batch. Sorting is by triangle centre (painter's algorithm), with one
 //! structural fix: a visible cap can never be behind a wall of the same solid, so caps are drawn after the sides.
 
-use skia_safe::{vertices::VertexMode, AlphaType, BlendMode, Canvas, Color, ColorType, FilterMode, ISize, ImageInfo, MipmapMode, Paint, Point, Rect, SamplingOptions, Vertices};
+use skia_safe::{vertices::VertexMode, BlendMode, Canvas, Color, FilterMode, MipmapMode, Paint, Point, Rect, SamplingOptions, Vertices};
+use turbomotion_core::layer::picture_info;
 
 /// Supersampling factor for the silhouette.
 const SSAA: f32 = 3.0;
@@ -98,7 +99,7 @@ pub fn paint(c: &Canvas, mesh: &Mesh, view: &View) {
     let b = pos.iter().fold([f32::MAX, f32::MAX, f32::MIN, f32::MIN], |b, p| [b[0].min(p.x), b[1].min(p.y), b[2].max(p.x), b[3].max(p.y)]);
     let dest = Rect::new((b[0] - 2.0).floor(), (b[1] - 2.0).floor(), (b[2] + 2.0).ceil(), (b[3] + 2.0).ceil());
     let k = SSAA.min(4096.0 / dest.width().max(dest.height())).max(1.0);
-    let info = ImageInfo::new(ISize::new((dest.width() * k).ceil() as i32, (dest.height() * k).ceil() as i32), ColorType::RGBAF16, AlphaType::Premul, None);
+    let info = picture_info(c, (dest.width() * k).ceil() as i32, (dest.height() * k).ceil() as i32);
     let Some(mut big) = c.new_surface(&info, None) else {
         c.draw_vertices(&verts, BlendMode::Dst, &paint);
         return;

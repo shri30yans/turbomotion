@@ -4,6 +4,7 @@ use anyhow::{anyhow, Result};
 use skia_safe::{Canvas, Matrix, Paint, Rect, Shader, TileMode};
 
 use crate::{
+    color::Encoding,
     layer::{linear, Layer},
     shader::{Program, Uniforms},
     shaders::Shaders,
@@ -60,19 +61,26 @@ impl Space {
     }
 }
 
-/// What an effect may use while it runs: the shared services, the canvas that provides the GPU context, the time, and
-/// where its picture sits in layer space (none: the picture is the whole layer).
+/// What an effect may use while it runs: the shared services, the canvas that provides the GPU context, the time, where
+/// its picture sits in layer space (none: the picture is the whole layer), and the encoding its shaders compute in.
+#[derive(Clone, Copy)]
 pub struct Ctx<'a> {
     pub shaders: &'a Shaders,
     pub like: &'a Canvas,
     pub t: f64,
     pub space: Option<Space>,
+    pub encoding: Encoding,
 }
 
 impl<'a> Ctx<'a> {
-    /// A context for a picture that is the whole layer.
+    /// A context for a picture that is the whole layer, for shaders that compute on display-encoded numbers.
     pub fn new(shaders: &'a Shaders, like: &'a Canvas, t: f64) -> Self {
-        Self { shaders, like, t, space: None }
+        Self { shaders, like, t, space: None, encoding: Encoding::Display }
+    }
+
+    /// The same context for shaders that compute in `encoding`.
+    pub fn computing_in(self, encoding: Encoding) -> Self {
+        Self { encoding, ..self }
     }
 
     /// Where `layer` sits in layer space.
@@ -89,11 +97,11 @@ pub fn source(ctx: &Ctx, layer: &Layer) -> Result<Shader> {
 }
 
 /// Run `program` over `layer`: the layer is the first child shader, `more` follow, and the result has the layer's size.
-/// The shader's `p` is a layer pixel.
+/// The shader's `p` is a layer pixel, and it computes in the context's encoding.
 pub fn run(ctx: &Ctx, layer: &Layer, program: &Program, uniforms: Uniforms, more: &[Shader]) -> Result<Layer> {
     let mut children = vec![source(ctx, layer)?];
     children.extend_from_slice(more);
-    let mut shader = program.instance(uniforms, &children)?;
+    let mut shader = ctx.encoding.shader(ctx.like, program.instance(uniforms, &children)?);
     let space = ctx.space_of(layer);
     if !space.is_whole() {
         shader = shader.with_local_matrix(&Matrix::translate((-space.origin[0] as f32, -space.origin[1] as f32)));

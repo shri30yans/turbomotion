@@ -48,12 +48,13 @@ fn declarations(h: &Header, earlier: &[Section]) -> String {
     }
     head.push_str("uniform float2 resolution;\nuniform float time;\nuniform float2 layer_origin;\nuniform float2 buffer_size;\n");
     for p in &h.params {
-        let ty = match p.ty {
-            Ty::Float | Ty::Choice => "float",
-            Ty::Vec2 => "float2",
-            Ty::Color => "float4",
+        // a colour is straight sRGB as written, and arrives in the encoding the shader computes in (`@space`)
+        let (layout, ty) = match p.ty {
+            Ty::Float | Ty::Choice => ("", "float"),
+            Ty::Vec2 => ("", "float2"),
+            Ty::Color => ("layout(color) ", "float4"),
         };
-        head.push_str(&format!("uniform {ty} {};\n", p.name));
+        head.push_str(&format!("{layout}uniform {ty} {};\n", p.name));
     }
     head
 }
@@ -85,7 +86,7 @@ impl Def {
         for u in ["resolution", "time"].into_iter().chain(h.params.iter().map(|p| p.name.as_str())) {
             ensure!(used_uniforms.iter().any(|used| used == u), "uniform {u:?} is unused by the shader, so the compiler dropped it; use it or remove it from the header");
         }
-        Ok(Def { name: h.name, kind: h.kind, summary: h.summary, params: h.params, inputs: h.inputs, origin: origin.to_string(), passes, example: h.example, bounds: h.bounds })
+        Ok(Def { name: h.name, kind: h.kind, summary: h.summary, params: h.params, inputs: h.inputs, origin: origin.to_string(), passes, example: h.example, bounds: h.bounds, space: h.space })
     }
 }
 

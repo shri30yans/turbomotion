@@ -3,10 +3,10 @@
 
 use anyhow::{Context, Result};
 use skia_safe::{
-    color_filters, image_filters, ColorFilter, AlphaType, Canvas, ColorType, FilterMode, Image, ImageInfo, ISize, MipmapMode, Paint, Rect, SamplingOptions, TileMode,
+    color_filters, image_filters, AlphaType, Canvas, ColorFilter, ColorSpace, ColorType, FilterMode, Image, ImageInfo, ISize, MipmapMode, Paint, Rect, SamplingOptions, Surface, TileMode,
 };
 
-use super::geom::Mat3;
+use super::{color::Encoding, geom::Mat3};
 
 #[derive(Clone)]
 pub struct Layer {
@@ -15,6 +15,29 @@ pub struct Layer {
 
 pub fn linear() -> SamplingOptions {
     SamplingOptions::new(FilterMode::Linear, MipmapMode::None)
+}
+
+/// The description of a `w` x `h` half-float picture made beside `like`: in the colour space `like`'s pictures are in, so
+/// that drawing one into another converts nothing. Every picture in the engine is made from this.
+pub fn picture_info(like: &Canvas, w: i32, h: i32) -> ImageInfo {
+    ImageInfo::new(ISize::new(w.max(1), h.max(1)), ColorType::RGBAF16, AlphaType::Premul, like.image_info().color_space())
+}
+
+/// A canvas to hand to code that makes pictures, whose pictures are in `space` (none: untagged): a one-pixel surface beside
+/// `like`, which is where the GPU context comes from.
+pub fn working_surface(like: &Canvas, space: Option<ColorSpace>) -> Result<Surface> {
+    let info = ImageInfo::new(ISize::new(1, 1), ColorType::RGBAF16, AlphaType::Premul, space);
+    like.new_surface(&info, None).context("no GPU memory for a working surface")
+}
+
+/// Run `f` with a canvas whose pictures are in `space`: `like` itself when they already are, otherwise a one-pixel surface
+/// made beside it.
+pub fn with_working_space<R>(like: &Canvas, space: Option<ColorSpace>, f: impl FnOnce(&Canvas) -> Result<R>) -> Result<R> {
+    if like.image_info().color_space() == space {
+        return f(like);
+    }
+    let mut surface = working_surface(like, space)?;
+    f(surface.canvas())
 }
 
 impl Layer {
@@ -28,8 +51,7 @@ impl Layer {
 
     /// Like `render`, for drawing that can fail.
     pub fn try_render(like: &Canvas, w: i32, h: i32, draw: impl FnOnce(&Canvas) -> Result<()>) -> Result<Self> {
-        let info = ImageInfo::new(ISize::new(w.max(1), h.max(1)), ColorType::RGBAF16, AlphaType::Premul, None);
-        let mut surface = like.new_surface(&info, None).with_context(|| format!("no GPU memory for a {w}x{h} layer"))?;
+        let mut surface = like.new_surface(&picture_info(like, w, h), None).with_context(|| format!("no GPU memory for a {w}x{h} layer"))?;
         surface.canvas().clear(skia_safe::Color::TRANSPARENT);
         draw(surface.canvas())?;
         Ok(Self { image: surface.image_snapshot() })
@@ -77,7 +99,7 @@ impl Layer {
         let pad = shadow.pad;
         let (w, h) = (self.width() + 2 * pad, self.height() + 2 * pad);
         let mut paint = Paint::default();
-        paint.set_color_filter(solid_color(shadow.color, shadow.opacity as f32));
+        paint.set_color_filter(solid_color(like, shadow.color, shadow.opacity as f32)?);
         paint.set_image_filter(image_filters::blur((shadow.blur as f32, shadow.blur as f32), TileMode::Decal, None, None));
         Self::render(like, w, h, |c| {
             c.draw_image(&self.image, ((pad + shadow.dx) as f32, (pad + shadow.dy) as f32), Some(&paint));
@@ -86,8 +108,9 @@ impl Layer {
     }
 }
 
-/// A colour filter that keeps the layer's shape (alpha scaled by `alpha`) and replaces its colour with `color`.
-pub fn solid_color(color: [u8; 3], alpha: f32) -> ColorFilter {
+/// A colour filter that keeps the layer's shape (alpha scaled by `alpha`) and replaces its colour with `color`, an sRGB
+/// colour like every colour in a composition, whatever the pictures of `like` are in.
+pub fn solid_color(like: &Canvas, color: [u8; 3], alpha: f32) -> Result<ColorFilter> {
     let [r, g, b] = color.map(|v| f32::from(v) / 255.0);
     #[rustfmt::skip]
     let m = [
@@ -96,7 +119,7 @@ pub fn solid_color(color: [u8; 3], alpha: f32) -> ColorFilter {
         0.0, 0.0, 0.0, 0.0, b,
         0.0, 0.0, 0.0, alpha, 0.0,
     ];
-    color_filters::matrix_row_major(&m, None)
+    Encoding::Display.filter(like, color_filters::matrix_row_major(&m, None))
 }
 
 /// Soft drop shadow beneath a layer.

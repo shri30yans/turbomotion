@@ -188,3 +188,12 @@ fn comp_effect_space_reaches_the_json_and_is_left_out_by_default() {
     let v = run("effect-space-default", &format!("import {{ comp, text }} from \"turbomotion\";\nconst film = comp({{ width: 64, height: 48, fps: 30, dur: 1 }});\n{body}"));
     assert!(v.get("effect_space").is_none(), "left out, the key is not written: the engine's default (screen) applies");
 }
+
+#[test]
+fn comp_color_reaches_the_json_and_is_left_out_by_default() {
+    let body = "film.add(text(\"x\", { pos: [10, 20] }));\nexport default film;\n";
+    let v = run("color", &format!("import {{ comp, text }} from \"turbomotion\";\nconst film = comp({{ width: 64, height: 48, fps: 30, dur: 1, color: {{ linear_light: true, space: \"display_p3\" }} }});\n{body}"));
+    assert_eq!(v["color"], serde_json::json!({"linear_light": true, "space": "display_p3"}));
+    let v = run("color-default", &format!("import {{ comp, text }} from \"turbomotion\";\nconst film = comp({{ width: 64, height: 48, fps: 30, dur: 1 }});\n{body}"));
+    assert!(v.get("color").is_none(), "left out, the key is not written: the engine's default (unmanaged) applies");
+}

@@ -11,7 +11,9 @@ pub mod extrude;
 pub mod repeat;
 mod item_alias;
 mod kinds;
+mod mblur;
 mod particle_shape;
+pub mod color;
 pub mod effect_space;
 pub mod letterbox;
 mod path;
@@ -30,8 +32,10 @@ use serde::Deserialize;
 use serde_json::{Map, Value};
 use turbomotion_core::effects::{self, Blend, Effect};
 
+pub use color::ColorBlock;
 pub use effect_space::EffectSpace;
 pub use kinds::*;
+pub use mblur::MotionBlur;
 pub use path::PathSpec;
 pub use problems::{Problem, Problems};
 pub use shape::item_keys as shape_item_keys;
@@ -103,6 +107,9 @@ pub struct Composition {
     /// `"layer"` (After Effects' order: on the layer's own pixels, grown to fit what the effects spread, before its
     /// transform). A nested composition that does not say takes the root's.
     pub effect_space: Option<EffectSpace>,
+    /// What the numbers of the pictures mean (`linear_light`, `working_profile`) and what the frame leaves in (`space`,
+    /// root only). Left out: display-encoded sRGB in and out, nothing converted. A nested composition takes the root's.
+    pub color: Option<ColorBlock>,
     /// Root only. Black bars (or a safe-area matte) drawn over the shots and their transitions: `[w, h]` of the
     /// picture that stays visible, centred. Overlays and film-level layers sit above the bars.
     pub letterbox: Option<[f64; 2]>,
@@ -110,7 +117,7 @@ pub struct Composition {
 
 impl Default for Composition {
     fn default() -> Self {
-        Composition { width: 1920, height: 1080, fps: 30, dur: 5.0, bg: None, bpm: None, beat_offset: 0.0, markers: vec![], comps: BTreeMap::new(), vars: Map::new(), fonts: BTreeMap::new(), palette: Map::new(), type_scale: None, image: None, surface: Map::new(), space: Map::new(), motion: None, mblur: None, look: vec![], layout: false, layers: vec![], root: None, fx_path: vec![], block_path: vec![], effect_space: None, letterbox: None }
+        Composition { width: 1920, height: 1080, fps: 30, dur: 5.0, bg: None, bpm: None, beat_offset: 0.0, markers: vec![], comps: BTreeMap::new(), vars: Map::new(), fonts: BTreeMap::new(), palette: Map::new(), type_scale: None, image: None, surface: Map::new(), space: Map::new(), motion: None, mblur: None, look: vec![], layout: false, layers: vec![], root: None, fx_path: vec![], block_path: vec![], effect_space: None, color: None, letterbox: None }
     }
 }
 
@@ -119,21 +126,6 @@ impl Default for Composition {
 pub struct Marker {
     pub t: f64,
     pub name: String,
-}
-
-#[derive(Debug, Deserialize, Clone, Copy)]
-#[serde(default, deny_unknown_fields)]
-pub struct MotionBlur {
-    /// Sub-frames averaged per frame.
-    pub samples: u32,
-    /// Shutter angle in degrees (180 = half the frame interval).
-    pub shutter: f64,
-}
-
-impl Default for MotionBlur {
-    fn default() -> Self {
-        MotionBlur { samples: 8, shutter: 180.0 }
-    }
 }
 
 /// An effect on a layer: what it is, and how its result is laid over its input (see `fxlib::composite`).

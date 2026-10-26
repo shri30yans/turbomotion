@@ -25,7 +25,12 @@ Collapse transformations	Layers	unverified	-	-	Collapse Transformations	WP-14
 Frame blending, Pixel Motion Blur, Timewarp	Time	none	-	-	Frame blending	WP-13
 Posterize Time, Time Displacement, Time Difference	Time	none	-	-	Time effects	WP-13
 Motion blur per layer	Time	part	-	-	Motion Blur switch	WP-13
-Colour management	Colour	none	-	-	Color settings	WP-03
+Colour management beyond P3: Rec.2020 working space, HDR (PQ/HLG), 32-bit float depth, ICC and LUT display management	Colour	none	-	-	Color settings	WP-50
+Linear-light compositing (opt-in `color.linear_light`)	Colour	done	half_white_over_black_shows_level_188_in_light_and_128_on_encoded_numbers	parity/specs/colour_pipeline.md	Linearize Working Space	WP-03
+Working colour profile with import conversion (sRGB, Display P3; image ICC, video tags)	Colour	done	an_image_keeps_the_colours_its_profile_gives_it_in_a_managed_film_and_is_drawn_as_it_is_otherwise	parity/specs/colour_pipeline.md	Working Space	WP-03
+Output colour tagging (the encoder writes the output profile)	Colour	done	a_managed_film_is_tagged_with_its_profile_and_an_unmanaged_one_is_not	parity/specs/colour_pipeline.md	Output color management	WP-03
+Effect and plugin colour contract (`@space display|linear`)	Colour	done	a_plugin_receives_the_encoding_it_declares	parity/specs/colour_pipeline.md	-	WP-03
+Premultiplication rules (alpha is coverage and is never encoded)	Colour	done	premultiplication_is_undone_before_a_colour_is_converted	parity/specs/colour_pipeline.md	-	WP-03
 Output formats	Output	part	-	-	Render queue	WP-50
 Lights and shadows	3D	none	-	-	Lights	WP-23
 Camera f-stop, iris, focus distance	3D	none	-	-	Camera settings	WP-24

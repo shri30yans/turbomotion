@@ -11,6 +11,8 @@ use anyhow::{anyhow, bail, Context, Result};
 use serde_json::Value;
 use skia_safe::{codec::Codec, Data};
 
+use super::color::VideoColor;
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct ImageInfo {
     /// Pixel size after applying the file's EXIF orientation.
@@ -25,6 +27,8 @@ pub struct VideoInfo {
     pub fps: f64,
     pub dur: f64,
     pub has_audio: bool,
+    /// What its stream says its colours are.
+    pub color: VideoColor,
 }
 
 /// Why a path cannot be used, with the files that are there.
@@ -82,7 +86,7 @@ pub fn video(path: &Path, as_written: &str) -> Result<VideoInfo> {
     }
     let fps = rate(v["avg_frame_rate"].as_str().unwrap_or("0")).max(rate(v["r_frame_rate"].as_str().unwrap_or("0")).min(1000.0));
     let dur = v["duration"].as_str().and_then(|d| d.parse().ok()).or_else(|| j["format"]["duration"].as_str().and_then(|d| d.parse().ok())).unwrap_or(0.0);
-    Ok(VideoInfo { w, h, fps: if fps > 0.0 { fps } else { 30.0 }, dur, has_audio: streams.iter().any(|s| s["codec_type"] == "audio") })
+    Ok(VideoInfo { w, h, fps: if fps > 0.0 { fps } else { 30.0 }, dur, has_audio: streams.iter().any(|s| s["codec_type"] == "audio"), color: VideoColor::from_stream(v) })
 }
 
 /// Duration in seconds of an audio file.

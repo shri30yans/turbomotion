@@ -6,6 +6,7 @@ mod fx_inputs;
 pub mod geometry;
 mod layer;
 pub mod layer_space;
+mod probe_media;
 
 use std::{
     collections::{BTreeMap, HashMap, HashSet},
@@ -15,10 +16,11 @@ use std::{
 
 use anyhow::{anyhow, bail, ensure, Context, Result};
 use serde_json::Value;
+use turbomotion_core::color::Pipeline;
 
 use crate::{
     anim::prop::ColorProp,
-    media::probe::{self, ImageInfo, VideoInfo},
+    media::probe::{ImageInfo, VideoInfo},
     schema::{self, EffectSpace, Fx, Kind, Layer, Marker, MatteMode, MotionBlur, PathSource},
 };
 use crate::fxlib::{Library, PlanFx, PluginPlan};
@@ -51,6 +53,8 @@ pub struct CompPlan {
     pub mblur: Option<MotionBlur>,
     /// Where this composition's layers run their effects and masks (the root's unless the composition says its own).
     pub effect_space: EffectSpace,
+    /// What the numbers of its pictures mean, and what its frame leaves in (see `schema::color`).
+    pub color: Pipeline,
     /// `check --layout` looks at this composition's layers.
     pub layout: bool,
     pub type_scale: crate::schema::tokens::ResolvedScale,
@@ -201,6 +205,7 @@ impl CompPlan {
         let (kit_order, spread_seed) = kit_spread(name, c);
         let mut problems: Vec<schema::Problem> = Vec::new();
         let effect_space = c.effect_space.or(root.effect_space).unwrap_or_default();
+        let color = schema::color::pipeline(name, c.color.as_ref(), root.color.as_ref())?;
         for (i, v) in c.layers.iter().enumerate() {
             match plan_layer(i, v, c, root, dir, lib, kit_order.get(&i).map(|&o| (o, spread_seed)), effect_space) {
                 Ok(layer) => layers.push(layer),
@@ -338,6 +343,7 @@ impl CompPlan {
             markers: c.markers.clone(),
             mblur: c.mblur,
             effect_space,
+            color,
             layout: c.layout,
             look,
             layers,
@@ -366,40 +372,6 @@ fn kit_spread(comp: &str, c: &schema::Composition) -> (HashMap<usize, usize>, u6
         order.extend(list.iter().enumerate().map(|(k, (_, i))| (*i, k)));
     }
     (order, comp.bytes().fold(0x9e37_79b9u64, |h, b| (h ^ u64::from(b)).wrapping_mul(0x100_0000_01b3)))
-}
-
-fn probe_media(kind: &Kind, dir: &Path, spread: Option<(usize, u64)>) -> Result<Media> {
-    Ok(match kind {
-        Kind::Image(i) => {
-            let path = probe::absolute(dir, &i.src);
-            let info = probe::image(&path, &i.src)?;
-            let depth = i.parallax.as_ref().map(|p| -> Result<_> {
-                let dp = probe::absolute(dir, &p.depth);
-                let di = probe::image(&dp, &p.depth).context("parallax depth map")?;
-                Ok((dp, di))
-            });
-            Media::Image { path, info, depth: depth.transpose()? }
-        }
-        Kind::Video(v) => {
-            let path = probe::absolute(dir, &v.src);
-            let info = probe::video(&path, &v.src)?;
-            Media::Video { path, info }
-        }
-        Kind::Audio(a) => {
-            if let Some(cue) = a.src.strip_prefix("kit:") {
-                let (order, seed) = spread.unwrap_or((0, 0));
-                let pick = crate::media::kit::kit().pick(cue, order, seed).map_err(|e| e.context(format!("audio {:?}", a.src)))?;
-                if !pick.path.exists() {
-                    return Err(probe::missing(&pick.path, &a.src));
-                }
-                return Ok(Media::Audio { dur: probe::audio(&pick.path, &a.src)?, path: pick.path, rate: pick.rate, gain: pick.gain, kit: Some(pick.cue) });
-            }
-            let path = probe::absolute(dir, &a.src);
-            let dur = probe::audio(&path, &a.src)?;
-            Media::Audio { path, dur, rate: 1.0, gain: 1.0, kit: None }
-        }
-        _ => Media::None,
-    })
 }
 
 #[cfg(test)]
