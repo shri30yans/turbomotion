@@ -1,0 +1,7 @@
+circle arrow: radius error over 41 samples max 0.067 px, mean 0.034 px
+circle auto: radius error over 41 samples max 52.063 px, mean 23.459 px
+circle arrow: speed min 392.3 max 392.4 px/s (a circle of 2*pi*250 = 1570.8 px in 4 s is 392.7)
+circle arrow at t=0.5 (the arc midpoint of the first quarter): 816.78,536.78, angle from the centre 45.000 deg (45 expected)
+motion s_path (roving): speed min 400.7 max 413.3 px/s
+motion handles vs cubic(0.33,0,0.67,1): max |x difference| 0.0000 px
+motion hold x at t=0.9,1.0,1.9,2.0,2.9,3.0: 140.0, 440.0, 440.0, 740.0, 740.0, 1140.0
