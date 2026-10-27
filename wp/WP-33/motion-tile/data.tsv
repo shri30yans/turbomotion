@@ -1,0 +1,10 @@
+probe	what	worst_level_difference_from_prediction
+panels/tiles	250 % output, tile 100 %; 93600 px drawn, the rest background	0.00
+panels/mirror edges	250 %, mirror on; 93600 px drawn, the rest background	0.00
+panels/phase 180 bricks	tile 50 %, phase 180, horizontal; 93600 px drawn, the rest background	0.50
+panels/gutter 8 px	tile 50 %, gutter 8 white; 93600 px drawn, the rest background	0.50
+panels/centre +20, -10	tile 50 %, centre moved; 93600 px drawn, the rest background	0.50
+panels/output 60 % crop	output 60 %; 5568 px drawn, the rest background	0.00
+layer-vs-screen	frame-sized card, tile 40 x 30 %, output 300 %, mirror, phase 90, centre (0.46, 0.55), left layer space, right screen space	0.00
+scale2-quarter-turn	layer scale 2 and rotation 90 against the unrotated scale 2 picture turned by 90 degrees	0.00
+seam-subpixel	tile centre 0.3 px right: the 5 seam columns x 16 rows against the card's first and last texel column	0.00
