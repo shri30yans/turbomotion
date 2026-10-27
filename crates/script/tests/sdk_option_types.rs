@@ -83,6 +83,10 @@ fn the_color_option_is_typed_with_exactly_the_engines_keys_and_names() {
         assert_eq!(typed, gamuts, "{key} is typed with the engine's gamut names, in its order");
     }
     assert_eq!(const_list(&engine_source, "NAMES"), ["half"], "depth has the one value the SDK types");
+    let dithers = const_list(&read("../core/src/dither/mod.rs"), "NAMES");
+    let line = source.lines().find(|l| l.trim_start().starts_with("dither?:")).expect("the dither option");
+    let typed: Vec<String> = line.split('"').skip(1).step_by(2).map(str::to_string).collect();
+    assert_eq!(typed, dithers, "dither is typed with the engine's dither names, in its order");
 }
 
 #[test]

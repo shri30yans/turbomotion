@@ -1,0 +1,14 @@
+// Adds the blurred excess back as tinted light. The tint is divided by its own luma, so it sets only the hue: the
+// luma added is exactly `strength` times the blurred excess whatever the colour. Coverage grows to hold the light.
+uniform shader src;
+uniform shader halo;           // the thresholded light, blurred; grey, so its red channel is the amount
+layout(color) uniform float3 tint;
+uniform float strength;
+
+half4 main(float2 p) {
+    half4 c = src.eval(p);
+    float3 hue = tint / max(dot(tint, float3(0.2126, 0.7152, 0.0722)), 1e-4);
+    float3 light = hue * (strength * float(halo.eval(p).r));
+    float cover = clamp(max(light.r, max(light.g, light.b)), 0.0, 1.0);
+    return half4(half3(float3(c.rgb) + light), half(float(c.a) + (1.0 - float(c.a)) * cover));
+}

@@ -1,0 +1,11 @@
+// The light a picture holds above a threshold, as grey light with the picture's own coverage: the source of halation.
+// The excess is the picture's luma (Rec. 709 weights, on premultiplied colour) less the threshold times its coverage,
+// so a pixel at the threshold gives nothing and one at white gives `1 - threshold`.
+uniform shader src;
+uniform float threshold;
+
+half4 main(float2 p) {
+    half4 c = src.eval(p);
+    float excess = max(dot(float3(c.rgb), float3(0.2126, 0.7152, 0.0722)) - threshold * float(c.a), 0.0);
+    return half4(half(excess), half(excess), half(excess), c.a);
+}

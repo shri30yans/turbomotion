@@ -43,6 +43,12 @@ mod fx_motion_tile_tests;
 #[cfg(test)]
 mod motion_tile_seam_tests;
 #[cfg(test)]
+mod grain_tests;
+#[cfg(test)]
+mod dither_tests;
+#[cfg(test)]
+mod halation_tests;
+#[cfg(test)]
 mod history_tests;
 #[cfg(test)]
 mod layer_space_plugin_tests;
@@ -54,6 +60,8 @@ mod palette_tests;
 mod shutter_tests;
 #[cfg(test)]
 mod shutter_world_tests;
+#[cfg(test)]
+mod stats;
 #[cfg(test)]
 mod taper_tests;
 #[cfg(test)]
@@ -68,6 +76,7 @@ use skia_safe::{png_encoder, AlphaType, Color4f, ColorType, ISize, ImageInfo, Pi
 use turbomotion_core::{
     encode::{Codec, Encoder, VideoFormat},
     color::Pipeline,
+    dither::Dithering,
     gpu::Gpu,
     layer::working_surface,
     parallel,
@@ -88,6 +97,8 @@ pub struct Renderer<'a> {
     /// The canvas every picture of the root composition is made beside: it carries the working profile.
     work: Surface,
     pipeline: Pipeline,
+    /// What rounds the frame to 8 bits when the film asks for a dither; none rounds to nearest, as Skia does.
+    dither: Option<Dithering>,
     shaders: Shaders,
     programs: programs::Programs,
     res: res::Resources,
@@ -119,7 +130,7 @@ impl<'a> Renderer<'a> {
         let mut surface = gpu.frame_surface(size, pipeline.output_space())?;
         let info = ImageInfo::new(size, ColorType::BGRA8888, AlphaType::Premul, pipeline.output_space());
         let work = working_surface(surface.canvas(), pipeline.working_space())?;
-        Ok(Renderer { plan, gpu, surface, info, work, pipeline, shaders: Shaders::compile().context("compiling the platform shaders")?, programs: programs::Programs::compile()?, res: res::Resources::new(pipeline.is_managed()), packs: crate::pack::instances(), ev: Evaluator::new(plan), history: Default::default() })
+        Ok(Renderer { plan, gpu, surface, info, work, pipeline, dither: Dithering::new(pipeline.dither)?, shaders: Shaders::compile().context("compiling the platform shaders")?, programs: programs::Programs::compile()?, res: res::Resources::new(pipeline.is_managed()), packs: crate::pack::instances(), ev: Evaluator::new(plan), history: Default::default() })
     }
 
     /// Draw frame number `frame` of the root composition into the surface.
@@ -144,7 +155,12 @@ impl<'a> Renderer<'a> {
         }
         let canvas = self.surface.canvas();
         canvas.clear(skia_safe::Color::BLACK);
-        canvas.draw_image(layer.image(), (0, 0), None);
+        match &self.dither {
+            Some(dither) => dither.draw(canvas, layer.image())?,
+            None => {
+                canvas.draw_image(layer.image(), (0, 0), None);
+            }
+        }
         self.gpu.context.flush_and_submit();
         Ok(())
     }

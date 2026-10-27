@@ -12,7 +12,7 @@ Generated from `parity/MATRIX.tsv` and `parity/effects.tsv`. `turbomotion parity
 
 * **3D**: Lights and shadows (WP-23), Camera f-stop, iris, focus distance (WP-24), Environment, reflection, refraction (WP-21), Per-pixel mesh rasteriser and G-buffer (WP-20), Mesh materials: chrome, glass, toon, matcap (WP-21), 3D layers intersect (depth compositing) (WP-22)
 * **Animation**: Per-component orientation vs rotation order (WP-14), Colour keys interpolated in linear light (project setting)
-* **Colour**: Colour management beyond P3: Rec.2020 working space, HDR (PQ/HLG), 32-bit float depth, ICC and LUT display management (WP-50)
+* **Colour**: Colour management beyond P3: Rec.2020 working space, HDR (PQ/HLG), 32-bit float depth, ICC and LUT display management (WP-50), 10-bit export from the half-float frames (the dither does not survive H.264; ProRes 4444 is 10-bit but is fed 8-bit frames)
 * **Effects**: Blur kernels (correct sigma, disc, box) (WP-02), Warps: corner pin, mesh warp, liquify, puppet (WP-34), Keying and matte tools (WP-35)
 * **Expressions**: Expressions: full object model (WP-12), Expression controls (WP-11)
 * **Import**: Subject matte import (WP-40), Lottie import (WP-51)

@@ -44,11 +44,11 @@ fn the_default_pipeline_tags_nothing_and_converts_nothing() {
 
 #[test]
 fn linear_light_keeps_pictures_in_light_and_converts_when_the_frame_leaves() {
-    let p = Pipeline { working: linear(), output: Profile::SRGB };
+    let p = Pipeline { working: linear(), output: Profile::SRGB, ..Pipeline::default() };
     assert!(p.is_managed() && p.converts_at_output());
     assert_eq!(p.working_space(), Some(linear().space()));
     assert_eq!(p.output_space(), Some(Profile::SRGB.space()));
-    let wide = Pipeline { working: Profile { primaries: Primaries::DisplayP3, transfer: Transfer::Srgb }, output: Profile { primaries: Primaries::DisplayP3, transfer: Transfer::Srgb } };
+    let wide = Pipeline { working: Profile { primaries: Primaries::DisplayP3, transfer: Transfer::Srgb }, output: Profile { primaries: Primaries::DisplayP3, transfer: Transfer::Srgb }, ..Pipeline::default() };
     assert!(wide.is_managed() && !wide.converts_at_output(), "a P3 film kept and delivered in P3 converts nothing at the end");
 }
 

@@ -15,6 +15,7 @@ mod bounds;
 mod color;
 mod distort;
 mod edge;
+mod halation;
 mod param;
 mod pass;
 mod place;
@@ -103,6 +104,14 @@ registry! {
             optional_rgb("color", "Colour of the halo; leave out to glow in the layer's own colours."),
         ],
         {"effect": "glow", "radius": 24, "strength": 1, "threshold": 0, "color": [255, 200, 120]};
+    FilmHalation(halation::FilmHalation) = "film_halation", Linear, halation::film_halation, "Film halation: the brightest parts ring with a wide red-orange halo, as light scattered back through the film base exposes it again.",
+        [
+            float("threshold", 0.6, "Light above this (luma, 0..1) halates; in a linear_light film that is light itself.").between(0.0, 1.0),
+            float("radius", 40.0, "Gaussian sigma of the halo in pixels.").at_least(0.0),
+            float("strength", 0.5, "The luma added back as a fraction of the light that passed the threshold, summed over the picture.").at_least(0.0),
+            rgb("color", [255, 90, 40], "Hue of the halo; only its hue counts, the strength sets how much light it adds."),
+        ],
+        {"effect": "film_halation", "threshold": 0.6, "radius": 40, "strength": 0.5, "color": [255, 90, 40]};
     Shadow(edge::Shadow) = "shadow", Linear, edge::shadow, "Soft drop shadow behind the layer's shape.",
         [
             float("dx", 0.0, "Horizontal offset in pixels."),
@@ -250,5 +259,7 @@ fn run_chain(ctx: &Ctx, layer: Layer, chain: &[Effect]) -> Result<Layer> {
     chain.iter().try_fold(layer, |layer, effect| effect.run(ctx, &layer).with_context(|| format!("effect {:?}", effect.name())))
 }
 
+#[cfg(test)]
+mod halation_tests;
 #[cfg(test)]
 mod tests;

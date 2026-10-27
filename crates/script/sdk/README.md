@@ -60,7 +60,7 @@ Layer options: `id, pos | x,y,z, anchor, scale, skew, rotation, orientation, aim
 
 Motion blur: `comp({ ..., motion_blur: { shutter_angle: 180, shutter_phase: -90, samples: 16 } })` is After Effects' shutter (angles in degrees of the frame; all three are optional and these are the defaults) and `mblur: true` on a layer switches it on for that layer; a precomp layer blurs everything it shows. The timeline's `mblur` is the older key, centred on the frame, and cannot be combined with it. See `docs/reference/layers.md`.
 
-Colour: `comp({ ..., color: { linear_light: true } })` keeps pictures as light, so blends, blurs, glows and gradients are computed on light (50% white over black shows level 188, not 128); `working_profile` and `space` (`"srgb"` or `"display_p3"`) set the gamut pictures are kept in and the one the file leaves in and is tagged with. Left out, nothing changes. A shader plugin says which encoding it computes in with `// @space display|linear`. See `docs/reference/effects.md`.
+Colour: `comp({ ..., color: { linear_light: true } })` keeps pictures as light, so blends, blurs, glows and gradients are computed on light (50% white over black shows level 188, not 128); `working_profile` and `space` (`"srgb"` or `"display_p3"`) set the gamut pictures are kept in and the one the file leaves in and is tagged with; `dither: "ordered" | "blue_noise"` rounds the finished frame to 8 bits through a threshold pattern, so smooth dark gradients do not band (default `"none"`). Left out, nothing changes. A shader plugin says which encoding it computes in with `// @space display|linear`. See `docs/reference/effects.md`.
 
 ## Builders: what goes first
 

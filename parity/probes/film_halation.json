@@ -1,0 +1,62 @@
+{
+ "width": 1280,
+ "height": 720,
+ "fps": 24,
+ "dur": 1,
+ "bg": "#05060a",
+ "layers": [
+  {
+   "type": "shape",
+   "items": [
+    {
+     "ellipse": [
+      280,
+      360,
+      70,
+      70
+     ],
+     "fill": "#ffffff"
+    }
+   ]
+  },
+  {
+   "type": "solid",
+   "color": "#ffffff",
+   "size": [
+    420,
+    8
+   ],
+   "pos": [
+    700,
+    360
+   ]
+  },
+  {
+   "type": "shape",
+   "items": [
+    {
+     "ellipse": [
+      1080,
+      360,
+      60,
+      60
+     ],
+     "fill": "#666666"
+    }
+   ]
+  }
+ ],
+ "look": [
+  {
+   "effect": "film_halation",
+   "threshold": 0.6,
+   "radius": 40,
+   "strength": 0.6,
+   "color": [
+    255,
+    90,
+    40
+   ]
+  }
+ ]
+}

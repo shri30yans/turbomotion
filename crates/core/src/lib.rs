@@ -3,6 +3,7 @@
 //! timelines, no fonts, no maps. Renderers depend on this crate; it never depends on them.
 
 pub mod color;
+pub mod dither;
 pub mod ease;
 pub mod effects;
 pub mod encode;

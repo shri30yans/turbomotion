@@ -89,6 +89,12 @@ export interface ColorOpts {
   linear_light?: boolean;
   /** The gamut pictures are kept in. Default `"srgb"`. */
   working_profile?: "srgb" | "display_p3";
+  /**
+   * Film only. How the finished frame is rounded to 8 bits: `"none"` rounds to nearest (the default, and what every film
+   * did before); `"ordered"` (16 x 16 Bayer) and `"blue_noise"` add a threshold pattern first, so a smooth dark gradient
+   * shows no bands. The error is zero-mean and at most one level. A hardware or lossy encode re-quantises the frames.
+   */
+  dither?: "none" | "ordered" | "blue_noise";
 }
 
 /** The `motion_blur` option of a composition: see `CompOpts.motion_blur`. */

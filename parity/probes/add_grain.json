@@ -1,0 +1,175 @@
+{
+ "width": 1280,
+ "height": 720,
+ "fps": 24,
+ "dur": 1,
+ "bg": "#000000",
+ "layers": [
+  {
+   "type": "shape",
+   "items": [
+    {
+     "rect": [
+      0,
+      0,
+      320,
+      720
+     ],
+     "fill": {
+      "gradient": {
+       "type": "linear",
+       "from": [
+        0,
+        0
+       ],
+       "to": [
+        0,
+        720
+       ],
+       "stops": [
+        [
+         0,
+         "#000000"
+        ],
+        [
+         1,
+         "#ffffff"
+        ]
+       ]
+      }
+     }
+    }
+   ],
+   "fx": []
+  },
+  {
+   "type": "shape",
+   "items": [
+    {
+     "rect": [
+      320,
+      0,
+      320,
+      720
+     ],
+     "fill": {
+      "gradient": {
+       "type": "linear",
+       "from": [
+        320,
+        0
+       ],
+       "to": [
+        320,
+        720
+       ],
+       "stops": [
+        [
+         0,
+         "#000000"
+        ],
+        [
+         1,
+         "#ffffff"
+        ]
+       ]
+      }
+     }
+    }
+   ],
+   "fx": [
+    {
+     "effect": "add_grain",
+     "preset": "fine_35mm",
+     "seed": 3
+    }
+   ]
+  },
+  {
+   "type": "shape",
+   "items": [
+    {
+     "rect": [
+      640,
+      0,
+      320,
+      720
+     ],
+     "fill": {
+      "gradient": {
+       "type": "linear",
+       "from": [
+        640,
+        0
+       ],
+       "to": [
+        640,
+        720
+       ],
+       "stops": [
+        [
+         0,
+         "#000000"
+        ],
+        [
+         1,
+         "#ffffff"
+        ]
+       ]
+      }
+     }
+    }
+   ],
+   "fx": [
+    {
+     "effect": "add_grain",
+     "preset": "coarse_16mm",
+     "seed": 3
+    }
+   ]
+  },
+  {
+   "type": "shape",
+   "items": [
+    {
+     "rect": [
+      960,
+      0,
+      320,
+      720
+     ],
+     "fill": {
+      "gradient": {
+       "type": "linear",
+       "from": [
+        960,
+        0
+       ],
+       "to": [
+        960,
+        720
+       ],
+       "stops": [
+        [
+         0,
+         "#000000"
+        ],
+        [
+         1,
+         "#ffffff"
+        ]
+       ]
+      }
+     }
+    }
+   ],
+   "fx": [
+    {
+     "effect": "add_grain",
+     "preset": "vintage_8mm",
+     "seed": 3
+    }
+   ]
+  }
+ ]
+}

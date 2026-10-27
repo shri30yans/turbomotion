@@ -8,6 +8,7 @@ use super::{
     blur::{DirectionalBlur, Glow, RadialBlur},
     distort::{Bulge, ChromaticAberration, Pixelate, RgbSplit, Twirl, Wave},
     edge::{Outline, Shadow},
+    halation::FilmHalation,
     Effect,
 };
 use crate::geom::Mat3;
@@ -19,7 +20,7 @@ pub type Growth = [f64; 4];
 pub const GAUSSIAN_REACH: f64 = 3.0;
 
 /// The platform effects whose output can reach past their input: exactly those [`Effect::grows`] gives a size.
-pub const GROWING: [&str; 13] = ["blur", "directional_blur", "radial_blur", "glow", "shadow", "outline", "wave", "twirl", "bulge", "pixelate", "chromatic_aberration", "rgb_split", "transform"];
+pub const GROWING: [&str; 14] = ["blur", "directional_blur", "radial_blur", "glow", "film_halation", "shadow", "outline", "wave", "twirl", "bulge", "pixelate", "chromatic_aberration", "rgb_split", "transform"];
 
 /// Whether platform effect `name` can reach past its input (the ledger's `grows_bounds`).
 pub fn grows_bounds(name: &str) -> bool {
@@ -57,6 +58,7 @@ impl Effect {
         match self {
             Effect::Blur(e) => all_sides(GAUSSIAN_REACH * e.radius.at(t)),
             Effect::Glow(Glow { radius, .. }) => all_sides(GAUSSIAN_REACH * radius.at(t)),
+            Effect::FilmHalation(FilmHalation { radius, .. }) => all_sides(GAUSSIAN_REACH * radius.at(t)),
             Effect::DirectionalBlur(DirectionalBlur { distance, angle }) => {
                 let d = distance.at(t);
                 if d.abs() < MIN_SMEAR {
@@ -161,6 +163,7 @@ mod tests {
         let g = grows("directional_blur", serde_json::json!({"distance": 40, "angle": 90}));
         assert!(g[0].abs() < 1e-9 && (g[1] - 20.0).abs() < 1e-9, "{g:?}");
         assert_eq!(grows("glow", serde_json::json!({"radius": 8})), [24.0; 4]);
+        assert_eq!(grows("film_halation", serde_json::json!({"radius": 8})), [24.0; 4], "halation spreads like the blur it is built on");
     }
 
     #[test]

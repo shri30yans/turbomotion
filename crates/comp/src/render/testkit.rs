@@ -17,6 +17,21 @@ pub fn render_at(value: Value, dir: &Path, t: f64) -> Vec<u8> {
     pixels
 }
 
+/// The BGRA pixels of each frame number in `frames`, drawn by one renderer in the order given.
+pub fn render_frames(value: Value, frames: &[u32]) -> Vec<Vec<u8>> {
+    let plan = Plan::from_value(value, Path::new(".")).expect("the plan");
+    let mut renderer = Renderer::new(&plan).expect("a renderer");
+    frames
+        .iter()
+        .map(|&f| {
+            renderer.draw(f).expect("the frame");
+            let mut pixels = vec![];
+            renderer.pixels(&mut pixels).expect("the pixels");
+            pixels
+        })
+        .collect()
+}
+
 pub fn render(value: Value) -> Vec<u8> {
     render_at(value, Path::new("."), 0.0)
 }

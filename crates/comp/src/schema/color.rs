@@ -9,7 +9,10 @@
 
 use anyhow::{bail, Result};
 use serde::Deserialize;
-use turbomotion_core::color::{Pipeline, Primaries, Profile, Transfer};
+use turbomotion_core::{
+    color::{Pipeline, Primaries, Profile, Transfer},
+    dither::Dither,
+};
 
 /// The pictures' numeric depth. Every picture is half-float, so there is one.
 #[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq, Default)]
@@ -53,6 +56,9 @@ pub struct ColorBlock {
     pub linear_light: Option<bool>,
     /// The gamut pictures are kept in: `"srgb"` (default) or `"display_p3"` (images and video in it keep their colours).
     pub working_profile: Option<Gamut>,
+    /// Root only. How the finished frame is rounded to 8 bits: `"none"` (default, round to nearest), `"ordered"` or
+    /// `"blue_noise"`, which break up the bands a smooth dark gradient shows.
+    pub dither: Option<Dither>,
 }
 
 /// The pipeline of composition `name` (the root is `""`) given its own `color` block and the root's.
@@ -61,10 +67,13 @@ pub fn pipeline(name: &str, own: Option<&ColorBlock>, root: Option<&ColorBlock>)
     if !name.is_empty() && own.space.is_some() {
         bail!("composition {name:?}: color.space is the colour space the finished frame leaves in, so only the root composition has it");
     }
+    if !name.is_empty() && own.dither.is_some() {
+        bail!("composition {name:?}: color.dither is how the finished frame is rounded to 8 bits, so only the root composition has it");
+    }
     let gamut = own.working_profile.or(root.working_profile).unwrap_or(Gamut::Srgb);
     let transfer = if own.linear_light.or(root.linear_light).unwrap_or(false) { Transfer::Linear } else { Transfer::Srgb };
     let output = root.space.unwrap_or(Gamut::Srgb);
-    Ok(Pipeline { working: Profile { primaries: gamut.primaries(), transfer }, output: Profile { primaries: output.primaries(), transfer: Transfer::Srgb } })
+    Ok(Pipeline { working: Profile { primaries: gamut.primaries(), transfer }, output: Profile { primaries: output.primaries(), transfer: Transfer::Srgb }, dither: root.dither.unwrap_or_default() })
 }
 
 #[cfg(test)]
@@ -98,6 +107,19 @@ mod tests {
         assert_eq!(inherits.working, Profile { primaries: Primaries::DisplayP3, transfer: Transfer::Linear });
         let overrides = pipeline("b", Some(&block(serde_json::json!({"linear_light": false}))), Some(&root)).unwrap();
         assert_eq!(overrides.working, Profile { primaries: Primaries::DisplayP3, transfer: Transfer::Srgb });
+    }
+
+    #[test]
+    fn dither_is_the_roots_and_changes_no_colour_management() {
+        let root = block(serde_json::json!({"dither": "blue_noise"}));
+        let p = pipeline("a", None, Some(&root)).unwrap();
+        assert_eq!(p.dither, Dither::BlueNoise);
+        assert!(!p.is_managed(), "dither alone tags nothing and converts nothing");
+        let e = pipeline("a", Some(&root), Some(&root)).unwrap_err().to_string();
+        assert!(e.contains("\"a\"") && e.contains("only the root"), "{e}");
+        for n in Dither::NAMES {
+            serde_json::from_value::<Dither>(serde_json::json!(n)).unwrap();
+        }
     }
 
     #[test]

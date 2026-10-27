@@ -1,0 +1,15 @@
+// The one place a picture becomes 8-bit: each channel is `floor(value * 255 + threshold)` where the threshold is the
+// pixel's rank in a tiled pattern, `(rank + 0.5) / 256`. A threshold of 0.5 everywhere is plain rounding; a pattern
+// whose ranks are all different and each used equally is zero-mean, and the result is never more than one level from
+// the exact value. The picture arrives already in the output's colour space and transfer, so the numbers are the ones
+// the file will hold.
+uniform shader picture;
+uniform shader ranks;   // the rank pattern as coverage: alpha = rank / 255
+
+half4 main(float2 p) {
+    half4 c = picture.eval(p);
+    float rank = floor(ranks.eval(p).a * 255.0 + 0.5);
+    float threshold = (rank + 0.5) / 256.0;
+    float3 level = clamp(floor(float3(c.rgb) * 255.0 + threshold), 0.0, 255.0);
+    return half4(half3(level / 255.0), 1.0);
+}

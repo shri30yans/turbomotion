@@ -71,9 +71,10 @@ Where a layer's effects and masks run. "screen" (the default) paints every layer
 
 ## Colour (`color`, a composition key)
 
-What the numbers of a composition's pictures mean. Left out, nothing changes: every picture, colour and effect works on display-encoded sRGB numbers as it always did, and the render is byte-for-byte what it was. With `linear_light`, pictures are kept as light: blends, blurs, glows, gradients and resampling are computed on light, so 50% white over black is the mid-grey a lamp at half power gives (level 188 on screen, not 128), a blur across a black/white edge is half as bright as the pair on average (188, not 128), and an additive blend adds light. Colour literals, gradients, images and video are converted into the working profile as they are drawn, and the finished frame is converted to the output profile when it leaves, with alpha kept as coverage throughout (it is never encoded). Effects that move or spread light (blur, glow, shadow, exposure, the warps) run in light; effects written against what the eye sees (brightness, contrast, hue, tint, grain, grade) always run on display numbers, converted in and out around them, so their sliders feel the same in either mode. A shader plugin says which it wants with `// @space display|linear`. A nested composition takes the root's values field by field unless it says its own; `space` is the finished frame's profile, so only the root has it. The encoder tags the file with the output profile, so a player shows the colours the film was made with.
+What the numbers of a composition's pictures mean. Left out, nothing changes: every picture, colour and effect works on display-encoded sRGB numbers as it always did, and the render is byte-for-byte what it was. With `linear_light`, pictures are kept as light: blends, blurs, glows, gradients and resampling are computed on light, so 50% white over black is the mid-grey a lamp at half power gives (level 188 on screen, not 128), a blur across a black/white edge is half as bright as the pair on average (188, not 128), and an additive blend adds light. Colour literals, gradients, images and video are converted into the working profile as they are drawn, and the finished frame is converted to the output profile when it leaves, with alpha kept as coverage throughout (it is never encoded). Effects that move or spread light (blur, glow, shadow, exposure, the warps) run in light; effects written against what the eye sees (brightness, contrast, hue, tint, grain, grade) always run on display numbers, converted in and out around them, so their sliders feel the same in either mode. A shader plugin says which it wants with `// @space display|linear`. A nested composition takes the root's values field by field unless it says its own; `space` is the finished frame's profile, so only the root has it. The encoder tags the file with the output profile, so a player shows the colours the film was made with. `dither` changes how the finished frame is rounded to 8 bits and nothing else: with `ordered` or `blue_noise` a threshold pattern is added before the floor, on the numbers the file will hold (after the output conversion), so a smooth dark gradient shows no bands; the error is zero-mean and at most one level, the pattern is static, and the render is deterministic. A flat colour can move one level at a few pixels (half-float cannot hold every level exactly). It cannot outlast the codec: hardware H.264 and any 4:2:0 or lossy encode re-quantise the frames, so a 10-bit export is the real cure for banding in a delivered file.
 
 * `depth`: Numeric depth of every picture: `half` (half-float, the only one, and what the engine always used).
+* `dither`: Root only. How the finished frame is rounded to 8 bits: `none` or `ordered` or `blue_noise` (default none, which rounds to nearest and changes nothing).
 * `linear_light`: true keeps pictures in linear light (default false: display-encoded numbers).
 * `space`: Root only. The gamut the finished frame is encoded in, with the sRGB curve, and the file is tagged with: `srgb` or `display_p3` (default srgb).
 * `working_profile`: The gamut pictures are kept in: `srgb` or `display_p3` (default srgb). Images with an embedded profile and video tagged with their primaries keep their colours when it is wider than the file's.
@@ -223,6 +224,34 @@ Adds a blurred copy back on top, so bright parts bleed light. (effect, platform)
   "radius": 24,
   "strength": 1,
   "threshold": 0
+}
+```
+
+## `film_halation`
+
+Film halation: the brightest parts ring with a wide red-orange halo, as light scattered back through the film base exposes it again. (effect, platform)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `threshold` | float | 0.6 | 0 to 1 | Light above this (luma, 0..1) halates; in a linear_light film that is light itself. |
+| `radius` | float | 40.0 | 0 or more | Gaussian sigma of the halo in pixels. |
+| `strength` | float | 0.5 | 0 or more | The luma added back as a fraction of the light that passed the threshold, summed over the picture. |
+| `color` | color | [255.0,90.0,40.0,1.0] |  | Hue of the halo; only its hue counts, the strength sets how much light it adds. |
+
+* layer space (`effect_space: "layer"`): grows the layer's picture by its reach (blur radius, distance, offset)
+* colour (`color.linear_light`): computes in linear numbers
+
+```json
+{
+  "color": [
+    255,
+    90,
+    40
+  ],
+  "effect": "film_halation",
+  "radius": 40,
+  "strength": 0.5,
+  "threshold": 0.6
 }
 ```
 
@@ -699,6 +728,35 @@ Moves, scales and rotates the layer about an anchor. (effect, platform)
   "scale": 1.15,
   "x": 40,
   "y": -20
+}
+```
+
+## `add_grain`
+
+Film grain as After Effects' Add Grain makes it: seeded, zero-mean, with a size, softness and aspect in px, colour or mono, and a response to shadows, midtones and highlights. (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `preset` | choice | custom | custom, fine_35mm, coarse_16mm, vintage_8mm | a film look that replaces intensity, size, softness, saturation, shadows and highlights; custom uses the parameters below |
+| `intensity` | float | 0.5 | 0 to 10 | standard deviation of the grain where its tone weight is 1, in 4% of full scale (1 = 10.2 levels of 255) |
+| `size` | float | 1.5 | 0.5 to 20 | correlation length of the grain in px: the lag at which two grains agree 1/e as much as one agrees with itself |
+| `aspect` | float | 1.0 | 0.25 to 4 | width of a grain over its height (above 1 stretches it sideways) |
+| `softness` | float | 0.0 | 0 to 8 | extra blur of the grain in px (a Gaussian's standard deviation); the grain stays at the same strength |
+| `saturation` | float | 0.3 | 0 to 1 | 0 = one grain for all three channels (mono), 1 = each channel its own; every channel keeps the full strength |
+| `shadows` | float | 1.0 | 0 to 2 | grain strength in the darks, a multiple of intensity |
+| `midtones` | float | 1.0 | 0 to 2 | grain strength in the midtones |
+| `highlights` | float | 1.0 | 0 to 2 | grain strength in the lights |
+| `rate` | float | 24.0 | 0 to 60 | grain redraws per second of the layer's time (0 = frozen) |
+| `seed` | float | 0.0 | 0 to 100000 | a different seed is a different, equally good pattern |
+
+* layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
+
+```json
+{
+  "effect": "add_grain",
+  "preset": "fine_35mm",
+  "seed": 3
 }
 ```
 

@@ -88,6 +88,9 @@ Warp Stabilizer	Not built	not_supported	-	-	Warp Stabilizer	-
 Content-Aware Fill	Not built	not_supported	-	-	Content-Aware Fill	-
 Cinema 4D renderer	Not built	not_supported	-	-	Cinema 4D	-
 Mocha planar tracking	Not built	not_supported	-	-	Mocha AE	-
+Output dither at the single 8-bit quantisation (opt-in `color.dither`: ordered Bayer or blue noise; default none is byte-identical)	Colour	done	no_dither_bands_a_dark_ramp_and_each_dither_removes_the_bands	parity/specs/dither.md	-	WP-33
+10-bit export from the half-float frames (the dither does not survive H.264; ProRes 4444 is 10-bit but is fed 8-bit frames)	Colour	none	-	parity/specs/dither.md	-	-
+Gaussian blur keeps its light above sigma 4 (Skia's reduced-resolution path over- and under-counts small sources by up to 27%; glow, bloom, shadow and film_halation inherit it)	Effects	part	-	parity/specs/film_halation.md	-	-
 AEP project import	Not built	not_supported	-	-	.aep	-
 Immersive and VR effects	Not built	not_supported	-	-	Immersive Video	-
 Third-party plugin clones (Particular, Form, Shine, Sapphire)	Not built	not_supported	-	-	Third-party plugins	-

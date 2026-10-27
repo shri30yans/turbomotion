@@ -119,7 +119,7 @@ Spill Suppressor	Keying & Matte	A	T1	todo	?	?	-	-	-
 Matte Choker	Keying & Matte	B	T0	todo	?	?	-	-	-
 Refine Hard/Soft Matte	Keying & Matte	B	T1	todo	?	?	-	-	-
 Simple Choker	Keying & Matte	A	T1	todo	?	?	-	-	-
-Add Grain	Noise & Grain	-	T1	part	no	no	-	grain	-
+Add Grain	Noise & Grain	-	T1	done	no	no	-	add_grain	the_standard_deviation_follows_intensity_as_the_spec_says
 Dust & Scratches	Noise & Grain	-	T1	part	no	no	-	dust,scratches	-
 Fractal Noise	Noise & Grain	B	T0	part	no	no	-	noise,clouds	-
 Match Grain	Noise & Grain	D	T2	todo	?	?	-	-	-
@@ -210,6 +210,8 @@ Grow Bounds	Utility	A	T0	todo	?	?	-	-	-
 HDR Compander	Utility	A	T2	todo	?	?	-	-	-
 HDR Highlight Compression	Utility	A	T2	todo	?	?	-	-	-
 backdrop	Engine-only	-	-	have	no	yes	-	backdrop	-
+film_halation	Engine-only	-	-	done	yes	yes	-	film_halation	the_luma_it_adds_is_strength_times_the_light_above_the_threshold_summed_over_the_picture
+grain	Engine-only	-	-	have	no	no	-	grain	-
 outline	Engine-only	-	-	have	yes	yes	-	outline	-
 chromatic_aberration	Engine-only	-	-	have	yes	yes	-	chromatic_aberration	-
 rgb_split	Engine-only	-	-	have	yes	yes	-	rgb_split	-

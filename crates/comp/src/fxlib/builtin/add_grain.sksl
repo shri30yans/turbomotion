@@ -1,0 +1,97 @@
+// @effect add_grain
+// @summary Film grain as After Effects' Add Grain makes it: seeded, zero-mean, with a size, softness and aspect in px, colour or mono, and a response to shadows, midtones and highlights.
+// @bounds none
+// @space display
+// @param preset choice custom custom,fine_35mm,coarse_16mm,vintage_8mm -- a film look that replaces intensity, size, softness, saturation, shadows and highlights; custom uses the parameters below
+// @param intensity float 0.5 0 10 -- standard deviation of the grain where its tone weight is 1, in 4% of full scale (1 = 10.2 levels of 255)
+// @param size float 1.5 0.5 20 -- correlation length of the grain in px: the lag at which two grains agree 1/e as much as one agrees with itself
+// @param aspect float 1 0.25 4 -- width of a grain over its height (above 1 stretches it sideways)
+// @param softness float 0 0 8 -- extra blur of the grain in px (a Gaussian's standard deviation); the grain stays at the same strength
+// @param saturation float 0.3 0 1 -- 0 = one grain for all three channels (mono), 1 = each channel its own; every channel keeps the full strength
+// @param shadows float 1 0 2 -- grain strength in the darks, a multiple of intensity
+// @param midtones float 1 0 2 -- grain strength in the midtones
+// @param highlights float 1 0 2 -- grain strength in the lights
+// @param rate float 24 0 60 -- grain redraws per second of the layer's time (0 = frozen)
+// @param seed float 0 0 100000 -- a different seed is a different, equally good pattern
+// @example {"effect": "add_grain", "preset": "fine_35mm", "seed": 3}
+
+// Grain is a property of what the eye sees, so the strength is in display numbers: in a linear-light film the picture is
+// converted to display numbers around this effect (`@space display`) and one intensity gives the same grain in both modes.
+
+// The grain is a stationary Gaussian-like field: unit-variance white noise on a lattice, spread by a Gaussian kernel and
+// sampled at pixel centres. The kernel's standard deviation is KERNEL_SIGMA lattice cells, which is wide enough that the
+// field's variance does not depend on where a pixel sits in a cell (it varies by under 1%).
+const float KERNEL_SIGMA = 0.75;
+// Two taps either side of the pixel's cell; the cells beyond hold under 0.1% of the variance.
+const int TAPS = 4;
+// Weights squared summed over the whole lattice average pi * KERNEL_SIGMA^2 per cell, which sets the unit variance.
+const float VARIANCE_NORM = 1.0 / (PI * KERNEL_SIGMA * KERNEL_SIGMA);
+// The standard deviation of the grain at intensity 1, as a share of full scale.
+const float SIGMA_PER_INTENSITY = 0.04;
+// A uniform variable of unit variance spans plus and minus sqrt(3).
+const float UNIFORM_SPAN = 3.4641016;
+// The fields of one frame (mono, red, green, blue) start this far apart in the hash so they never repeat each other.
+const float2 FIELD_STRIDE = float2(173.7, 91.3);
+// How far the hash input is moved per frame and seed; whole cells apart keeps a frame's hash unrelated to the next.
+const float HASH_SPREAD = 1024.0;
+
+// One grain field in -sqrt(3)..sqrt(3) units of unit variance at lattice point `cell`, for field number `field`.
+float lattice(float2 cell, float2 key, float field) {
+    float2 shift = hash22(key + FIELD_STRIDE * field) * HASH_SPREAD;
+    return (hash21(cell + shift) - 0.5) * UNIFORM_SPAN;
+}
+
+// The grain field at lattice position `u` (in cells): the kernel-weighted sum of the lattice values around it.
+float field_at(float2 u, float2 key, float field) {
+    float2 base = floor(u);
+    float sum = 0.0;
+    for (int j = 0; j < TAPS; j++) {
+        for (int i = 0; i < TAPS; i++) {
+            float2 cell = base + float2(float(i - 1), float(j - 1));
+            float2 d = u - cell;
+            sum += exp(-dot(d, d) / (2.0 * KERNEL_SIGMA * KERNEL_SIGMA)) * lattice(cell, key, field);
+        }
+    }
+    return sum * sqrt(VARIANCE_NORM);
+}
+
+half4 main(float2 xy) {
+    float4 src = straight(xy);
+    if (src.a <= 0.0) {
+        return half4(0.0);
+    }
+    float amount = intensity;
+    float grain_size = size;
+    float blur = softness;
+    float colour = saturation;
+    float dark = shadows;
+    float light = highlights;
+    if (preset > 0.5) {
+        // fine 35 mm, coarse 16 mm, vintage 8 mm: our own looks, not After Effects' stock names
+        bool fine = preset < 1.5;
+        bool coarse = !fine && preset < 2.5;
+        amount = fine ? 0.6 : (coarse ? 1.1 : 1.8);
+        grain_size = fine ? 1.2 : (coarse ? 2.2 : 3.5);
+        blur = fine ? 0.0 : (coarse ? 0.3 : 0.6);
+        colour = fine ? 0.15 : (coarse ? 0.3 : 0.45);
+        dark = fine ? 0.8 : (coarse ? 0.9 : 1.0);
+        light = fine ? 0.45 : (coarse ? 0.5 : 0.7);
+    }
+    // the kernel's width in px: its autocorrelation exp(-lag^2 / (size^2 + 4 softness^2)) has the length `size` at softness 0
+    float2 sigma_px = sqrt(pow(0.5 * grain_size * float2(aspect, 1.0), float2(2.0)) + blur * blur);
+    float2 u = xy / (sigma_px / KERNEL_SIGMA);
+    float2 key = float2(floor(time * rate + 0.5), seed);
+    // one grain for every channel, and one per channel, mixed so that each channel keeps unit variance
+    float3 shared_grain = float3(colour < 1.0 ? field_at(u, key, 0.0) : 0.0);
+    float3 own_grain = float3(0.0);
+    if (colour > 0.0) {
+        own_grain = float3(field_at(u, key, 1.0), field_at(u, key, 2.0), field_at(u, key, 3.0));
+    }
+    float3 grain = sqrt(1.0 - colour) * shared_grain + sqrt(colour) * own_grain;
+    // tone response on the brightness the eye sees: three bands that sum to one at every brightness
+    float l = luma(src.rgb);
+    float band_dark = 1.0 - smoothstep(0.0, 0.5, l);
+    float band_light = smoothstep(0.5, 1.0, l);
+    float tone = dark * band_dark + midtones * (1.0 - band_dark - band_light) + light * band_light;
+    return premul(clamp(src.rgb + grain * (amount * SIGMA_PER_INTENSITY * tone), 0.0, 1.0), src.a);
+}
