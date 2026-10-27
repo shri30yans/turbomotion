@@ -80,6 +80,9 @@ pub(super) fn plan_layer(i: usize, v: &Value, c: &schema::Composition, root: &sc
     if let Some(message) = super::facing::conflict(&def.common) {
         note(Err(anyhow!("{message}")));
     }
+    if let Some(swatch) = &def.common.swatch {
+        note(swatch.check(&def.kind));
+    }
     let along = match def.common.along.as_ref().map(|a| crate::plan::geometry::PathGeo::build(&a.path)).transpose() {
         Ok(a) => a,
         Err(e) => {

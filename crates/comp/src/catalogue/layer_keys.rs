@@ -31,6 +31,7 @@ const CUSTOM_FORMS: &[(&str, &str)] = &[
     ("Perspective", "a number (viewer distance in px; smaller is stronger) | \"orthographic\""),
     ("TextPath", "an object with ONE geometry (d, points, ellipse, rect, polygon, star) or `layer` (the id of a shape layer), plus reverse, perpendicular, force_align, first_margin, last_margin, travel"),
     ("ParticleShape", "soft | circle | square | spark | star | ring | {\"path\": <one geometry: d, points, rect, ellipse, polygon, star>} (your own outline, fitted to the particle size)"),
+    ("Swatch", "an object {palette: [colours], index: the copy number (0 is the first), cycle?: {mode: step|gradient|ping_pong, offset, reverse}, paint?: fill|stroke|both}; a repeater with a palette writes it on each copy"),
     ("Mark", "an object {word*: string, nth, at, dur, ease, color, pad, verdict, rough}"),
 ];
 

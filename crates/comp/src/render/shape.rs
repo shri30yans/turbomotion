@@ -7,9 +7,12 @@ use skia_safe::{
 use turbomotion_core::color::Ink;
 
 use super::color4f;
+use crate::schema::palette::Target;
 use crate::{
+    anim::prop::Rgba,
     eval::{shape::{item_matrix, FillState, GradientState, StrokeState}, ShapeState},
     plan::geometry::PathGeo,
+    shape::stroke::{self, Cap, Join},
 };
 
 pub fn paint(ink: &Ink, c: &Canvas, items: &[ShapeState], geos: &[PathGeo]) -> Result<()> {
@@ -21,14 +24,17 @@ pub fn paint(ink: &Ink, c: &Canvas, items: &[ShapeState], geos: &[PathGeo]) -> R
         let copies = s.repeat.as_ref().map_or(1, |r| r.copies);
         let mut m = item_matrix(s);
         let mut opacity = s.opacity;
-        for _ in 0..copies {
+        for k in 0..copies as usize {
+            // the colour this copy takes from the repeater's palette, for the fill and for the stroke
+            let tint = s.repeat.as_ref().and_then(|r| r.tint.as_ref()).map(|t| (t.paint, t.colours.colour(k)));
+            let take = |wanted: fn(Target) -> bool| tint.filter(|(paint, _)| wanted(*paint)).map(|(_, colour)| colour);
             c.save();
             c.concat(&m);
             if let Some(f) = &s.fill {
-                fill(ink, c, &path, f, opacity, geo.morph_to.is_none() && s.trim.is_none())?;
+                fill(ink, c, &path, f, take(Target::fill), opacity)?;
             }
             if let Some(st) = &s.stroke {
-                stroke(ink, c, &path, st, opacity)?;
+                stroke(ink, c, &path, st, take(Target::stroke), opacity)?;
             }
             c.restore();
             if let Some(r) = &s.repeat {
@@ -53,13 +59,13 @@ pub(super) fn gradient(g: &GradientState, opacity: f64) -> Option<skia_safe::Sha
     }
 }
 
-fn fill(ink: &Ink, c: &Canvas, path: &Path, f: &FillState, opacity: f64, _plain: bool) -> Result<()> {
+fn fill(ink: &Ink, c: &Canvas, path: &Path, f: &FillState, tint: Option<Rgba>, opacity: f64) -> Result<()> {
     let mut p = Paint::default();
     p.set_anti_alias(true).set_style(PaintStyle::Fill);
     let a = (f.opacity * opacity) as f32;
     if let Some(g) = &f.gradient {
         p.set_shader(gradient(g, f.opacity * opacity));
-    } else if let Some(col) = f.color {
+    } else if let Some(col) = tint.or(f.color) {
         ink.apply(&mut p, c, color4f([col[0], col[1], col[2], col[3] * a]))?;
     } else {
         return Ok(());
@@ -70,13 +76,21 @@ fn fill(ink: &Ink, c: &Canvas, path: &Path, f: &FillState, opacity: f64, _plain:
     Ok(())
 }
 
-fn stroke(ink: &Ink, c: &Canvas, path: &Path, s: &StrokeState, opacity: f64) -> Result<()> {
+fn stroke(ink: &Ink, c: &Canvas, path: &Path, s: &StrokeState, tint: Option<Rgba>, opacity: f64) -> Result<()> {
     if s.width <= 0.0 {
         return Ok(());
     }
     let mut p = Paint::default();
     p.set_anti_alias(true).set_style(PaintStyle::Stroke).set_stroke_width(s.width as f32);
-    ink.apply(&mut p, c, color4f([s.color[0], s.color[1], s.color[2], s.color[3] * (s.opacity * opacity) as f32]))?;
+    let col = tint.unwrap_or(s.color);
+    ink.apply(&mut p, c, color4f([col[0], col[1], col[2], col[3] * (s.opacity * opacity) as f32]))?;
+    if let Some(taper) = &s.taper {
+        // a variable-width stroke is the filled region between its two edges
+        let style = stroke::Style { cap: Cap::parse(&s.cap)?, join: Join::parse(&s.join)? };
+        p.set_style(PaintStyle::Fill);
+        c.draw_path(&stroke::outline(path, style, |length| taper.profile(length, s.width)), &p);
+        return Ok(());
+    }
     p.set_stroke_cap(match s.cap.as_str() {
         "round" => PaintCap::Round,
         "square" => PaintCap::Square,

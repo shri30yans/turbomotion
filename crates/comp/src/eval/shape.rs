@@ -5,11 +5,16 @@ use anyhow::Result;
 use serde::Serialize;
 use skia_safe::{ContourMeasureIter, Matrix, Path, Rect};
 
+pub mod repeat;
+pub mod taper;
+
 use super::{CompPlan, Evaluator, LayerEnv};
+pub use repeat::RepeatState;
 use crate::{
     anim::prop::Rgba,
     plan::{geometry::PathGeo, LayerPlan},
     schema::ShapeItem,
+    shape::stroke,
 };
 
 #[derive(Serialize, Clone)]
@@ -38,15 +43,8 @@ pub struct StrokeState {
     pub dash: Option<Vec<f64>>,
     pub dash_offset: f64,
     pub opacity: f64,
-}
-
-#[derive(Serialize, Clone)]
-pub struct RepeatState {
-    pub copies: u32,
-    pub offset: [f64; 2],
-    pub rotation: f64,
-    pub scale: f64,
-    pub opacity: f64,
+    /// The stroke thins toward the ends of the outline.
+    pub taper: Option<stroke::Taper>,
 }
 
 #[derive(Serialize, Clone)]
@@ -86,6 +84,7 @@ pub fn state(ev: &Evaluator, c: &CompPlan, l: &LayerPlan, it: &ShapeItem, geo: &
                 dash: s.dash.clone(),
                 dash_offset: s.dash_offset.as_ref().map_or(Ok(0.0), |d| d.0.at(lt, &env(12)))?,
                 opacity: s.opacity.as_ref().map_or(Ok(1.0), |o| o.0.at(lt, &env(13)))?.clamp(0.0, 1.0),
+                taper: it.taper.as_ref().map(|spec| taper::state(ev, c, l, spec, k, t)).transpose()?,
             })
         })
         .transpose()?;
@@ -133,7 +132,7 @@ pub fn state(ev: &Evaluator, c: &CompPlan, l: &LayerPlan, it: &ShapeItem, geo: &
         rotation: it.rotation.as_ref().map_or(Ok(0.0), |r| r.0.at(lt, &env(22)))?,
         scale,
         opacity: it.opacity.as_ref().map_or(Ok(1.0), |o| o.0.at(lt, &env(23)))?.clamp(0.0, 1.0),
-        repeat: it.repeat.as_ref().map(|r| RepeatState { copies: r.copies.max(1), offset: r.offset.unwrap_or([0.0, 0.0]), rotation: r.rotation, scale: r.scale, opacity: r.opacity }),
+        repeat: it.repeat.as_ref().map(|r| repeat::state(ev, c, l, r, k, t)).transpose()?,
     })
 }
 
@@ -203,7 +202,7 @@ pub fn bounds(items: &[ShapeState], geos: &[PathGeo]) -> Option<[f64; 4]> {
     let mut acc: Option<Rect> = None;
     for (s, g) in items.iter().zip(geos) {
         let path = g.at(s.morph);
-        let pad = s.stroke.as_ref().map_or(0.0, |st| st.width / 2.0) as f32;
+        let pad = s.stroke.as_ref().map_or(0.0, |st| st.taper.as_ref().map_or(st.width, |t| t.widest(st.width)) / 2.0) as f32;
         let copies = s.repeat.as_ref().map_or(1, |r| r.copies);
         let mut m = item_matrix(s);
         for _ in 0..copies {

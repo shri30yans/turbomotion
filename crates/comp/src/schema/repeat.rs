@@ -5,9 +5,15 @@
 //! out), and `offset` and `rotation` may be expressions, so a step can change over time.
 //!
 //! Only `opacity` is applied to the copy itself, because a null's opacity does not reach its children.
+//!
+//! A `palette` (with `cycle` and `paint`, see `schema::palette`) gives each layer in the row its own colour: every
+//! layer, the original too, is stamped with a `swatch` naming its place in the row, which the evaluator turns into a
+//! colour. The palette is checked here, where it is written, and against the layer's type when the plan is built.
 
 use anyhow::{anyhow, bail, ensure, Context, Result};
 use serde_json::{json, Map, Value};
+
+use super::palette::{self, Cycling};
 
 const FIELDS: &[&str] = &["count", "offset", "rotation", "scale", "opacity", "origin", "order"];
 /// Most copies one repeater may make: a stack this tall is a mistake, not a look.
@@ -40,6 +46,9 @@ fn layers_pass(layers: &mut Value) -> Result<()> {
         };
         let spec = Spec::parse(&spec).with_context(|| format!("layer {i} repeat"))?;
         let mut copies = copies(&l, &spec).with_context(|| format!("layer {i} repeat"))?;
+        if let (Some(swatch), Some(o)) = (&spec.swatch, l.as_object_mut()) {
+            o.insert("swatch".into(), swatch_at(swatch, 0));
+        }
         if spec.above {
             out.push(l);
             out.extend(copies.into_iter().flatten());
@@ -61,13 +70,21 @@ struct Spec {
     opacity: f64,
     origin: Vec<f64>,
     above: bool,
+    /// The `palette`, `cycle` and `paint` as written, which a copy's `swatch` repeats; read once to check them.
+    swatch: Option<Map<String, Value>>,
 }
 
 impl Spec {
     fn parse(spec: &Value) -> Result<Spec> {
-        let s = spec.as_object().ok_or_else(|| anyhow!("repeat is an object like {{\"count\": 5, \"offset\": [40, 0]}}"))?;
-        if let Some(k) = s.keys().find(|k| !FIELDS.contains(&k.as_str())) {
-            bail!("unknown repeat field {k:?}; fields are {}", FIELDS.join(", "));
+        let mut s = spec.as_object().cloned().ok_or_else(|| anyhow!("repeat is an object like {{\"count\": 5, \"offset\": [40, 0]}}"))?;
+        let valid: Vec<&str> = FIELDS.iter().chain(&palette::KEYS).copied().collect();
+        if let Some(message) = super::fields::stray_keys("repeat", s.keys(), &valid) {
+            bail!("{message}");
+        }
+        let swatch: Map<String, Value> = palette::KEYS.iter().filter_map(|k| s.remove(*k).map(|v| (k.to_string(), v))).collect();
+        let swatch = (!swatch.is_empty()).then_some(swatch);
+        if let Some(swatch) = &swatch {
+            Cycling::take(&mut swatch.clone())?;
         }
         let count = s.get("count").and_then(Value::as_u64).ok_or_else(|| anyhow!("repeat needs \"count\": how many layers in all, the original included"))?;
         ensure!((2..=MAX_COUNT).contains(&count), "repeat count is {count}; use 2 to {MAX_COUNT}");
@@ -89,6 +106,7 @@ impl Spec {
             opacity: factor("opacity")?,
             origin: s.get("origin").map_or(Ok(vec![]), |v| numbers(v, "origin"))?,
             above,
+            swatch,
         })
     }
 }
@@ -152,12 +170,23 @@ fn copies(layer: &Value, spec: &Spec) -> Result<Vec<[Value; 2]>> {
         let mut c = o.clone();
         c.insert("id".into(), json!(format!("{id}~c{k}")));
         c.insert("parent".into(), json!(wrapper_id));
+        if let Some(swatch) = &spec.swatch {
+            ensure!(!o.contains_key("swatch"), "the layer has a `swatch` of its own, and the repeat's palette would replace it: use one or the other");
+            c.insert("swatch".into(), swatch_at(swatch, k));
+        }
         if spec.opacity != 1.0 {
             c.insert("opacity".into(), fade(opacity.as_ref(), spec.opacity.powi(k as i32))?);
         }
         out.push([Value::Object(w), Value::Object(c)]);
     }
     Ok(out)
+}
+
+/// The `swatch` of the layer at place `k` in the row.
+fn swatch_at(palette: &Map<String, Value>, k: usize) -> Value {
+    let mut swatch = palette.clone();
+    swatch.insert("index".into(), json!(k));
+    Value::Object(swatch)
 }
 
 /// The layer's opacity times a constant, for every form of opacity that can be multiplied.
@@ -171,84 +200,5 @@ fn fade(opacity: Option<&Value>, factor: f64) -> Result<Value> {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn run(layer: Value) -> Result<Vec<Value>> {
-        let mut v = json!({"layers": [layer]});
-        expand(&mut v)?;
-        Ok(v["layers"].as_array().unwrap().clone())
-    }
-
-    fn card() -> Value {
-        json!({"type": "solid", "id": "card", "color": "#fff", "pos": [100, 100]})
-    }
-
-    fn with(spec: Value) -> Value {
-        let mut l = card();
-        l["repeat"] = spec;
-        l
-    }
-
-    #[test]
-    fn copies_sit_under_nulls_that_step_away_from_the_original() {
-        let out = run(with(json!({"count": 3, "offset": [40, 10], "rotation": 5, "scale": 0.5, "origin": [960, 540]}))).unwrap();
-        let ids: Vec<&str> = out.iter().map(|l| l["id"].as_str().unwrap()).collect();
-        // later copies first (they sit behind), the original last and on top
-        assert_eq!(ids, ["card~r2", "card~c2", "card~r1", "card~c1", "card"]);
-        let w = &out[2];
-        assert_eq!(w["type"], "null");
-        assert_eq!(w["pos"], json!([1000.0, 550.0]));
-        assert_eq!(w["anchor"], json!([960.0, 540.0]));
-        assert_eq!(w["rotation"], json!(5.0));
-        assert_eq!(w["scale"], json!(0.5));
-        assert_eq!(out[3]["parent"], "card~r1");
-        assert_eq!(out[3]["pos"], json!([100, 100]));
-        assert!(out[4].get("repeat").is_none() && out[4]["id"] == "card");
-    }
-
-    #[test]
-    fn order_above_puts_the_copies_over_the_original_and_opacity_falls_off() {
-        let out = run(with(json!({"count": 3, "offset": [10, 0], "order": "above", "opacity": 0.5}))).unwrap();
-        assert_eq!(out[0]["id"], "card");
-        assert_eq!(out[2]["opacity"], json!(0.5));
-        assert_eq!(out[4]["opacity"], json!(0.25));
-    }
-
-    #[test]
-    fn a_step_may_be_an_expression_and_a_copy_keeps_the_layers_parent_and_opacity_expression() {
-        let mut l = with(json!({"count": 2, "rotation": "time * 10", "opacity": 0.5}));
-        l["parent"] = json!("rig");
-        l["opacity"] = json!("smooth(0, 1, time)");
-        let out = run(l).unwrap();
-        assert_eq!(out[0]["rotation"], json!("0 + 1 * (time * 10)"));
-        assert_eq!(out[0]["parent"], "rig");
-        assert_eq!(out[1]["parent"], "card~r1");
-        assert_eq!(out[1]["opacity"], json!("(smooth(0, 1, time)) * 0.5"));
-    }
-
-    #[test]
-    fn three_d_layers_get_three_d_nulls() {
-        let mut l = with(json!({"count": 2, "offset": [0, 0, -50], "rotation": [0, 15, 0]}));
-        l["three_d"] = json!(true);
-        let out = run(l).unwrap();
-        assert_eq!(out[0]["three_d"], true);
-        assert_eq!(out[0]["pos"], json!([0.0, 0.0, -50.0]));
-        assert_eq!(out[0]["rotation"], json!([0.0, 15.0, 0.0]));
-    }
-
-    #[test]
-    fn mistakes_are_named() {
-        let refused = |spec: Value| format!("{:#}", run(with(spec)).unwrap_err());
-        assert!(refused(json!({"offset": [1, 0]})).contains("count"));
-        assert!(refused(json!({"count": 1})).contains("2 to"));
-        assert!(refused(json!({"count": 3, "ofset": [1, 0]})).contains("ofset"));
-        assert!(refused(json!({"count": 3, "scale": 0})).contains("above 0"));
-        assert!(refused(json!({"count": 3, "order": "front"})).contains("order"));
-        assert!(refused(json!({"count": 3, "offset": [1, 2, 3]})).contains("flat"));
-        let mut l = card();
-        l.as_object_mut().unwrap().remove("id");
-        l["repeat"] = json!({"count": 2});
-        assert!(format!("{:#}", run(l).unwrap_err()).contains("needs an \"id\""));
-    }
-}
+#[path = "repeat_tests.rs"]
+mod tests;

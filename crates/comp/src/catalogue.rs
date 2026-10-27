@@ -8,8 +8,10 @@ mod effect_space;
 mod expression_support;
 pub mod layer_keys;
 mod motion_keys;
+mod palette_cycle;
 mod property_examples;
 mod property_forms;
+mod stroke_taper;
 mod text_box;
 
 use serde::Serialize;
@@ -56,7 +58,7 @@ pub fn layers() -> Vec<Entry> {
         },
         Entry {
             name: "shape",
-            summary: "Vector shapes with fill, gradient, stroke, dashes, trim (draw-on), morph and repeat. Geometry: rect, ellipse, polygon, star, d (SVG path), points. A fill is a colour or a gradient (linear {from, to}, radial {center, radius}). Every item animates its own properties (`trim`, `rotation`, `scale`, `opacity`, rect/ellipse sizes); `anchor` is the item's pivot for rotation and scale, in the item's own units from the shape's origin.",
+            summary: "Vector shapes with fill, gradient, stroke, dashes, trim (draw-on), morph and repeat. Geometry: rect, ellipse, polygon, star, d (SVG path), points. A fill is a colour or a gradient (linear {from, to}, radial {center, radius}). Every item animates its own properties (`trim`, `rotation`, `scale`, `opacity`, rect/ellipse sizes); `anchor` is the item's pivot for rotation and scale, in the item's own units from the shape's origin. `taper` thins the stroke toward its ends (see `stroke_taper`); an item's `repeat` takes a `palette` (see `palette_cycle`).",
             example: json!({"type": "shape", "pos": [960, 540], "items": [
                 {"rect": [-200, -120, 400, 240], "radius": 24, "fill": {"gradient": {"type": "linear", "from": [0, -120], "to": [0, 120], "stops": [[0, "#ff8a00"], [1, "#e52e71"]]}}},
                 {"ellipse": [0, 0, 90, 90], "stroke": {"color": "#ffffff", "width": 8, "cap": "round"}, "trim": {"end": {"from": 0, "to": 1, "at": 0.3, "dur": 1, "ease": "power3.inOut"}}},
@@ -149,6 +151,8 @@ pub fn all() -> Value {
         "effect_composite": crate::fxlib::composite::catalogue(),
         "effect_space": effect_space::entry(),
         "text_box": text_box::entry(),
+        "palette_cycle": palette_cycle::entry(),
+        "stroke_taper": stroke_taper::entry(),
         "color": color::entry(),
         "blend_modes": blend_modes::entry(),
         "keyframe_motion": motion_keys::entry(),
@@ -172,7 +176,7 @@ pub fn all() -> Value {
         "timeline": timeline(),
         "extrude": {"summary": "Depth for a three_d text, shape or solid layer: copies stepping back in z, coloured from `color` to `far`. Show it with a camera move or a Y Rotation. `fx` apply to the front face only; the slices behind it stay plain colour, so an outline ring lies over the first slices and hides the sides at shallow angles.",
             "example": {"type": "text", "text": "88888", "size": 220, "weight": 800, "align": "center", "color": "#ffd166", "three_d": true, "pos": [960, 540], "rotation": [0, 18, 0], "extrude": {"depth": 60, "color": "#e8590c", "far": "#c2410c"}}},
-        "repeat": {"summary": "Repeater for any layer: `count` copies in all, each one step further along (`offset`, `rotation`, `scale` and `opacity` per copy), turning and scaling about `origin`. Each copy keeps the layer's animation and effects; `offset` and `rotation` may be expressions. Needs an `id`. Later copies sit behind the original unless `order` is \"above\".",
+        "repeat": {"summary": "Repeater for any layer: `count` copies in all, each one step further along (`offset`, `rotation`, `scale` and `opacity` per copy), turning and scaling about `origin`. Each copy keeps the layer's animation and effects; `offset` and `rotation` may be expressions. Needs an `id`. Later copies sit behind the original unless `order` is \"above\". Add `palette`, `cycle` and `paint` to give each copy its own colour (see `palette_cycle`).",
             "example": {"type": "solid", "id": "slab", "color": "#8a5cff", "size": [400, 240], "pos": [760, 500], "repeat": {"count": 6, "offset": [36, -24], "opacity": 0.85}}},
         "packs": crate::pack::catalogue().into_iter().map(|(n, s)| json!({"name": n, "summary": s})).collect::<Vec<_>>(),
         "make_a_new_effect": "Write effects/<name>.sksl beside comp.json: header comments `// @effect name`, `// @kind effect|generator`, `// @summary ...`, `// @param name float|vec2|color default [min max] -- doc`, `// @param name choice default a,b,c -- doc` (written as a name), `// @input name layer` (another layer's picture, named by id in the use), `// @input name history=N [depth=D]` (the effect's own output N frames ago), `// @pass name [scale=S]` (several passes, each sees the earlier ones by name), `// @space display|linear` (the encoding the shader computes in; see the colour key), `// @example {json}`, then `half4 main(float2 xy)`. You get `image` (effects), `resolution`, `time` and a library (hash21, vnoise, fbm, worley, rot2, luma, hsv2rgb, straight, premul). Try it with `comp fx test <name> --out sheet.png`; then use it like any effect: {\"effect\": \"name\", \"param\": value}.",

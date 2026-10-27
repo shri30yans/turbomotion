@@ -75,6 +75,16 @@ fn index(pages: &[(String, String)]) -> String {
     s
 }
 
+/// A feature of a layer or an item: what it does, each of its keys and one runnable composition.
+fn feature(s: &mut String, heading: &str, entry: &Value) {
+    let _ = writeln!(s, "## {heading}\n\n{}\n", str_of(entry, "summary"));
+    for (key, what) in entry["keys"].as_object().into_iter().flatten() {
+        let _ = writeln!(s, "* `{key}`: {}", what.as_str().unwrap_or_default());
+    }
+    s.push('\n');
+    json_block(s, &entry["example"]["composition"]);
+}
+
 fn layers(c: &Value) -> String {
     let mut s = page("Layer kinds", "What a composition's `layers` can hold. `turbomotion comp catalogue` prints the same data as JSON.");
     for l in c["layers"].as_array().into_iter().flatten() {
@@ -84,13 +94,9 @@ fn layers(c: &Value) -> String {
     let x = &c["extrude"];
     let _ = writeln!(s, "## `extrude`\n\n{}\n", str_of(x, "summary"));
     json_block(&mut s, &x["example"]);
-    let text_box = &c["text_box"];
-    let _ = writeln!(s, "## `box` (a text layer key)\n\n{}\n", str_of(text_box, "summary"));
-    for (key, what) in text_box["keys"].as_object().into_iter().flatten() {
-        let _ = writeln!(s, "* `{key}`: {}", what.as_str().unwrap_or_default());
+    for (heading, key) in [("`box` (a text layer key)", "text_box"), ("`palette` (a repeater key)", "palette_cycle"), ("`taper` (a shape item key)", "stroke_taper")] {
+        feature(&mut s, heading, &c[key]);
     }
-    s.push('\n');
-    json_block(&mut s, &text_box["example"]["composition"]);
     s
 }
 

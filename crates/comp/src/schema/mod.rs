@@ -8,6 +8,7 @@ pub mod docs;
 pub mod fields;
 pub mod layer_keys;
 pub mod extrude;
+pub mod palette;
 pub mod repeat;
 mod item_alias;
 mod kinds;
@@ -19,6 +20,7 @@ pub mod letterbox;
 mod path;
 pub mod problems;
 mod shape;
+pub mod taper;
 mod text;
 pub mod text_box;
 pub mod time;
@@ -33,18 +35,14 @@ use serde::Deserialize;
 use serde_json::{Map, Value};
 use turbomotion_core::effects::{self, Blend, Effect};
 
-pub use color::ColorBlock;
-pub use effect_space::EffectSpace;
+pub use {color::ColorBlock, effect_space::EffectSpace};
 pub use kinds::*;
-pub use mblur::MotionBlur;
-pub use path::PathSpec;
+pub use {mblur::MotionBlur, path::PathSpec};
 pub use problems::{Problem, Problems};
-pub use shape::item_keys as shape_item_keys;
-pub use shape::{Fill, Gradient, Metal, Repeat, ShapeItem, Stroke, Trim};
+pub use shape::{item_keys as shape_item_keys, Fill, Gradient, Metal, Repeat, ShapeItem, Stroke, Trim};
 pub use particle_shape::ParticleShape;
 pub use text::{Align, TextRun, Animator, Charset, Cipher, Counter, Marquee, PathSource, Perspective, SelectorShape, SurfaceKind, TextPath, TextSurface, Direction, Mark, Role, Selector, Stagger, StaggerFrom, TextSource, TextStroke, TextSwap, Unit, UnitProps, Verdict, Wiggle};
-pub use tokens::TypeScale;
-pub use wrap::{Col, Orient, Pos, Rot, Scale, P};
+pub use {tokens::TypeScale, wrap::{Col, Orient, Pos, Rot, Scale, P}};
 
 /// A nested composition or the root. Only the root uses `fps`, `comps`, `fonts` and `audio`.
 #[derive(Debug, Deserialize, Clone)]
@@ -399,6 +397,8 @@ pub struct Common {
     pub exit: Option<Transit>,
     /// Draw a faded mirror of this layer on the floor beneath it.
     pub reflect: Option<Reflect>,
+    /// One colour of a palette cycle, in place of the layer's own colour (what a repeater's `palette` gives each copy).
+    pub swatch: Option<palette::Swatch>,
 }
 
 #[derive(Debug, Clone)]
@@ -409,7 +409,7 @@ pub struct Layer {
 }
 
 const COMMON_KEYS: &[&str] = &[
-    "id", "start", "dur", "parent", "hidden", "three_d", "lit", "material", "pos", "anchor", "scale", "rotation", "orientation", "aim", "cull", "skew", "opacity", "wrap", "stagger", "flip", "blend", "fx", "masks", "matte", "clip_to", "mblur", "layout", "along", "enter", "exit", "reflect",
+    "id", "start", "dur", "parent", "hidden", "three_d", "lit", "material", "pos", "anchor", "scale", "rotation", "orientation", "aim", "cull", "skew", "opacity", "wrap", "stagger", "flip", "blend", "fx", "masks", "matte", "clip_to", "mblur", "layout", "along", "enter", "exit", "reflect", "swatch",
 ];
 
 /// Parse layer number `index` of a composition. Every mistake in the layer is reported, not the first: all unknown keys

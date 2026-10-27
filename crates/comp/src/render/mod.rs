@@ -45,6 +45,10 @@ mod layer_space_plugin_tests;
 #[cfg(test)]
 mod layer_space_tests;
 #[cfg(test)]
+mod palette_tests;
+#[cfg(test)]
+mod taper_tests;
+#[cfg(test)]
 mod testkit;
 #[cfg(test)]
 mod tests;

@@ -4,7 +4,8 @@ use anyhow::{anyhow, bail, ensure, Result};
 use serde::Deserialize;
 use serde_json::{Map, Value};
 
-use super::{item_alias, path::PathSpec, wrap::{Col, Pos, Scale, P}};
+use super::{de::from_value_at, item_alias, palette::{self, Cycling}, path::PathSpec, taper::Taper, wrap::{Col, Pos, Scale, P}};
+use crate::shape::stroke::{Cap, Join};
 
 #[derive(Debug, Clone)]
 pub struct ShapeItem {
@@ -19,10 +20,12 @@ pub struct ShapeItem {
     pub scale: Option<Scale>,
     pub opacity: Option<P>,
     pub repeat: Option<Repeat>,
+    /// The stroke thins toward the ends of the outline.
+    pub taper: Option<Taper>,
 }
 
 const PATH_KEYS: &[&str] = &["d", "points", "closed", "smooth", "rect", "radius", "ellipse", "polygon", "star", "rotate", "morph_to", "morph"];
-const ITEM_KEYS: &[&str] = &["fill", "stroke", "trim", "offset", "anchor", "rotation", "scale", "opacity", "repeat"];
+const ITEM_KEYS: &[&str] = &["fill", "stroke", "trim", "offset", "anchor", "rotation", "scale", "opacity", "repeat", "taper"];
 
 /// Every key a shape item accepts and which half it belongs to: `outline` keys say where the line goes, `look` keys how it is painted.
 pub fn item_keys() -> Vec<(&'static str, &'static str)> {
@@ -52,7 +55,7 @@ impl ShapeItem {
         let path: PathSpec = serde_json::from_value(Value::Object(path_map)).map_err(|e| anyhow!("{e}"))?;
         ensure!(path.geometry_count() == 1, "a shape item needs exactly one of d, points, rect, ellipse, polygon, star (found {})", path.geometry_count());
         let get = |k: &str| o.get(k);
-        Ok(ShapeItem {
+        let item = ShapeItem {
             path,
             fill: get("fill").map(Fill::parse).transpose().map_err(|e| anyhow!("fill: {e:#}"))?,
             stroke: get("stroke").map(|s| serde_json::from_value::<Stroke>(s.clone())).transpose().map_err(|e| anyhow!("stroke: {e}"))?,
@@ -62,8 +65,26 @@ impl ShapeItem {
             rotation: get("rotation").map(|s| serde_json::from_value::<P>(s.clone())).transpose().map_err(|e| anyhow!("rotation: {e}"))?,
             scale: get("scale").map(|s| serde_json::from_value::<Scale>(s.clone())).transpose().map_err(|e| anyhow!("scale: {e}"))?,
             opacity: get("opacity").map(|s| serde_json::from_value::<P>(s.clone())).transpose().map_err(|e| anyhow!("opacity: {e}"))?,
-            repeat: get("repeat").map(|s| serde_json::from_value::<Repeat>(s.clone())).transpose().map_err(|e| anyhow!("repeat: {e}"))?,
-        })
+            repeat: get("repeat").map(Repeat::parse).transpose().map_err(|e| anyhow!("repeat: {e:#}"))?,
+            taper: get("taper").map(|s| from_value_at::<Taper>(s.clone())).transpose().map_err(|e| anyhow!("taper: {e:#}"))?,
+        };
+        item.check()?;
+        Ok(item)
+    }
+
+    /// The rules between an item's keys, which no single key can check alone.
+    fn check(&self) -> Result<()> {
+        if let Some(t) = &self.taper {
+            t.validate().map_err(|e| anyhow!("taper: {e:#}"))?;
+            let stroke = self.stroke.as_ref().ok_or_else(|| anyhow!("taper thins a stroke, and this item has none: add a `stroke`, or leave the taper out (a fill has no width to taper)"))?;
+            ensure!(stroke.dash.is_none(), "a tapered stroke cannot also be dashed: remove `dash` or `taper`");
+            Cap::parse(stroke.cap.as_deref().unwrap_or("butt")).map_err(|e| anyhow!("stroke: {e}"))?;
+            Join::parse(stroke.join.as_deref().unwrap_or("miter")).map_err(|e| anyhow!("stroke: {e}"))?;
+        }
+        if let Some(cycling) = self.repeat.as_ref().and_then(|r| r.palette.as_ref()) {
+            cycling.check_item(self).map_err(|e| anyhow!("repeat: {e:#}"))?;
+        }
+        Ok(())
     }
 }
 
@@ -173,24 +194,55 @@ pub struct Trim {
     pub offset: Option<P>,
 }
 
-#[derive(Debug, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
+/// Copies of an item, each moved on from the last; with a palette each copy also takes the next colour (see
+/// `schema::palette`).
+#[derive(Debug, Clone)]
 pub struct Repeat {
     pub copies: u32,
     /// Added to every copy's position, cumulatively.
-    #[serde(default)]
     pub offset: Option<[f64; 2]>,
     /// Degrees added per copy.
-    #[serde(default)]
     pub rotation: f64,
     /// Multiplied per copy.
-    #[serde(default = "one")]
     pub scale: f64,
     /// Opacity multiplied per copy.
-    #[serde(default = "one")]
     pub opacity: f64,
+    /// The colours the copies take, one each.
+    pub palette: Option<Cycling>,
+}
+
+/// The keys of a repeat that are not the palette's.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct RepeatKeys {
+    copies: u32,
+    #[serde(default)]
+    offset: Option<[f64; 2]>,
+    #[serde(default)]
+    rotation: f64,
+    #[serde(default = "one")]
+    scale: f64,
+    #[serde(default = "one")]
+    opacity: f64,
+}
+
+impl Repeat {
+    pub fn parse(v: &Value) -> Result<Repeat> {
+        let mut rest = v.as_object().cloned().ok_or_else(|| anyhow!("a repeat is an object like {{\"copies\": 5, \"offset\": [40, 0]}}"))?;
+        let valid: Vec<&str> = ["copies", "offset", "rotation", "scale", "opacity"].into_iter().chain(palette::KEYS).collect();
+        if let Some(message) = super::fields::stray_keys("repeat", rest.keys(), &valid) {
+            bail!("{message}");
+        }
+        let palette = Cycling::take(&mut rest)?;
+        let RepeatKeys { copies, offset, rotation, scale, opacity } = from_value_at(Value::Object(rest))?;
+        Ok(Repeat { copies, offset, rotation, scale, opacity, palette })
+    }
 }
 
 fn one() -> f64 {
     1.0
 }
+
+#[cfg(test)]
+#[path = "shape_tests.rs"]
+mod tests;

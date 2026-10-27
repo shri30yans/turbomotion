@@ -880,6 +880,30 @@ export function overwritten(tweens: Tween[], base: Value | undefined, id: string
 ```
 Segment times are on the timeline's clock; the expressions it writes use the layer's own time (`local`).
 
+## `palette-types`
+
+A palette that colours the copies of a repeater, as the engine reads it (crates/comp/src/schema/palette.rs). The layer `repeat` and the shape item's `repeat` take the same three keys.
+
+```ts
+export interface PaletteCycle
+```
+How copies pick from the palette. Copy `i` falls `i + offset` colours along it.
+
+```ts
+export type PalettePaint = "fill" | "stroke" | "both";
+```
+Which paint of a copy takes the colour: the fill (a text or solid layer's own colour), the stroke, or both.
+
+```ts
+export interface PaletteOpts
+```
+What a repeater takes to colour its copies.
+
+```ts
+export interface Swatch extends PaletteOpts
+```
+One colour of a palette cycle by the layer's place in a row, which is what a layer repeater gives each copy; also usable by hand.
+
 ## `raw-types`
 
 The two builders that take the engine's own vocabulary: `texture` (a generator and its parameters) and `raw` (any layer type).
@@ -926,6 +950,26 @@ A bare colour, `"metal"`, or one of `color`, `gradient`, `metal` with an `opacit
 export interface ItemTrim
 ```
 Draw only the part of the outline between `start` and `end` (0..1), shifted by `offset`: animate `end` to draw on.
+
+```ts
+export interface ItemRepeat extends PaletteOpts
+```
+Copies of an item. With a `palette` each copy also takes the next colour (`cycle` and `paint` say how).
+
+```ts
+export type TaperExtent = Prop | { fraction: Prop };
+```
+A length or a width in pixels, or `{ fraction }` of the outline's length (a tip's `length`) or of the stroke's `width` (a tip's `width`).
+
+```ts
+export interface TaperTip
+```
+One end of a tapered stroke.
+
+```ts
+export interface ItemTaper
+```
+The stroke thins toward either end of the outline: a variable-width stroke. Needs a `stroke`, and no `dash`.
 
 ```ts
 export interface ItemPaint extends Omit<PathGeometry, GeometryKey>

@@ -78,6 +78,9 @@ salts! {
         TEXT_BOX_PADDING_X = "text.box.padding.x",
         TEXT_BOX_PADDING_Y = "text.box.padding.y",
         TEXT_BOX_FILL = "text.box.fill",
+        SWATCH = "swatch",
+        SHAPE_REPEAT_PALETTE = "shape.repeat.palette",
+        SHAPE_TAPER = "shape.taper",
     }
     vectors {
         POS = "pos",

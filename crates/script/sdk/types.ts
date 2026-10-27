@@ -4,6 +4,7 @@ import type { BlendMode } from "./blend-types";
 import type { ItemFill } from "./shape-types";
 import type { Along, Flip, LayerStagger, Reflect, Wrap } from "./layer-motion-types";
 import type { MotionPath } from "./motion-types";
+import type { PaletteOpts, Swatch } from "./palette-types";
 
 export type Ease = string; // any engine ease: "none", "power2.out", "back.out(1.4)", "elastic.out(1, 0.4)", "steps(8)"...
 export type Vec2 = [number, number];
@@ -22,7 +23,7 @@ export interface Material {
   shininess?: number;
 }
 
-export interface Repeat {
+export interface Repeat extends PaletteOpts {
   /** Layers in all, the original included (2 to 256). */
   count: number;
   /** Move per copy: a number or an expression (`"time * 20"`) per axis. */
@@ -115,6 +116,8 @@ export interface LayerOpts {
   layout?: "foreground" | "backdrop" | "ignore";
   along?: Along;
   reflect?: Reflect;
+  /** One colour of a palette cycle in place of the layer's own (a text, solid or shape layer). A repeater's `palette` sets it on every copy. */
+  swatch?: Swatch;
   /** Anything else the engine takes (see `turbomotion comp catalogue`); merged as written. */
   extra?: Record<string, unknown>;
 }
@@ -327,7 +330,8 @@ export interface AudioOpts extends LayerOpts {
 
 export interface ShapeOpts extends LayerOpts {}
 
-export type { PathGeometry, GradientFill, ItemFill, ItemStroke, ItemTrim, ItemRepeat, ShapeItem } from "./shape-types";
+export type { PathGeometry, GradientFill, ItemFill, ItemStroke, ItemTrim, ItemRepeat, ItemTaper, TaperTip, TaperExtent, ShapeItem } from "./shape-types";
+export type { PaletteCycle, PalettePaint, PaletteOpts, Swatch } from "./palette-types";
 export type { Wrap, LayerStagger, Flip, Along, Reflect } from "./layer-motion-types";
 export interface SolidOpts extends LayerOpts {
   size?: Vec2;

@@ -150,7 +150,7 @@ A solid: a triangle mesh from a `geometry` generator, lit by the composition's l
 
 ## `shape`
 
-Vector shapes with fill, gradient, stroke, dashes, trim (draw-on), morph and repeat. Geometry: rect, ellipse, polygon, star, d (SVG path), points. A fill is a colour or a gradient (linear {from, to}, radial {center, radius}). Every item animates its own properties (`trim`, `rotation`, `scale`, `opacity`, rect/ellipse sizes); `anchor` is the item's pivot for rotation and scale, in the item's own units from the shape's origin.
+Vector shapes with fill, gradient, stroke, dashes, trim (draw-on), morph and repeat. Geometry: rect, ellipse, polygon, star, d (SVG path), points. A fill is a colour or a gradient (linear {from, to}, radial {center, radius}). Every item animates its own properties (`trim`, `rotation`, `scale`, `opacity`, rect/ellipse sizes); `anchor` is the item's pivot for rotation and scale, in the item's own units from the shape's origin. `taper` thins the stroke toward its ends (see `stroke_taper`); an item's `repeat` takes a `palette` (see `palette_cycle`).
 
 ```json
 {
@@ -576,6 +576,182 @@ A filled rectangle fitted to a text layer's characters, drawn behind the glyphs 
       "text": "Two lines,\nEach with its own bar",
       "type": "text",
       "weight": 700
+    }
+  ],
+  "width": 1920
+}
+```
+
+## `palette` (a repeater key)
+
+A repeater can give every copy its own colour from a palette. Add `palette`, `cycle` and `paint` to a layer `repeat` (the original is copy 0, the others 1 to count - 1) or to a shape item's `repeat` (copy 0 is the item itself). Both repeaters read the same three keys. Copy i falls `i + offset` colours along the palette: `step` takes colour `floor(i + offset) mod n` (a whole offset moves every copy on by that many colours, a fractional one holds the colour until it reaches the next whole number, a negative one moves back); `gradient` blends the two colours either side of `(i + offset) mod n`, the last colour blending back into the first, in the film's working colour space (display-encoded values in an ordinary film, light in a `linear_light` film, so it matches a Skia gradient drawn in the same film); `ping_pong` runs the palette forwards then backwards, `0 1 .. n-1 n-2 .. 1 0 1 ..`, the end colours not doubled. `reverse` reads the palette from its last colour to its first before any of this. `offset` is a property (a number, an expression, {from, to, at, dur, ease} or keys), so it can animate: animate it from 0 to n over a loop to run the colours along the row. The colours in `palette` may be animated too. `paint` says which paint of a copy takes the colour: "fill" (default; for text and solid layers their own colour), "stroke" or "both". A shape item takes a fill colour only when its fill is one flat colour (a gradient or metal fill is refused, with `paint: "stroke"` available), and a stroke only when it has one. A layer repeater works on text, solid and shape layers (an image or a precomp has no colour to replace, and is refused when the film is planned); each copy carries the result as a `swatch` {palette, index, cycle, paint}, a layer key you can also write by hand. The per-copy `opacity` of the repeater applies to the coloured copy as before. The repeater has whole copies only: `count` and `copies` are integers, so there is no fractional copy to colour.
+
+* `cycle`: {mode, offset, reverse}. `mode` is "step" (default), "gradient" or "ping_pong". `offset` is how many colours the palette is shifted on, a property that may animate and may be negative or fractional (default 0). `reverse` reads the palette last colour first (default false).
+* `paint`: "fill" (default), "stroke" or "both": which paint of the copy takes the colour.
+* `palette`: Required to colour copies: a list of at least one colour (hex, a palette name, an animated colour). Written inside `repeat`.
+
+```json
+{
+  "bg": "#10141f",
+  "dur": 3,
+  "fps": 30,
+  "height": 1080,
+  "layers": [
+    {
+      "color": "#ffffff",
+      "id": "chip",
+      "pos": [
+        260,
+        340
+      ],
+      "repeat": {
+        "count": 8,
+        "cycle": {
+          "mode": "step",
+          "offset": {
+            "dur": 3,
+            "ease": "none",
+            "from": 0,
+            "to": 4
+          }
+        },
+        "offset": [
+          200,
+          0
+        ],
+        "palette": [
+          "#e63946",
+          "#f1fa8c",
+          "#2a9d8f",
+          "#264653"
+        ]
+      },
+      "size": [
+        150,
+        150
+      ],
+      "type": "solid"
+    },
+    {
+      "id": "ramp",
+      "items": [
+        {
+          "ellipse": [
+            260,
+            720,
+            70,
+            70
+          ],
+          "fill": "#ffffff",
+          "repeat": {
+            "copies": 8,
+            "cycle": {
+              "mode": "gradient",
+              "offset": 0.5
+            },
+            "offset": [
+              200,
+              0
+            ],
+            "opacity": 0.9,
+            "paint": "both",
+            "palette": [
+              "#e63946",
+              "#2a9d8f",
+              "#9b5de5"
+            ]
+          },
+          "stroke": {
+            "color": "#ffffff",
+            "width": 8
+          }
+        }
+      ],
+      "pos": [
+        0,
+        0
+      ],
+      "type": "shape"
+    }
+  ],
+  "width": 1920
+}
+```
+
+## `taper` (a shape item key)
+
+`taper` on a shape item makes its stroke thinner toward either end of the outline: a variable-width stroke. It is drawn as the filled region between the two offset curves of the path (with the stroke's own `cap` and `join`; corners are joined, tight bends do not leave holes, and the edges stay within a fiftieth of a pixel of the true offset curve). `start` is the first point of the outline and `end` the last. Each end has a `length` (how far from the end the stroke takes to reach its full width) and a `width` (how wide it is at the end itself, default 0: a point). A length is pixels, or `{"fraction": f}` of the outline's length; a width is pixels, or `{"fraction": f}` of the stroke's `width`; each is a property that may animate. A length cannot be negative and is held to half the outline, so the two ends never overlap: a taper of 5000 px on a 400 px path is 200 px at each end and the stroke is full width at the middle only. `ease` (a GSAP name, default linear) shapes the width from the tip to the full width and is the same at both ends, measured from each tip. Between the tapers the stroke is its full `width`. A closed outline is tapered from its start point: `start` runs along the first stretch and `end` back along the last stretch before the start point, so with both given the stroke pinches at the start point from both sides, and with only one the stroke steps from the tip's width to full there. Several contours (a path with more than one `M`) are each tapered along their own length. A tapered stroke follows the trimmed outline: with `trim`, the taper is measured along the part that is drawn. The item needs a `stroke` and cannot be dashed; the colour, opacity, `cap` and `join` are the stroke's; a repeater's palette colours it like any stroke.
+
+* `ease`: A GSAP ease (default linear): how the width rises from the tip to the full width, measured from each tip.
+* `end`: {length, width}: the taper at the last point of the outline (on a closed outline, the stretch before the start point).
+* `length`: Pixels, or {"fraction": f} of the outline's length: how far from the end the stroke takes to reach its full width. 0 or more; held to half the outline.
+* `start`: {length, width}: the taper at the first point of the outline.
+* `width`: Pixels, or {"fraction": f} of the stroke's width: how wide the stroke is at the end itself (default 0). 0 or more.
+
+```json
+{
+  "bg": "#10141f",
+  "dur": 3,
+  "fps": 30,
+  "height": 1080,
+  "layers": [
+    {
+      "id": "arrow",
+      "items": [
+        {
+          "d": "M 260 800 C 560 300 1060 1000 1560 380",
+          "stroke": {
+            "cap": "round",
+            "color": "#e63946",
+            "join": "round",
+            "width": 56
+          },
+          "taper": {
+            "ease": "power2.out",
+            "end": {
+              "length": {
+                "fraction": 0.12
+              },
+              "width": {
+                "fraction": 0.3
+              }
+            },
+            "start": {
+              "length": 360,
+              "width": 0
+            }
+          },
+          "trim": {
+            "end": {
+              "dur": 1.5,
+              "ease": "power2.inOut",
+              "from": 0,
+              "to": 1
+            }
+          }
+        },
+        {
+          "ellipse": [
+            1560,
+            380,
+            150,
+            150
+          ],
+          "stroke": {
+            "color": "#f1fa8c",
+            "width": 36
+          },
+          "taper": {
+            "end": {
+              "length": 120
+            },
+            "start": {
+              "length": 120
+            }
+          }
+        }
+      ],
+      "type": "shape"
     }
   ],
   "width": 1920

@@ -51,7 +51,11 @@ Lights and shadows	3D	none	-	-	Lights	WP-23
 Camera f-stop, iris, focus distance	3D	none	-	-	Camera settings	WP-24
 Layer styles	Styles	part	-	-	Layer styles	WP-31
 Shape operators	Shapes	none	-	-	Shape path operators	WP-30
-Gradient stroke, taper, wave	Shapes	none	-	-	Stroke options	WP-30
+Gradient stroke, wave	Shapes	none	-	-	Stroke options	WP-30
+Stroke taper: variable-width stroke from offset curves (start/end length and width in px or fraction, ease, lengths held to half the path, closed paths)	Shapes	done	the_width_at_the_start_the_middle_and_the_end_is_the_one_asked_for_for_several_eases	parity/specs/stroke_taper.md	Stroke taper (Taper Length, Start/End Width)	WP-30
+Repeater palette cycle: step, gradient and ping_pong, animatable and fractional offset, reverse, on the layer repeater and the shape repeater (one typed definition)	Shapes	done	step_copy_i_shows_palette_i_plus_offset_mod_n_in_every_film	parity/specs/palette_cycle.md	Repeater with a colour expression	WP-30
+Palette gradient interpolates in the film's working colour space (display and linear light) and matches a Skia gradient	Colour	done	a_gradient_in_linear_light_matches_a_skia_gradient_drawn_in_the_same_film	parity/specs/palette_cycle.md	Repeater with a colour expression	WP-30
+Repeater fractional copies and start/end opacity ramp	Shapes	none	-	-	Repeater Copies, Start/End Opacity	WP-30
 Text measured bounds (comp inspect, measure(), source_rect_at_time)	Text	done	the_rectangle_is_the_text_bounds_inspect_shows_and_the_measured_characters	parity/specs/text_box.md	sourceRectAtTime	WP-32
 Text box fitted to the revealed characters (box: padding, radius, min_width, align, per_line)	Text	done	a_typewriter_reveal_grows_the_box_to_the_width_of_the_text_typed_so_far_at_every_sampled_time	parity/specs/text_box.md	Shape layer fitted to text	WP-32
 Text box drawn as measured in both effect spaces, at any scale and rotation	Text	done	the_drawn_box_is_the_measured_box_within_half_a_pixel_on_every_side	parity/specs/text_box.md	Shape layer fitted to text	WP-32

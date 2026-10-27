@@ -1,7 +1,8 @@
 // Shape layers: the items a `shape([...])` takes, as the engine reads them (crates/comp/src/schema/shape.rs and path.rs).
 // An item is one geometry plus how it is painted; `trim`, `offset`, `rotation`, `scale` and `opacity` can be tweened.
 
-import type { Color, Prop, Vec2 } from "./types";
+import type { PaletteOpts } from "./palette-types";
+import type { Color, Ease, Prop, Vec2 } from "./types";
 
 /** Exactly one of `d`, `points`, `rect`, `ellipse`, `polygon`, `star` names the outline; the rest refine it. */
 export interface PathGeometry {
@@ -58,7 +59,8 @@ export interface ItemTrim {
   offset?: Prop;
 }
 
-export interface ItemRepeat {
+/** Copies of an item. With a `palette` each copy also takes the next colour (`cycle` and `paint` say how). */
+export interface ItemRepeat extends PaletteOpts {
   copies: number;
   /** Added to every copy's position, cumulatively. */
   offset?: Vec2;
@@ -68,6 +70,27 @@ export interface ItemRepeat {
   scale?: number;
   /** Opacity multiplied per copy. */
   opacity?: number;
+}
+
+/** A length or a width in pixels, or `{ fraction }` of the outline's length (a tip's `length`) or of the stroke's `width` (a tip's `width`). */
+export type TaperExtent = Prop | { fraction: Prop };
+
+/** One end of a tapered stroke. */
+export interface TaperTip {
+  /** How far from the end the stroke takes to reach its full width; held to half the outline. */
+  length: TaperExtent;
+  /** How wide the stroke is at the end itself (default 0: a point). */
+  width?: TaperExtent;
+}
+
+/** The stroke thins toward either end of the outline: a variable-width stroke. Needs a `stroke`, and no `dash`. */
+export interface ItemTaper {
+  /** The first point of the outline. */
+  start?: TaperTip;
+  /** The last point of the outline (on a closed outline, the stretch before the start). */
+  end?: TaperTip;
+  /** How the stroke fills out from a tip, the same at both ends (default `"none"`, linear). */
+  ease?: Ease;
 }
 
 type GeometryKey = "d" | "points" | "rect" | "ellipse" | "polygon" | "star";
@@ -87,6 +110,7 @@ export interface ItemPaint extends Omit<PathGeometry, GeometryKey> {
   scale?: Prop | [Prop, Prop];
   opacity?: Prop;
   repeat?: ItemRepeat;
+  taper?: ItemTaper;
 }
 
 /** One piece of a `shape()`: one outline plus how it is painted, e.g. `{ ellipse: [0, 0, 80, 50], fill: "#fff", stroke: { color: "#000", width: 4 } }`. */

@@ -14,6 +14,7 @@
 
 mod encoding;
 mod ink;
+mod mix;
 mod pipeline;
 mod profile;
 

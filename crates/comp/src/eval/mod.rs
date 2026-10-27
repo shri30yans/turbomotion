@@ -13,6 +13,7 @@ pub mod media;
 pub mod shape;
 pub mod text;
 pub mod mesh;
+pub mod palette;
 pub mod transit;
 mod travel;
 
@@ -25,11 +26,7 @@ use anyhow::{anyhow, Context, Result};
 use serde::Serialize;
 use turbomotion_core::effects::Blend;
 
-use crate::{
-    anim::{ease::Ease, prop::Rgba},
-    plan::{CompPlan, LayerPlan, Plan},
-    schema::{Fit, Kind, Transit},
-};
+use crate::{anim::{ease::Ease, prop::Rgba}, plan::{CompPlan, LayerPlan, Plan}, schema::{Fit, Kind, Transit}};
 pub use env::LayerEnv;
 use mat4::Mat4;
 pub use shape::{MaskState, ShapeState};
@@ -432,6 +429,7 @@ impl<'p> Evaluator<'p> {
         };
 
         let (content, local_bounds) = self.content(c, l, t, lt, size, active)?;
+        let content = palette::apply(self, c, l, t, content)?;
         // depth of field: a 3D layer away from the focal distance softens in proportion to how far off it is
         let dof_blur = match (l.in_3d, camera.and_then(|c| c.dof)) {
             (true, Some([focus, blur])) if focus > 1.0 => blur * (depth - focus).abs() / focus,

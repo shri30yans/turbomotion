@@ -17,7 +17,7 @@ Generated from `parity/MATRIX.tsv` and `parity/effects.tsv`. `turbomotion parity
 * **Expressions**: Expressions: full object model (WP-12), Expression controls (WP-11)
 * **Import**: Subject matte import (WP-40), Lottie import (WP-51)
 * **Layers**: Per-vertex mask feather (WP-30), Collapse transformations (WP-14), Order of operations: masks before effects (WP-14)
-* **Shapes**: Shape operators (WP-30), Gradient stroke, taper, wave (WP-30)
+* **Shapes**: Shape operators (WP-30), Gradient stroke, wave (WP-30), Repeater fractional copies and start/end opacity ramp (WP-30)
 * **Simulation**: Particles v2 and simulation effects (WP-36), Rigid-body bake (WP-37)
 * **Text**: sourceRectAtTime called from expressions (WP-12), Text selector based-on and modes (WP-32), Variable font axes (WP-32)
 * **Time**: Frame blending, Pixel Motion Blur, Timewarp (WP-13), Posterize Time, Time Displacement, Time Difference (WP-13)

@@ -4,7 +4,7 @@
 use serde::{de::Error, Deserialize, Deserializer};
 use serde_json::Value;
 
-use crate::anim::prop::{ColorProp, Prop, VecProp};
+use crate::anim::{ease::Ease, prop::{ColorProp, Prop, VecProp}};
 
 /// A scalar animated property.
 #[derive(Debug, Clone)]
@@ -21,6 +21,10 @@ pub struct Scale(pub VecProp);
 /// A colour that can animate.
 #[derive(Debug, Clone)]
 pub struct Col(pub ColorProp);
+
+/// An easing curve named as GSAP names it (`"power2.out"`), checked when the composition is read.
+#[derive(Debug, Clone, Copy)]
+pub struct Easing(pub Ease);
 
 /// X, Y and Z Rotation: one number spins the layer about the z axis (the Z Rotation), three numbers are the X, Y
 /// and Z Rotation. Each axis is its own property and may wind past 360 degrees. Three numbers can also be written as
@@ -92,5 +96,11 @@ impl<'de> Deserialize<'de> for Col {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
         let v = Value::deserialize(d)?;
         ColorProp::parse(&v).map(Col).map_err(|e| D::Error::custom(format!("{e:#}")))
+    }
+}
+
+impl<'de> Deserialize<'de> for Easing {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        Ease::parse(&String::deserialize(d)?).map(Easing).map_err(|e| D::Error::custom(format!("{e:#}")))
     }
 }
