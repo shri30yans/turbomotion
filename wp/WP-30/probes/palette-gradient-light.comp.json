@@ -1,0 +1,105 @@
+{
+ "width": 960,
+ "height": 360,
+ "fps": 30,
+ "dur": 2,
+ "bg": "#10141f",
+ "layers": [
+  {
+   "id": "rows",
+   "type": "shape",
+   "items": [
+    {
+     "rect": [
+      -30,
+      -30,
+      60,
+      60
+     ],
+     "offset": [
+      60,
+      60
+     ],
+     "fill": "#ffffff",
+     "repeat": {
+      "copies": 8,
+      "offset": [
+       110,
+       0
+      ],
+      "palette": [
+       "#e63946",
+       "#f1fa8c",
+       "#2a9d8f"
+      ],
+      "cycle": {
+       "mode": "gradient",
+       "offset": 0
+      }
+     }
+    },
+    {
+     "rect": [
+      -30,
+      -30,
+      60,
+      60
+     ],
+     "offset": [
+      60,
+      160
+     ],
+     "fill": "#ffffff",
+     "repeat": {
+      "copies": 8,
+      "offset": [
+       110,
+       0
+      ],
+      "palette": [
+       "#e63946",
+       "#f1fa8c",
+       "#2a9d8f"
+      ],
+      "cycle": {
+       "mode": "gradient",
+       "offset": 0.25
+      }
+     }
+    },
+    {
+     "rect": [
+      -30,
+      -30,
+      60,
+      60
+     ],
+     "offset": [
+      60,
+      260
+     ],
+     "fill": "#ffffff",
+     "repeat": {
+      "copies": 8,
+      "offset": [
+       110,
+       0
+      ],
+      "palette": [
+       "#e63946",
+       "#f1fa8c",
+       "#2a9d8f"
+      ],
+      "cycle": {
+       "mode": "gradient",
+       "offset": -0.5
+      }
+     }
+    }
+   ]
+  }
+ ],
+ "color": {
+  "linear_light": true
+ }
+}

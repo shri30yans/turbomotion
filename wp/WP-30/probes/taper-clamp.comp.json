@@ -1,0 +1,32 @@
+{
+ "width": 520,
+ "height": 200,
+ "fps": 30,
+ "dur": 2,
+ "bg": "#10141f",
+ "layers": [
+  {
+   "id": "line",
+   "type": "shape",
+   "items": [
+    {
+     "d": "M 60 100 L 460 100",
+     "stroke": {
+      "color": "#ffffff",
+      "width": 20
+     },
+     "taper": {
+      "start": {
+       "length": 5000,
+       "width": 0
+      },
+      "end": {
+       "length": 5000,
+       "width": 0
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

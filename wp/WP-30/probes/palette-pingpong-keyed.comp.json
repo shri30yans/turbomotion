@@ -1,0 +1,82 @@
+{
+ "width": 960,
+ "height": 270,
+ "fps": 30,
+ "dur": 2,
+ "bg": "#10141f",
+ "layers": [
+  {
+   "id": "rows",
+   "type": "shape",
+   "items": [
+    {
+     "rect": [
+      -30,
+      -30,
+      60,
+      60
+     ],
+     "offset": [
+      60,
+      50
+     ],
+     "fill": "#ffffff",
+     "repeat": {
+      "copies": 8,
+      "offset": [
+       110,
+       0
+      ],
+      "palette": [
+       "#e63946",
+       "#f1fa8c",
+       "#2a9d8f",
+       "#264653"
+      ],
+      "cycle": {
+       "mode": "ping_pong"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "chip",
+   "type": "solid",
+   "color": "#ffffff",
+   "size": [
+    60,
+    60
+   ],
+   "pos": [
+    60,
+    200
+   ],
+   "repeat": {
+    "count": 8,
+    "offset": [
+     110,
+     0
+    ],
+    "palette": [
+     "#e63946",
+     "#f1fa8c",
+     "#2a9d8f"
+    ],
+    "cycle": {
+     "offset": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       4,
+       "none"
+      ]
+     ]
+    }
+   }
+  }
+ ]
+}

@@ -1,0 +1,69 @@
+{
+ "width": 960,
+ "height": 360,
+ "fps": 30,
+ "dur": 2,
+ "bg": "#10141f",
+ "layers": [
+  {
+   "id": "lines",
+   "type": "shape",
+   "items": [
+    {
+     "d": "M 60 80 L 900 80",
+     "stroke": {
+      "color": "#ffffff",
+      "width": 30
+     },
+     "taper": {
+      "start": {
+       "length": 200,
+       "width": 0
+      },
+      "end": {
+       "length": 160,
+       "width": 8
+      },
+      "ease": "none"
+     }
+    },
+    {
+     "d": "M 60 170 L 900 170",
+     "stroke": {
+      "color": "#ffffff",
+      "width": 30
+     },
+     "taper": {
+      "start": {
+       "length": 200,
+       "width": 0
+      },
+      "end": {
+       "length": 160,
+       "width": 8
+      },
+      "ease": "power2.out"
+     }
+    },
+    {
+     "d": "M 60 260 L 900 260",
+     "stroke": {
+      "color": "#ffffff",
+      "width": 30
+     },
+     "taper": {
+      "start": {
+       "length": 200,
+       "width": 0
+      },
+      "end": {
+       "length": 160,
+       "width": 8
+      },
+      "ease": "sine.inOut"
+     }
+    }
+   ]
+  }
+ ]
+}

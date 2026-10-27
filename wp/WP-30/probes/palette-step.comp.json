@@ -1,0 +1,201 @@
+{
+ "width": 960,
+ "height": 540,
+ "fps": 30,
+ "dur": 2,
+ "bg": "#10141f",
+ "layers": [
+  {
+   "id": "rows",
+   "type": "shape",
+   "items": [
+    {
+     "rect": [
+      -30,
+      -30,
+      60,
+      60
+     ],
+     "offset": [
+      60,
+      50
+     ],
+     "fill": "#ffffff",
+     "repeat": {
+      "copies": 8,
+      "offset": [
+       110,
+       0
+      ],
+      "palette": [
+       "#e63946",
+       "#f1fa8c",
+       "#2a9d8f",
+       "#264653",
+       "#9b5de5"
+      ],
+      "cycle": {
+       "offset": 0,
+       "reverse": false
+      }
+     }
+    },
+    {
+     "rect": [
+      -30,
+      -30,
+      60,
+      60
+     ],
+     "offset": [
+      60,
+      130
+     ],
+     "fill": "#ffffff",
+     "repeat": {
+      "copies": 8,
+      "offset": [
+       110,
+       0
+      ],
+      "palette": [
+       "#e63946",
+       "#f1fa8c",
+       "#2a9d8f",
+       "#264653",
+       "#9b5de5"
+      ],
+      "cycle": {
+       "offset": 1,
+       "reverse": false
+      }
+     }
+    },
+    {
+     "rect": [
+      -30,
+      -30,
+      60,
+      60
+     ],
+     "offset": [
+      60,
+      210
+     ],
+     "fill": "#ffffff",
+     "repeat": {
+      "copies": 8,
+      "offset": [
+       110,
+       0
+      ],
+      "palette": [
+       "#e63946",
+       "#f1fa8c",
+       "#2a9d8f",
+       "#264653",
+       "#9b5de5"
+      ],
+      "cycle": {
+       "offset": -1,
+       "reverse": false
+      }
+     }
+    },
+    {
+     "rect": [
+      -30,
+      -30,
+      60,
+      60
+     ],
+     "offset": [
+      60,
+      290
+     ],
+     "fill": "#ffffff",
+     "repeat": {
+      "copies": 8,
+      "offset": [
+       110,
+       0
+      ],
+      "palette": [
+       "#e63946",
+       "#f1fa8c",
+       "#2a9d8f",
+       "#264653",
+       "#9b5de5"
+      ],
+      "cycle": {
+       "offset": 2.5,
+       "reverse": false
+      }
+     }
+    },
+    {
+     "rect": [
+      -30,
+      -30,
+      60,
+      60
+     ],
+     "offset": [
+      60,
+      370
+     ],
+     "fill": "#ffffff",
+     "repeat": {
+      "copies": 8,
+      "offset": [
+       110,
+       0
+      ],
+      "palette": [
+       "#e63946",
+       "#f1fa8c",
+       "#2a9d8f",
+       "#264653",
+       "#9b5de5"
+      ],
+      "cycle": {
+       "offset": -0.5,
+       "reverse": true
+      }
+     }
+    },
+    {
+     "rect": [
+      -30,
+      -30,
+      60,
+      60
+     ],
+     "offset": [
+      60,
+      450
+     ],
+     "fill": "#ffffff",
+     "repeat": {
+      "copies": 8,
+      "offset": [
+       110,
+       0
+      ],
+      "palette": [
+       "#e63946",
+       "#f1fa8c",
+       "#2a9d8f",
+       "#264653",
+       "#9b5de5"
+      ],
+      "cycle": {
+       "offset": 7,
+       "reverse": true
+      }
+     }
+    }
+   ]
+  }
+ ]
+}
