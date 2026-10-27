@@ -7,7 +7,7 @@
 //! // @bounds source=map                        the output covers the named layer input as well
 //! ```
 //!
-//! An expression is numbers, float parameter names, `box_w` and `box_h` (the layer's own width and height in pixels, so
+//! An expression is numbers, float parameter names (a choice is the number of its option), `box_w` and `box_h` (the layer's own width and height in pixels, so
 //! a growth can be a share of the layer: `expand_x=box_w*(scale-1)/2`), `+ - * /`, brackets and `abs`, `min`, `max`,
 //! written without spaces. A plugin without the tag has not said: in layer space its pixels cannot grow and `check` warns
 //! (`fx-needs-bounds`).
@@ -15,7 +15,7 @@
 use anyhow::{anyhow, bail, ensure, Context, Result};
 use turbomotion_core::suggest::hint;
 
-use super::{Param, Ty};
+use super::{kernel_pass::expression_names, Param};
 
 /// The names an expression may use besides the float parameters: the layer's box width and height.
 const BOX_NAMES: [&str; 2] = ["box_w", "box_h"];
@@ -57,7 +57,7 @@ impl Bounds {
             return Ok(Bounds::Within);
         }
         ensure!(!words.is_empty(), "@bounds is `none`, `expand=<expr>`, `expand_x=<expr> expand_y=<expr>` or `source=<input>`");
-        let mut floats: Vec<&str> = params.iter().filter(|p| p.ty == Ty::Float).map(|p| p.name.as_str()).collect();
+        let mut floats = expression_names(params);
         if let Some(clash) = floats.iter().find(|n| BOX_NAMES.contains(n)) {
             bail!("a parameter called {clash:?} would hide the layer's size in @bounds, where box_w and box_h are the layer's width and height; rename the parameter");
         }

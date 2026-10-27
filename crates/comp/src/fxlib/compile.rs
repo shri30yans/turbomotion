@@ -6,7 +6,7 @@ use std::ops::Range;
 use anyhow::{anyhow, ensure, Result};
 use turbomotion_core::shader::Program;
 
-use super::{header::Header, Def, Kind, Pass, Ty, FULL_SIZE};
+use super::{header::Header, Def, Kind, KernelPass, Pass, PassBody, Ty, FULL_SIZE};
 
 const PRELUDE: &str = include_str!("prelude.sksl");
 /// Where the standard library's image helpers begin: generators have no input picture, so they do not get them.
@@ -23,14 +23,15 @@ struct Section<'a> {
     scale: f64,
     doc: &'a str,
     body: Range<usize>,
+    kernel: Option<&'a KernelPass>,
 }
 
 /// The file's passes: one per `@pass` marker, or a single `main` over the whole file when there are none.
 fn sections(h: &Header, lines: usize) -> Vec<Section<'_>> {
     if h.marks.is_empty() {
-        return vec![Section { name: "main", scale: FULL_SIZE, doc: "", body: 0..lines }];
+        return vec![Section { name: "main", scale: FULL_SIZE, doc: "", body: 0..lines, kernel: None }];
     }
-    h.marks.iter().enumerate().map(|(k, m)| Section { name: &m.name, scale: m.scale, doc: &m.doc, body: m.line + 1..h.marks.get(k + 1).map_or(lines, |next| next.line) }).collect()
+    h.marks.iter().enumerate().map(|(k, m)| Section { name: &m.name, scale: m.scale, doc: &m.doc, body: m.line + 1..h.marks.get(k + 1).map_or(lines, |next| next.line), kernel: m.kernel.as_ref() }).collect()
 }
 
 /// The uniform declarations of pass `k`: the picture, the inputs, every earlier pass, then the platform's values and the
@@ -76,12 +77,18 @@ impl Def {
         let mut passes = Vec::with_capacity(sections.len());
         let mut used_uniforms: Vec<String> = vec![];
         for (k, s) in sections.iter().enumerate() {
+            if let Some(kernel) = s.kernel {
+                let code = src.lines().enumerate().find(|(n, l)| s.body.contains(n) && !l.trim().is_empty() && !l.trim_start().starts_with("//"));
+                ensure!(code.is_none(), "pass {:?} is a kernel pass and has no code, but line {} is: {}", s.name, code.map_or(0, |c| c.0 + 1), code.map_or("", |c| c.1.trim()));
+                passes.push(Pass { name: s.name.to_string(), scale: s.scale, doc: s.doc.to_string(), body: PassBody::Kernel(kernel.clone()) });
+                continue;
+            }
             let library = if h.kind == Kind::Effect { PRELUDE } else { shared_prelude() };
             let prelude = format!("{}{library}\n", declarations(&h, &sections[..k]));
             let body = author_source(src, &sections, k);
             let program = Program::shader(&h.name, &format!("{prelude}{body}")).map_err(|e| anyhow!("{}", explain(&format!("{e:#}"), &body, prelude.lines().count())))?;
             used_uniforms.extend(program.uniform_names());
-            passes.push(Pass { name: s.name.to_string(), scale: s.scale, doc: s.doc.to_string(), program });
+            passes.push(Pass { name: s.name.to_string(), scale: s.scale, doc: s.doc.to_string(), body: PassBody::Shader(program) });
         }
         for u in ["resolution", "time"].into_iter().chain(h.params.iter().map(|p| p.name.as_str())) {
             ensure!(used_uniforms.iter().any(|used| used == u), "uniform {u:?} is unused by the shader, so the compiler dropped it; use it or remove it from the header");

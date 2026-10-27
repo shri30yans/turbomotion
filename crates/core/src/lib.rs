@@ -10,6 +10,7 @@ pub mod encode;
 pub mod geom;
 pub mod gpu;
 pub mod grade;
+pub mod kernel;
 pub mod layer;
 pub mod parallel;
 pub mod shader;

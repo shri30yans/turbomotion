@@ -11,33 +11,45 @@
 mod backdrop;
 pub mod blend;
 mod blur;
+#[cfg(test)]
+mod blur_tests;
 mod bounds;
+mod chain;
 mod color;
 mod distort;
 mod edge;
 mod halation;
+mod lens;
+mod limits;
 mod param;
 mod pass;
 mod place;
 mod programs;
+mod quality;
+mod reach;
+mod smear;
 mod spec;
 mod texture;
+mod unsharp;
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::Result;
 use serde::Deserialize;
-use serde_json::{Map, Value};
-use skia_safe::Canvas;
+use serde_json::Value;
 
 pub use backdrop::over as backdrop_over;
 pub use blend::{Blend, Programs as BlendPrograms};
-pub use blur::smear;
+pub use smear::smear;
 pub use bounds::{grown, grows_bounds, Growth, GAUSSIAN_REACH};
+pub use chain::{apply, apply_in, entry};
 pub use pass::{Ctx, Space};
 pub use programs::Programs;
 pub use spec::{check_names, ParamKind, ParamSpec};
 
-use self::spec::{float, optional_rgb, resolve_all, rgb};
-use super::{color::Encoding, grade, layer::Layer, shaders::Shaders};
+use self::{
+    quality::QUALITY,
+    spec::{choice, float, optional_rgb, resolve_all, rgb},
+};
+use super::{color::Encoding, grade, kernel, layer::Layer};
 
 /// One catalogue entry: what the effect is called, what it does, every parameter it takes, and a runnable use.
 pub struct Entry {
@@ -85,16 +97,51 @@ macro_rules! registry {
 
 registry! {
     Blur(blur::Blur) = "blur", Linear, blur::blur, "Gaussian blur.",
-        [float("radius", 8.0, "Gaussian sigma in pixels.").at_least(0.0)],
+        [
+            float("radius", 8.0, "Gaussian sigma in pixels (After Effects' Blurriness is twice this).").at_least(0.0),
+            QUALITY,
+            choice("dimensions", "both", kernel::Axes::NAMES, "Which way it blurs."),
+            choice("edge", "transparent", kernel::Edge::NAMES, "`transparent` lets light leave the picture's edge; `repeat` continues the edge pixels outward, and the layer does not grow."),
+        ],
         {"effect": "blur", "radius": 8};
+    BoxBlur(lens::BoxBlur) = "box_blur", Linear, lens::box_blur, "Box blur: the mean of a square, repeated for a softer, rounder fall-off.",
+        [
+            float("radius", 5.0, "Pixels each side of a pixel it averages; a fraction weights the outermost pixel.").at_least(0.0),
+            float("iterations", 1.0, "Times the box is repeated; 3 or more is close to a Gaussian.").between(1.0, kernel::MAX_ITERATIONS as f64),
+            choice("dimensions", "both", kernel::Axes::NAMES, "Which way it blurs."),
+            choice("edge", "transparent", kernel::Edge::NAMES, "`transparent` lets light leave the picture's edge; `repeat` continues the edge pixels outward, and the layer does not grow."),
+        ],
+        {"effect": "box_blur", "radius": 6, "iterations": 3};
+    LensBlur(lens::LensBlur) = "lens_blur", Linear, lens::lens_blur, "Lens blur: every pixel becomes the lens's opening, a disc or a polygon.",
+        [
+            float("radius", 10.0, "Pixels from the centre of the opening to its farthest part.").between(0.0, kernel::taps::MAX_IRIS_TAPS as f64 - 0.5),
+            float("blades", 0.0, "Sides of the opening: 0 for a disc, or 3 to 16.").between(0.0, kernel::MAX_BLADES as f64),
+            float("rotation", 0.0, "Degrees the polygon is turned."),
+            float("roundness", 0.0, "0 keeps the polygon's straight sides, 1 rounds it to a disc.").between(0.0, 1.0),
+            choice("edge", "transparent", kernel::Edge::NAMES, "`transparent` lets light leave the picture's edge; `repeat` continues the edge pixels outward, and the layer does not grow."),
+        ],
+        {"effect": "lens_blur", "radius": 10, "blades": 6, "rotation": 15, "roundness": 0.2};
+    UnsharpMask(unsharp::UnsharpMask) = "unsharp_mask", Display, unsharp::unsharp_mask, "Sharpens by adding back a fraction of what a Gaussian blur takes away; coverage is left as it is.",
+        [
+            float("amount", 50.0, "Percent of the difference added back.").at_least(0.0),
+            float("radius", 1.0, "Gaussian sigma in pixels of the soft copy; the size of the detail it sharpens.").between(0.0, 100.0),
+            float("threshold", 0.0, "Differences smaller than this many levels (of 255) are left alone.").between(0.0, 255.0),
+        ],
+        {"effect": "unsharp_mask", "amount": 150, "radius": 2, "threshold": 0};
     Backdrop(backdrop::Backdrop) = "backdrop", Linear, backdrop::backdrop, "Blurs what has already been composited behind this layer and draws the layer on top (frosted glass).",
-        [float("blur", 24.0, "Gaussian sigma in pixels.").at_least(0.0)],
+        [float("blur", 24.0, "Gaussian sigma in pixels.").at_least(0.0), QUALITY],
         {"effect": "backdrop", "blur": 24};
-    DirectionalBlur(blur::DirectionalBlur) = "directional_blur", Linear, blur::directional_blur, "Motion blur: smears the layer along an angle.",
-        [float("distance", 40.0, "Length of the smear in pixels."), float("angle", 0.0, "Direction of the smear in degrees (0 = horizontal, 90 = vertical).")],
+    DirectionalBlur(smear::DirectionalBlur) = "directional_blur", Linear, smear::directional_blur, "Motion blur: smears the layer along an angle.",
+        [float("distance", 40.0, "Length of the smear in pixels."), float("angle", 0.0, "Direction of the smear in degrees (0 = horizontal, 90 = vertical)."), QUALITY],
         {"effect": "directional_blur", "distance": 40, "angle": 0};
-    RadialBlur(blur::RadialBlur) = "radial_blur", Linear, blur::radial_blur, "Zoom blur from a point.",
-        [float("amount", 0.1, "Extra zoom at the end of the smear: 0.1 smears 10%."), float("x", 0.5, "Centre across the frame, as a fraction."), float("y", 0.5, "Centre down the frame, as a fraction.")],
+    RadialBlur(smear::RadialBlur) = "radial_blur", Linear, smear::radial_blur, "Radial blur from a point: a zoom, or (with `quality: exact`) a spin.",
+        [
+            float("amount", 0.1, "`zoom`: extra zoom at the end of the smear, 0.1 smears 10%. `spin`: degrees the smear turns through."),
+            float("x", 0.5, "Centre across the frame, as a fraction."),
+            float("y", 0.5, "Centre down the frame, as a fraction."),
+            choice("mode", "zoom", smear::Radial::NAMES, "`zoom` smears along each ray from the centre, `spin` along each circle about it."),
+            QUALITY,
+        ],
         {"effect": "radial_blur", "amount": 0.1, "x": 0.5, "y": 0.5};
     Glow(blur::Glow) = "glow", Linear, blur::glow, "Adds a blurred copy back on top, so bright parts bleed light.",
         [
@@ -102,6 +149,7 @@ registry! {
             float("strength", 1.0, "How much of the halo is added back (1 = as bright as the source).").at_least(0.0),
             float("threshold", 0.0, "Only parts brighter than this (0..1 luma) glow; 0 makes everything glow.").between(0.0, 1.0),
             optional_rgb("color", "Colour of the halo; leave out to glow in the layer's own colours."),
+            QUALITY,
         ],
         {"effect": "glow", "radius": 24, "strength": 1, "threshold": 0, "color": [255, 200, 120]};
     FilmHalation(halation::FilmHalation) = "film_halation", Linear, halation::film_halation, "Film halation: the brightest parts ring with a wide red-orange halo, as light scattered back through the film base exposes it again.",
@@ -110,6 +158,7 @@ registry! {
             float("radius", 40.0, "Gaussian sigma of the halo in pixels.").at_least(0.0),
             float("strength", 0.5, "The luma added back as a fraction of the light that passed the threshold, summed over the picture.").at_least(0.0),
             rgb("color", [255, 90, 40], "Hue of the halo; only its hue counts, the strength sets how much light it adds."),
+            QUALITY,
         ],
         {"effect": "film_halation", "threshold": 0.6, "radius": 40, "strength": 0.5, "color": [255, 90, 40]};
     Shadow(edge::Shadow) = "shadow", Linear, edge::shadow, "Soft drop shadow behind the layer's shape.",
@@ -119,6 +168,7 @@ registry! {
             float("blur", 16.0, "Gaussian sigma of the shadow's edge.").at_least(0.0),
             rgb("color", [0, 0, 0], "Shadow colour."),
             float("opacity", 0.5, "How dark the shadow is.").between(0.0, 1.0),
+            QUALITY,
         ],
         {"effect": "shadow", "dx": 0, "dy": 12, "blur": 16, "color": [0, 0, 0], "opacity": 0.5};
     Outline(edge::Outline) = "outline", Linear, edge::outline, "Solid outline around the layer's shape.",
@@ -230,36 +280,9 @@ registry! {
         {"effect": "transform", "x": 40, "y": -20, "scale": 1.15, "rotation": -6, "anchor_x": 0.5, "anchor_y": 0.5};
 }
 
-impl Effect {
-    /// The effect `name` with `given` parameters: unknown names and parameters are errors that list the valid ones, a
-    /// parameter left out takes its declared default, and values are held inside their declared range.
-    pub fn build(name: &str, given: &Map<String, Value>) -> Result<Effect> {
-        let entry = entry(name).ok_or_else(|| anyhow!("no platform effect {name:?}; they are: {}", CATALOGUE.iter().map(|e| e.effect).collect::<Vec<_>>().join(", ")))?;
-        let resolved = resolve_all(name, entry.params, given)?;
-        serde_json::from_value(Value::Object(resolved)).with_context(|| format!("effect {name:?}"))
-    }
-}
-
-/// The catalogue entry called `name`.
-pub fn entry(name: &str) -> Option<&'static Entry> {
-    CATALOGUE.iter().find(|e| e.effect == name)
-}
-
-/// Run `chain` over `layer` at time `t`, in order. The picture is the whole layer.
-pub fn apply(shaders: &Shaders, like: &Canvas, layer: Layer, chain: &[Effect], t: f64) -> Result<Layer> {
-    run_chain(&Ctx::new(shaders, like, t), layer, chain)
-}
-
-/// As [`apply`] for a picture that is a window onto the layer (see [`Space`]).
-pub fn apply_in(shaders: &Shaders, like: &Canvas, layer: Layer, chain: &[Effect], t: f64, space: Space) -> Result<Layer> {
-    run_chain(&Ctx { space: Some(space), ..Ctx::new(shaders, like, t) }, layer, chain)
-}
-
-fn run_chain(ctx: &Ctx, layer: Layer, chain: &[Effect]) -> Result<Layer> {
-    chain.iter().try_fold(layer, |layer, effect| effect.run(ctx, &layer).with_context(|| format!("effect {:?}", effect.name())))
-}
-
 #[cfg(test)]
 mod halation_tests;
+#[cfg(test)]
+mod reach_tests;
 #[cfg(test)]
 mod tests;

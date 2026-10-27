@@ -1,0 +1,72 @@
+{
+ "width": 1280,
+ "height": 720,
+ "fps": 24,
+ "dur": 1,
+ "bg": "#000000",
+ "layers": [
+  {
+   "type": "solid",
+   "color": "#ffffff",
+   "size": [
+    6,
+    6
+   ],
+   "pos": [
+    220,
+    360
+   ],
+   "fx": [
+    {
+     "effect": "lens_blur",
+     "radius": 28,
+     "blades": 0,
+     "rotation": 0
+    }
+   ]
+  },
+  {
+   "type": "solid",
+   "color": "#ffffff",
+   "size": [
+    6,
+    6
+   ],
+   "pos": [
+    640,
+    360
+   ],
+   "fx": [
+    {
+     "effect": "lens_blur",
+     "radius": 28,
+     "blades": 6,
+     "rotation": 0
+    }
+   ]
+  },
+  {
+   "type": "solid",
+   "color": "#ffffff",
+   "size": [
+    6,
+    6
+   ],
+   "pos": [
+    1060,
+    360
+   ],
+   "fx": [
+    {
+     "effect": "lens_blur",
+     "radius": 28,
+     "blades": 5,
+     "rotation": 0
+    }
+   ]
+  }
+ ],
+ "color": {
+  "linear_light": true
+ }
+}

@@ -99,6 +99,14 @@ fn across(side: i32, sigma: f64, d: i32) -> f64 {
     (0..side).map(|i| k(d - (i - side / 2))).sum()
 }
 
+/// [`across`] for the exact blur: the Gaussian cut at the 4 sigma the kernel reads.
+fn exact_across(side: i32, sigma: f64, d: i32) -> f64 {
+    let radius = crate::kernel::taps::gaussian_taps(sigma) as i32;
+    let g = |x: i32| (-f64::from(x * x) / (2.0 * sigma * sigma)).exp();
+    let total: f64 = (-radius..=radius).map(g).sum();
+    (0..side).map(|i| d - (i - side / 2)).filter(|x| x.abs() <= radius).map(|x| g(x) / total).sum()
+}
+
 fn profile(after: &[[f32; 4]], before: &[[f32; 4]], dx: i32, dy: i32) -> f64 {
     let i = ((SIDE / 2 + dy) * SIDE + SIDE / 2 + dx) as usize;
     f64::from(after[i][1]) - f64::from(before[i][1])
@@ -180,4 +188,39 @@ fn no_strength_changes_nothing_and_no_radius_adds_the_excess_where_it_is() {
     let i = (CENTRE as i32 * SIDE + CENTRE as i32) as usize;
     near("an unblurred halo adds the part above the threshold", f64::from(sharp[i][0]), 1.0 + 0.5, 0.002);
     assert_eq!(sharp[i + 1][0], 0.0, "and reaches no further");
+}
+
+/// The halo's value on the source pixel itself, for a point of light under a strength so large that the halo stands well
+/// clear of the half-float's resolution next to the source's own 1.0 (strength 1000 against the sigma 16's 6.2e-4 per unit).
+fn point_halo_peak(radius: f64, quality: &str) -> f64 {
+    const STRENGTH: f64 = 1000.0;
+    let point = [[CENTRE, CENTRE, 1.0, 1.0]];
+    let params = |strength: f64| json!({"effect": "film_halation", "threshold": 0.0, "radius": radius, "strength": strength, "color": [255, 255, 255], "quality": quality});
+    let (before, after) = (halated(BLACK, &point, 1.0, params(0.0)), halated(BLACK, &point, 1.0, params(STRENGTH)));
+    profile(&after, &before, 0, 0) / STRENGTH
+}
+
+#[test]
+fn the_halo_of_a_point_peaks_where_the_gaussian_does_in_the_exact_blur_and_a_little_under_it_in_the_legacy_one() {
+    // the continuous Gaussian's peak, 1 / (2 pi sigma^2), for a unit of light on one pixel
+    for radius in [16.0, 32.0, 64.0] {
+        let analytic = 1.0 / (2.0 * std::f64::consts::PI * radius * radius);
+        let (old, new) = (point_halo_peak(radius, "legacy") / analytic, point_halo_peak(radius, "exact") / analytic);
+        assert!((new - 1.0).abs() < 0.01, "sigma {radius}: the exact halo's peak is {new:.4} of the analytic one");
+        assert!(old < 0.99 && old > 0.97, "sigma {radius}: the legacy halo's peak is {old:.4} of the analytic one, 1% to 3% low");
+    }
+}
+
+#[test]
+fn an_exact_halo_keeps_all_the_light_where_a_wide_source_is_over_or_under_counted_by_the_legacy_one() {
+    let (side, sigma) = (64.0f32, 24.0);
+    let square = [[CENTRE - 32.0, CENTRE - 32.0, 1.0, 1.0]];
+    let before = unchanged(&square, side);
+    let sums: Vec<f64> = ["legacy", "exact"].iter().map(|q| added(&halated(BLACK, &square, side, json!({"effect": "film_halation", "threshold": 0.0, "radius": sigma, "strength": 1.0, "color": [255, 255, 255], "quality": q})), &before, 1) / 4096.0).collect();
+    assert!((sums[1] - 1.0).abs() < 0.005, "the exact halo's light: {:.4} of the source's", sums[1]);
+    // the 64 px square's halo in the middle: the closed form (the Gaussian sampled and cut at 4 sigma, as the exact blur is) against what each blur put there
+    let peak = exact_across(64, sigma, 0).powi(2);
+    let centre = |q: &str| profile(&halated(BLACK, &square, side, json!({"effect": "film_halation", "threshold": 0.0, "radius": sigma, "strength": 1.0, "color": [255, 255, 255], "quality": q})), &before, 0, 0);
+    assert!((centre("exact") / peak - 1.0).abs() < 0.005, "exact: {:.4} of the closed form", centre("exact") / peak);
+    assert!(centre("legacy") / peak < 0.985, "legacy: {:.4} of the closed form at the centre (2.5% low)", centre("legacy") / peak);
 }

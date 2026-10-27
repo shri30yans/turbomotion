@@ -2,7 +2,7 @@
 //! The effect's struct, the plan's validation, the descriptor the documentation is written from and `comp fx test`
 //! all read this declaration, so none of them can disagree about it.
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, bail, ensure, Result};
 use serde::Deserialize;
 use serde_json::{json, Map, Value};
 
@@ -16,6 +16,8 @@ pub enum ParamKind {
     Float { default: f64 },
     /// `[r, g, b]`, each channel 0 to 255; with no default the colour is simply absent when left out.
     Color { default: Option<Rgb> },
+    /// One of a fixed list of names (never animated); `default` is the index in `options` of the one taken when left out.
+    Choice { default: usize, options: &'static [&'static str] },
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -36,6 +38,38 @@ pub const fn float(name: &'static str, default: f64, doc: &'static str) -> Param
 /// A colour parameter.
 pub const fn rgb(name: &'static str, default: Rgb, doc: &'static str) -> ParamSpec {
     ParamSpec { name, kind: ParamKind::Color { default: Some(default) }, min: None, max: None, doc }
+}
+
+/// A parameter that is one of `options`, written as its name.
+/// `default` must be one of them: a declaration that is not stops the build, not the film.
+pub const fn choice(name: &'static str, default: &'static str, options: &'static [&'static str], doc: &'static str) -> ParamSpec {
+    ParamSpec { name, kind: ParamKind::Choice { default: index_of(default, options), options }, min: None, max: None, doc }
+}
+
+/// Where `name` is in `options`; a compile-time error when it is not there.
+const fn index_of(name: &str, options: &[&str]) -> usize {
+    let mut at = 0;
+    while at < options.len() {
+        if bytes_equal(name.as_bytes(), options[at].as_bytes()) {
+            return at;
+        }
+        at += 1;
+    }
+    panic!("a choice's default is not among its options")
+}
+
+const fn bytes_equal(a: &[u8], b: &[u8]) -> bool {
+    if a.len() != b.len() {
+        return false;
+    }
+    let mut i = 0;
+    while i < a.len() {
+        if a[i] != b[i] {
+            return false;
+        }
+        i += 1;
+    }
+    true
 }
 
 /// A colour that is absent when left out.
@@ -65,6 +99,7 @@ impl ParamSpec {
             return Ok(match self.kind {
                 ParamKind::Float { default } => Some(json!(default)),
                 ParamKind::Color { default } => default.map(|rgb| json!(rgb)),
+                ParamKind::Choice { default, options } => options.get(default).map(|name| json!(name)),
             });
         };
         Ok(Some(match self.kind {
@@ -74,6 +109,11 @@ impl ParamSpec {
             }
             ParamKind::Color { .. } => {
                 Rgb::deserialize(v).map_err(|_| anyhow!("a colour is [r, g, b] with each channel 0 to 255"))?;
+                v.clone()
+            }
+            ParamKind::Choice { options, .. } => {
+                let name = v.as_str().ok_or_else(|| anyhow!("a choice is written as one of its names"))?;
+                ensure!(options.contains(&name), "{name:?} is not an option.{} The options are: {}", hint(name, options), options.join(", "));
                 v.clone()
             }
         }))
@@ -105,6 +145,7 @@ impl ParamKind {
         match self {
             ParamKind::Float { .. } => "a number, or [[seconds, value], ...] keys that animate it",
             ParamKind::Color { .. } => "[r, g, b] with each channel 0 to 255",
+            ParamKind::Choice { .. } => "one of its option names, in quotes",
         }
     }
 }
@@ -142,6 +183,7 @@ mod tests {
     const RADIUS: ParamSpec = float("radius", 8.0, "reach").between(0.0, 100.0);
     const INK: ParamSpec = rgb("ink", [1, 2, 3], "colour");
     const GLOW: ParamSpec = optional_rgb("glow", "an optional colour");
+    const EDGE: ParamSpec = choice("edge", "repeat", &["transparent", "repeat"], "what lies beyond");
 
     #[test]
     fn a_left_out_parameter_takes_its_default_and_an_optional_one_stays_absent() {
@@ -179,5 +221,15 @@ mod tests {
         let given = json!({"radis": 3}).as_object().unwrap().clone();
         let e = resolve_all("blur", &[RADIUS], &given).unwrap_err().to_string();
         assert!(e.contains("\"radis\"") && e.contains("Did you mean \"radius\"") && e.contains("Its parameters are: radius"), "{e}");
+    }
+
+    #[test]
+    fn a_choice_is_one_of_its_names_and_a_wrong_one_says_what_the_names_are() {
+        assert_eq!(EDGE.resolve(None).unwrap(), Some(json!("repeat")), "left out it takes its default");
+        assert_eq!(EDGE.resolve(Some(&json!("transparent"))).unwrap(), Some(json!("transparent")));
+        let e = EDGE.resolve(Some(&json!("repat"))).unwrap_err().to_string();
+        assert!(e.contains("\"repat\" is not an option") && e.contains("Did you mean \"repeat\"") && e.contains("transparent, repeat"), "{e}");
+        assert!(EDGE.resolve(Some(&json!(2))).is_err() && EDGE.resolve(Some(&json!([[0, 1]]))).is_err(), "a choice is never a number or keys");
+        assert_eq!(EDGE.kind.accepts(), "one of its option names, in quotes");
     }
 }

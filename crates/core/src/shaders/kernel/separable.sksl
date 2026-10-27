@@ -1,0 +1,22 @@
+// One separable blur pass: a weighted mean of the pixels along `axis`, the weights a Gaussian (`falloff` > 0) or flat
+// (a box, `falloff` 0). The mean is taken over the kernel's own weights, so a pixel beyond the picture counts as light that
+// is lost (transparent edge) or as the edge pixel repeated (clamp), never as a smaller kernel. The sum runs in 32-bit
+// float whatever the picture holds, so a wide kernel adds no rounding of its own; only the result is stored as half.
+uniform shader src;
+uniform float2 axis;     // one pixel along the pass: (1, 0) or (0, 1)
+uniform float taps;      // taps each side of the centre
+uniform float falloff;   // 1 / (2 sigma^2); 0 for a box
+uniform float last;      // weight of the outermost tap (a box of a fractional radius ends in a lighter one)
+
+half4 main(float2 p) {
+    float4 sum = float4(src.eval(p));
+    float total = 1.0;
+    for (int k = 1; k <= MAX_TAPS; k++) {
+        float d = float(k);
+        if (d > taps) break;
+        float w = exp(-d * d * falloff) * (d == taps ? last : 1.0);
+        sum += w * (float4(src.eval(p + axis * d)) + float4(src.eval(p - axis * d)));
+        total += 2.0 * w;
+    }
+    return half4(sum / total);
+}

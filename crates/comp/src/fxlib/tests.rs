@@ -20,10 +20,13 @@ fn a_platform_effect_describes_itself_from_its_registry_entry() {
     let descriptors = Library::builtin().unwrap().descriptors();
     let by_name = |n: &str| descriptors.iter().find(|d| d.name == n).unwrap_or_else(|| panic!("{n} has no descriptor"));
     let blur = by_name("blur");
-    assert_eq!((blur.origin.as_str(), blur.params.len()), (PLATFORM_ORIGIN, 1));
+    assert_eq!((blur.origin.as_str(), blur.params.iter().map(|p| p.name.as_str()).collect::<Vec<_>>()), (PLATFORM_ORIGIN, vec!["radius", "quality", "dimensions", "edge"]));
     let radius = &blur.params[0];
     assert_eq!((radius.default.clone(), radius.min, radius.max, radius.optional), (vec![8.0], Some(0.0), None, false));
     assert!(!radius.doc.is_empty());
+    let quality = &blur.params[1];
+    assert_eq!((quality.ty, quality.options.as_slice(), quality.default.clone(), quality.optional), (Ty::Choice, ["legacy".to_string(), "exact".to_string()].as_slice(), vec![0.0], false), "a choice is described as a plugin's is: its options, and its default as an index");
+    assert_eq!(quality.default_json(), serde_json::json!("legacy"));
     let glow = by_name("glow");
     let colour = glow.params.iter().find(|p| p.name == "color").unwrap();
     assert!(colour.optional && colour.default.is_empty() && colour.ty == Ty::Color);

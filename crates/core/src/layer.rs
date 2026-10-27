@@ -82,10 +82,15 @@ impl Layer {
     /// transparent (`Decal`). Skia already filters a wide blur at reduced resolution; doing it again by hand was
     /// measured and gave no speed-up.
     pub fn blurred_with_edge(&self, like: &Canvas, sigma: f64, edge: TileMode) -> Result<Self> {
-        if sigma <= 0.3 {
+        self.blurred_by_axis(like, [sigma; 2], edge)
+    }
+
+    /// [`Self::blurred_with_edge`] with a sigma for each axis; an axis of 0 is left sharp.
+    pub fn blurred_by_axis(&self, like: &Canvas, sigma: [f64; 2], edge: TileMode) -> Result<Self> {
+        if sigma.iter().all(|s| *s <= 0.3) {
             return Ok(Self { image: self.image.clone() });
         }
-        let blur = image_filters::blur((sigma as f32, sigma as f32), edge, None, None).context("blur filter")?;
+        let blur = image_filters::blur((sigma[0] as f32, sigma[1] as f32), edge, None, None).context("blur filter")?;
         let mut paint = Paint::default();
         paint.set_image_filter(blur);
         Self::render(like, self.width(), self.height(), |c| {

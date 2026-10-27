@@ -5,7 +5,7 @@ use anyhow::{anyhow, bail, ensure, Context, Result};
 use serde_json::Value;
 use turbomotion_core::{color::Encoding, effects};
 
-use super::bounds::Bounds;
+use super::{bounds::Bounds, kernel_pass::KernelPass};
 use super::{is_full_size, InputDecl, InputKind, Kind, Param, Ty, DEFAULT_DEPTH, FULL_SIZE, MAX_DEPTH, MAX_HISTORY};
 use crate::anim::prop::parse_color_static;
 
@@ -15,6 +15,9 @@ pub struct PassMark {
     pub scale: f64,
     pub doc: String,
     pub line: usize,
+    /// The words after the name that are not `scale=`: what makes it a kernel pass.
+    pub options: Vec<String>,
+    pub kernel: Option<KernelPass>,
 }
 
 pub struct Header {
@@ -87,6 +90,14 @@ impl Header {
             }
         }
         let name = name.ok_or_else(|| anyhow!("the file needs a header line `// @effect <name>`"))?;
+        for k in 0..marks.len() {
+            if marks[k].options.is_empty() {
+                continue;
+            }
+            let earlier: Vec<&str> = marks[..k].iter().map(|m| m.name.as_str()).collect();
+            let pass = KernelPass::parse(&marks[k].options, &params, &earlier).with_context(|| format!("line {}: @pass {}", marks[k].line + 1, marks[k].name))?;
+            marks[k].kernel = Some(pass);
+        }
         let bounds = match bounds_tag {
             None => Bounds::Undeclared,
             Some((n, text)) => {
@@ -105,6 +116,7 @@ impl Header {
         if self.kind == Kind::Generator {
             ensure!(self.inputs.is_empty(), "a generator paints the whole layer and has no inputs; @input is for effects");
             ensure!(self.marks.len() <= 1, "a generator is a single pass");
+            ensure!(self.marks.iter().all(|m| m.kernel.is_none()), "a generator has no picture to blur, so its pass cannot be a kernel pass");
         }
         ensure!(self.inputs.iter().filter(|i| matches!(i.kind, InputKind::History { .. })).count() <= 1, "an effect has at most one history input");
         let mut taken: Vec<&str> = RESERVED.to_vec();
@@ -113,6 +125,9 @@ impl Header {
         for (what, n) in named {
             ensure!(!taken.contains(&n), "{what} {n:?} is a reserved or repeated name (image, resolution, time, layer_origin, buffer_size and every parameter, input and pass name are one namespace)");
             taken.push(n);
+        }
+        for m in self.marks.iter().filter(|m| m.kernel.is_some()) {
+            ensure!(is_full_size(m.scale), "pass {:?} is a kernel pass, which runs at the layer's size (no scale=)", m.name);
         }
         if let Some(last) = self.marks.last() {
             ensure!(is_full_size(last.scale), "the last pass {:?} is the effect's output and must be full size (no scale=)", last.name);
@@ -146,18 +161,22 @@ fn parse_input(s: &str) -> Result<InputDecl> {
     Ok(InputDecl { name: t[0].to_string(), kind, doc })
 }
 
-/// `name [scale=S] [-- doc]`, on header line `line`.
+/// `name [scale=S] [kernel=... radius=...] [-- doc]`, on header line `line`.
 fn parse_pass(s: &str, line: usize) -> Result<PassMark> {
     let (t, doc) = split_doc(s);
     ensure!(!t.is_empty(), "expected `name [scale=S]`");
     ensure!(is_ident(t[0]), "pass name {:?} must be letters, digits and underscores", t[0]);
     let mut scale = FULL_SIZE;
+    let mut options = vec![];
     for extra in &t[1..] {
-        let v = extra.strip_prefix("scale=").ok_or_else(|| anyhow!("unknown option {extra:?}; a pass takes scale=S"))?;
+        let Some(v) = extra.strip_prefix("scale=") else {
+            options.push(extra.to_string());
+            continue;
+        };
         scale = v.parse::<f64>().map_err(|_| anyhow!("scale= takes a number, not {v:?}"))?;
         ensure!(scale > 0.0 && scale <= FULL_SIZE, "scale={scale} is out of range: scale= is above 0 and at most 1 (the layer's own size)");
     }
-    Ok(PassMark { name: t[0].to_string(), scale, doc, line })
+    Ok(PassMark { name: t[0].to_string(), scale, doc, line, options, kernel: None })
 }
 
 /// `name type default [min max] [-- doc]`; a `choice` is `name choice default a,b,c`.

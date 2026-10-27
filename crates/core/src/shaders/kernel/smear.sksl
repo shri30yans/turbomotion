@@ -1,0 +1,26 @@
+// A line integral: the mean of the picture along the path each pixel's colour is carried over, a shift, a turn about
+// `centre`, a zoom from it, or any of them together (a directional, a spin and a zoom blur are one shader). The path
+// is sampled once per pixel of its length (at the worst of the pixel and the picture's far corner), at the middle of each
+// step, so a long smear is a line and not a row of copies.
+uniform shader src;
+uniform float2 centre;
+uniform float2 shift;     // the whole path's translation in pixels
+uniform float turn;       // the whole path's rotation in radians
+uniform float zoom;       // extra scale at the end of the path
+uniform float2 span;      // the path runs from span.x to span.y (a fraction of the shift, turn and zoom)
+
+half4 main(float2 p) {
+    float2 r = p - centre;
+    float travel = length(shift) + length(r) * (abs(turn) + abs(zoom));
+    float n = clamp(ceil(travel * (span.y - span.x)), 1.0, float(MAX_SMEAR_TAPS));
+    float4 sum = float4(0.0);
+    for (int i = 0; i < MAX_SMEAR_TAPS; i++) {
+        if (float(i) >= n) break;
+        float s = mix(span.x, span.y, (float(i) + 0.5) / n);
+        float c = cos(turn * s);
+        float v = sin(turn * s);
+        float2 q = float2(c * r.x + v * r.y, c * r.y - v * r.x) / (1.0 + zoom * s);
+        sum += float4(src.eval(centre + q + shift * s));
+    }
+    return half4(sum / n);
+}

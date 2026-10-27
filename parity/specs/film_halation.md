@@ -53,12 +53,14 @@ excess**: a 4 x 4 white square (16 px, excess 0.5 each) at `strength 0.5` adds *
 | film, tail at scale 2 against scale 1 | 2x in layer space, 1x in screen space | | 3 px |
 | film, threshold in a linear-light film | level 160 (light 0.35) halates nothing, level 200 (0.58) does; in a display film level 160 (0.63) does | | |
 
-## What is not exact (found, not fixed)
+## Quality: `legacy` and `exact`
 
-Skia's GPU Gaussian is exact up to a sigma of 4 and works at reduced resolution beyond it. Measured on the engine's own
-`Layer::blurred`, a **one-pixel source returns 1.0002x of its light at sigma 4, 1.20x at 5, 1.27x at 6, 1.20x at 7, 1.00x at 8,
-0.86x at 8.5, 1.11x at 9, 1.20x at 10 and 1.27x at 12**, a 64 px square at sigma 40 returns 0.95x, a 32 px square 1.03x. The
-error is the reduced-resolution sampling of a source smaller than its cells and shrinks as the source grows. `glow`, `bloom` and
-`shadow` inherit it. Making the blur exact would change their pictures (and the identity table), so it is **not** changed; a
-cascade of passes of sigma at most 4 is exact but costs `(radius / 4)^2` passes (100 at the default radius). Recorded as an open
-question: an energy-exact wide blur, versioned.
+`quality: legacy` (the default, so films made before it render as they did) blurs with Skia's Gaussian, which is exact only to a sigma of
+about 4 and above that works at reduced resolution. Measured on the engine's own `Layer::blurred`, **a one-pixel source returns 1.0002x of
+its light at sigma 4, 1.20x at 5, 1.27x at 6, 1.20x at 7, 1.00x at 8, 0.86x at 8.5, 1.11x at 9, 1.20x at 10 and 1.27x at 12**, and the answer
+changes with the size of the picture (WP-02 audit: `parity/specs/gaussian_blur.md`). The peak of a point source's halo is **0.9817, 0.9802 and
+0.9802 of the analytic Gaussian's at sigma 16, 32 and 64**; a 64 px square at sigma 24 is 2.5% low at the centre.
+
+`quality: exact` (WP-02) blurs with the kernel (`core/src/kernel`): the same halo's peak is **1.0006, 0.9990 and 1.0053 of the analytic one**
+and the 64 px square's centre is within 0.5% of the closed form. `halation_tests` asserts both columns. The kernel reaches 4 sigma, so a layer
+in layer space grows by `4 * radius` and not `3 * radius`.

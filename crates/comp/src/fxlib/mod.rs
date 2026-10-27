@@ -39,7 +39,8 @@
 //!   it returns is taken as light, however the composition's working profile is encoded (see `color` in `schema::color`).
 //!   The default, `display`, is what the author sees on screen: 0.5 is mid-grey. In a film that is not in linear light
 //!   both are the same numbers.
-//! * `@pass name [scale=S]` starts a pass. Passes run in order; each sees `image`, the inputs and every earlier pass by
+//! * `@pass name [scale=S]` starts a pass (`kernel=gaussian radius=<expr>` makes it a kernel blur with no code: `kernel_pass.rs`).
+//!   Passes run in order; each sees `image`, the inputs and every earlier pass by
 //!   name; the last one (scale 1) is the effect's output. Text before the first `@pass` is shared by all passes. A pass
 //!   reads a bigger picture bilinearly with no mipmaps, so it skips pixels rather than averaging them: `scale=0.5` is
 //!   fine, much smaller aliases fine detail (halve in steps, one pass per halving).
@@ -48,15 +49,18 @@ use std::{collections::BTreeMap, fs, path::Path};
 
 use anyhow::{anyhow, bail, ensure, Context, Result};
 use serde_json::{Map, Value};
-use turbomotion_core::{color::Encoding, effects, shader::Program, suggest::hint};
+use turbomotion_core::{color::Encoding, effects, suggest::hint};
 
 pub use bounds::{Bounds, Expr};
+pub use kernel_pass::{KernelPass, PassBody};
 use crate::anim::prop::{ColorProp, Prop, VecProp};
 
 mod bounds;
 mod compile;
 pub mod composite;
 mod header;
+mod kernel_pass;
+mod platform;
 pub mod search;
 pub mod sweep;
 
@@ -111,8 +115,6 @@ pub struct InputDecl {
 
 /// The `origin` of a platform effect's descriptor: it is Rust, not a plugin file.
 pub const PLATFORM_ORIGIN: &str = "rust";
-/// A colour's alpha when its default is written as `r, g, b`.
-const OPAQUE: f64 = 1.0;
 
 /// Most frames of history an effect may ask for, and deepest recursion: both multiply render work.
 pub const MAX_HISTORY: u32 = 8;
@@ -132,7 +134,7 @@ pub struct Pass {
     pub name: String,
     pub scale: f64,
     pub doc: String,
-    pub program: Program,
+    pub body: PassBody,
 }
 
 #[derive(Debug, Clone, serde::Serialize)]
@@ -140,6 +142,8 @@ pub struct PassInfo {
     pub name: String,
     pub scale: f64,
     pub doc: String,
+    /// The kernel the pass runs as the header wrote it (`kernel=gaussian radius=blur/2`), or nothing for a shader.
+    pub kernel: String,
 }
 
 /// The complete, serialisable declaration of one effect: typed parameters, named inputs, passes, history, defaults and
@@ -425,7 +429,7 @@ impl Library {
 
     /// One descriptor per effect: the platform's own, then every plugin.
     pub fn descriptors(&self) -> Vec<Descriptor> {
-        let mut out: Vec<Descriptor> = effects::CATALOGUE.iter().map(builtin_descriptor).collect();
+        let mut out: Vec<Descriptor> = effects::CATALOGUE.iter().map(platform::descriptor).collect();
         out.extend(self.defs.values().map(Def::descriptor));
         out
     }
@@ -466,23 +470,6 @@ fn parse_input_use(name: &str, v: &Value) -> Result<InputPlan> {
     Ok(InputPlan { name: name.to_string(), id, fit, index: None })
 }
 
-/// A platform effect's descriptor, written from its registry entry: parameters, defaults, ranges and docs are what the
-/// effect itself is built from.
-fn builtin_descriptor(e: &effects::Entry) -> Descriptor {
-    let params = e
-        .params
-        .iter()
-        .map(|p| {
-            let (ty, default) = match p.kind {
-                effects::ParamKind::Float { default } => (Ty::Float, vec![default]),
-                effects::ParamKind::Color { default } => (Ty::Color, default.map_or(vec![], |[r, g, b]| vec![f64::from(r), f64::from(g), f64::from(b), OPAQUE])),
-            };
-            Param { name: p.name.to_string(), ty, optional: default.is_empty(), default, min: p.min, max: p.max, options: vec![], doc: p.doc.to_string() }
-        })
-        .collect();
-    Descriptor { name: e.effect.to_string(), kind: Kind::Effect, origin: PLATFORM_ORIGIN.to_string(), summary: e.summary.to_string(), params, inputs: vec![], passes: vec![PassInfo { name: "main".into(), scale: 1.0, doc: String::new() }], history: 0, example: (e.example)(), bounds: (if effects::grows_bounds(e.effect) { "grows" } else { "none" }).to_string(), space: e.encoding.name().to_string() }
-}
-
 impl InputDecl {
     /// The shader children this input declares: `prev`, `prev2` .. `prevN` for history, else its own name.
     pub fn children(&self) -> Vec<String> {
@@ -505,7 +492,7 @@ impl Def {
             summary: self.summary.clone(),
             params: self.params.clone(),
             inputs: self.inputs.clone(),
-            passes: self.passes.iter().map(|p| PassInfo { name: p.name.clone(), scale: p.scale, doc: p.doc.clone() }).collect(),
+            passes: self.passes.iter().map(|p| PassInfo { name: p.name.clone(), scale: p.scale, doc: p.doc.clone(), kernel: if let PassBody::Kernel(k) = &p.body { k.text.clone() } else { String::new() } }).collect(),
             history,
             example,
             bounds: self.bounds.describe(),

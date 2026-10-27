@@ -127,7 +127,10 @@ Gaussian blur. (effect, platform)
 
 | parameter | type | default | range | what it does |
 | --- | --- | --- | --- | --- |
-| `radius` | float | 8.0 | 0 or more | Gaussian sigma in pixels. |
+| `radius` | float | 8.0 | 0 or more | Gaussian sigma in pixels (After Effects' Blurriness is twice this). |
+| `quality` | choice | legacy | legacy, exact | `legacy` is the blur films were first made with, kept so they render as they did (above a sigma of 4 a small source gains or loses up to a quarter of its light); `exact` is the kernel blur: the sigma asked for, no light lost, a reach of 4 sigma. |
+| `dimensions` | choice | both | both, horizontal, vertical | Which way it blurs. |
+| `edge` | choice | transparent | transparent, repeat | `transparent` lets light leave the picture's edge; `repeat` continues the edge pixels outward, and the layer does not grow. |
 
 * layer space (`effect_space: "layer"`): grows the layer's picture by its reach (blur radius, distance, offset)
 * colour (`color.linear_light`): computes in linear numbers
@@ -139,6 +142,75 @@ Gaussian blur. (effect, platform)
 }
 ```
 
+## `box_blur`
+
+Box blur: the mean of a square, repeated for a softer, rounder fall-off. (effect, platform)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `radius` | float | 5.0 | 0 or more | Pixels each side of a pixel it averages; a fraction weights the outermost pixel. |
+| `iterations` | float | 1.0 | 1 to 16 | Times the box is repeated; 3 or more is close to a Gaussian. |
+| `dimensions` | choice | both | both, horizontal, vertical | Which way it blurs. |
+| `edge` | choice | transparent | transparent, repeat | `transparent` lets light leave the picture's edge; `repeat` continues the edge pixels outward, and the layer does not grow. |
+
+* layer space (`effect_space: "layer"`): grows the layer's picture by its reach (blur radius, distance, offset)
+* colour (`color.linear_light`): computes in linear numbers
+
+```json
+{
+  "effect": "box_blur",
+  "iterations": 3,
+  "radius": 6
+}
+```
+
+## `lens_blur`
+
+Lens blur: every pixel becomes the lens's opening, a disc or a polygon. (effect, platform)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `radius` | float | 10.0 | 0 to 31.5 | Pixels from the centre of the opening to its farthest part. |
+| `blades` | float | 0.0 | 0 to 16 | Sides of the opening: 0 for a disc, or 3 to 16. |
+| `rotation` | float | 0.0 |  | Degrees the polygon is turned. |
+| `roundness` | float | 0.0 | 0 to 1 | 0 keeps the polygon's straight sides, 1 rounds it to a disc. |
+| `edge` | choice | transparent | transparent, repeat | `transparent` lets light leave the picture's edge; `repeat` continues the edge pixels outward, and the layer does not grow. |
+
+* layer space (`effect_space: "layer"`): grows the layer's picture by its reach (blur radius, distance, offset)
+* colour (`color.linear_light`): computes in linear numbers
+
+```json
+{
+  "blades": 6,
+  "effect": "lens_blur",
+  "radius": 10,
+  "rotation": 15,
+  "roundness": 0.2
+}
+```
+
+## `unsharp_mask`
+
+Sharpens by adding back a fraction of what a Gaussian blur takes away; coverage is left as it is. (effect, platform)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `amount` | float | 50.0 | 0 or more | Percent of the difference added back. |
+| `radius` | float | 1.0 | 0 to 100 | Gaussian sigma in pixels of the soft copy; the size of the detail it sharpens. |
+| `threshold` | float | 0.0 | 0 to 255 | Differences smaller than this many levels (of 255) are left alone. |
+
+* layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
+* colour (`color.linear_light`): computes in display numbers
+
+```json
+{
+  "amount": 150,
+  "effect": "unsharp_mask",
+  "radius": 2,
+  "threshold": 0
+}
+```
+
 ## `backdrop`
 
 Blurs what has already been composited behind this layer and draws the layer on top (frosted glass). (effect, platform)
@@ -146,6 +218,7 @@ Blurs what has already been composited behind this layer and draws the layer on 
 | parameter | type | default | range | what it does |
 | --- | --- | --- | --- | --- |
 | `blur` | float | 24.0 | 0 or more | Gaussian sigma in pixels. |
+| `quality` | choice | legacy | legacy, exact | `legacy` is the blur films were first made with, kept so they render as they did (above a sigma of 4 a small source gains or loses up to a quarter of its light); `exact` is the kernel blur: the sigma asked for, no light lost, a reach of 4 sigma. |
 
 * layer space (`effect_space: "layer"`): does not reach past the layer's own pixels
 * colour (`color.linear_light`): computes in linear numbers
@@ -165,6 +238,7 @@ Motion blur: smears the layer along an angle. (effect, platform)
 | --- | --- | --- | --- | --- |
 | `distance` | float | 40.0 |  | Length of the smear in pixels. |
 | `angle` | float | 0.0 |  | Direction of the smear in degrees (0 = horizontal, 90 = vertical). |
+| `quality` | choice | legacy | legacy, exact | `legacy` is the blur films were first made with, kept so they render as they did (above a sigma of 4 a small source gains or loses up to a quarter of its light); `exact` is the kernel blur: the sigma asked for, no light lost, a reach of 4 sigma. |
 
 * layer space (`effect_space: "layer"`): grows the layer's picture by its reach (blur radius, distance, offset)
 * colour (`color.linear_light`): computes in linear numbers
@@ -179,13 +253,15 @@ Motion blur: smears the layer along an angle. (effect, platform)
 
 ## `radial_blur`
 
-Zoom blur from a point. (effect, platform)
+Radial blur from a point: a zoom, or (with `quality: exact`) a spin. (effect, platform)
 
 | parameter | type | default | range | what it does |
 | --- | --- | --- | --- | --- |
-| `amount` | float | 0.1 |  | Extra zoom at the end of the smear: 0.1 smears 10%. |
+| `amount` | float | 0.1 |  | `zoom`: extra zoom at the end of the smear, 0.1 smears 10%. `spin`: degrees the smear turns through. |
 | `x` | float | 0.5 |  | Centre across the frame, as a fraction. |
 | `y` | float | 0.5 |  | Centre down the frame, as a fraction. |
+| `mode` | choice | zoom | zoom, spin | `zoom` smears along each ray from the centre, `spin` along each circle about it. |
+| `quality` | choice | legacy | legacy, exact | `legacy` is the blur films were first made with, kept so they render as they did (above a sigma of 4 a small source gains or loses up to a quarter of its light); `exact` is the kernel blur: the sigma asked for, no light lost, a reach of 4 sigma. |
 
 * layer space (`effect_space: "layer"`): grows the layer's picture by its reach (blur radius, distance, offset)
 * colour (`color.linear_light`): computes in linear numbers
@@ -209,6 +285,7 @@ Adds a blurred copy back on top, so bright parts bleed light. (effect, platform)
 | `strength` | float | 1.0 | 0 or more | How much of the halo is added back (1 = as bright as the source). |
 | `threshold` | float | 0.0 | 0 to 1 | Only parts brighter than this (0..1 luma) glow; 0 makes everything glow. |
 | `color` | color | none |  | Colour of the halo; leave out to glow in the layer's own colours. |
+| `quality` | choice | legacy | legacy, exact | `legacy` is the blur films were first made with, kept so they render as they did (above a sigma of 4 a small source gains or loses up to a quarter of its light); `exact` is the kernel blur: the sigma asked for, no light lost, a reach of 4 sigma. |
 
 * layer space (`effect_space: "layer"`): grows the layer's picture by its reach (blur radius, distance, offset)
 * colour (`color.linear_light`): computes in linear numbers
@@ -237,6 +314,7 @@ Film halation: the brightest parts ring with a wide red-orange halo, as light sc
 | `radius` | float | 40.0 | 0 or more | Gaussian sigma of the halo in pixels. |
 | `strength` | float | 0.5 | 0 or more | The luma added back as a fraction of the light that passed the threshold, summed over the picture. |
 | `color` | color | [255.0,90.0,40.0,1.0] |  | Hue of the halo; only its hue counts, the strength sets how much light it adds. |
+| `quality` | choice | legacy | legacy, exact | `legacy` is the blur films were first made with, kept so they render as they did (above a sigma of 4 a small source gains or loses up to a quarter of its light); `exact` is the kernel blur: the sigma asked for, no light lost, a reach of 4 sigma. |
 
 * layer space (`effect_space: "layer"`): grows the layer's picture by its reach (blur radius, distance, offset)
 * colour (`color.linear_light`): computes in linear numbers
@@ -266,6 +344,7 @@ Soft drop shadow behind the layer's shape. (effect, platform)
 | `blur` | float | 16.0 | 0 or more | Gaussian sigma of the shadow's edge. |
 | `color` | color | [0.0,0.0,0.0,1.0] |  | Shadow colour. |
 | `opacity` | float | 0.5 | 0 to 1 | How dark the shadow is. |
+| `quality` | choice | legacy | legacy, exact | `legacy` is the blur films were first made with, kept so they render as they did (above a sigma of 4 a small source gains or loses up to a quarter of its light); `exact` is the kernel blur: the sigma asked for, no light lost, a reach of 4 sigma. |
 
 * layer space (`effect_space: "layer"`): grows the layer's picture by its reach (blur radius, distance, offset)
 * colour (`color.linear_light`): computes in linear numbers
@@ -2490,8 +2569,10 @@ Blurs everything outside a horizontal band so a scene reads as a miniature. (eff
 | `focus` | float | 0.5 | 0 to 1 | vertical centre of the sharp band (fraction of the height) |
 | `band` | float | 0.18 | 0.02 to 0.6 | half-height of the sharp band |
 | `blur` | float | 14.0 | 0 to 60 | maximum blur radius in px |
+| `quality` | choice | legacy | legacy, exact | `legacy` blurs with 16 spiral taps; `exact` blends between exact Gaussian blurs of sigma blur/6, blur/3 and blur/2, so the blur grows smoothly with the distance from the band and keeps all of its light |
 
-* layer space (`effect_space: "layer"`): grows the layer's picture by `@bounds expand=blur` pixels
+* passes: `soft1` (x1.0), `soft2` (x1.0), `soft3` (x1.0), `main` (x1.0)
+* layer space (`effect_space: "layer"`): grows the layer's picture by `@bounds expand=blur*(1+quality)` pixels
 * colour (`color.linear_light`): computes in linear numbers
 
 ```json
@@ -2499,7 +2580,8 @@ Blurs everything outside a horizontal band so a scene reads as a miniature. (eff
   "band": 0.18,
   "blur": 14.0,
   "effect": "tilt_shift",
-  "focus": 0.5
+  "focus": 0.5,
+  "quality": "legacy"
 }
 ```
 

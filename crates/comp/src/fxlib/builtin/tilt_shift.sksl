@@ -1,13 +1,27 @@
 // @effect tilt_shift
 // @summary Blurs everything outside a horizontal band so a scene reads as a miniature.
-// @bounds expand=blur
+// @bounds expand=blur*(1+quality)
 // @space linear
 // @param focus float 0.5 0 1 -- vertical centre of the sharp band (fraction of the height)
 // @param band float 0.18 0.02 0.6 -- half-height of the sharp band
 // @param blur float 14 0 60 -- maximum blur radius in px
+// @param quality choice legacy legacy,exact -- `legacy` blurs with 16 spiral taps; `exact` blends between exact Gaussian blurs of sigma blur/6, blur/3 and blur/2, so the blur grows smoothly with the distance from the band and keeps all of its light
+// @pass soft1 kernel=gaussian radius=quality*blur/6 from=image
+// @pass soft2 kernel=gaussian radius=quality*blur/3 from=image
+// @pass soft3 kernel=gaussian radius=quality*blur/2 from=image
+// @pass main
 half4 main(float2 xy) {
     float v = xy.y / resolution.y;
     float k = smoothstep(band, band + 0.3, abs(v - focus));
+    if (quality > 0.5) {
+        // the blur at distance k is between the two blurs either side of it, and the sharp picture is the first of them
+        float level = k * 3.0;
+        float seg = min(floor(level), 2.0);
+        float f = level - seg;
+        half4 lo = seg < 0.5 ? image.eval(xy) : (seg < 1.5 ? soft1.eval(xy) : soft2.eval(xy));
+        half4 hi = seg < 0.5 ? soft1.eval(xy) : (seg < 1.5 ? soft2.eval(xy) : soft3.eval(xy));
+        return mix(lo, hi, half(f));
+    }
     float r = blur * k;
     if (r < 0.5) {
         float4 s = straight(xy);

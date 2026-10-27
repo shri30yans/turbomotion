@@ -49,3 +49,15 @@ export default f;";
     let report = auto(&bad, None, None, true).unwrap();
     assert!(!report.success && report.diagnostics.contains("nonzero"), "{}", report.diagnostics);
 }
+
+#[test]
+fn the_blur_family_is_written_in_the_sdk_as_any_effect_and_a_misspelt_quality_is_reported_with_the_name_that_was_meant() {
+    let fx = "[{effect:'blur', radius: 12, quality:'exact', dimensions:'horizontal', edge:'repeat'}, {effect:'box_blur', radius: 4, iterations: 3}, {effect:'lens_blur', radius: 8, blades: 6}, {effect:'radial_blur', amount: 20, mode:'spin', quality:'exact'}, {effect:'unsharp_mask', amount: 80, radius: 2}]";
+    let source = format!("import {{comp,solid}} from 'turbomotion';\nconst f = comp({{width:200,height:100,fps:30,dur:1}});\nf.add(solid('#888', {{id:'s', fx: {fx}}}));\nexport default f;");
+    let report = auto(&film("blur-family", &source), None, None, true).unwrap();
+    assert!(report.success, "{}", report.diagnostics);
+    let bad = auto(&film("blur-family-bad", &source.replace("quality:'exact', dimensions", "quality:'exakt', dimensions")), None, None, true).unwrap();
+    assert!(!bad.success && bad.diagnostics.contains("Did you mean \"exact\"") && bad.diagnostics.contains("legacy, exact"), "{}", bad.diagnostics);
+    let spin = auto(&film("blur-spin-legacy", &source.replace("mode:'spin', quality:'exact'", "mode:'spin'")), None, None, true).unwrap();
+    assert!(!spin.success && spin.diagnostics.contains("needs `quality: exact`"), "{}", spin.diagnostics);
+}

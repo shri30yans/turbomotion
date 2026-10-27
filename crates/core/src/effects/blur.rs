@@ -1,4 +1,4 @@
-//! Blurs and glow: Gaussian, directional (motion), radial (zoom) and a glow that adds a blurred copy back on top.
+//! The Gaussian blur and the glow that adds a blurred copy back on top.
 //! Each effect's parameters are declared in the registry (`mod.rs`); the structs only carry them.
 
 use anyhow::Result;
@@ -8,9 +8,11 @@ use skia_safe::{color_filters, Paint};
 use super::{
     param::Param,
     pass::{run, Ctx},
+    quality::{soften, Quality},
 };
 use crate::{
     color::{Encoding, Rgb},
+    kernel::{self, Axes, Edge},
     layer::{solid_color, Layer},
     shader::Uniforms,
 };
@@ -19,62 +21,17 @@ use crate::{
 #[serde(deny_unknown_fields)]
 pub struct Blur {
     pub radius: Param,
+    pub quality: Quality,
+    pub dimensions: Axes,
+    pub edge: Edge,
 }
 
 pub fn blur(ctx: &Ctx, e: &Blur, layer: &Layer) -> Result<Layer> {
-    layer.blurred(ctx.like, e.radius.at(ctx.t))
-}
-
-#[derive(Debug, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
-pub struct DirectionalBlur {
-    pub distance: Param,
-    pub angle: Param,
-}
-
-/// Below this smear length the layer is left alone.
-const MIN_SMEAR: f64 = 1.5;
-/// Samples along a smear are at least this many and at most `MAX_TAPS`: more costs time, fewer shows steps.
-const MIN_TAPS: f64 = 3.0;
-const MAX_TAPS: f64 = 64.0;
-/// One sample per this many pixels of smear.
-const PIXELS_PER_TAP: f64 = 2.0;
-
-/// Smear `layer` `distance` pixels along `angle` degrees.
-pub fn smear(ctx: &Ctx, layer: &Layer, distance: f64, angle: f64) -> Result<Layer> {
-    let ctx = &ctx.computing_in(Encoding::Linear);
-    if distance.abs() < MIN_SMEAR {
-        return Ok(Layer::from_image(layer.image().clone()));
+    let sigma = e.dimensions.along(e.radius.at(ctx.t));
+    match e.quality {
+        Quality::Legacy => layer.blurred_by_axis(ctx.like, sigma, e.edge.tile()),
+        Quality::Exact => kernel::Blur::gaussian(sigma, e.edge).apply(ctx.shaders, ctx.like, layer),
     }
-    let (sin, cos) = angle.to_radians().sin_cos();
-    let taps = (distance.abs() / PIXELS_PER_TAP).round().clamp(MIN_TAPS, MAX_TAPS);
-    run(ctx, layer, &ctx.shaders.effects.directional_blur, Uniforms::new().v2(cos * distance, sin * distance).f(taps), &[])
-}
-
-pub fn directional_blur(ctx: &Ctx, e: &DirectionalBlur, layer: &Layer) -> Result<Layer> {
-    smear(ctx, layer, e.distance.at(ctx.t), e.angle.at(ctx.t))
-}
-
-#[derive(Debug, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
-pub struct RadialBlur {
-    pub amount: Param,
-    pub x: Param,
-    pub y: Param,
-}
-
-/// Below this zoom the layer is left alone.
-const MIN_ZOOM: f64 = 0.002;
-/// Samples along a zoom smear.
-const ZOOM_TAPS: f64 = 24.0;
-
-pub fn radial_blur(ctx: &Ctx, e: &RadialBlur, layer: &Layer) -> Result<Layer> {
-    let amount = e.amount.at(ctx.t);
-    if amount.abs() < MIN_ZOOM {
-        return Ok(Layer::from_image(layer.image().clone()));
-    }
-    let centre = ctx.space_of(layer).at(e.x.at(ctx.t), e.y.at(ctx.t));
-    run(ctx, layer, &ctx.shaders.effects.radial_blur, Uniforms::new().v2(centre.0, centre.1).f(amount).f(ZOOM_TAPS), &[])
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -84,6 +41,7 @@ pub struct Glow {
     pub strength: Param,
     pub threshold: Param,
     pub color: Option<Rgb>,
+    pub quality: Quality,
 }
 
 pub fn glow(ctx: &Ctx, e: &Glow, layer: &Layer) -> Result<Layer> {
@@ -94,7 +52,7 @@ pub fn glow(ctx: &Ctx, e: &Glow, layer: &Layer) -> Result<Layer> {
     } else {
         Layer::from_image(layer.image().clone())
     };
-    let halo = source.blurred(ctx.like, e.radius.at(ctx.t))?;
+    let halo = soften(ctx, &source, e.radius.at(ctx.t), e.quality)?;
     let mut paint = Paint::default();
     paint.set_blender(ctx.shaders.union.blend(Uniforms::new())?);
     paint.set_color_filter(match e.color {

@@ -1,0 +1,38 @@
+// A lens blur pass: the weighted mean of the pixels inside an iris, a disc or a polygon of `blades` sides with rounded
+// corners. A pixel's weight is its coverage by the iris, one pixel of linear falloff across the edge, so the radius is
+// continuous. Like `separable.sksl` the mean is over the kernel's own weights and the sum is 32-bit float.
+uniform shader src;
+uniform float radius;     // the iris's outer radius in pixels (a polygon's corners)
+uniform float blades;     // sides of the polygon; 0 or 2 or less is a disc
+uniform float turn;       // rotation in radians
+uniform float roundness;  // 0: straight edges, 1: a disc
+uniform float taps;       // pixels each side of the centre the iris can cover
+
+const float PI = 3.14159265;
+
+// How far from the centre the iris's edge is along the direction of `d`.
+float edge_radius(float2 d) {
+    if (blades < 2.5 || dot(d, d) == 0.0) return radius;   // the centre has no direction, and is inside
+    float sector = 2.0 * PI / blades;
+    float a = atan(d.y, d.x) - turn + 0.5 * sector;
+    a = a - sector * floor(a / sector) - 0.5 * sector;           // the angle from the nearest edge's middle
+    float straight = radius * cos(0.5 * sector) / cos(a);
+    return mix(straight, radius, roundness);
+}
+
+half4 main(float2 p) {
+    float4 sum = float4(0.0);
+    float total = 0.0;
+    for (int j = -MAX_IRIS_TAPS; j <= MAX_IRIS_TAPS; j++) {
+        if (abs(float(j)) > taps) continue;
+        for (int i = -MAX_IRIS_TAPS; i <= MAX_IRIS_TAPS; i++) {
+            if (abs(float(i)) > taps) continue;
+            float2 d = float2(float(i), float(j));
+            float w = clamp(edge_radius(d) - length(d) + 0.5, 0.0, 1.0);
+            if (w <= 0.0) continue;
+            sum += w * float4(src.eval(p + d));
+            total += w;
+        }
+    }
+    return half4(sum / total);
+}

@@ -1,0 +1,120 @@
+{
+ "width": 1280,
+ "height": 720,
+ "fps": 24,
+ "dur": 1,
+ "bg": "#000000",
+ "layers": [
+  {
+   "type": "solid",
+   "color": "#ffffff",
+   "size": [
+    640,
+    180
+   ],
+   "pos": [
+    640,
+    0
+   ],
+   "fx": [
+    {
+     "effect": "blur",
+     "radius": 16,
+     "quality": "legacy"
+    }
+   ],
+   "anchor": [
+    0,
+    0
+   ]
+  },
+  {
+   "type": "solid",
+   "color": "#ffffff",
+   "size": [
+    640,
+    180
+   ],
+   "pos": [
+    640,
+    180
+   ],
+   "fx": [
+    {
+     "effect": "blur",
+     "radius": 16,
+     "quality": "exact"
+    }
+   ],
+   "anchor": [
+    0,
+    0
+   ]
+  },
+  {
+   "type": "solid",
+   "color": "#ffffff",
+   "size": [
+    640,
+    180
+   ],
+   "pos": [
+    640,
+    360
+   ],
+   "fx": [
+    {
+     "effect": "blur",
+     "radius": 16,
+     "quality": "exact",
+     "dimensions": "horizontal"
+    }
+   ],
+   "anchor": [
+    0,
+    0
+   ]
+  },
+  {
+   "type": "solid",
+   "color": "#ffffff",
+   "size": [
+    4,
+    4
+   ],
+   "pos": [
+    320,
+    600
+   ],
+   "fx": [
+    {
+     "effect": "blur",
+     "radius": 8,
+     "quality": "legacy"
+    }
+   ]
+  },
+  {
+   "type": "solid",
+   "color": "#ffffff",
+   "size": [
+    4,
+    4
+   ],
+   "pos": [
+    960,
+    600
+   ],
+   "fx": [
+    {
+     "effect": "blur",
+     "radius": 8,
+     "quality": "exact"
+    }
+   ]
+  }
+ ],
+ "color": {
+  "linear_light": true
+ }
+}

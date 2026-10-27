@@ -49,6 +49,8 @@ mod dither_tests;
 #[cfg(test)]
 mod halation_tests;
 #[cfg(test)]
+mod blur_tests;
+#[cfg(test)]
 mod history_tests;
 #[cfg(test)]
 mod layer_space_plugin_tests;

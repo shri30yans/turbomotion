@@ -1,0 +1,52 @@
+{
+ "width": 1280,
+ "height": 720,
+ "fps": 24,
+ "dur": 1,
+ "bg": "#000000",
+ "layers": [
+  {
+   "type": "solid",
+   "color": "#646464",
+   "size": [
+    1280,
+    720
+   ],
+   "pos": [
+    0,
+    0
+   ],
+   "anchor": [
+    0,
+    0
+   ]
+  },
+  {
+   "type": "solid",
+   "color": "#a0a0a0",
+   "size": [
+    640,
+    720
+   ],
+   "pos": [
+    640,
+    0
+   ],
+   "anchor": [
+    0,
+    0
+   ]
+  },
+  {
+   "type": "adjustment",
+   "fx": [
+    {
+     "effect": "unsharp_mask",
+     "amount": 100,
+     "radius": 4,
+     "threshold": 0
+    }
+   ]
+  }
+ ]
+}

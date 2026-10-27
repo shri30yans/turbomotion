@@ -20,7 +20,7 @@ fn the_gap_list_names_what_is_not_built_and_what_is_decided_against() {
     let gaps: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
     let find = |name: &str| gaps.as_array().unwrap().iter().find(|g| g["name"] == name).cloned().unwrap_or_else(|| panic!("no gap named {name}"));
     assert_eq!(find("Roto Brush and Refine Edge")["status"], "not_supported");
-    assert_eq!(find("Box Blur")["wp"], "WP-02");
+    assert_eq!(find("Bilateral Blur")["wp"], "WP-02");
     assert_eq!(find("Expressions: full object model")["status"], "none");
 }
 

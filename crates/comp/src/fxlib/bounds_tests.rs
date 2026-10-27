@@ -1,6 +1,7 @@
 //! The `@bounds` grammar and what it measures.
 
 use super::*;
+use crate::fxlib::Ty;
 
 fn param(name: &str) -> Param {
     Param { name: name.to_string(), ty: Ty::Float, default: vec![1.0], optional: false, min: None, max: None, options: vec![], doc: String::new() }

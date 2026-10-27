@@ -5,11 +5,9 @@
 //! its input.
 
 use super::{
-    blur::{DirectionalBlur, Glow, RadialBlur},
     distort::{Bulge, ChromaticAberration, Pixelate, RgbSplit, Twirl, Wave},
-    edge::{Outline, Shadow},
-    halation::FilmHalation,
-    Effect,
+    edge::Outline,
+    reach, Effect,
 };
 use crate::geom::Mat3;
 
@@ -20,15 +18,12 @@ pub type Growth = [f64; 4];
 pub const GAUSSIAN_REACH: f64 = 3.0;
 
 /// The platform effects whose output can reach past their input: exactly those [`Effect::grows`] gives a size.
-pub const GROWING: [&str; 14] = ["blur", "directional_blur", "radial_blur", "glow", "film_halation", "shadow", "outline", "wave", "twirl", "bulge", "pixelate", "chromatic_aberration", "rgb_split", "transform"];
+pub const GROWING: [&str; 16] = ["blur", "box_blur", "lens_blur", "directional_blur", "radial_blur", "glow", "film_halation", "shadow", "outline", "wave", "twirl", "bulge", "pixelate", "chromatic_aberration", "rgb_split", "transform"];
 
 /// Whether platform effect `name` can reach past its input (the ledger's `grows_bounds`).
 pub fn grows_bounds(name: &str) -> bool {
     GROWING.contains(&name)
 }
-
-/// A smear shorter than this leaves the layer alone (the directional blur's own cut-off).
-const MIN_SMEAR: f64 = 1.5;
 
 /// `content` grown by `g`.
 pub fn grown(content: [f64; 4], g: Growth) -> [f64; 4] {
@@ -45,7 +40,7 @@ fn all_sides(r: f64) -> Growth {
 }
 
 /// A disc of `radius` about `centre` meeting the box: how far the disc, cut down to the farthest corner, passes each side.
-fn disc_reach(content: [f64; 4], centre: (f64, f64), radius: f64) -> Growth {
+pub(super) fn disc_reach(content: [f64; 4], centre: (f64, f64), radius: f64) -> Growth {
     let far = [(content[0], content[1]), (content[2], content[1]), (content[2], content[3]), (content[0], content[3])].iter().map(|c| (c.0 - centre.0).hypot(c.1 - centre.1)).fold(0.0, f64::max);
     let reach = radius.max(0.0).min(far);
     exceeds(content, [centre.0 - reach, centre.1 - reach, centre.0 + reach, centre.1 + reach])
@@ -55,30 +50,10 @@ impl Effect {
     /// How far the effect reaches past `content` (`[left, top, right, bottom]` in layer pixels) at time `t`.
     pub fn grows(&self, t: f64, content: [f64; 4]) -> Growth {
         let (w, h) = (content[2] - content[0], content[3] - content[1]);
+        if let Some(g) = reach::grows(self, t, content) {
+            return g;
+        }
         match self {
-            Effect::Blur(e) => all_sides(GAUSSIAN_REACH * e.radius.at(t)),
-            Effect::Glow(Glow { radius, .. }) => all_sides(GAUSSIAN_REACH * radius.at(t)),
-            Effect::FilmHalation(FilmHalation { radius, .. }) => all_sides(GAUSSIAN_REACH * radius.at(t)),
-            Effect::DirectionalBlur(DirectionalBlur { distance, angle }) => {
-                let d = distance.at(t);
-                if d.abs() < MIN_SMEAR {
-                    return [0.0; 4];
-                }
-                // the copies are spread evenly over `d` pixels centred on the pixel
-                let (sin, cos) = angle.at(t).to_radians().sin_cos();
-                let (gx, gy) = ((d * cos).abs() / 2.0, (d * sin).abs() / 2.0);
-                [gx, gy, gx, gy]
-            }
-            Effect::RadialBlur(RadialBlur { amount, x, y }) => {
-                let a = amount.at(t).max(0.0);
-                let (cx, cy) = (content[0] + x.at(t) * w, content[1] + y.at(t) * h);
-                // copies are scaled from 1x to (1 + amount)x about the centre: each side moves outward by `amount` of its distance
-                [(cx - content[0]).max(0.0) * a, (cy - content[1]).max(0.0) * a, (content[2] - cx).max(0.0) * a, (content[3] - cy).max(0.0) * a]
-            }
-            Effect::Shadow(Shadow { dx, dy, blur, .. }) => {
-                let (dx, dy, reach) = (dx.at(t), dy.at(t), GAUSSIAN_REACH * blur.at(t));
-                [(reach - dx).max(0.0), (reach - dy).max(0.0), (reach + dx).max(0.0), (reach + dy).max(0.0)]
-            }
             Effect::Outline(Outline { width, .. }) => all_sides(width.at(t)),
             Effect::Wave(Wave { amplitude, angle, .. }) => {
                 // pixels move across the direction the wave travels

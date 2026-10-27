@@ -1,5 +1,7 @@
 //! The registry: every declared effect builds, parameters are checked, names are unique.
 
+use serde_json::{Map, Value};
+
 use super::*;
 
 fn params_of(v: &Value) -> Map<String, Value> {

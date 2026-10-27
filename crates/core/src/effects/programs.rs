@@ -7,6 +7,7 @@ use crate::{grade, shader::Program};
 pub struct Programs {
     pub directional_blur: Program,
     pub radial_blur: Program,
+    pub unsharp: Program,
     pub bright: Program,
     pub halation_source: Program,
     pub halation_add: Program,
@@ -25,6 +26,7 @@ impl Programs {
         Ok(Self {
             directional_blur: Program::shader("directional blur", include_str!("../shaders/effects/directional_blur.sksl"))?,
             radial_blur: Program::shader("radial blur", include_str!("../shaders/effects/radial_blur.sksl"))?,
+            unsharp: Program::shader("unsharp mask", include_str!("../shaders/effects/unsharp.sksl"))?,
             bright: Program::shader("glow threshold", include_str!("../shaders/effects/bright.sksl"))?,
             halation_source: Program::shader("halation source", include_str!("../shaders/effects/halation_source.sksl"))?,
             halation_add: Program::shader("halation add", include_str!("../shaders/effects/halation_add.sksl"))?,

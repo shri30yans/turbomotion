@@ -1,0 +1,76 @@
+{
+ "width": 1280,
+ "height": 720,
+ "fps": 24,
+ "dur": 1,
+ "bg": "#000000",
+ "layers": [
+  {
+   "type": "solid",
+   "color": "#ffffff",
+   "size": [
+    640,
+    180
+   ],
+   "pos": [
+    640,
+    0
+   ],
+   "fx": [
+    {
+     "effect": "box_blur",
+     "radius": 6,
+     "iterations": 1
+    }
+   ],
+   "anchor": [
+    0,
+    0
+   ]
+  },
+  {
+   "type": "solid",
+   "color": "#ffffff",
+   "size": [
+    640,
+    180
+   ],
+   "pos": [
+    640,
+    180
+   ],
+   "fx": [
+    {
+     "effect": "box_blur",
+     "radius": 6,
+     "iterations": 3
+    }
+   ],
+   "anchor": [
+    0,
+    0
+   ]
+  },
+  {
+   "type": "solid",
+   "color": "#ffffff",
+   "size": [
+    8,
+    8
+   ],
+   "pos": [
+    320,
+    600
+   ],
+   "fx": [
+    {
+     "effect": "box_blur",
+     "radius": 6
+    }
+   ]
+  }
+ ],
+ "color": {
+  "linear_light": true
+ }
+}

@@ -20,6 +20,14 @@ impl Param {
             Self::Keys(keys) => keyed(keys, t),
         }
     }
+
+    /// The largest magnitude the parameter ever has: what a limit on it is checked against.
+    pub fn peak(&self) -> f64 {
+        match self {
+            Self::Fixed(v) => v.abs(),
+            Self::Keys(keys) => keys.iter().map(|k| k.1.abs()).fold(0.0, f64::max),
+        }
+    }
 }
 
 impl<'de> Deserialize<'de> for Param {
@@ -74,6 +82,12 @@ mod tests {
         assert_eq!(fixed.at(5.0), 12.0);
         let keys: Param = serde_json::from_str("[[1, 0], [3, 10]]").unwrap();
         assert_eq!((keys.at(0.0), keys.at(2.0), keys.at(9.0)), (0.0, 5.0, 10.0));
+    }
+
+    #[test]
+    fn the_peak_is_the_largest_magnitude_among_the_keys() {
+        assert_eq!(Param::Fixed(-4.0).peak(), 4.0);
+        assert_eq!(Param::Keys(vec![(0.0, 2.0), (1.0, -9.0), (2.0, 3.0)]).peak(), 9.0);
     }
 
     #[test]

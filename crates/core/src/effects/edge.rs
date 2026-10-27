@@ -4,7 +4,11 @@ use anyhow::{Context, Result};
 use serde::Deserialize;
 use skia_safe::{image_filters, Paint, TileMode};
 
-use super::{param::Param, pass::Ctx};
+use super::{
+    param::Param,
+    pass::Ctx,
+    quality::{soften, Quality},
+};
 use crate::{
     color::Rgb,
     layer::{solid_color, Layer},
@@ -18,16 +22,24 @@ pub struct Shadow {
     pub blur: Param,
     pub color: Rgb,
     pub opacity: Param,
+    pub quality: Quality,
 }
 
 pub fn shadow(ctx: &Ctx, e: &Shadow, layer: &Layer) -> Result<Layer> {
-    let blur = e.blur.at(ctx.t) as f32;
+    let blur = e.blur.at(ctx.t);
     let mut paint = Paint::default();
     paint.set_color_filter(solid_color(ctx.like, e.color, e.opacity.at(ctx.t) as f32)?);
-    paint.set_image_filter(image_filters::blur((blur, blur), TileMode::Decal, None, None));
+    // the legacy blur is part of the paint, so the picture is blurred as it is drawn; the exact one is blurred first
+    let drawn = match e.quality {
+        Quality::Legacy => {
+            paint.set_image_filter(image_filters::blur((blur as f32, blur as f32), TileMode::Decal, None, None));
+            layer.clone()
+        }
+        Quality::Exact => soften(ctx, layer, blur, e.quality)?,
+    };
     let offset = (e.dx.at(ctx.t) as f32, e.dy.at(ctx.t) as f32);
     Layer::render(ctx.like, layer.width(), layer.height(), |c| {
-        c.draw_image(layer.image(), offset, Some(&paint));
+        c.draw_image(drawn.image(), offset, Some(&paint));
         c.draw_image(layer.image(), (0, 0), None);
     })
 }

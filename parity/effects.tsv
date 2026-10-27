@@ -1,15 +1,15 @@
 name	category	recipe_class	tier	status	grows_bounds	linear	ae_params	engine	test
 Bilateral Blur	Blur & Sharpen	B	T1	todo	?	?	-	-	-
-Box Blur	Blur & Sharpen	B	T0	todo	?	?	-	-	-
-Camera Lens Blur	Blur & Sharpen	B	T0	todo	?	?	-	-	-
+Box Blur	Blur & Sharpen	B	T0	done	yes	yes	-	box_blur	a_box_is_flat_over_exactly_its_width_and_keeps_its_light
+Camera Lens Blur	Blur & Sharpen	B	T0	part	yes	yes	-	lens_blur	-
 Channel Blur	Blur & Sharpen	B	T1	todo	?	?	-	-	-
 Compound Blur	Blur & Sharpen	B	T1	todo	?	?	-	-	-
 Directional Blur	Blur & Sharpen	-	T1	part	yes	yes	-	directional_blur	-
-Fast Box Blur	Blur & Sharpen	B	T0	todo	?	?	-	-	-
-Gaussian Blur	Blur & Sharpen	-	T1	part	yes	yes	-	blur	-
+Fast Box Blur	Blur & Sharpen	B	T0	part	yes	yes	-	box_blur	-
+Gaussian Blur	Blur & Sharpen	-	T1	done	yes	yes	-	blur	an_impulse_blurs_to_the_sigma_asked_for_in_every_size_of_blur
 Radial Blur	Blur & Sharpen	-	T1	part	yes	yes	-	radial_blur	-
 Smart Blur	Blur & Sharpen	B	T1	todo	?	?	-	-	-
-Unsharp Mask	Blur & Sharpen	B	T0	todo	?	?	-	-	-
+Unsharp Mask	Blur & Sharpen	B	T0	done	no	no	-	unsharp_mask	unsharp_adds_back_a_fraction_of_the_detail_and_leaves_flat_ground_and_coverage_alone
 Sharpen	Blur & Sharpen	-	T1	part	no	no	-	sharpen	-
 Reduce Interlace Flicker	Blur & Sharpen	A	T2	todo	?	?	-	-	-
 Arithmetic	Channel	A	T2	todo	?	?	-	-	-

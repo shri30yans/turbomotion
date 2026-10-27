@@ -4,10 +4,12 @@
 
 use anyhow::Result;
 
-use super::{color::Ink, effects, shader::Program};
+use super::{color::Ink, effects, kernel, shader::Program};
 
 pub struct Shaders {
     pub effects: effects::Programs,
+    /// The blur kernels every blur, glow, shadow and plugin kernel pass runs.
+    pub kernel: kernel::Programs,
     /// What the layer blend modes that Skia lacks are drawn with.
     pub blend: effects::BlendPrograms,
     /// Additive light that clips at 1.0 (half-float layers do not clamp by themselves).
@@ -22,6 +24,7 @@ impl Shaders {
     pub fn compile() -> Result<Self> {
         Ok(Self {
             effects: effects::Programs::compile()?,
+            kernel: kernel::Programs::compile()?,
             blend: effects::BlendPrograms::compile()?,
             add_clip: Program::blender("add_clip", include_str!("shaders/add_clip.sksl"))?,
             union: Program::blender("union", include_str!("shaders/union.sksl"))?,

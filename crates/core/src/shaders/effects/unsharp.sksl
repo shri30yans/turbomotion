@@ -1,0 +1,15 @@
+// Unsharp mask: add back what a blur took out. `amount` is a fraction of the difference; a difference smaller than
+// `threshold` (0..1) is left alone. Colour is sharpened and coverage is not, so the result is clamped inside its alpha.
+uniform shader src;
+uniform shader soft;
+uniform float amount;
+uniform float threshold;
+
+half4 main(float2 p) {
+    half4 c = src.eval(p);
+    half4 b = soft.eval(p);
+    float3 d = float3(c.rgb) - float3(b.rgb);
+    float3 gate = step(float3(threshold), abs(d));
+    float3 sharp = clamp(float3(c.rgb) + amount * d * gate, 0.0, float(c.a));
+    return half4(half3(sharp), c.a);
+}

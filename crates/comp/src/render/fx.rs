@@ -12,7 +12,7 @@ use crate::{
         fx::{FxOpState, FxState, PluginState},
         Frame,
     },
-    fxlib::{is_full_size, Def, Fit, FxOp, PlanFx, PluginPlan},
+    fxlib::{is_full_size, Def, Fit, FxOp, KernelPass, PassBody, PlanFx, PluginPlan},
 };
 
 /// Where an effect chain runs: the frame it is drawn for, the layer it belongs to (none for a composition's `look`) and
@@ -46,7 +46,7 @@ pub fn chain(sc: &Scope, mut img: Layer, fx: &[PlanFx], states: &[FxState], t: f
             (FxOp::Plugin(plan), FxOpState::Plugin(p)) => plugin(sc, &img, plan, p, t, at).with_context(|| format!("effect {:?}", p.name))?,
             (FxOp::Builtin(Effect::Backdrop(e)), FxOpState::Builtin) => {
                 let behind = sc.behind.ok_or_else(|| anyhow!("effect {:?} needs a picture of what is behind the layer", f.name()))?;
-                backdrop_over(sc.like, &img, behind, e.blur.at(t))?
+                backdrop_over(&effects::Ctx::new(sc.ctx.shaders, sc.like, t), &img, behind, e)?
             }
             (FxOp::Builtin(e), FxOpState::Builtin) => match sc.space {
                 Some(space) => effects::apply_in(sc.ctx.shaders, sc.like, img, std::slice::from_ref(e), t, space)?,
@@ -122,10 +122,28 @@ fn layer_inputs(sc: &Scope, plan: &PluginPlan) -> Result<Vec<Source>> {
         .collect()
 }
 
+/// A kernel pass: the picture it reads (`image`, or an earlier pass), blurred by the radius its expression gives now.
+fn kernel_pass(sc: &Scope, kernel: &KernelPass, p: &PluginState, image: &Source, done: &[(String, Layer)]) -> Result<Layer> {
+    let input = match done.iter().find(|(name, _)| *name == kernel.from) {
+        Some((_, layer)) => layer.clone(),
+        None => Layer::from_image(image.image.clone()),
+    };
+    let value = |name: &str| p.values.iter().find(|(n, _)| n == name).and_then(|(_, v)| v.first()).map(|&x| f64::from(x));
+    kernel.blur(&value)?.apply(sc.ctx.shaders, sc.like, &input)
+}
+
 /// Run every pass of `def` over `sources` (`image` first); the last pass's picture is the effect's output.
 fn run_passes(sc: &Scope, def: &Def, p: &PluginState, w: i32, h: i32, t: f64, sources: &[Source]) -> Result<Layer> {
     let mut done: Vec<(String, Layer)> = Vec::with_capacity(def.passes.len());
     for pass in &def.passes {
+        let program = match &pass.body {
+            PassBody::Shader(program) => program,
+            PassBody::Kernel(kernel) => {
+                let blurred = kernel_pass(sc, kernel, p, &sources[0], &done).with_context(|| format!("pass {:?}", pass.name))?;
+                done.push((pass.name.clone(), blurred));
+                continue;
+            }
+        };
         let (pw, ph) = if is_full_size(pass.scale) { (w, h) } else { (((f64::from(w) * pass.scale).ceil() as i32).max(1), ((f64::from(h) * pass.scale).ceil() as i32).max(1)) };
         let to_pass = Matrix::scale((pw as f32 / w as f32, ph as f32 / h as f32));
         let geometry = Geometry::of(sc.space, (w, h), (pw, ph));
@@ -140,7 +158,7 @@ fn run_passes(sc: &Scope, def: &Def, p: &PluginState, w: i32, h: i32, t: f64, so
         let vals = geometry.values(p, t);
         let refs: Vec<(&str, &[f32])> = vals.iter().map(|(n, v)| (n.as_str(), v.as_slice())).collect();
         let kid_refs: Vec<(&str, Shader)> = kids.iter().map(|(n, s)| (n.as_str(), s.clone())).collect();
-        let shader = geometry.shader(def.space.shader(sc.like, pass.program.instance_with(&refs, &kid_refs).with_context(|| format!("pass {:?}", pass.name))?));
+        let shader = geometry.shader(def.space.shader(sc.like, program.instance_with(&refs, &kid_refs).with_context(|| format!("pass {:?}", pass.name))?));
         let out = Layer::try_render(sc.like, pw, ph, |c| {
             let mut paint = Paint::default();
             paint.set_shader(shader);
@@ -182,7 +200,7 @@ pub fn generate(ctx: &Ctx, c: &Canvas, p: &PluginState, size: [f64; 2], t: f64) 
     let def = ctx.plan.fx.get(&p.name)?;
     let vals = Geometry::whole(size).values(p, t);
     let refs: Vec<(&str, &[f32])> = vals.iter().map(|(n, v)| (n.as_str(), v.as_slice())).collect();
-    let shader = def.space.shader(c, def.passes[0].program.instance_with(&refs, &[])?);
+    let shader = def.space.shader(c, def.passes[0].program().ok_or_else(|| anyhow!("a generator is a shader"))?.instance_with(&refs, &[])?);
     let mut paint = Paint::default();
     paint.set_shader(shader);
     c.draw_rect(Rect::from_wh(size[0] as f32, size[1] as f32), &paint);
