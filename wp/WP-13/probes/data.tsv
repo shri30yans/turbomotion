@@ -1,0 +1,32 @@
+probe	quantity	expected	measured	tolerance	result
+smear-180	smear length by variance, px	70.000	69.922	1.5	ok
+smear-180	outer extent, px (one 16-sample step short)	66.875	68.000	1.5	ok
+smear-180	centre of the smear, px (600 + (phase + angle / 2) / 360 * 100, phase -90)	600.000	600.000	0.3	ok
+smear-180	flat top: mean level, levels (255 * size / travel)	102.000	102.357	2.0	ok
+smear-180	flat top: ripple max - min, levels (one of 16 samples is 255 / 16)	15.938	16.000	1.0	ok
+smear-180	unswitched layer extent, px (sharp)	20.000	20.000	0	ok
+smear-360	smear length by variance, px	120.000	119.815	1.5	ok
+smear-360	outer extent, px (one 16-sample step short)	113.750	114.000	1.5	ok
+smear-360	centre of the smear, px (600 + (phase + angle / 2) / 360 * 100, phase -90)	625.000	625.000	0.3	ok
+smear-360	flat top: mean level, levels (255 * size / travel)	51.000	51.333	2.0	ok
+smear-360	flat top: ripple max - min, levels (one of 16 samples is 255 / 16)	15.938	16.000	1.0	ok
+smear-360	unswitched layer extent, px (sharp)	20.000	20.000	0	ok
+smear-0	extent, px (sharp)	20.000	20.000	0	ok
+smear-0	pixels identical to the unblurred row	0.000	0.000	0	ok
+smear-0	unswitched layer extent, px (sharp)	20.000	20.000	0	ok
+phasem180	centroid, px (600 + (phase + 90) / 360 * 100)	575.000	575.000	0.3	ok
+phasem90	centroid, px (600 + (phase + 90) / 360 * 100)	600.000	600.000	0.3	ok
+phasep0	centroid, px (600 + (phase + 90) / 360 * 100)	625.000	625.000	0.3	ok
+phasep90	centroid, px (600 + (phase + 90) / 360 * 100)	650.000	650.000	0.3	ok
+ease	centroid, px (mean of the true positions)	610.475	610.482	0.3	ok
+ease	gap to the unblurred position 610.3, px (a straight line gives 0)	0.175	0.182	0.3	ok
+handles	centroid, px (mean of the eased positions)	208.256	208.259	0.3	ok
+handles	gap to the unblurred position, px	1.423	1.426	0.3	ok
+rotate	outermost lit radius over 10 angle bins, worst deviation from 100 px	0.000	0.288	1.5	ok
+rotate	swept angle of the tip, degrees (45 = 180 degree shutter)	45.000	45.639	3.0	ok
+display	pixel 650 of the edge, level (display 127.5, linear light 187.5)	127.500	128.000	1.0	ok
+linear	pixel 650 of the edge, level (display 127.5, linear light 187.5)	187.500	188.000	1.0	ok
+alpha	red at the edge pixel, level (half red)	127.500	128.000	1.0	ok
+alpha	blue at the edge pixel, level (half of what is behind)	127.500	127.000	1.0	ok
+alpha	alpha at the edge pixel	255.000	255.000	0	ok
+static	largest pixel difference from the film without the block	0.000	0.000	0	ok

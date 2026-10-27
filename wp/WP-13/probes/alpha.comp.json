@@ -1,0 +1,46 @@
+{
+  "width": 800,
+  "height": 120,
+  "fps": 30,
+  "dur": 2,
+  "bg": "#000000",
+  "motion_blur": {
+    "shutter_angle": 180
+  },
+  "layers": [
+    {
+      "type": "solid",
+      "color": "#0000ff",
+      "size": [
+        800,
+        120
+      ],
+      "pos": [
+        400.0,
+        60.0
+      ]
+    },
+    {
+      "type": "solid",
+      "color": "#ff0000",
+      "size": [
+        100,
+        20.0
+      ],
+      "mblur": true,
+      "pos": {
+        "from": [
+          100,
+          30
+        ],
+        "to": [
+          3100,
+          30
+        ],
+        "at": 0,
+        "dur": 1,
+        "ease": "none"
+      }
+    }
+  ]
+}

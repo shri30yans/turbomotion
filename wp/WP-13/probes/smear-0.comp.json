@@ -1,0 +1,57 @@
+{
+  "width": 800,
+  "height": 120,
+  "fps": 30,
+  "dur": 2,
+  "bg": "#000000",
+  "layers": [
+    {
+      "type": "solid",
+      "id": "square",
+      "color": "#ffffff",
+      "size": [
+        20.0,
+        20.0
+      ],
+      "mblur": true,
+      "pos": {
+        "from": [
+          100,
+          30
+        ],
+        "to": [
+          3100,
+          30
+        ],
+        "at": 0,
+        "dur": 1,
+        "ease": "none"
+      }
+    },
+    {
+      "type": "solid",
+      "id": "sharp",
+      "color": "#ffffff",
+      "size": [
+        20.0,
+        20.0
+      ],
+      "pos": {
+        "from": [
+          100,
+          90
+        ],
+        "to": [
+          3100,
+          90
+        ],
+        "at": 0,
+        "dur": 1,
+        "ease": "none"
+      }
+    }
+  ],
+  "motion_blur": {
+    "shutter_angle": 0
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "width": 800,
+  "height": 120,
+  "fps": 30,
+  "dur": 2,
+  "bg": "#000000",
+  "layers": [
+    {
+      "type": "solid",
+      "id": "square",
+      "color": "#ffffff",
+      "size": [
+        20.0,
+        20.0
+      ],
+      "mblur": true,
+      "pos": {
+        "keys": [
+          {
+            "t": 0,
+            "v": [
+              100,
+              30
+            ],
+            "ease_out": {
+              "speed": 0,
+              "influence": 60
+            }
+          },
+          {
+            "t": 0.4,
+            "v": [
+              740,
+              30
+            ],
+            "ease_in": {
+              "speed": 0,
+              "influence": 60
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "solid",
+      "id": "sharp",
+      "color": "#ffffff",
+      "size": [
+        20.0,
+        20.0
+      ],
+      "pos": [
+        100,
+        90
+      ]
+    }
+  ],
+  "motion_blur": {
+    "shutter_angle": 360,
+    "shutter_phase": -180
+  }
+}
