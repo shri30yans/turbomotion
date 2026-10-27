@@ -91,6 +91,16 @@ export interface ColorOpts {
   working_profile?: "srgb" | "display_p3";
 }
 
+/** The `motion_blur` option of a composition: see `CompOpts.motion_blur`. */
+export interface MotionBlurOpts {
+  /** How long the shutter is open, in degrees of the frame interval, 0 to 720. Default 180. 0 draws no blur. */
+  shutter_angle?: number;
+  /** When the shutter opens relative to the frame time, in degrees, -360 to 360. Default -90 (a 180 degree shutter centred on the frame). */
+  shutter_phase?: number;
+  /** Moments averaged per frame, 2 to 16. Default 16. Each one draws every blurred layer again. */
+  samples?: number;
+}
+
 export interface CompOpts {
   /** Asset directory relative to the script; defaults to the script's folder. */
   root?: string;
@@ -113,6 +123,12 @@ export interface CompOpts {
    * (50% white over black shows as level 188, not 128). Nested compositions take the film's unless they say their own.
    */
   color?: ColorOpts;
+  /**
+   * After Effects' motion blur: the frame at `t` is the scene drawn at `samples` moments of `[t + phase, t + phase + angle]`
+   * (degrees of the frame interval) and averaged. Only layers with `mblur: true` blur; a precomp layer blurs everything it
+   * shows. Not together with the timeline's `mblur`, which is centred on the frame and kept as it was.
+   */
+  motion_blur?: MotionBlurOpts;
   width: number;
   height: number;
   fps: number;

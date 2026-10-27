@@ -37,7 +37,9 @@ Precomp time remap	Time	have	-	-	Time Remap	-
 Collapse transformations	Layers	unverified	-	-	Collapse Transformations	WP-14
 Frame blending, Pixel Motion Blur, Timewarp	Time	none	-	-	Frame blending	WP-13
 Posterize Time, Time Displacement, Time Difference	Time	none	-	-	Time effects	WP-13
-Motion blur per layer	Time	part	-	-	Motion Blur switch	WP-13
+Motion blur per layer: switch, shutter angle, shutter phase and samples (opt-in `motion_blur` block)	Time	done	a_100_px_per_frame_square_with_a_180_degree_shutter_smears_over_70_px	parity/specs/motion_blur.md	Motion Blur switch, Shutter Angle, Shutter Phase, Samples Per Frame	WP-13
+Motion blur: Adaptive Sample Limit, and a switch inside a precomp that blurs its own layers (the precomp layer's switch blurs everything it shows)	Time	none	-	-	Adaptive Sample Limit; precomp Motion Blur switches	WP-13
+Motion blur of the timeline's older `mblur` key (centred shutter, 8 samples, visible at the frame time only)	Time	have	-	-	Motion Blur switch	-
 Colour management beyond P3: Rec.2020 working space, HDR (PQ/HLG), 32-bit float depth, ICC and LUT display management	Colour	none	-	-	Color settings	WP-50
 Linear-light compositing (opt-in `color.linear_light`)	Colour	done	half_white_over_black_shows_level_188_in_light_and_128_on_encoded_numbers	parity/specs/colour_pipeline.md	Linearize Working Space	WP-03
 Working colour profile with import conversion (sRGB, Display P3; image ICC, video tags)	Colour	done	an_image_keeps_the_colours_its_profile_gives_it_in_a_managed_film_and_is_drawn_as_it_is_otherwise	parity/specs/colour_pipeline.md	Working Space	WP-03

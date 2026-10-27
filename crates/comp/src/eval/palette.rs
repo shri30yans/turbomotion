@@ -27,7 +27,7 @@ use crate::{
 };
 
 /// The colours of a palette and where its cycle stands.
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, PartialEq)]
 pub struct Cycled {
     pub colours: NonEmpty<Rgba>,
     pub mode: CycleMode,

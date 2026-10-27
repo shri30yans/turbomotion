@@ -16,6 +16,7 @@ mod build;
 mod describe;
 mod local;
 mod run;
+pub mod shutter;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]

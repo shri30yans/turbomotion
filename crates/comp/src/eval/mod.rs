@@ -15,6 +15,9 @@ pub mod text;
 pub mod mesh;
 pub mod palette;
 pub mod transit;
+mod same;
+mod shading;
+mod shared;
 mod travel;
 
 #[cfg(test)]
@@ -29,6 +32,7 @@ use turbomotion_core::effects::Blend;
 use crate::{anim::{ease::Ease, prop::Rgba}, plan::{CompPlan, LayerPlan, Plan}, schema::{Fit, Kind, Transit}};
 pub use env::LayerEnv;
 use mat4::Mat4;
+use shading::{culled, lit_state};
 pub use shape::{MaskState, ShapeState};
 
 pub struct Evaluator<'p> {
@@ -39,7 +43,7 @@ pub struct Evaluator<'p> {
     pub(crate) meshes: std::cell::RefCell<std::collections::HashMap<crate::mesh::MeshKey, std::rc::Rc<crate::mesh::Mesh>>>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, PartialEq)]
 pub struct Frame {
     pub comp: String,
     pub t: f64,
@@ -53,7 +57,7 @@ pub struct Frame {
     pub layers: Vec<LayerState>,
 }
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, PartialEq)]
 pub struct CameraState {
     pub pos: [f64; 3],
     pub poi: [f64; 3],
@@ -65,7 +69,7 @@ pub struct CameraState {
     pub view: Mat4,
 }
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, PartialEq)]
 pub struct LightState {
     pub kind: String,
     pub pos: [f64; 3],
@@ -76,7 +80,7 @@ pub struct LightState {
     pub shine: f64,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, PartialEq)]
 pub struct LayerState {
     pub index: usize,
     pub id: Option<String>,
@@ -120,7 +124,7 @@ pub struct LayerState {
     pub content: Content,
 }
 
-#[derive(Serialize, Clone, Copy)]
+#[derive(Serialize, Clone, Copy, PartialEq)]
 pub struct ReflectState {
     pub strength: f64,
     pub fade: f64,
@@ -129,7 +133,7 @@ pub struct ReflectState {
 }
 
 /// Where a lit layer stands in the world, for the lighting shader and for `inspect`.
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, PartialEq)]
 pub struct LitState {
     pub origin: [f64; 3],
     pub axis_u: [f64; 3],
@@ -142,7 +146,7 @@ pub struct LitState {
     pub inverse: [f64; 9],
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, PartialEq)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum Content {
     None,
@@ -628,51 +632,8 @@ impl<'p> Evaluator<'p> {
     }
 }
 
-/// Whether the camera sees the side of a layer that `cull` hides.
-///
-/// The layer's readable side is its local `-z`, so the camera is on it when it lies against the layer's local
-/// `+z` axis.
-fn culled(world: &Mat4, cam: &CameraState, cull: crate::schema::Cull) -> bool {
-    let w = &world.0;
-    let normal = [w[2], w[6], w[10]];
-    let origin = [w[3], w[7], w[11]];
-    let to_camera = [cam.pos[0] - origin[0], cam.pos[1] - origin[1], cam.pos[2] - origin[2]];
-    let towards = normal[0] * to_camera[0] + normal[1] * to_camera[1] + normal[2] * to_camera[2];
-    match cull {
-        crate::schema::Cull::None => false,
-        crate::schema::Cull::Front => towards < 0.0,
-        crate::schema::Cull::Back => towards > 0.0,
-    }
-}
-
-fn lit_state(world: &Mat4, screen: &Mat4, mat: crate::schema::Material) -> Option<LitState> {
-    let w = &world.0;
-    let origin = [w[3], w[7], w[11]];
-    let axis_u = [w[0], w[4], w[8]];
-    let axis_v = [w[1], w[5], w[9]];
-    let cross = [axis_u[1] * axis_v[2] - axis_u[2] * axis_v[1], axis_u[2] * axis_v[0] - axis_u[0] * axis_v[2], axis_u[0] * axis_v[1] - axis_u[1] * axis_v[0]];
-    let n = (cross[0] * cross[0] + cross[1] * cross[1] + cross[2] * cross[2]).sqrt();
-    if n < 1e-9 {
-        return None;
-    }
-    // layer plane (u, v) -> screen: the columns of the screen matrix for u, v and the origin
-    let s = &screen.0;
-    let h = [s[0], s[1], s[3], s[4], s[5], s[7], s[12], s[13], s[15]];
-    let det = h[0] * (h[4] * h[8] - h[5] * h[7]) - h[1] * (h[3] * h[8] - h[5] * h[6]) + h[2] * (h[3] * h[7] - h[4] * h[6]);
-    if det.abs() < 1e-12 {
-        return None;
-    }
-    let d = 1.0 / det;
-    let inverse = [
-        (h[4] * h[8] - h[5] * h[7]) * d, (h[2] * h[7] - h[1] * h[8]) * d, (h[1] * h[5] - h[2] * h[4]) * d,
-        (h[5] * h[6] - h[3] * h[8]) * d, (h[0] * h[8] - h[2] * h[6]) * d, (h[2] * h[3] - h[0] * h[5]) * d,
-        (h[3] * h[7] - h[4] * h[6]) * d, (h[1] * h[6] - h[0] * h[7]) * d, (h[0] * h[4] - h[1] * h[3]) * d,
-    ];
-    Some(LitState { origin, axis_u, axis_v, normal: [cross[0] / n, cross[1] / n, cross[2] / n], material: [mat.ambient, mat.diffuse, mat.specular, mat.shininess.max(1.0)], inverse })
-}
-
 /// What turns a layer's face.
-#[derive(Debug, Clone, Copy, Serialize)]
+#[derive(Debug, Clone, Copy, Serialize, PartialEq)]
 pub enum Aim {
     /// Face a point in composition (world) space: the layer's `aim`.
     Point([f64; 3]),
@@ -682,7 +643,7 @@ pub enum Aim {
 }
 
 /// The evaluated transform properties of one layer.
-#[derive(Debug, Clone, Copy, Serialize)]
+#[derive(Debug, Clone, Copy, Serialize, PartialEq)]
 pub struct Props {
     pub pos: [f64; 3],
     pub anchor: [f64; 3],

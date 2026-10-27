@@ -499,6 +499,11 @@ export interface ColorOpts
 ```
 The `color` option of a composition: see `CompOpts.color`.
 
+```ts
+export interface MotionBlurOpts
+```
+The `motion_blur` option of a composition: see `CompOpts.motion_blur`.
+
 ## `image-check`
 
 `image()` options, checked where the author wrote them instead of by the engine's schema error at render time.

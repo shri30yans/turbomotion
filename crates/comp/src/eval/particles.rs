@@ -12,7 +12,7 @@ use crate::{
     schema::{ParticleShape, Particles},
 };
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Particle {
     pub x: f64,
     pub y: f64,
@@ -31,6 +31,14 @@ pub struct ParticleState {
     pub shape: ParticleShape,
     #[serde(skip)]
     pub items: Vec<Particle>,
+}
+
+/// The particles of two instants are the same when every one is. The `shape` is the layer's own, the same at every
+/// instant (an outline that animates is read at the layer's time, which the layer's state carries), so it is not compared.
+impl PartialEq for ParticleState {
+    fn eq(&self, other: &Self) -> bool {
+        self.count == other.count && self.items == other.items
+    }
 }
 
 /// A piecewise-linear curve over 0..1 life; flat outside its keys, `default` when empty.

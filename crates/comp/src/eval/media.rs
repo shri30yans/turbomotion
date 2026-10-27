@@ -66,7 +66,7 @@ impl View {
     }
 }
 
-#[derive(Debug, Clone, Copy, Serialize)]
+#[derive(Debug, Clone, Copy, Serialize, PartialEq)]
 pub struct ParallaxState {
     /// Sampling displacement in viewport pixels at full depth.
     pub shift: [f64; 2],

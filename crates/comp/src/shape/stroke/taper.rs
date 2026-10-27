@@ -32,7 +32,7 @@ pub struct Tip {
 }
 
 /// A taper at one instant.
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, PartialEq)]
 pub struct Taper {
     pub start: Option<Tip>,
     pub end: Option<Tip>,

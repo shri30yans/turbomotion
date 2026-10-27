@@ -14,7 +14,7 @@ use crate::{
     plan::CompPlan,
 };
 
-#[derive(Serialize, Clone, Debug)]
+#[derive(Serialize, Clone, Debug, PartialEq)]
 pub struct PluginState {
     pub name: String,
     /// Uniform values by name: floats, vec2 as two numbers, colours as `[r, g, b, a]` in 0..1.
@@ -22,7 +22,7 @@ pub struct PluginState {
 }
 
 /// One effect of a chain at a moment: what it does, and how its result is laid over its input.
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, PartialEq)]
 pub struct FxState {
     #[serde(flatten)]
     pub op: FxOpState,
@@ -30,7 +30,7 @@ pub struct FxState {
     pub composite: Option<CompositeState>,
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, PartialEq)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum FxOpState {
     /// A platform effect; its numbers are evaluated by the effects library at draw time.
@@ -39,13 +39,13 @@ pub enum FxOpState {
 }
 
 /// The composite options with every value evaluated (`mix` limited to 0..1).
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, PartialEq)]
 pub struct CompositeState {
     pub mix: f32,
     pub mask: MaskState,
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, PartialEq)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum MaskState {
     Everywhere,

@@ -4,6 +4,7 @@
 
 mod blend_modes;
 mod color;
+mod motion_blur;
 mod effect_space;
 mod expression_support;
 pub mod layer_keys;
@@ -154,6 +155,7 @@ pub fn all() -> Value {
         "palette_cycle": palette_cycle::entry(),
         "stroke_taper": stroke_taper::entry(),
         "color": color::entry(),
+        "motion_blur": motion_blur::entry(),
         "blend_modes": blend_modes::entry(),
         "keyframe_motion": motion_keys::entry(),
         "text_presets": ["rise", "reveal", "rise_words", "fade_up", "blur_in", "pop", "slam", "drop", "typewriter", "scramble", "tracking_in", "wave_in", "spin_in", "elastic", "fade_out", "rise_out"],

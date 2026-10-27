@@ -94,7 +94,7 @@ fn layers(c: &Value) -> String {
     let x = &c["extrude"];
     let _ = writeln!(s, "## `extrude`\n\n{}\n", str_of(x, "summary"));
     json_block(&mut s, &x["example"]);
-    for (heading, key) in [("`box` (a text layer key)", "text_box"), ("`palette` (a repeater key)", "palette_cycle"), ("`taper` (a shape item key)", "stroke_taper")] {
+    for (heading, key) in [("`box` (a text layer key)", "text_box"), ("`palette` (a repeater key)", "palette_cycle"), ("`taper` (a shape item key)", "stroke_taper"), ("`motion_blur` (a composition key)", "motion_blur")] {
         feature(&mut s, heading, &c[key]);
     }
     s

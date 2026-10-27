@@ -94,3 +94,13 @@ fn the_blend_option_is_typed_with_exactly_the_engines_names_in_its_order() {
     let layer = read("sdk/types.ts");
     assert!(layer.lines().any(|l| l.trim() == "blend?: BlendMode;"), "LayerOpts types `blend` as BlendMode");
 }
+
+#[test]
+fn the_motion_blur_option_is_typed_with_exactly_the_engines_keys() {
+    let engine = struct_fields(&read("../comp/src/schema/mblur.rs"), "Shutter");
+    let source = read("sdk/film-types.ts");
+    assert!(interface_keys(&source, "CompOpts").contains(&"motion_blur".to_string()), "CompOpts lacks motion_blur");
+    let typed = interface_keys(&source, "MotionBlurOpts");
+    assert!(missing(&engine, &typed, &[]).is_empty() && missing(&typed, &engine, &[]).is_empty(), "engine keys {engine:?} against SDK keys {typed:?}");
+    assert!(read("sdk/types.ts").lines().any(|l| l.trim() == "mblur?: boolean;"), "LayerOpts types the switch");
+}

@@ -7,7 +7,7 @@ use std::rc::Rc;
 use anyhow::{anyhow, Context, Result};
 use serde::Serialize;
 
-use super::{mat4::Mat4, CompPlan, Evaluator, LayerEnv};
+use super::{mat4::Mat4, shared::Shared, CompPlan, Evaluator, LayerEnv};
 use crate::{
     anim::prop::Rgba,
     mesh::{glyphs, primitives, Mesh, MeshKey},
@@ -16,7 +16,7 @@ use crate::{
     text::layout::Spec,
 };
 
-#[derive(Serialize)]
+#[derive(Serialize, PartialEq)]
 pub struct MeshState {
     /// The geometry's name: `text`, `box`, `sphere`, `torus`, `cylinder` or `extrude`.
     pub geometry: &'static str,
@@ -28,7 +28,7 @@ pub struct MeshState {
     #[serde(skip)]
     pub material: Material,
     #[serde(skip)]
-    pub mesh: Rc<Mesh>,
+    pub mesh: Shared<Mesh>,
 }
 
 pub fn state(ev: &Evaluator, c: &CompPlan, l: &LayerPlan, m: &MeshLayer, t: f64) -> Result<MeshState> {
@@ -42,7 +42,7 @@ pub fn state(ev: &Evaluator, c: &CompPlan, l: &LayerPlan, m: &MeshLayer, t: f64)
     let back = m.back.as_ref().map_or(Ok(side), |p| p.0.at(lt, &env(super::salt::MESH_BACK)))?;
     let (name, mesh) = mesh_for(ev, &m.geometry, m.segments.unwrap_or(primitives::DEFAULT_SEGMENTS), lt, &env)?;
     let extent = [mesh.min[0], mesh.min[1], mesh.min[2], mesh.max[0], mesh.max[1], mesh.max[2]];
-    Ok(MeshState { geometry: name, color, side, back, extent, material: l.def.common.material.unwrap_or_default(), mesh })
+    Ok(MeshState { geometry: name, color, side, back, extent, material: l.def.common.material.unwrap_or_default(), mesh: mesh.into() })
 }
 
 /// The mesh for a geometry at this instant, built on first use. An animated size or depth rebuilds per distinct value.

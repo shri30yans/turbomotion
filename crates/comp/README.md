@@ -22,7 +22,7 @@ trim, morph, repeat), `text` (per-character animators, presets, counters, scramb
 parallax, EXIF-correct, mipmapped), `video` (streamed through ffmpeg), `audio`, `precomp` (nested compositions and
 blocks), `null`, `camera`, `light`, `adjustment`, `particles`, `texture` (generator shaders), `pack` (graphics owned
 by another crate). Every layer also takes transform, `parent`, `masks`, `matte` (alpha/luma, inverted), `fx`,
-`blend`, `enter`/`exit` presets, `along` (motion path), `three_d` with a `material`, and `mblur`.
+`blend`, `enter`/`exit` presets, `along` (motion path), `three_d` with a `material`, and `mblur` (the layer's motion blur switch; the composition's `motion_blur` sets the shutter).
 
 Anything animated is a *property*: a number, an expression string, keys `[[t, value, ease?]]`, a GSAP-style tween
 `{"from", "to", "at", "dur", "ease"}`, a loop, or keys plus an expression. Times can be `1.5s`, `45f`, `beat:8`,

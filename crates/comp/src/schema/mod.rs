@@ -12,6 +12,7 @@ pub mod palette;
 pub mod repeat;
 mod item_alias;
 mod kinds;
+mod material;
 mod mblur;
 mod particle_shape;
 pub mod color;
@@ -37,7 +38,8 @@ use turbomotion_core::effects::{self, Blend, Effect};
 
 pub use {color::ColorBlock, effect_space::EffectSpace};
 pub use kinds::*;
-pub use {mblur::MotionBlur, path::PathSpec};
+pub use material::Material;
+pub use {mblur::{blur_of, Blur, MotionBlur, Shutter, MAX_BLUR_SAMPLES}, path::PathSpec};
 pub use problems::{Problem, Problems};
 pub use shape::{item_keys as shape_item_keys, Fill, Gradient, Metal, Repeat, ShapeItem, Stroke, Trim};
 pub use particle_shape::ParticleShape;
@@ -88,6 +90,8 @@ pub struct Composition {
     pub motion: Option<Value>,
     /// Motion blur settings (samples per frame, shutter angle). Layers with `"mblur": true` blur along their motion; the defaults are 8 samples at 180 degrees.
     pub mblur: Option<MotionBlur>,
+    /// Motion blur as After Effects has it: `shutter_angle`, `shutter_phase` and `samples`. Layers with `"mblur": true` blur; the root composition's shutter is the one used. Not together with `mblur`.
+    pub motion_blur: Option<Shutter>,
     /// Finishing on the finished picture (grain, vignette). Not type, not images; those have their own looks.
     pub look: Vec<Value>,
     /// Check this composition's foreground layers for clashes (`check --layout`): text, cards, shapes and packs that overlap on screen.
@@ -115,7 +119,7 @@ pub struct Composition {
 
 impl Default for Composition {
     fn default() -> Self {
-        Composition { width: 1920, height: 1080, fps: 30, dur: 5.0, bg: None, bpm: None, beat_offset: 0.0, markers: vec![], comps: BTreeMap::new(), vars: Map::new(), fonts: BTreeMap::new(), palette: Map::new(), type_scale: None, image: None, surface: Map::new(), space: Map::new(), motion: None, mblur: None, look: vec![], layout: false, layers: vec![], root: None, fx_path: vec![], block_path: vec![], effect_space: None, color: None, letterbox: None }
+        Composition { width: 1920, height: 1080, fps: 30, dur: 5.0, bg: None, bpm: None, beat_offset: 0.0, markers: vec![], comps: BTreeMap::new(), vars: Map::new(), fonts: BTreeMap::new(), palette: Map::new(), type_scale: None, image: None, surface: Map::new(), space: Map::new(), motion: None, mblur: None, motion_blur: None, look: vec![], layout: false, layers: vec![], root: None, fx_path: vec![], block_path: vec![], effect_space: None, color: None, letterbox: None }
     }
 }
 
@@ -247,16 +251,6 @@ pub struct Along {
     pub orient: bool,
 }
 
-/// How a lit 3D layer answers to light: strengths of the ambient and diffuse response, the specular highlight and its tightness.
-#[derive(Debug, Deserialize, Clone, Copy)]
-#[serde(default, deny_unknown_fields)]
-pub struct Material {
-    pub ambient: f64,
-    pub diffuse: f64,
-    pub specular: f64,
-    pub shininess: f64,
-}
-
 /// Which side of a 3D layer is hidden. After Effects draws both sides of a layer; a plane seen from behind shows
 /// its content mirrored.
 #[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq, Default)]
@@ -287,12 +281,6 @@ pub struct Reflect {
     /// Softness of the mirror, px. Default 3.
     #[serde(default)]
     pub blur: Option<f64>,
-}
-
-impl Default for Material {
-    fn default() -> Self {
-        Material { ambient: 1.0, diffuse: 1.0, specular: 0.0, shininess: 32.0 }
-    }
 }
 
 /// Wrap a coordinate into `[min, max)` after it is evaluated.
@@ -388,6 +376,7 @@ pub struct Common {
     pub matte: Option<Matte>,
     /// Keep this layer inside another layer's alpha, and still draw that layer (unlike a track matte).
     pub clip_to: Option<String>,
+    /// Motion blur switch: the layer is drawn at several moments of the composition's shutter (`motion_blur`, or `mblur` on the composition) and averaged. Only layers of the root composition have one; a precomp layer blurs everything it shows.
     pub mblur: bool,
     /// How `check --layout` treats this layer: `foreground` (must not overlap other foreground layers), `backdrop` or `ignore`.
     /// Left out, text, shapes, nested comps and packs are foreground.

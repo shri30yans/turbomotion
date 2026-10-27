@@ -51,6 +51,10 @@ mod layer_space_tests;
 #[cfg(test)]
 mod palette_tests;
 #[cfg(test)]
+mod shutter_tests;
+#[cfg(test)]
+mod shutter_world_tests;
+#[cfg(test)]
 mod taper_tests;
 #[cfg(test)]
 mod testkit;
@@ -122,7 +126,7 @@ impl<'a> Renderer<'a> {
     pub fn draw(&mut self, frame: u32) -> Result<()> {
         let t = f64::from(frame) / f64::from(self.plan.fps);
         let state = self.ev.frame(ROOT, t).with_context(|| format!("evaluating frame {frame}"))?;
-        let subs = shutter_frames(self.plan, &self.ev, t).with_context(|| format!("evaluating the shutter of frame {frame}"))?;
+        let subs = graph::shutter::frames(self.plan, &self.ev, t).with_context(|| format!("evaluating the shutter of frame {frame}"))?;
         self.draw_state(&state, &subs)
     }
 
@@ -169,20 +173,6 @@ impl<'a> Renderer<'a> {
         anyhow::ensure!(png_encoder::encode(&pixmap, &mut png, &png_encoder::Options::default()), "PNG encoding failed");
         Ok(png)
     }
-}
-
-/// The root composition at evenly spread moments while the shutter is open, when any layer asks for motion blur.
-pub(crate) fn shutter_frames(plan: &Plan, ev: &Evaluator, t: f64) -> Result<Vec<Frame>> {
-    let root = plan.root();
-    if !root.layers.iter().any(|l| l.def.common.mblur) {
-        return Ok(vec![]);
-    }
-    let mb = root.mblur.unwrap_or_default();
-    if mb.samples < 2 || mb.shutter <= 0.0 {
-        return Ok(vec![]);
-    }
-    let open = mb.shutter / 360.0 / f64::from(plan.fps);
-    (0..mb.samples).map(|i| ev.frame(ROOT, t + ((f64::from(i) + 0.5) / f64::from(mb.samples) - 0.5) * open)).collect()
 }
 
 /// Render `frames` of `plan_file` into `out` with `workers` threads; each worker loads the plan itself because Skia

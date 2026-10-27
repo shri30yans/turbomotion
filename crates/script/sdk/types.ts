@@ -103,6 +103,7 @@ export interface LayerOpts {
   enter?: Transit;
   exit?: Transit;
   hidden?: boolean;
+  /** Motion blur switch: the layer is averaged over the composition's shutter (`comp({ motion_blur })`). A precomp layer blurs everything it shows. */
   mblur?: boolean;
   lit?: Lit;
   /** Shear in degrees (GSAP `skewX`); positive leans the top to the right. */

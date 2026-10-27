@@ -20,7 +20,7 @@ Generated from `parity/MATRIX.tsv` and `parity/effects.tsv`. `turbomotion parity
 * **Shapes**: Shape operators (WP-30), Gradient stroke, wave (WP-30), Repeater fractional copies and start/end opacity ramp (WP-30)
 * **Simulation**: Particles v2 and simulation effects (WP-36), Rigid-body bake (WP-37)
 * **Text**: sourceRectAtTime called from expressions (WP-12), Text selector based-on and modes (WP-32), Variable font axes (WP-32)
-* **Time**: Frame blending, Pixel Motion Blur, Timewarp (WP-13), Posterize Time, Time Displacement, Time Difference (WP-13)
+* **Time**: Frame blending, Pixel Motion Blur, Timewarp (WP-13), Posterize Time, Time Displacement, Time Difference (WP-13), Motion blur: Adaptive Sample Limit, and a switch inside a precomp that blurs its own layers (the precomp layer's switch blurs everything it shows) (WP-13)
 * **Tracking**: Simple point and corner tracking (WP-41)
 * **effects/Blur & Sharpen**: Bilateral Blur (WP-02), Box Blur (WP-02), Camera Lens Blur (WP-02), Channel Blur (WP-02), Compound Blur (WP-02), Fast Box Blur (WP-02), Smart Blur (WP-02), Unsharp Mask (WP-02), Reduce Interlace Flicker (WP-02)
 * **effects/Channel**: Arithmetic (WP-33), Blend (WP-33), Calculations (WP-33), Compound Arithmetic (WP-33), Minimax (WP-33), Remove Color Matting (WP-33), Set Channels (WP-33), Set Matte (WP-33), Shift Channels (WP-33), Solid Composite (WP-33), Cineon Converter (WP-33)

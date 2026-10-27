@@ -17,7 +17,7 @@ use crate::{
     shape::stroke,
 };
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, PartialEq)]
 pub struct GradientState {
     pub radial: bool,
     pub stops: Vec<(f64, Rgba)>,
@@ -26,7 +26,7 @@ pub struct GradientState {
     pub radius: f64,
 }
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, PartialEq)]
 pub struct FillState {
     pub color: Option<Rgba>,
     pub gradient: Option<GradientState>,
@@ -34,7 +34,7 @@ pub struct FillState {
     pub even_odd: bool,
 }
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, PartialEq)]
 pub struct StrokeState {
     pub color: Rgba,
     pub width: f64,
@@ -47,7 +47,7 @@ pub struct StrokeState {
     pub taper: Option<stroke::Taper>,
 }
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, PartialEq)]
 pub struct ShapeState {
     pub fill: Option<FillState>,
     pub stroke: Option<StrokeState>,
@@ -230,7 +230,7 @@ pub fn point_on(path: &Path, u: f64) -> ([f64; 2], f64) {
     }
 }
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, PartialEq)]
 pub struct MaskState {
     pub feather: f64,
     pub expansion: f64,

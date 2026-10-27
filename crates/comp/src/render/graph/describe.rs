@@ -87,7 +87,7 @@ fn graph_text(out: &mut String, plan: &Plan, g: &Graph, frame: &Frame, depth: us
 /// The passes and edges (`i<n>` are images) of the root composition at `t` seconds, nested compositions indented.
 pub fn describe(plan: &Plan, ev: &Evaluator, t: f64) -> Result<String> {
     let frame = ev.frame(crate::plan::ROOT, t)?;
-    let samples = crate::render::shutter_frames(plan, ev, t)?;
+    let samples = super::shutter::frames(plan, ev, t)?;
     let mut out = String::new();
     graph_text(&mut out, plan, &comp_graph(plan.root(), &frame, &samples), &frame, 0);
     Ok(out)

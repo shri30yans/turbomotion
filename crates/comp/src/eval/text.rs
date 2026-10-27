@@ -9,7 +9,7 @@ pub mod bounds;
 mod mark;
 mod source;
 
-use super::{shape::FillState, CompPlan, Evaluator, LayerEnv};
+use super::{shape::FillState, shared::Shared, CompPlan, Evaluator, LayerEnv};
 use crate::{
     anim::prop::Rgba,
     plan::LayerPlan,
@@ -24,7 +24,7 @@ use crate::{
 };
 use self::{bounds::BoxState, mark::mark_state, source::{counter_string, swap_string}};
 
-#[derive(Serialize)]
+#[derive(Serialize, PartialEq)]
 pub struct TextState {
     pub text: String,
     pub size: f64,
@@ -51,11 +51,11 @@ pub struct TextState {
     /// The layer's `box` at this instant.
     pub text_box: Option<BoxState>,
     #[serde(skip)]
-    pub layout: Option<Rc<Layout>>,
+    pub layout: Option<Shared<Layout>>,
 }
 
 /// A highlighter sweeping across one word of the line.
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, PartialEq)]
 pub struct MarkState {
     pub rect: [f32; 4],
     pub progress: f64,
@@ -192,7 +192,7 @@ pub fn state(ev: &Evaluator, c: &CompPlan, l: &LayerPlan, tx: &Text, t: f64) -> 
         placed_bounds,
         bounds,
         text_box,
-        layout: Some(layout),
+        layout: Some(layout.clone().into()),
     })
 }
 

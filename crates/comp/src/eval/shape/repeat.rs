@@ -12,7 +12,7 @@ use crate::{
     schema::{palette::Target, Repeat},
 };
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, PartialEq)]
 pub struct RepeatState {
     pub copies: u32,
     pub offset: [f64; 2],
@@ -24,7 +24,7 @@ pub struct RepeatState {
 }
 
 /// The colours of the copies and which paints take them.
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, PartialEq)]
 pub struct Tint {
     pub paint: Target,
     pub colours: Cycled,

@@ -758,3 +758,84 @@ A repeater can give every copy its own colour from a palette. Add `palette`, `cy
 }
 ```
 
+## `motion_blur` (a composition key)
+
+True motion blur, as After Effects has it: the frame at time `t` is the whole scene (every layer's transform, its motion path and keys with their ease or speed and influence handles, the camera, 3D layers, text animators, particles, effects and masks) drawn at several moments while the shutter is open and averaged. The shutter is open over `[t + phase, t + phase + angle]`, both in degrees of the frame interval (360 degrees is one frame), so the default angle of 180 and phase of -90 blur over a quarter of a frame either side of `t`. Only layers with `"mblur": true` blur. The blur is an average of finished pictures in the film's working colour, so with `color.linear_light` it averages light (an edge half through a pixel is level 188 on screen, not 128), and it averages premultiplied pictures, so alpha coverage is exact. Samples are spread evenly over the shutter (the middle of each of `samples` equal slices) and their number is fixed: the smear of a fast mover is `samples` copies, so it steps when the distance between samples (travel / samples) is more than a pixel or two; lower the angle or raise `samples` (at most 16; each sample draws every blurred layer again). A layer that does not move, and has no effect, matte or clip, is drawn once and exactly as without blur. A comp with the block and no switched layer costs nothing. Only the layers of the root composition have a switch: a precomp layer with `"mblur": true` blurs everything it shows, whatever is switched inside it, and a switch inside a nested composition does nothing (`comp check` says so).
+
+* `mblur`: A layer key, not part of the block: `"mblur": true` switches motion blur on for the layer (default false). With no `motion_blur` block the older key's shutter is used.
+* `older key`: `"mblur": {"samples": 8, "shutter": 180}` on the composition (and on a timeline) is kept as it always was: the shutter is centred on the frame time whatever its angle, a layer that is not showing at the frame time takes no part, and the numbers are not range-checked. Use `motion_blur` for After Effects' phase and for a layer that enters or leaves during the shutter; the two keys together are an error.
+* `samples`: Moments averaged per frame, 2 to 16 (default 16). A frame costs about this many times a frame without blur, for the layers that blur.
+* `shutter_angle`: How long the shutter is open, in degrees of the frame interval, 0 to 720 (default 180). 0 draws no blur. A 100 px per frame mover blurs over 100 * angle / 360 px plus its own size.
+* `shutter_phase`: When the shutter opens relative to the frame time, in degrees of the frame interval, -360 to 360 (default -90: a 180 degree shutter centred on the frame time; 0 opens it at the frame time, so the smear trails ahead of the layer).
+
+```json
+{
+  "bg": "#101820",
+  "dur": 2,
+  "fps": 30,
+  "height": 720,
+  "layers": [
+    {
+      "color": "#ffd166",
+      "id": "puck",
+      "mblur": true,
+      "pos": {
+        "keys": [
+          {
+            "ease_out": {
+              "influence": 60,
+              "speed": 0
+            },
+            "t": 0,
+            "v": [
+              320,
+              360
+            ]
+          },
+          {
+            "ease_in": {
+              "influence": 60,
+              "speed": 0
+            },
+            "t": 1.2,
+            "v": [
+              960,
+              360
+            ]
+          }
+        ]
+      },
+      "rotation": {
+        "at": 0,
+        "dur": 1.2,
+        "ease": "power1.inOut",
+        "from": 0,
+        "to": 180
+      },
+      "size": [
+        120,
+        120
+      ],
+      "type": "solid"
+    },
+    {
+      "align": "center",
+      "color": "#f4f7ff",
+      "pos": [
+        640,
+        600
+      ],
+      "size": 56,
+      "text": "SHUTTER 180",
+      "type": "text"
+    }
+  ],
+  "motion_blur": {
+    "samples": 16,
+    "shutter_angle": 180,
+    "shutter_phase": -90
+  },
+  "width": 1280
+}
+```
+

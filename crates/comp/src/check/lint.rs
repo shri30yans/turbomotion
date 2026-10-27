@@ -234,34 +234,12 @@ pub fn run(plan: &Plan) -> anyhow::Result<Vec<Finding>> {
     Ok(out)
 }
 
-/// Moments of a composition at which the layers an effect reads are looked at.
-const EFFECT_INPUT_SAMPLES: usize = 24;
-
-/// A layer an effect reads as a map or mask is drawn on the composite as well unless it is hidden, so the map shows on
-/// screen. That is rarely meant: say `"hidden": true` on it.
+/// The rules that read the evaluated frames: a map drawn on screen, layers behind the camera, plugin bounds, motion blur, text animators.
 fn visible_effect_inputs(plan: &Plan, ev: &Evaluator) -> anyhow::Result<Vec<Finding>> {
-    let mut out = vec![];
-    for (name, comp) in &plan.comps {
-        // (layer read, who reads it, through which effect)
-        let readers = comp.layers.iter().flat_map(|l| l.fx.iter().map(move |f| (l.label.as_str(), f))).chain(comp.look.iter().map(|f| ("look", f)));
-        let mut reads: Vec<(usize, &str, &str)> = vec![];
-        for (reader, f) in readers {
-            reads.extend(f.layers_read().into_iter().map(|read| (read, reader, f.name())));
-        }
-        for (read, reader, effect) in reads {
-            let seen = (0..EFFECT_INPUT_SAMPLES).map(|k| comp.dur * (k as f64 + 0.5) / EFFECT_INPUT_SAMPLES as f64).find_map(|t| match ev.frame(name, t) {
-                Ok(f) => shows(&f.layers[read]).then_some(Ok(t)),
-                Err(e) => Some(Err(e)),
-            });
-            if let Some(t) = seen.transpose()? {
-                let label = &comp.layers[read].label;
-                let place = if name.is_empty() { String::new() } else { format!(" in comp {name:?}") };
-                out.push(warn("visible-effect-input", &format!("{label}{place}"), Some(t), format!("is read by effect {effect:?} on {reader} but is also drawn on screen, so the map itself shows"), "set \"hidden\": true on it; an effect still reads a hidden layer"));
-            }
-        }
-    }
+    let mut out = super::effect_inputs::run(plan, ev)?;
     super::behind_camera::run(plan, &ev, &mut out)?;
     super::fx_bounds::run(plan, &mut out)?;
+    super::motion_blur::run(plan, &mut out);
     super::text_animators::run(plan, &ev, &mut out)?;
     Ok(out)
 }

@@ -17,7 +17,7 @@ pub fn uses_backdrop(fx: &[PlanFx]) -> bool {
 }
 
 /// Where a layer's picture comes from: the frame itself or one of the shutter samples.
-const MAIN: usize = 0;
+pub(super) const MAIN: usize = 0;
 
 pub(super) struct Builder<'a> {
     pub(super) comp: &'a CompPlan,
@@ -54,7 +54,7 @@ impl<'a> Builder<'a> {
         out
     }
 
-    fn modify(&mut self, stage: Stage, frame: usize, reads: Vec<ImageId>) {
+    pub(super) fn modify(&mut self, stage: Stage, frame: usize, reads: Vec<ImageId>) {
         self.passes.push(Pass { stage, frame, reads, write: Write::Composite });
     }
 
@@ -173,20 +173,6 @@ impl<'a> Builder<'a> {
         self.modify(Stage::AdjustMix, MAIN, vec![below, changed, cov]);
     }
 
-    /// Layer `i` averaged over the shutter samples at which it is visible.
-    fn shutter(&mut self, i: usize) -> ImageId {
-        let mut reads = vec![];
-        let mut opacities = vec![];
-        for frame in 1..self.frames.len() {
-            let s = &self.frames[frame].layers[i];
-            if s.visible && s.opacity > 0.0 {
-                reads.push(self.layer_picture(frame, i, None));
-                opacities.push(s.opacity);
-            }
-        }
-        self.pass(Stage::ShutterAverage { opacities }, MAIN, reads)
-    }
-
     /// Lay one visible layer on the composite (adjustment, motion-blur shutter, or a normal layer).
     fn composite_layer(&mut self, frame: usize, i: usize) {
         let (comp, f) = (self.comp, self.frames[frame]);
@@ -197,15 +183,13 @@ impl<'a> Builder<'a> {
             }
             return;
         }
+        if frame == MAIN && self.composite_blurred(i) {
+            return;
+        }
         if !st.visible || st.opacity <= 0.0 {
             return;
         }
         let blend = st.blend_mode;
-        if comp.layers[i].def.common.mblur && self.frames.len() > 1 && f.comp == crate::plan::ROOT {
-            let averaged = self.shutter(i);
-            self.modify(Stage::Composite { blend, opacity: 1.0, placed: None }, frame, vec![averaged]);
-            return;
-        }
         let behind = if uses_backdrop(&comp.layers[i].fx) { Some(self.pass(Stage::Snapshot, frame, vec![])) } else { None };
         let mut parts = self.layer_parts(frame, i, behind);
         // a mode that reaches past the layer's own pixels (a dissolve, a stencil) sees the layer as the frame sees it

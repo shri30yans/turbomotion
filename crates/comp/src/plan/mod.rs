@@ -22,7 +22,7 @@ use turbomotion_core::color::Pipeline;
 use crate::{
     anim::prop::ColorProp,
     media::probe::{ImageInfo, VideoInfo},
-    schema::{self, EffectSpace, Fx, Kind, Layer, Marker, MatteMode, MotionBlur, PathSource},
+    schema::{self, Blur, EffectSpace, Fx, Kind, Layer, Marker, MatteMode, PathSource},
 };
 use crate::fxlib::{Library, PlanFx, PluginPlan};
 use geometry::PathGeo;
@@ -51,7 +51,7 @@ pub struct CompPlan {
     pub bpm: Option<f64>,
     pub beat_offset: f64,
     pub markers: Vec<Marker>,
-    pub mblur: Option<MotionBlur>,
+    pub blur: Option<Blur>,
     /// Where this composition's layers run their effects and masks (the root's unless the composition says its own).
     pub effect_space: EffectSpace,
     /// What the numbers of its pictures mean, and what its frame leaves in (see `schema::color`).
@@ -342,7 +342,7 @@ impl CompPlan {
             bpm: c.bpm.or(if name.is_empty() { None } else { root.bpm }),
             beat_offset: if c.bpm.is_none() && !name.is_empty() && root.bpm.is_some() { root.beat_offset } else { c.beat_offset },
             markers: c.markers.clone(),
-            mblur: c.mblur,
+            blur: schema::blur_of(name, c)?,
             effect_space,
             color,
             layout: c.layout,

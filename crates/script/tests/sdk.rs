@@ -197,3 +197,13 @@ fn comp_color_reaches_the_json_and_is_left_out_by_default() {
     let v = run("color-default", &format!("import {{ comp, text }} from \"turbomotion\";\nconst film = comp({{ width: 64, height: 48, fps: 30, dur: 1 }});\n{body}"));
     assert!(v.get("color").is_none(), "left out, the key is not written: the engine's default (unmanaged) applies");
 }
+
+#[test]
+fn comp_motion_blur_reaches_the_json_and_is_left_out_by_default() {
+    let body = "film.add(solid(\"#fff\", { size: [8, 8], mblur: true }));\nexport default film;\n";
+    let v = run("motion-blur", &format!("import {{ comp, solid }} from \"turbomotion\";\nconst film = comp({{ width: 64, height: 48, fps: 30, dur: 1, motion_blur: {{ shutter_angle: 360, samples: 8 }} }});\n{body}"));
+    assert_eq!(v["motion_blur"], serde_json::json!({"shutter_angle": 360, "samples": 8}));
+    assert_eq!(v["layers"][0]["mblur"], serde_json::json!(true));
+    let v = run("motion-blur-default", &format!("import {{ comp, solid }} from \"turbomotion\";\nconst film = comp({{ width: 64, height: 48, fps: 30, dur: 1 }});\n{body}"));
+    assert!(v.get("motion_blur").is_none(), "left out, the key is not written");
+}
