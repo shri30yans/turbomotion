@@ -17,7 +17,7 @@ fn const_list(source: &str, name: &str) -> Vec<String> {
 fn struct_fields(source: &str, name: &str) -> Vec<String> {
     let start = source.find(&format!("pub struct {name} {{")).unwrap_or_else(|| panic!("no struct {name}"));
     let body = &source[start..start + source[start..].find("\n}").unwrap()];
-    body.lines().skip(1).filter_map(|l| l.trim().strip_prefix("pub ")).filter_map(|l| l.split(':').next()).map(str::to_string).collect()
+    body.lines().skip(1).filter_map(|l| l.trim().strip_prefix("pub ")).filter_map(|l| l.split(':').next()).map(|f| f.trim_start_matches("r#").to_string()).collect()
 }
 
 /// The names declared by `interface NAME ... { ... }` in an SDK type file.

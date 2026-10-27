@@ -6,16 +6,19 @@ use turbomotion_core::color::Ink;
 
 use super::color4f;
 use crate::{
-    eval::{mat4::Mat4, text::TextState},
+    eval::{mat4::Mat4, text::{bounds::BoxState, TextState}},
     text::{
         animate::shift_hsv,
         layout::is_color_glyph,
-        place::{corners, MIN_VISIBLE_OPACITY},
+        place::{corners, MIN_STROKE_WIDTH, MIN_VISIBLE_OPACITY},
     },
 };
 
 pub fn paint(ink: &Ink, c: &Canvas, t: &TextState) -> Result<()> {
     let Some(layout) = &t.layout else { return Ok(()) };
+    if let Some(b) = &t.text_box {
+        paint_box(ink, c, b)?;
+    }
     if let Some(m) = &t.mark {
         if m.progress > 0.002 {
             let w = ((m.rect[2] - m.rect[0]) as f64 * m.progress).max(1.0) as f32;
@@ -118,8 +121,19 @@ pub fn paint(ink: &Ink, c: &Canvas, t: &TextState) -> Result<()> {
     Ok(())
 }
 
-/// Strokes thinner than this are not drawn.
-const MIN_STROKE_WIDTH: f64 = 0.01;
+/// The `box`: a rounded rectangle for each of its rects, behind everything else the layer draws. The corner radius is
+/// held to half the shorter side, so a large one makes a pill.
+fn paint_box(ink: &Ink, c: &Canvas, b: &BoxState) -> Result<()> {
+    let mut paint = Paint::default();
+    paint.set_anti_alias(true);
+    ink.apply(&mut paint, c, color4f(b.fill))?;
+    for &[left, top, right, bottom] in &b.rects {
+        let rect = Rect::new(left as f32, top as f32, right as f32, bottom as f32);
+        let radius = (b.radius as f32).min(rect.width() / 2.0).min(rect.height() / 2.0);
+        c.draw_rrect(RRect::new_rect_xy(rect, radius, radius), &paint);
+    }
+    Ok(())
+}
 
 /// The fractions of one glyph's outline (`own` long) inside the trim `window`. `along` is the length of the outlines
 /// before this glyph and of the whole line when the trim runs along the line, `None` when each glyph trims its own.

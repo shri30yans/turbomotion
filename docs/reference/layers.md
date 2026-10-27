@@ -17,7 +17,7 @@ A flat rectangle: backgrounds, flashes, mattes. Size defaults to the composition
 
 ## `text`
 
-Text with real shaping. `font` is a family or a file; `align` left|center|right (the layer's pos is the alignment edge, vertically centred); `width` wraps. Characters the designed font does not have take a fallback face and are painted in the same colour as the rest of the line. `preset` is a named per-character animation (see `text_presets`); `animators` build your own (GSAP staggers or After Effects range selectors). `text` can also be a counter {from, to, at, dur, ease, decimals, sep, prefix, suffix}. Animator props include per-character 3D (`z`, `rotation_x|y|z`, `scale_z`, seen through `perspective`), `fill_hue|saturation|brightness` and `stroke_width`; an animator's `cipher` {charset, rate, seed, settle} decodes noise into the real characters. Animator `props` are DELTAS added to each character's rest state: `opacity: -1` hides it, a positive opacity changes nothing (rest is already full), `scale: -1` shrinks it to nothing. A `selector` {start, end, offset, shape, smooth, random} gives weight 1 to the characters whose place along the text (0 to 1) lies between `start + offset` and `end + offset`, so a window that never reaches a character leaves the text untouched: animate `offset` (for example {from: -0.2, to: 1, dur: 2}) to sweep a window along the line. `check` warns (animator-never-applies, animator-opacity-delta) when an animator can change nothing. `path` {an ellipse/points/d/... geometry or a `layer` id, reverse, perpendicular, force_align, first_margin, last_margin, travel} sets the text along a path (`travel` 0..1 is one exact lap of a closed path); `surface` {kind: cylinder|sphere, radius, turn, back} wraps it on a drum or ball; `marquee` {speed, gap, repeat} scrolls a seamless row; `outline_only` with `stroke_trim` [start, end] draws the glyph outlines on.
+Text with real shaping. `font` is a family or a file; `align` left|center|right (the layer's pos is the alignment edge, vertically centred); `width` wraps. Characters the designed font does not have take a fallback face and are painted in the same colour as the rest of the line. `preset` is a named per-character animation (see `text_presets`); `animators` build your own (GSAP staggers or After Effects range selectors). `text` can also be a counter {from, to, at, dur, ease, decimals, sep, prefix, suffix}. Animator props include per-character 3D (`z`, `rotation_x|y|z`, `scale_z`, seen through `perspective`), `fill_hue|saturation|brightness` and `stroke_width`; an animator's `cipher` {charset, rate, seed, settle} decodes noise into the real characters. Animator `props` are DELTAS added to each character's rest state: `opacity: -1` hides it, a positive opacity changes nothing (rest is already full), `scale: -1` shrinks it to nothing. A `selector` {start, end, offset, shape, smooth, random} gives weight 1 to the characters whose place along the text (0 to 1) lies between `start + offset` and `end + offset`, so a window that never reaches a character leaves the text untouched: animate `offset` (for example {from: -0.2, to: 1, dur: 2}) to sweep a window along the line. `check` warns (animator-never-applies, animator-opacity-delta) when an animator can change nothing. `path` {an ellipse/points/d/... geometry or a `layer` id, reverse, perpendicular, force_align, first_margin, last_margin, travel} sets the text along a path (`travel` 0..1 is one exact lap of a closed path); `surface` {kind: cylinder|sphere, radius, turn, back} wraps it on a drum or ball; `marquee` {speed, gap, repeat} scrolls a seamless row; `outline_only` with `stroke_trim` [start, end] draws the glyph outlines on. `box` {fit: "text", padding, radius, fill, min_width, align, per_line} draws a rectangle behind the glyphs that is as wide as the characters showing (see `text_box`).
 
 ```json
 {
@@ -498,6 +498,87 @@ Depth for a three_d text, shape or solid layer: copies stepping back in z, colou
   "three_d": true,
   "type": "text",
   "weight": 800
+}
+```
+
+## `box` (a text layer key)
+
+A filled rectangle fitted to a text layer's characters, drawn behind the glyphs inside the same layer: it moves, scales, turns, fades and takes the layer's effects with the text, in either `effect_space`. It is as wide as the characters showing plus the padding on both sides and as tall as the lines it covers (ascent to descent) plus the padding above and below, measured from the real shaped text (kerning, tracking, line breaks, the font's own metrics). It follows what is showing: a typewriter bar grows with every character, a masked rise grows as the line comes out from behind its mask, a tracking-in widens it, and a text with nothing showing has no box. Whitespace has no extent, so a box hugs the first and last visible character of a line. The same measurement is `source_rect_at_time(t, include_extents)` in the engine, the `bounds` of the layer's `content` in `comp inspect`, and `bounds` in the SDK's `measure()`.
+
+* `align`: Which side of a box widened by `min_width` keeps its place: "left" grows to the right, "right" to the left, "center" both ways (default: the text layer's own `align`).
+* `fill`: Required: the box's colour (a colour, a palette name or an animated colour).
+* `fit`: Required: "text", the only choice. The box is fitted to the measured characters.
+* `min_width`: The box is never narrower than this many pixels, padding included (default 0).
+* `padding`: [x, y] pixels between the characters and the box: x on the left and right, y above and below. Each is a property (a number, an expression, {from, to, at, dur, ease} or keys), so it can animate; neither may be negative (default [0, 0]).
+* `per_line`: true draws one box for each line that has characters showing, each as wide as its own line; false (default) draws one box round the whole block.
+* `radius`: Corner radius in pixels, held to half the box's shorter side, so a large one makes a pill (default 0).
+
+```json
+{
+  "bg": "#10141f",
+  "dur": 3,
+  "fps": 30,
+  "height": 1080,
+  "layers": [
+    {
+      "box": {
+        "fill": "#e63946",
+        "fit": "text",
+        "min_width": 360,
+        "padding": [
+          {
+            "at": 0.2,
+            "dur": 1.4,
+            "ease": "power2.out",
+            "from": 56,
+            "to": 36
+          },
+          24
+        ],
+        "radius": 28
+      },
+      "color": "#ffffff",
+      "font": "Avenir Next",
+      "id": "typed",
+      "pos": [
+        300,
+        400
+      ],
+      "preset": {
+        "at": 0.2,
+        "dur": 1.4,
+        "name": "typewriter"
+      },
+      "size": 96,
+      "text": "Make it move",
+      "type": "text",
+      "weight": 800
+    },
+    {
+      "box": {
+        "fill": "#e2c48a",
+        "fit": "text",
+        "padding": [
+          28,
+          14
+        ],
+        "per_line": true,
+        "radius": 10
+      },
+      "color": "#10141f",
+      "font": "Avenir Next",
+      "id": "lines",
+      "pos": [
+        300,
+        700
+      ],
+      "size": 64,
+      "text": "Two lines,\nEach with its own bar",
+      "type": "text",
+      "weight": 700
+    }
+  ],
+  "width": 1920
 }
 ```
 

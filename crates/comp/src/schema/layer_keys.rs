@@ -13,10 +13,17 @@ const EXPANDED: &[(&str, &str)] = &[("*", "repeat"), ("*", "extrude"), ("*", "on
 pub fn unknown_key(label: &str, ty: &str, own: Fields, key: &str) -> String {
     let valid: Vec<&str> = COMMON_KEYS.iter().chain(own.keys).copied().collect();
     format!(
-        "{label}: unknown key {key:?}.{} A {ty} layer takes {}, and every layer takes the common keys (`turbomotion comp catalogue layer {ty}` lists both with their forms)",
+        "{label}: unknown key {key:?}.{}{} A {ty} layer takes {}, and every layer takes the common keys (`turbomotion comp catalogue layer {ty}` lists both with their forms)",
         hint(key, &valid),
+        belongs_to(key),
         if own.keys.is_empty() { "no keys of its own".to_string() } else { own.keys.join(", ") }
     )
+}
+
+/// Where `key` is valid, when it is a key of other layer types: the usual mistake is a text key on a solid.
+fn belongs_to(key: &str) -> String {
+    let owners: Vec<&str> = Kind::NAMES.iter().copied().filter(|n| super::fields::of_kind(n).is_some_and(|f| f.keys.contains(&key))).collect();
+    if owners.is_empty() { String::new() } else { format!(" `{key}` is a key of {} layers.", owners.join(", ")) }
 }
 
 /// Every complaint about `keys` (`type` is the kind itself and is not a key) on a layer of type `ty`; empty when they all belong.
@@ -37,6 +44,13 @@ mod tests {
         assert_eq!(p.len(), 2, "{p:?}");
         assert!(p[0].contains("unknown key \"colour\". Did you mean \"color\"?") && p[0].contains("A text layer takes text, font"), "{}", p[0]);
         assert!(p[1].contains("\"outline\"") && p[1].contains("outline_only"), "{}", p[1]);
+    }
+
+    #[test]
+    fn a_key_of_another_layer_type_says_which_layers_take_it() {
+        let p = problems("solid \"s\"", "solid", &["box", "per_line"]);
+        assert!(p[0].contains("unknown key \"box\".") && p[0].contains("`box` is a key of text layers."), "{}", p[0]);
+        assert!(!p[1].contains("is a key of"), "`per_line` is not a layer key anywhere, only a key of the box: {}", p[1]);
     }
 
     #[test]

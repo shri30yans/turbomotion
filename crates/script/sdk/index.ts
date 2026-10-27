@@ -25,4 +25,4 @@ export { motionPath } from "./motion-path";
 export type { Handle, Handles, HandleKey, MotionPath, PathHandles, PathKey, PathPoint, RovingKey, Side } from "./motion-types";
 
 export { measure } from "./measure";
-export type { MeasureOptions, Measured, CharBox, WordBox } from "./measure";
+export type { MeasureOptions, Measured, CharBox, WordBox, SourceRect, TextBounds } from "./measure";

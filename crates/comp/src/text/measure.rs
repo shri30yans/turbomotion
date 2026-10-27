@@ -4,7 +4,10 @@
 use anyhow::{ensure, Result};
 use serde::{Deserialize, Serialize};
 
-use super::layout::{Engine, FontBook, Spec};
+use super::{
+    bounds::TextBounds,
+    layout::{Engine, FontBook, Spec},
+};
 use crate::schema::Align;
 
 /// What to measure. Every field but `text` has the default a text layer has.
@@ -70,6 +73,9 @@ pub struct Measured {
     /// Every character of the text, spaces included, in order.
     pub chars: Vec<CharBox>,
     pub words: Vec<WordBox>,
+    /// Where the characters are (`null` for a text with none): the same measurement a text layer's `box` and
+    /// `comp inspect` read, with every character showing. `lines` has the extent of each line.
+    pub bounds: Option<TextBounds>,
 }
 
 /// Shape `req` with `engine`, finding fonts through `book`.
@@ -111,7 +117,7 @@ pub fn measure(engine: &Engine, book: &dyn FontBook, req: &Request) -> Result<Me
         })
         .collect();
     let baseline = layout.glyphs.first().map_or(req.size as f32, |g| g.y);
-    Ok(Measured { width: layout.width, height: layout.height, baseline, lines: layout.lines.len().max(1), chars, words })
+    Ok(Measured { width: layout.width, height: layout.height, baseline, lines: layout.lines.len().max(1), chars, words, bounds: TextBounds::of_layout(&layout) })
 }
 
 #[cfg(test)]

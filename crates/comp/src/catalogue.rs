@@ -10,6 +10,7 @@ pub mod layer_keys;
 mod motion_keys;
 mod property_examples;
 mod property_forms;
+mod text_box;
 
 use serde::Serialize;
 use serde_json::{json, Value};
@@ -29,7 +30,7 @@ pub fn layers() -> Vec<Entry> {
         Entry { name: "solid", summary: "A flat rectangle: backgrounds, flashes, mattes. Size defaults to the composition.", example: json!({"type": "solid", "color": "#101828"}) },
         Entry {
             name: "text",
-            summary: "Text with real shaping. `font` is a family or a file; `align` left|center|right (the layer's pos is the alignment edge, vertically centred); `width` wraps. Characters the designed font does not have take a fallback face and are painted in the same colour as the rest of the line. `preset` is a named per-character animation (see `text_presets`); `animators` build your own (GSAP staggers or After Effects range selectors). `text` can also be a counter {from, to, at, dur, ease, decimals, sep, prefix, suffix}. Animator props include per-character 3D (`z`, `rotation_x|y|z`, `scale_z`, seen through `perspective`), `fill_hue|saturation|brightness` and `stroke_width`; an animator's `cipher` {charset, rate, seed, settle} decodes noise into the real characters. Animator `props` are DELTAS added to each character's rest state: `opacity: -1` hides it, a positive opacity changes nothing (rest is already full), `scale: -1` shrinks it to nothing. A `selector` {start, end, offset, shape, smooth, random} gives weight 1 to the characters whose place along the text (0 to 1) lies between `start + offset` and `end + offset`, so a window that never reaches a character leaves the text untouched: animate `offset` (for example {from: -0.2, to: 1, dur: 2}) to sweep a window along the line. `check` warns (animator-never-applies, animator-opacity-delta) when an animator can change nothing. `path` {an ellipse/points/d/... geometry or a `layer` id, reverse, perpendicular, force_align, first_margin, last_margin, travel} sets the text along a path (`travel` 0..1 is one exact lap of a closed path); `surface` {kind: cylinder|sphere, radius, turn, back} wraps it on a drum or ball; `marquee` {speed, gap, repeat} scrolls a seamless row; `outline_only` with `stroke_trim` [start, end] draws the glyph outlines on.",
+            summary: "Text with real shaping. `font` is a family or a file; `align` left|center|right (the layer's pos is the alignment edge, vertically centred); `width` wraps. Characters the designed font does not have take a fallback face and are painted in the same colour as the rest of the line. `preset` is a named per-character animation (see `text_presets`); `animators` build your own (GSAP staggers or After Effects range selectors). `text` can also be a counter {from, to, at, dur, ease, decimals, sep, prefix, suffix}. Animator props include per-character 3D (`z`, `rotation_x|y|z`, `scale_z`, seen through `perspective`), `fill_hue|saturation|brightness` and `stroke_width`; an animator's `cipher` {charset, rate, seed, settle} decodes noise into the real characters. Animator `props` are DELTAS added to each character's rest state: `opacity: -1` hides it, a positive opacity changes nothing (rest is already full), `scale: -1` shrinks it to nothing. A `selector` {start, end, offset, shape, smooth, random} gives weight 1 to the characters whose place along the text (0 to 1) lies between `start + offset` and `end + offset`, so a window that never reaches a character leaves the text untouched: animate `offset` (for example {from: -0.2, to: 1, dur: 2}) to sweep a window along the line. `check` warns (animator-never-applies, animator-opacity-delta) when an animator can change nothing. `path` {an ellipse/points/d/... geometry or a `layer` id, reverse, perpendicular, force_align, first_margin, last_margin, travel} sets the text along a path (`travel` 0..1 is one exact lap of a closed path); `surface` {kind: cylinder|sphere, radius, turn, back} wraps it on a drum or ball; `marquee` {speed, gap, repeat} scrolls a seamless row; `outline_only` with `stroke_trim` [start, end] draws the glyph outlines on. `box` {fit: \"text\", padding, radius, fill, min_width, align, per_line} draws a rectangle behind the glyphs that is as wide as the characters showing (see `text_box`).",
             example: json!({"type": "text", "text": "Make it move\nlike you mean it", "font": "Avenir Next", "weight": 800, "role": "title", "color": "#ffffff", "pos": [960, 540], "align": "center", "preset": {"name": "reveal", "at": 0.3}, "mark": {"word": "move", "at": 1.0}}),
         },
         Entry {
@@ -147,6 +148,7 @@ pub fn all() -> Value {
         "effects": effects,
         "effect_composite": crate::fxlib::composite::catalogue(),
         "effect_space": effect_space::entry(),
+        "text_box": text_box::entry(),
         "color": color::entry(),
         "blend_modes": blend_modes::entry(),
         "keyframe_motion": motion_keys::entry(),

@@ -91,6 +91,9 @@ pub struct Text {
     /// Sweep a highlighter across this word of the line.
     #[serde(default)]
     pub mark: Option<super::text::Mark>,
+    /// A filled rectangle fitted to the characters showing (a text bar, pill, chip or lower third).
+    #[serde(default, rename = "box")]
+    pub r#box: Option<super::text_box::TextBox>,
     /// Restyle part of the line: an italic accent word, a bold number, another face for a unit. Each run matches
     /// text (`"match": "prompt."`) and overrides only the fields it names.
     #[serde(default)]
@@ -152,6 +155,7 @@ impl Text {
     pub fn validate(&self) -> anyhow::Result<()> {
         use anyhow::ensure;
         ensure!(self.path.is_none() || self.surface.is_none(), "text takes a `path` or a `surface`, not both");
+        self.r#box.iter().try_for_each(super::text_box::TextBox::validate)?;
         ensure!(self.stroke_trim.is_none() || self.stroke.is_some() || self.outline_only, "`stroke_trim` trims the stroke: give the text a `stroke` or `outline_only`");
         if let Some(m) = &self.marquee {
             ensure!(m.speed.is_finite() && m.offset.is_finite(), "marquee speed and offset are finite numbers");

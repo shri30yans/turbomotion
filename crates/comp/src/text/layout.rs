@@ -66,6 +66,10 @@ pub struct Glyph {
     /// The baseline.
     pub y: f32,
     pub w: f32,
+    /// What `w` gains when no character follows this one on its line: the pair kerning with the next character is gone,
+    /// so the box is the character's own advance (and its tracking). Zero for the last character of a line, and for a
+    /// character in a font that does not kern it, or that ends a ligature (`fi`).
+    pub trail: f32,
     pub top: f32,
     pub bottom: f32,
     pub line: usize,
@@ -297,7 +301,10 @@ impl Engine {
                     let mut face = p.get_font_at_utf16_offset(utf16);
                     prepare_font(&mut face);
                     let font = if face.unichar_to_glyph(ch as i32) == 0 { primary.clone() } else { face };
-                    glyphs.push(Glyph { ch, x: r.left, y: baseline as f32, w: r.width(), top: (baseline - ascent) as f32, bottom: (baseline + descent) as f32, line, word, slot, font });
+                    // the last character of a ligature (`fi`) ends the cluster: nothing was pulled from it
+                    let ends_ligature = p.get_glyph_cluster_at(utf16).is_some_and(|c| c.text_range.len() > len && c.text_range.end == utf16 + len);
+                    let trail = if ends_ligature { 0.0 } else { font.measure_str(ch.to_string(), None).0 + spec.tracking as f32 / 100.0 - r.width() };
+                    glyphs.push(Glyph { ch, x: r.left, y: baseline as f32, w: r.width(), trail, top: (baseline - ascent) as f32, bottom: (baseline + descent) as f32, line, word, slot, font });
                     word_open = true;
                 }
             }

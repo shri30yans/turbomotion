@@ -19,7 +19,7 @@ Generated from `parity/MATRIX.tsv` and `parity/effects.tsv`. `turbomotion parity
 * **Layers**: Per-vertex mask feather (WP-30), Collapse transformations (WP-14), Order of operations: masks before effects (WP-14)
 * **Shapes**: Shape operators (WP-30), Gradient stroke, taper, wave (WP-30)
 * **Simulation**: Particles v2 and simulation effects (WP-36), Rigid-body bake (WP-37)
-* **Text**: Text measured bounds (WP-32), Text selector based-on and modes (WP-32), Variable font axes (WP-32)
+* **Text**: sourceRectAtTime called from expressions (WP-12), Text selector based-on and modes (WP-32), Variable font axes (WP-32)
 * **Time**: Frame blending, Pixel Motion Blur, Timewarp (WP-13), Posterize Time, Time Displacement, Time Difference (WP-13)
 * **Tracking**: Simple point and corner tracking (WP-41)
 * **effects/Blur & Sharpen**: Bilateral Blur (WP-02), Box Blur (WP-02), Camera Lens Blur (WP-02), Channel Blur (WP-02), Compound Blur (WP-02), Fast Box Blur (WP-02), Smart Blur (WP-02), Unsharp Mask (WP-02), Reduce Interlace Flicker (WP-02)

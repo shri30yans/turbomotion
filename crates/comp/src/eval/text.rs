@@ -5,20 +5,24 @@ use std::rc::Rc;
 use anyhow::{Context, Result};
 use serde::Serialize;
 
-use super::{CompPlan, Evaluator, LayerEnv};
+pub mod bounds;
+mod mark;
+mod source;
+
+use super::{shape::FillState, CompPlan, Evaluator, LayerEnv};
 use crate::{
-    anim::{ease::Ease, prop::Rgba},
+    anim::prop::Rgba,
     plan::LayerPlan,
     schema::{self, Animator, Perspective, Text, TextSource, P},
     text::{
         animate::{glyph_states, GlyphState, Resolved},
+        bounds::{union, Edges, TextBounds},
         layout::{Layout, RunSpec, Spec},
-        place::{self, Margins, OnPath, OnSurface, Placement, Row},
+        place::{Margins, OnPath, OnSurface, Placement, Row},
         presets,
     },
 };
-
-use super::shape::FillState;
+use self::{bounds::BoxState, mark::mark_state, source::{counter_string, swap_string}};
 
 #[derive(Serialize)]
 pub struct TextState {
@@ -41,6 +45,11 @@ pub struct TextState {
     pub trim_each: bool,
     /// Where the glyphs really are (layout space `[l, t, r, b]`) when a path, surface or marquee moved them.
     pub placed_bounds: Option<[f64; 4]>,
+    /// The measured bounds of the characters showing (`None` when none is): the layer's text bounds, the one
+    /// measurement the `box`, this output and `source_rect_at_time` share.
+    pub bounds: Option<TextBounds>,
+    /// The layer's `box` at this instant.
+    pub text_box: Option<BoxState>,
     #[serde(skip)]
     pub layout: Option<Rc<Layout>>,
 }
@@ -65,41 +74,6 @@ const SALT_TURN: u32 = 206;
 
 /// Stroke width of outline-only type that names no stroke of its own, px.
 const OUTLINE_WIDTH: f64 = 2.0;
-
-/// GSAP TextPlugin: type `to` from the start after `at`, showing `from` until then.
-pub fn swap_string(s: &schema::TextSwap, t: f64) -> Result<String> {
-    if t < s.at - 1e-9 {
-        return Ok(s.from.clone());
-    }
-    let ease = s.ease.as_deref().map_or(Ok(Ease::parse("none")?), Ease::parse)?;
-    let u = if s.dur <= 1e-9 { 1.0 } else { ((t - s.at) / s.dur).clamp(0.0, 1.0) };
-    let u = ease.at(u);
-    let chars: Vec<char> = s.to.chars().collect();
-    if chars.is_empty() {
-        return Ok(String::new());
-    }
-    let n = ((u * chars.len() as f64).ceil() as usize).clamp(0, chars.len());
-    Ok(chars.into_iter().take(n).collect())
-}
-
-pub fn counter_string(c: &schema::Counter, t: f64) -> Result<String> {
-    let ease = c.ease.as_deref().map_or(Ok(Ease::default()), Ease::parse)?;
-    let u = if c.dur <= 1e-9 { f64::from(t >= c.at) } else { ((t - c.at) / c.dur).clamp(0.0, 1.0) };
-    let v = c.from + (c.to - c.from) * ease.at(u);
-    let mut s = format!("{:.*}", c.decimals, v.abs());
-    if !c.sep.is_empty() {
-        let (int, frac) = s.split_once('.').map_or((s.as_str(), None), |(i, f)| (i, Some(f)));
-        let mut grouped = String::new();
-        for (i, ch) in int.chars().enumerate() {
-            if i > 0 && (int.len() - i) % 3 == 0 {
-                grouped.push_str(&c.sep);
-            }
-            grouped.push(ch);
-        }
-        s = frac.map_or(grouped.clone(), |f| format!("{grouped}.{f}"));
-    }
-    Ok(format!("{}{}{}{}", if v < 0.0 { "-" } else { "" }, c.prefix, s, c.suffix))
-}
 
 pub fn spec_of(ev: &Evaluator, c: &CompPlan, l: &LayerPlan, tx: &Text, t: f64) -> Result<(Spec, String, f64)> {
     let lt = t - l.start;
@@ -188,15 +162,17 @@ pub fn state(ev: &Evaluator, c: &CompPlan, l: &LayerPlan, tx: &Text, t: f64) -> 
     let placement = placement_of(c, l, tx, &layout, lt, &env)?;
     let glyphs = glyph_states(&layout, &resolved, lt, color, &inks, &placement)?;
     let animated = !resolved.is_empty() && glyphs != glyph_states(&layout, &[], lt, color, &inks, &placement)?;
-    let placed_bounds = if placement.moves_glyphs() { place::bounds(&layout, &glyphs) } else { None };
-    let span = Some(([0.0, 0.0], [layout.width as f64 * 0.12, layout.height as f64]));
-    let fill = tx.fill.as_ref().map(|f| super::shape::fill_state(f, lt, &env, span)).transpose()?;
-    let mark = tx.mark.as_ref().map(|m| mark_state(m, &layout, &text, lt, &env)).transpose()?.flatten();
     let stroke = match (&tx.stroke, tx.outline_only) {
         (Some(s), _) => Some((s.color.0.at(lt, &env(63))?, s.width)),
         (None, true) => Some((color, OUTLINE_WIDTH)),
         (None, false) => None,
     };
+    let bounds = TextBounds::of(&layout, &glyphs, stroke.map_or(0.0, |(_, w)| w));
+    let placed_bounds = if placement.moves_glyphs() { bounds.as_ref().map(|b| b.block.edges()) } else { None };
+    let text_box = tx.r#box.as_ref().map(|b| bounds::box_state(b, bounds.as_ref(), tx.align, lt, &env)).transpose()?;
+    let span = Some(([0.0, 0.0], [layout.width as f64 * 0.12, layout.height as f64]));
+    let fill = tx.fill.as_ref().map(|f| super::shape::fill_state(f, lt, &env, span)).transpose()?;
+    let mark = tx.mark.as_ref().map(|m| mark_state(m, &layout, &text, lt, &env)).transpose()?.flatten();
     let trim = tx.stroke_trim.as_ref().map(|[a, b]| Ok::<_, anyhow::Error>([a.0.at(lt, &env(SALT_TRIM_START))?.clamp(0.0, 1.0), b.0.at(lt, &env(SALT_TRIM_END))?.clamp(0.0, 1.0)])).transpose()?;
     Ok(TextState {
         text,
@@ -214,8 +190,19 @@ pub fn state(ev: &Evaluator, c: &CompPlan, l: &LayerPlan, tx: &Text, t: f64) -> 
         trim,
         trim_each: tx.stroke_trim_each,
         placed_bounds,
+        bounds,
+        text_box,
         layout: Some(layout),
     })
+}
+
+impl TextState {
+    /// The box of everything the layer draws, in layer pixels: the text as laid out (where a path, surface or marquee
+    /// put the glyphs, those), and any `box` round it.
+    pub fn local_bounds(&self) -> Edges {
+        let text = self.placed_bounds.unwrap_or([0.0, 0.0, f64::from(self.width), f64::from(self.height)]);
+        self.text_box.iter().flat_map(|b| &b.rects).fold(text, |all, r| union(all, *r))
+    }
 }
 
 /// Path, surface, marquee and perspective for this text at this instant.
@@ -242,75 +229,6 @@ fn placement_of<'a>(c: &CompPlan, l: &LayerPlan, tx: &Text, layout: &Layout, lt:
         (false, None) => Some(schema::default_camera_zoom(f64::from(c.width))),
     };
     Ok(pl)
-}
-
-fn mark_state<'a>(m: &schema::Mark, layout: &Layout, text: &str, lt: f64, env: &dyn Fn(u32) -> LayerEnv<'a>) -> Result<Option<MarkState>> {
-    let Some(rect) = word_rect(layout, text, &m.word, m.nth) else { return Ok(None) };
-    let ease = m.ease.as_deref().map_or(Ok(Ease::parse("power3.out")?), Ease::parse)?;
-    let u = if m.dur <= 1e-9 { f64::from(lt >= m.at) } else { ((lt - m.at) / m.dur).clamp(0.0, 1.0) };
-    let progress = ease.at(u);
-    let pad = m.pad.unwrap_or((layout.height * 0.08).max(3.0) as f64) as f32;
-    let color = match (&m.color, m.verdict) {
-        (Some(c), _) => c.0.at(lt, &env(64))?,
-        (None, Some(v)) => v.color(),
-        (None, None) => [255.0, 211.0, 122.0, 0.88],
-    };
-    Ok(Some(MarkState { rect: [rect[0] - pad, rect[1] - pad * 0.3, rect[2] + pad, rect[3] + pad * 0.15], progress, color, rough: m.rough }))
-}
-
-/// Bounding box of the `nth` occurrence of `word` in `text`, in layout space.
-fn word_rect(layout: &Layout, text: &str, word: &str, nth: usize) -> Option<[f32; 4]> {
-    let hay = text.to_lowercase();
-    let needle = word.to_lowercase();
-    if needle.is_empty() {
-        return None;
-    }
-    let mut from = 0;
-    let mut hit = None;
-    for _ in 0..=nth {
-        let i = hay[from..].find(&needle)?;
-        let start = from + i;
-        hit = Some((start, start + needle.len()));
-        from = start + needle.len();
-    }
-    let (byte0, byte1) = hit?;
-    let mut start_char = 0;
-    let mut end_char = 0;
-    let mut bytes = 0;
-    for (ci, ch) in text.chars().enumerate() {
-        if bytes == byte0 {
-            start_char = ci;
-        }
-        bytes += ch.len_utf8();
-        if bytes == byte1 {
-            end_char = ci + 1;
-            break;
-        }
-    }
-    // Glyphs skip whitespace and keep source order; walk characters the same way.
-    let mut char_i = 0;
-    let mut gi = 0;
-    let mut rect: Option<[f32; 4]> = None;
-    for ch in text.chars() {
-        if ch.is_whitespace() {
-            char_i += 1;
-            continue;
-        }
-        if gi >= layout.glyphs.len() {
-            break;
-        }
-        if char_i >= start_char && char_i < end_char {
-            let g = &layout.glyphs[gi];
-            let r = [g.x, g.top, g.x + g.w, g.bottom];
-            rect = Some(match rect {
-                None => r,
-                Some(a) => [a[0].min(r[0]), a[1].min(r[1]), a[2].max(r[2]), a[3].max(r[3])],
-            });
-        }
-        gi += 1;
-        char_i += 1;
-    }
-    rect
 }
 
 #[cfg(test)]

@@ -119,6 +119,23 @@ export interface LayerOpts {
   extra?: Record<string, unknown>;
 }
 
+/** A rectangle fitted to the characters showing: a text bar, pill, chip or lower third. Drawn behind the glyphs, in the layer's own pixels. */
+export interface TextBox {
+  /** What the box is fitted to; `"text"` is the only choice. */
+  fit: "text";
+  /** `[x, y]` px beyond the characters: sides, then top and bottom. Each is a number or a keyed value; 0 or more. Default `[0, 0]`. */
+  padding?: [Prop, Prop];
+  /** Corner radius px; held to half the box's shorter side, so a large one makes a pill. Default 0. */
+  radius?: number;
+  fill: Color | Record<string, unknown>;
+  /** The least width of a box, padding included. Default 0. */
+  min_width?: number;
+  /** Which side of a box widened to `min_width` keeps its place. Default: the text's `align`. */
+  align?: "left" | "center" | "right";
+  /** One box per visible line instead of one round the block. */
+  per_line?: boolean;
+}
+
 export interface TextOpts extends LayerOpts {
   font?: string;
   weight?: number;
@@ -141,6 +158,8 @@ export interface TextOpts extends LayerOpts {
   runs?: TextRun[];
   /** A highlighter swept behind a word: `{ word, at, color }` (see `comp catalogue`). */
   mark?: Record<string, unknown>;
+  /** A box that grows with the characters showing, behind the glyphs: `{ fit: "text", padding: [24, 12], radius: 16, fill: "#e63946" }`. */
+  box?: TextBox;
   /** Per-character, word or line animations: build them with `charFlip`, `decode` or write `{ by, props, stagger | selector }`. */
   animators?: TextAnimator[];
   stroke?: { color: Color; width: number };

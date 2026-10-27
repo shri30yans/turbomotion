@@ -52,7 +52,10 @@ Camera f-stop, iris, focus distance	3D	none	-	-	Camera settings	WP-24
 Layer styles	Styles	part	-	-	Layer styles	WP-31
 Shape operators	Shapes	none	-	-	Shape path operators	WP-30
 Gradient stroke, taper, wave	Shapes	none	-	-	Stroke options	WP-30
-Text measured bounds	Text	none	-	-	sourceRectAtTime	WP-32
+Text measured bounds (comp inspect, measure(), source_rect_at_time)	Text	done	the_rectangle_is_the_text_bounds_inspect_shows_and_the_measured_characters	parity/specs/text_box.md	sourceRectAtTime	WP-32
+Text box fitted to the revealed characters (box: padding, radius, min_width, align, per_line)	Text	done	a_typewriter_reveal_grows_the_box_to_the_width_of_the_text_typed_so_far_at_every_sampled_time	parity/specs/text_box.md	Shape layer fitted to text	WP-32
+Text box drawn as measured in both effect spaces, at any scale and rotation	Text	done	the_drawn_box_is_the_measured_box_within_half_a_pixel_on_every_side	parity/specs/text_box.md	Shape layer fitted to text	WP-32
+sourceRectAtTime called from expressions	Text	none	-	-	sourceRectAtTime	WP-12
 Text selector based-on and modes	Text	none	-	-	Text animator selectors	WP-32
 Variable font axes	Text	none	-	-	Variable fonts	WP-32
 Environment, reflection, refraction	3D	none	-	-	Ray-traced 3D	WP-21

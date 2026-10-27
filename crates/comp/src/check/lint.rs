@@ -196,7 +196,7 @@ pub fn run(plan: &Plan) -> anyhow::Result<Vec<Finding>> {
                     if let Some(&i) = shown.first() {
                         if let Content::Text(t) = &frames[i].layers[l.index].content {
                             let sample = t.fill.as_ref().and_then(|f| f.color).unwrap_or(t.color);
-                            let r = contrast(luminance(sample), luminance(bg));
+                            let r = contrast(luminance(sample), luminance(super::text_backing::behind(t, bg)));
                             let body = t.size < h * 0.05;
                             if r < 3.0 {
                                 out.push(Finding { severity: Severity::Error, rule: "low-contrast", layer: Some(l.label.clone()), t: Some(times[i]), message: format!("text/background contrast is {r:.1}:1 (3:1 is the floor for any type)"), fix: "lighten the text, darken the background, or add a backing shape".into() });

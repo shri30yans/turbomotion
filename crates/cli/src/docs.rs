@@ -84,6 +84,13 @@ fn layers(c: &Value) -> String {
     let x = &c["extrude"];
     let _ = writeln!(s, "## `extrude`\n\n{}\n", str_of(x, "summary"));
     json_block(&mut s, &x["example"]);
+    let text_box = &c["text_box"];
+    let _ = writeln!(s, "## `box` (a text layer key)\n\n{}\n", str_of(text_box, "summary"));
+    for (key, what) in text_box["keys"].as_object().into_iter().flatten() {
+        let _ = writeln!(s, "* `{key}`: {}", what.as_str().unwrap_or_default());
+    }
+    s.push('\n');
+    json_block(&mut s, &text_box["example"]["composition"]);
     s
 }
 

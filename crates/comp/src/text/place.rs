@@ -124,6 +124,9 @@ impl Placement {
 /// Glyphs fainter than this are not drawn and do not count toward bounds.
 pub const MIN_VISIBLE_OPACITY: f64 = 0.002;
 
+/// Strokes thinner than this are not drawn and do not count toward bounds.
+pub const MIN_STROKE_WIDTH: f64 = 0.01;
+
 /// A glyph whose clip-space `w` falls below this is behind (or on) the viewer and cannot be drawn.
 pub const NEAR_W: f64 = 0.02;
 
@@ -244,20 +247,4 @@ pub fn corners(g: &GlyphState, rect: [f32; 4]) -> Option<[[f64; 2]; 4]> {
         };
     }
     Some(out)
-}
-
-/// Bounding box `[l, t, r, b]` of the placed glyphs in layout space (the boxes of glyphs that show).
-pub fn bounds(layout: &Layout, glyphs: &[GlyphState]) -> Option<[f64; 4]> {
-    let mut acc: Option<[f64; 4]> = None;
-    for g in glyphs.iter().filter(|g| g.opacity > MIN_VISIBLE_OPACITY) {
-        let lg = &layout.glyphs[g.src];
-        let Some(c) = corners(g, [lg.x, lg.top, lg.x + lg.w, lg.bottom]) else { continue };
-        for p in c {
-            acc = Some(match acc {
-                None => [p[0], p[1], p[0], p[1]],
-                Some(a) => [a[0].min(p[0]), a[1].min(p[1]), a[2].max(p[0]), a[3].max(p[1])],
-            });
-        }
-    }
-    acc
 }

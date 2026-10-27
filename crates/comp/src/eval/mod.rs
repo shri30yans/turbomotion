@@ -531,7 +531,7 @@ impl<'p> Evaluator<'p> {
             }
             Kind::Text(tx) => {
                 let st = text::state(self, c, l, tx, t)?;
-                let b = st.placed_bounds.unwrap_or([0.0, 0.0, f64::from(st.width), f64::from(st.height)]);
+                let b = st.local_bounds();
                 (Content::Text(st), Some(b))
             }
             Kind::Mesh(m) => (Content::Mesh(mesh::state(self, c, l, m, t)?), None),

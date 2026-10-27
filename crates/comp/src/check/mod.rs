@@ -10,6 +10,7 @@ mod fx_bounds;
 pub mod layout;
 pub mod lint;
 mod text_animators;
+mod text_backing;
 
 use serde::Serialize;
 

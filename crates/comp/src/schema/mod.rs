@@ -20,6 +20,7 @@ mod path;
 pub mod problems;
 mod shape;
 mod text;
+pub mod text_box;
 pub mod time;
 pub mod timeline;
 pub mod tokens;
@@ -41,8 +42,7 @@ pub use problems::{Problem, Problems};
 pub use shape::item_keys as shape_item_keys;
 pub use shape::{Fill, Gradient, Metal, Repeat, ShapeItem, Stroke, Trim};
 pub use particle_shape::ParticleShape;
-pub use text::TextRun;
-pub use text::{Align, Animator, Charset, Cipher, Counter, Marquee, PathSource, Perspective, SelectorShape, SurfaceKind, TextPath, TextSurface, Direction, Mark, Role, Selector, Stagger, StaggerFrom, TextSource, TextStroke, TextSwap, Unit, UnitProps, Verdict, Wiggle};
+pub use text::{Align, TextRun, Animator, Charset, Cipher, Counter, Marquee, PathSource, Perspective, SelectorShape, SurfaceKind, TextPath, TextSurface, Direction, Mark, Role, Selector, Stagger, StaggerFrom, TextSource, TextStroke, TextSwap, Unit, UnitProps, Verdict, Wiggle};
 pub use tokens::TypeScale;
 pub use wrap::{Col, Orient, Pos, Rot, Scale, P};
 

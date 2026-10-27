@@ -75,6 +75,9 @@ salts! {
         MESH_COLOR = "mesh.color",
         MESH_SIDE = "mesh.side",
         MESH_BACK = "mesh.back",
+        TEXT_BOX_PADDING_X = "text.box.padding.x",
+        TEXT_BOX_PADDING_Y = "text.box.padding.y",
+        TEXT_BOX_FILL = "text.box.fill",
     }
     vectors {
         POS = "pos",

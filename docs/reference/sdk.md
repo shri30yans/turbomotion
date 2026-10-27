@@ -739,6 +739,16 @@ Throw when an adjustment layer takes a matte from a layer in the same list that 
 Layout with the exact font shaping used by the composition renderer.
 
 ```ts
+export interface SourceRect { left: number; top: number; width: number; height: number }
+```
+`sourceRectAtTime`'s rectangle: top-left corner and size, px from the text block's top-left.
+
+```ts
+export interface TextBounds
+```
+Where the characters are: the same measurement a text layer's `box` and `comp inspect` use.
+
+```ts
 export function configureMeasure(roles: Record<string, string> = {}, directory = ""): void
 ```
 Called by comp() so font roles and relative files agree with the film.
@@ -1198,6 +1208,11 @@ A 3D layer is lit when the composition has lights; `false` keeps it flat.
 export interface LayerOpts
 ```
 What every layer takes. `x`, `y`, `z` are shorthand for `pos`.
+
+```ts
+export interface TextBox
+```
+A rectangle fitted to the characters showing: a text bar, pill, chip or lower third. Drawn behind the glyphs, in the layer's own pixels.
 
 ```ts
 export interface TextUnitProps
