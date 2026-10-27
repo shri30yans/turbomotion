@@ -1,0 +1,37 @@
+probe	quantity	setting	legacy	exact	expected
+gaussian_blur	hard edge, worst level off the erf profile	sigma 4, display	0.83	0.65	0 (1 allowed)
+gaussian_blur	hard edge, worst level off the erf profile	sigma 8, display	0.92	0.46	0 (1 allowed)
+gaussian_blur	hard edge, worst level off the erf profile	sigma 16, display	0.84	0.51	0 (1 allowed)
+gaussian_blur	hard edge, worst level off the erf profile	sigma 24, display	0.92	0.55	0 (1 allowed)
+gaussian_blur	hard edge, worst level off the erf profile	sigma 4, linear light	2.93	0.73	0 (1 allowed)
+gaussian_blur	hard edge, worst level off the erf profile	sigma 8, linear light	2.77	0.52	0 (1 allowed)
+gaussian_blur	hard edge, worst level off the erf profile	sigma 16, linear light	3.26	0.55	0 (1 allowed)
+gaussian_blur	hard edge, worst level off the erf profile	sigma 24, linear light	3.23	0.56	0 (1 allowed)
+gaussian_blur	light of a white square after the blur / before	sigma 4, 4 x 4 square	1.0016	1.001	1.0000
+gaussian_blur	light of a white square after the blur / before	sigma 5, 4 x 4 square	1.0307	0.9992	1.0000
+gaussian_blur	light of a white square after the blur / before	sigma 6, 4 x 4 square	0.88	0.9982	1.0000
+gaussian_blur	light of a white square after the blur / before	sigma 8, 4 x 4 square	0.9997	0.9982	1.0000
+gaussian_blur	light of a white square after the blur / before	sigma 12, 4 x 4 square	1.2629	0.995	1.0000
+gaussian_blur	light of a white square after the blur / before	sigma 12, 6 x 6 square	0.9992	0.9991	1.0000
+gaussian_blur	light of a white square after the blur / before	sigma 16, 4 x 4 square	0.9934	0.9895	1.0000
+gaussian_blur	light of a white square after the blur / before	sigma 16, 8 x 8 square	0.999	0.9974	1.0000
+gaussian_blur	light of a white square after the blur / before	sigma 32, 4 x 4 square	0.9604	0.9581	1.0000
+gaussian_blur	light of a white square after the blur / before	sigma 32, 16 x 16 square	0.9991	0.9981	1.0000
+box_blur	hard edge, worst level off the linear ramp	radius 6, iterations 1	-	0.4	0 (1 allowed) for 1; for 3 the Gaussian is only near (10 levels)
+box_blur	hard edge, worst level off the Gaussian of equal variance	radius 6, iterations 3	-	10.63	0 (1 allowed) for 1; for 3 the Gaussian is only near (10 levels)
+box_blur	light of an 8 x 8 white square after / before	radius 6	-	0.9988	1.0000
+box_blur	lit width of that square, px	radius 6	-	20	8 + 2 * 6 = 20
+lens_blur	disc: spread of levels over the middle 70% of the radius, light past radius + 2 px	radius 4	-	0 levels, max 0	flat top (at most 2 levels), 0
+lens_blur	disc: level of the plateau, 2 x 2 square, area over pi r squared	radius 4	-	80	79.7 (1 allowed)
+lens_blur	disc: spread of levels over the middle 70% of the radius, light past radius + 2 px	radius 6	-	0 levels, max 0	flat top (at most 2 levels), 0
+lens_blur	disc: level of the plateau, 2 x 2 square, area over pi r squared	radius 6	-	53	52.8 (1 allowed)
+lens_blur	disc: spread of levels over the middle 70% of the radius, light past radius + 2 px	radius 8	-	0 levels, max 0	flat top (at most 2 levels), 0
+lens_blur	disc: level of the plateau, 2 x 2 square, area over pi r squared	radius 8	-	39	38.6 (1 allowed)
+lens_blur	disc: spread of levels over the middle 70% of the radius, light past radius + 2 px	radius 12	-	0 levels, max 0	flat top (at most 2 levels), 0
+lens_blur	disc: level of the plateau, 2 x 2 square, area over pi r squared	radius 12	-	23	23.5 (1 allowed)
+unsharp_mask	edge 100 to 160, worst level off v + a (v - blur)	sigma 2, amount 100%	-	0.6	0 (1 allowed)
+unsharp_mask	edge 100 to 160, worst level off v + a (v - blur)	sigma 4, amount 100%	-	0.53	0 (1 allowed)
+unsharp_mask	edge 100 to 160, worst level off v + a (v - blur)	sigma 4, amount 200%	-	0.65	0 (1 allowed)
+unsharp_mask	flat grey 100: levels that change	amount 300	-	0	0
+radial_blur	spin of a 4 x 4 square at 200 px: radius spread (px), angle extent (deg), light after / before	20 degrees	-	4.9 px, 21.0 deg, 1.004	about 4 px, 20 deg less the ends, 1.000
+radial_blur	spin of a 4 x 4 square at 200 px: radius spread (px), angle extent (deg), light after / before	60 degrees	-	4.9 px, 60.9 deg, 1.011	about 4 px, 60 deg less the ends, 1.000

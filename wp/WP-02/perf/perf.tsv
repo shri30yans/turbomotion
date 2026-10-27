@@ -1,0 +1,4 @@
+sigma	legacy_ms_per_frame	exact_ms_per_frame	none_ms_per_frame
+4	12.3	13.3	12.2
+16	12.2	14.6	12.2
+64	12.7	25.1	12.2
