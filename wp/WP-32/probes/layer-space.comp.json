@@ -1,0 +1,98 @@
+{
+ "width": 1700,
+ "height": 800,
+ "fps": 30,
+ "dur": 3,
+ "bg": "#10141f",
+ "root": "../../../../motions/lib/fonts",
+ "effect_space": "layer",
+ "layers": [
+  {
+   "id": "s1",
+   "type": "text",
+   "text": "Wave AV",
+   "font": "InstrumentSerif-Regular.woff",
+   "weight": 400,
+   "size": 80,
+   "color": "#ffffff",
+   "pos": [
+    140,
+    150
+   ],
+   "box": {
+    "fit": "text",
+    "padding": [
+     24,
+     12
+    ],
+    "radius": 20,
+    "fill": "#e63946"
+   },
+   "fx": [
+    {
+     "effect": "blur",
+     "radius": 2
+    }
+   ]
+  },
+  {
+   "id": "s2",
+   "type": "text",
+   "text": "Wave AV",
+   "font": "InstrumentSerif-Regular.woff",
+   "weight": 400,
+   "size": 80,
+   "color": "#ffffff",
+   "pos": [
+    160,
+    450
+   ],
+   "box": {
+    "fit": "text",
+    "padding": [
+     24,
+     12
+    ],
+    "radius": 20,
+    "fill": "#e63946"
+   },
+   "fx": [
+    {
+     "effect": "blur",
+     "radius": 2
+    }
+   ],
+   "scale": 2
+  },
+  {
+   "id": "s3",
+   "type": "text",
+   "text": "Wave AV",
+   "font": "InstrumentSerif-Regular.woff",
+   "weight": 400,
+   "size": 80,
+   "color": "#10141f",
+   "pos": [
+    1000,
+    380
+   ],
+   "box": {
+    "fit": "text",
+    "padding": [
+     24,
+     12
+    ],
+    "radius": 20,
+    "fill": "#e2c48a"
+   },
+   "fx": [
+    {
+     "effect": "blur",
+     "radius": 2
+    }
+   ],
+   "scale": 2,
+   "rotation": 30
+  }
+ ]
+}

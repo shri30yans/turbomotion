@@ -1,0 +1,99 @@
+{
+ "width": 1600,
+ "height": 900,
+ "fps": 30,
+ "dur": 3,
+ "bg": "#10141f",
+ "root": "../../../../motions/lib/fonts",
+ "layers": [
+  {
+   "id": "f0",
+   "type": "text",
+   "text": "AVATAR Wave",
+   "font": "Manrope-Variable.ttf",
+   "weight": 400,
+   "size": 96,
+   "color": "#ffffff",
+   "pos": [
+    120,
+    150
+   ],
+   "box": {
+    "fit": "text",
+    "padding": [
+     28,
+     14
+    ],
+    "radius": 18,
+    "fill": "#e63946"
+   }
+  },
+  {
+   "id": "f1",
+   "type": "text",
+   "text": "AVATAR Wave",
+   "font": "InstrumentSerif-Regular.woff",
+   "weight": 400,
+   "size": 96,
+   "color": "#ffffff",
+   "pos": [
+    120,
+    340
+   ],
+   "box": {
+    "fit": "text",
+    "padding": [
+     28,
+     14
+    ],
+    "radius": 18,
+    "fill": "#e63946"
+   }
+  },
+  {
+   "id": "f2",
+   "type": "text",
+   "text": "AVATAR Wave",
+   "font": "JetBrainsMono-Regular.woff",
+   "weight": 400,
+   "size": 96,
+   "color": "#ffffff",
+   "pos": [
+    120,
+    530
+   ],
+   "box": {
+    "fit": "text",
+    "padding": [
+     28,
+     14
+    ],
+    "radius": 18,
+    "fill": "#e63946"
+   }
+  },
+  {
+   "id": "lines",
+   "type": "text",
+   "text": "Wave\nTo AVATAR",
+   "font": "Manrope-Variable.ttf",
+   "weight": 400,
+   "size": 72,
+   "color": "#10141f",
+   "pos": [
+    120,
+    730
+   ],
+   "box": {
+    "fit": "text",
+    "padding": [
+     28,
+     14
+    ],
+    "radius": 10,
+    "fill": "#e2c48a",
+    "per_line": true
+   }
+  }
+ ]
+}

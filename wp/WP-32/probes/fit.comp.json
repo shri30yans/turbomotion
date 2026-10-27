@@ -1,0 +1,182 @@
+{
+ "width": 1400,
+ "height": 900,
+ "fps": 30,
+ "dur": 3,
+ "bg": "#10141f",
+ "root": "../../../../motions/lib/fonts",
+ "layers": [
+  {
+   "id": "a-left",
+   "type": "text",
+   "text": "Hi",
+   "font": "Manrope-Variable.ttf",
+   "weight": 400,
+   "size": 80,
+   "color": "#ffffff",
+   "pos": [
+    500,
+    140
+   ],
+   "box": {
+    "fit": "text",
+    "padding": [
+     24,
+     12
+    ],
+    "radius": 0,
+    "fill": "#e63946",
+    "min_width": 360,
+    "align": "left"
+   }
+  },
+  {
+   "id": "a-center",
+   "type": "text",
+   "text": "Hi",
+   "font": "Manrope-Variable.ttf",
+   "weight": 400,
+   "size": 80,
+   "color": "#ffffff",
+   "pos": [
+    500,
+    270
+   ],
+   "box": {
+    "fit": "text",
+    "padding": [
+     24,
+     12
+    ],
+    "radius": 0,
+    "fill": "#e63946",
+    "min_width": 360,
+    "align": "center"
+   }
+  },
+  {
+   "id": "a-right",
+   "type": "text",
+   "text": "Hi",
+   "font": "Manrope-Variable.ttf",
+   "weight": 400,
+   "size": 80,
+   "color": "#ffffff",
+   "pos": [
+    500,
+    400
+   ],
+   "box": {
+    "fit": "text",
+    "padding": [
+     24,
+     12
+    ],
+    "radius": 0,
+    "fill": "#e63946",
+    "min_width": 360,
+    "align": "right"
+   }
+  },
+  {
+   "id": "r-0",
+   "type": "text",
+   "text": "Pill",
+   "font": "Manrope-Variable.ttf",
+   "weight": 400,
+   "size": 80,
+   "color": "#10141f",
+   "pos": [
+    130,
+    560
+   ],
+   "box": {
+    "fit": "text",
+    "padding": [
+     36,
+     14
+    ],
+    "radius": 0,
+    "fill": "#e2c48a"
+   }
+  },
+  {
+   "id": "r-24",
+   "type": "text",
+   "text": "Pill",
+   "font": "Manrope-Variable.ttf",
+   "weight": 400,
+   "size": 80,
+   "color": "#10141f",
+   "pos": [
+    460,
+    560
+   ],
+   "box": {
+    "fit": "text",
+    "padding": [
+     36,
+     14
+    ],
+    "radius": 24,
+    "fill": "#e2c48a"
+   }
+  },
+  {
+   "id": "r-1000",
+   "type": "text",
+   "text": "Pill",
+   "font": "Manrope-Variable.ttf",
+   "weight": 400,
+   "size": 80,
+   "color": "#10141f",
+   "pos": [
+    790,
+    560
+   ],
+   "box": {
+    "fit": "text",
+    "padding": [
+     36,
+     14
+    ],
+    "radius": 1000,
+    "fill": "#e2c48a"
+   }
+  },
+  {
+   "id": "pad",
+   "type": "text",
+   "text": "Wave",
+   "font": "Manrope-Variable.ttf",
+   "weight": 400,
+   "size": 80,
+   "color": "#ffffff",
+   "pos": [
+    140,
+    760
+   ],
+   "box": {
+    "fit": "text",
+    "padding": [
+     {
+      "from": 4,
+      "to": 52,
+      "at": 0,
+      "dur": 2,
+      "ease": "none"
+     },
+     {
+      "from": 0,
+      "to": 24,
+      "at": 0,
+      "dur": 2,
+      "ease": "none"
+     }
+    ],
+    "radius": 14,
+    "fill": "#e63946"
+   }
+  }
+ ]
+}

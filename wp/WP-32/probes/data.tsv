@@ -1,0 +1,22 @@
+probe	what	measured_px	drawn_px	abs_diff_px
+fonts	Manrope 'AVATAR Wave'	632.384	632.383	0.001
+fonts	InstrumentSerif 'AVATAR Wave'	483.776	483.776	0.000
+fonts	JetBrainsMono 'AVATAR Wave'	689.600	689.603	0.003
+fonts	Manrope 'Wave\nTo AVATAR' line 0	230.024	230.024	0.000
+fonts	Manrope 'Wave\nTo AVATAR' line 1	392.312	392.314	0.002
+typed	t=0.1: 0 characters, no box (nothing drawn)	0.000	0.000	0.000
+typed	t=0.26: 1 chars 'T': typed bar (inspect 110.71) against the prefix laid out alone	110.710	110.710	0.000
+typed	t=0.5: 3 chars 'To Y': typed bar (inspect 219.72) against the prefix laid out alone	219.720	219.720	0.000
+typed	t=0.86: 6 chars 'To Yo-y': typed bar (inspect 345.89) against the prefix laid out alone	345.890	345.893	0.003
+typed	t=1.22: 9 chars 'To Yo-yo Wa': typed bar (inspect 517.27) against the prefix laid out alone	517.270	517.271	0.001
+typed	t=1.7: 11 chars 'To Yo-yo Wave': typed bar (inspect 596.25) against the prefix laid out alone	596.250	596.248	0.002
+typed	t=2.5: 11 chars 'To Yo-yo Wave': typed bar (inspect 596.25) against the prefix laid out alone	596.250	596.248	0.002
+layer-space	s1 scale 1: 1 x the 266.40 px box (half-cover crossings)	266.400	266.400	0.000
+layer-space	s2 scale 2: 2 x the 266.40 px box (half-cover crossings)	532.800	532.786	0.014
+layer-space	scale 2 box over scale 1 box (ratio)	2.000	2.000	0.000
+fit	min_width 360 align left: width / left edge 476.00	360.000	360.000	0.000
+fit	min_width 360 align center: width / left edge 354.48	360.000	360.000	0.000
+fit	min_width 360 align right: width / left edge 232.96	360.000	360.000	0.000
+fit	keyed padding t=0: padding x 4: text 193.36 + 2 x 4	201.360	201.360	0.000
+fit	keyed padding t=1: padding x 28: text 193.36 + 2 x 28	249.360	249.360	0.000
+fit	keyed padding t=2: padding x 52: text 193.36 + 2 x 52	297.360	297.360	0.000
