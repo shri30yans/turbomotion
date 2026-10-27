@@ -11,7 +11,7 @@
 //! // @input map layer -- another layer whose picture steers the effect (a displacement map, a matte)
 //! // @input prev history=1 depth=8 -- the effect's own output one frame ago (feedback, trails, datamosh)
 //! // @pass blur_h scale=0.5 -- a named pass; a later pass samples it as `uniform shader blur_h`
-//! // @bounds expand=blur*3                   (layer space: pixels the output reaches past the input on each side; or `none`)
+//! // @bounds expand=blur*3                   (layer space: pixels the output reaches past the input on each side; or `none`; `box_w`, `box_h` are the layer's own size)
 //! // @space linear                           (display, the default, or linear: the encoding the shader computes in; see below)
 //! // @example {"effect": "duotone", "amount": 1}     (the doc example; one is generated from the defaults if absent)
 //! half4 main(float2 xy) { ... }

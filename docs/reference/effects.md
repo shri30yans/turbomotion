@@ -1979,6 +1979,37 @@ Reflects one half of the layer onto the other. (effect, shader plugin)
 }
 ```
 
+## `motion_tile`
+
+Repeats the layer as tiles over an output that is larger or smaller than the layer, as After Effects' Motion Tile does. (effect, shader plugin)
+
+| parameter | type | default | range | what it does |
+| --- | --- | --- | --- | --- |
+| `tile_center` | vec2 | [0.5,0.5] |  | where the middle tile sits, as a share of the layer's width and height (After Effects counts pixels) |
+| `tile_width` | float | 100.0 | 1 to 1000 | width of one tile, % of the layer's width; the whole layer is drawn into every tile |
+| `tile_height` | float | 100.0 | 1 to 1000 | height of one tile, % of the layer's height |
+| `output_width` | float | 100.0 | 1 to 1000 | width of the result, % of the layer's width; past 100 the layer grows, below 100 it is cropped |
+| `output_height` | float | 100.0 | 1 to 1000 | height of the result, % of the layer's height |
+| `mirror_edges` | choice | off | off, on | on: every other tile is flipped, so neighbouring tiles meet edge to edge |
+| `phase` | float | 0.0 | -36000 to 36000 | degrees; each row (or column) is shifted this far further than the one before, 360 being a whole tile |
+| `horizontal_phase_shift` | choice | off | off, on | on: the phase shifts rows sideways; off: it shifts columns up and down |
+| `gutter_size` | float | 0.0 | 0 to 1000 | px of gap between tiles (not in After Effects) |
+| `gutter_color` | color | [0.0,0.0,0.0,0.0] |  | what fills the gaps (not in After Effects) |
+
+* layer space (`effect_space: "layer"`): grows the layer's picture by `@bounds expand_x=box_w*(output_width-100)/200 expand_y=box_h*(output_height-100)/200` pixels
+* colour (`color.linear_light`): computes in linear numbers
+
+```json
+{
+  "effect": "motion_tile",
+  "mirror_edges": "on",
+  "output_height": 300,
+  "output_width": 300,
+  "tile_height": 40,
+  "tile_width": 40
+}
+```
+
 ## `noise`
 
 Smooth monochrome value noise, drifting over time. Use as a matte, a displacement source or a texture. (generator, shader plugin)

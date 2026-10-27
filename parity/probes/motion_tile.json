@@ -1,0 +1,280 @@
+{
+ "width": 1280,
+ "height": 720,
+ "fps": 30,
+ "dur": 1,
+ "bg": "#10141f",
+ "effect_space": "layer",
+ "comps": {
+  "card": {
+   "width": 160,
+   "height": 96,
+   "dur": 1,
+   "layers": [
+    {
+     "type": "solid",
+     "color": "#e02020",
+     "size": [
+      80,
+      48
+     ],
+     "pos": [
+      40,
+      24
+     ]
+    },
+    {
+     "type": "solid",
+     "color": "#20c020",
+     "size": [
+      80,
+      48
+     ],
+     "pos": [
+      120,
+      24
+     ]
+    },
+    {
+     "type": "solid",
+     "color": "#2040e0",
+     "size": [
+      80,
+      48
+     ],
+     "pos": [
+      40,
+      72
+     ]
+    },
+    {
+     "type": "solid",
+     "color": "#e0e020",
+     "size": [
+      80,
+      48
+     ],
+     "pos": [
+      120,
+      72
+     ]
+    },
+    {
+     "type": "solid",
+     "color": "#ffffff",
+     "size": [
+      24,
+      12
+     ],
+     "pos": [
+      24,
+      13
+     ]
+    }
+   ]
+  }
+ },
+ "layers": [
+  {
+   "id": "panel0",
+   "type": "precomp",
+   "comp": "card",
+   "pos": [
+    213,
+    150
+   ],
+   "fx": [
+    {
+     "effect": "motion_tile",
+     "output_width": 250,
+     "output_height": 250
+    }
+   ]
+  },
+  {
+   "id": "label0",
+   "type": "text",
+   "text": "tiles",
+   "font": "Helvetica Neue",
+   "weight": 600,
+   "size": 22,
+   "color": "#c9d1e3",
+   "pos": [
+    213,
+    285
+   ],
+   "align": "center",
+   "ui": true
+  },
+  {
+   "id": "panel1",
+   "type": "precomp",
+   "comp": "card",
+   "pos": [
+    639,
+    150
+   ],
+   "fx": [
+    {
+     "effect": "motion_tile",
+     "output_width": 250,
+     "output_height": 250,
+     "mirror_edges": "on"
+    }
+   ]
+  },
+  {
+   "id": "label1",
+   "type": "text",
+   "text": "mirror edges",
+   "font": "Helvetica Neue",
+   "weight": 600,
+   "size": 22,
+   "color": "#c9d1e3",
+   "pos": [
+    639,
+    285
+   ],
+   "align": "center",
+   "ui": true
+  },
+  {
+   "id": "panel2",
+   "type": "precomp",
+   "comp": "card",
+   "pos": [
+    1065,
+    150
+   ],
+   "fx": [
+    {
+     "effect": "motion_tile",
+     "tile_width": 50,
+     "tile_height": 50,
+     "output_width": 250,
+     "output_height": 250,
+     "phase": 180,
+     "horizontal_phase_shift": "on"
+    }
+   ]
+  },
+  {
+   "id": "label2",
+   "type": "text",
+   "text": "phase 180 bricks",
+   "font": "Helvetica Neue",
+   "weight": 600,
+   "size": 22,
+   "color": "#c9d1e3",
+   "pos": [
+    1065,
+    285
+   ],
+   "align": "center",
+   "ui": true
+  },
+  {
+   "id": "panel3",
+   "type": "precomp",
+   "comp": "card",
+   "pos": [
+    213,
+    470
+   ],
+   "fx": [
+    {
+     "effect": "motion_tile",
+     "tile_width": 50,
+     "tile_height": 50,
+     "output_width": 250,
+     "output_height": 250,
+     "gutter_size": 8,
+     "gutter_color": "#ffffff"
+    }
+   ]
+  },
+  {
+   "id": "label3",
+   "type": "text",
+   "text": "gutter 8 px",
+   "font": "Helvetica Neue",
+   "weight": 600,
+   "size": 22,
+   "color": "#c9d1e3",
+   "pos": [
+    213,
+    605
+   ],
+   "align": "center",
+   "ui": true
+  },
+  {
+   "id": "panel4",
+   "type": "precomp",
+   "comp": "card",
+   "pos": [
+    639,
+    470
+   ],
+   "fx": [
+    {
+     "effect": "motion_tile",
+     "tile_width": 50,
+     "tile_height": 50,
+     "output_width": 250,
+     "output_height": 250,
+     "tile_center": [
+      0.625,
+      0.3958333333333333
+     ]
+    }
+   ]
+  },
+  {
+   "id": "label4",
+   "type": "text",
+   "text": "centre +20, -10",
+   "font": "Helvetica Neue",
+   "weight": 600,
+   "size": 22,
+   "color": "#c9d1e3",
+   "pos": [
+    639,
+    605
+   ],
+   "align": "center",
+   "ui": true
+  },
+  {
+   "id": "panel5",
+   "type": "precomp",
+   "comp": "card",
+   "pos": [
+    1065,
+    470
+   ],
+   "fx": [
+    {
+     "effect": "motion_tile",
+     "output_width": 60,
+     "output_height": 60
+    }
+   ]
+  },
+  {
+   "id": "label5",
+   "type": "text",
+   "text": "output 60 % crop",
+   "font": "Helvetica Neue",
+   "weight": 600,
+   "size": 22,
+   "color": "#c9d1e3",
+   "pos": [
+    1065,
+    605
+   ],
+   "align": "center",
+   "ui": true
+  }
+ ]
+}

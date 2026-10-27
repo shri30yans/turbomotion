@@ -7,14 +7,18 @@
 //! // @bounds source=map                        the output covers the named layer input as well
 //! ```
 //!
-//! An expression is numbers, float parameter names, `+ - * /`, brackets and `abs`, `min`, `max`, written without
-//! spaces. A plugin without the tag has not said: in layer space its pixels cannot grow and `check` warns
+//! An expression is numbers, float parameter names, `box_w` and `box_h` (the layer's own width and height in pixels, so
+//! a growth can be a share of the layer: `expand_x=box_w*(scale-1)/2`), `+ - * /`, brackets and `abs`, `min`, `max`,
+//! written without spaces. A plugin without the tag has not said: in layer space its pixels cannot grow and `check` warns
 //! (`fx-needs-bounds`).
 
 use anyhow::{anyhow, bail, ensure, Context, Result};
 use turbomotion_core::suggest::hint;
 
 use super::{Param, Ty};
+
+/// The names an expression may use besides the float parameters: the layer's box width and height.
+const BOX_NAMES: [&str; 2] = ["box_w", "box_h"];
 
 /// What a plugin declares about its reach.
 #[derive(Debug, Clone, PartialEq)]
@@ -53,7 +57,11 @@ impl Bounds {
             return Ok(Bounds::Within);
         }
         ensure!(!words.is_empty(), "@bounds is `none`, `expand=<expr>`, `expand_x=<expr> expand_y=<expr>` or `source=<input>`");
-        let floats: Vec<&str> = params.iter().filter(|p| p.ty == Ty::Float).map(|p| p.name.as_str()).collect();
+        let mut floats: Vec<&str> = params.iter().filter(|p| p.ty == Ty::Float).map(|p| p.name.as_str()).collect();
+        if let Some(clash) = floats.iter().find(|n| BOX_NAMES.contains(n)) {
+            bail!("a parameter called {clash:?} would hide the layer's size in @bounds, where box_w and box_h are the layer's width and height; rename the parameter");
+        }
+        floats.extend(BOX_NAMES);
         let (mut all, mut x, mut y, mut source) = (None, None, None, None);
         for w in words {
             let (key, value) = w.split_once('=').ok_or_else(|| anyhow!("{w:?} is not key=value; @bounds takes expand=, expand_x=, expand_y= or source="))?;
@@ -79,12 +87,18 @@ impl Bounds {
         }
     }
 
-    /// Pixels added to each side, from the evaluated float parameters (`value(name)` is a parameter's value now).
-    pub fn growth(&self, value: &dyn Fn(&str) -> Option<f64>) -> Result<[f64; 4]> {
+    /// Pixels added to each side, from the evaluated float parameters (`value(name)` is a parameter's value now) and the
+    /// layer's own box `content` (`[left, top, right, bottom]`, what `box_w` and `box_h` measure).
+    pub fn growth(&self, content: [f64; 4], value: &dyn Fn(&str) -> Option<f64>) -> Result<[f64; 4]> {
+        let with_box = |name: &str| match name {
+            "box_w" => Some(content[2] - content[0]),
+            "box_h" => Some(content[3] - content[1]),
+            other => value(other),
+        };
         Ok(match self {
             Bounds::Undeclared | Bounds::Within => [0.0; 4],
             Bounds::Expand { x, y } => {
-                let (x, y) = (x.eval(value)?.max(0.0), y.eval(value)?.max(0.0));
+                let (x, y) = (x.eval(&with_box)?.max(0.0), y.eval(&with_box)?.max(0.0));
                 [x, y, x, y]
             }
             Bounds::Source(_) => bail!("`@bounds source=` reaches another layer's box, which layer space does not support yet"),
@@ -233,57 +247,5 @@ impl Parser<'_> {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn param(name: &str) -> Param {
-        Param { name: name.to_string(), ty: Ty::Float, default: vec![1.0], optional: false, min: None, max: None, options: vec![], doc: String::new() }
-    }
-
-    fn growth(text: &str, blur: f64) -> Result<[f64; 4]> {
-        let params = [param("blur"), param("reach")];
-        Bounds::parse(text, &params, &["map"])?.growth(&|n| match n {
-            "blur" => Some(blur),
-            "reach" => Some(7.0),
-            _ => None,
-        })
-    }
-
-    #[test]
-    fn an_expression_over_parameters_gives_pixels_per_side() {
-        assert_eq!(growth("expand=blur*3", 10.0).unwrap(), [30.0; 4]);
-        assert_eq!(growth("expand_x=reach+(blur-2)/2", 10.0).unwrap(), [11.0, 0.0, 11.0, 0.0]);
-        assert_eq!(growth("expand_y=max(blur,reach)", 3.0).unwrap(), [0.0, 7.0, 0.0, 7.0]);
-        assert_eq!(growth("expand=-blur", 10.0).unwrap(), [0.0; 4], "growth never shrinks the layer");
-        assert_eq!(growth("none", 10.0).unwrap(), [0.0; 4]);
-    }
-
-    #[test]
-    fn mistakes_name_the_problem_and_the_valid_choices() {
-        let text = |t: &str| growth(t, 1.0).unwrap_err().to_string() + &format!("{:#}", growth(t, 1.0).unwrap_err());
-        assert!(text("expand=blurr*3").contains("not a float parameter") && text("expand=blurr*3").contains("blur"), "{}", text("expand=blurr*3"));
-        assert!(text("expand=2*").contains("expected a number"));
-        assert!(text("expand=sqrt(2)").contains("no function"));
-        assert!(text("grow=3").contains("unknown @bounds key"));
-        assert!(text("expand=1 expand_x=2").contains("alone"));
-        assert!(text("source=mp").contains("not a layer input"));
-        assert!(text("").contains("`none`"));
-        assert!(growth("expand=1/0", 1.0).unwrap_err().to_string().contains("not a finite number"));
-    }
-
-    #[test]
-    fn a_source_bound_parses_and_says_it_is_not_supported_when_asked_for_pixels() {
-        let b = Bounds::parse("source=map", &[], &["map"]).unwrap();
-        assert!(b.grows() && b.describe() == "source=map");
-        assert!(b.growth(&|_| None).unwrap_err().to_string().contains("not support"));
-    }
-
-    #[test]
-    fn the_tag_reads_back_as_it_was_written() {
-        let params = [param("blur")];
-        for t in ["none", "expand=blur*3", "expand_x=blur expand_y=2"] {
-            assert_eq!(Bounds::parse(t, &params, &[]).unwrap().describe(), t);
-        }
-        assert!(!Bounds::Undeclared.grows() && !Bounds::Within.grows());
-    }
-}
+#[path = "bounds_tests.rs"]
+mod tests;

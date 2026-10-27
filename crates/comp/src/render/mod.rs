@@ -39,6 +39,10 @@ mod composite_tests;
 #[cfg(test)]
 mod fx_tests;
 #[cfg(test)]
+mod fx_motion_tile_tests;
+#[cfg(test)]
+mod motion_tile_seam_tests;
+#[cfg(test)]
 mod history_tests;
 #[cfg(test)]
 mod layer_space_plugin_tests;

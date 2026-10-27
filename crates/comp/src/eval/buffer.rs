@@ -67,7 +67,7 @@ pub fn chain_growth(fx: &[PlanFx], states: &[FxState], lib: &Library, t: f64, co
             (FxOp::Plugin(p), FxOpState::Plugin(values)) => {
                 let def = lib.get(&p.name)?;
                 let value = |name: &str| values.values.iter().find(|(n, _)| n == name).and_then(|(_, v)| v.first()).map(|&x| f64::from(x));
-                def.bounds.growth(&value).map_err(|e| anyhow!("effect {:?}: {e:#}", p.name))?
+                def.bounds.growth(content, &value).map_err(|e| anyhow!("effect {:?}: {e:#}", p.name))?
             }
             _ => bail!("effect {:?} was evaluated as a different kind of effect than the plan has", f.name()),
         };
@@ -91,6 +91,9 @@ pub fn for_layer(l: &LayerPlan, states: &[FxState], lib: &Library, t: f64, conte
 #[cfg(test)]
 #[path = "buffer_tests.rs"]
 mod layer_tests;
+#[cfg(test)]
+#[path = "buffer_motion_tile_tests.rs"]
+mod motion_tile_tests;
 
 #[cfg(test)]
 mod tests {

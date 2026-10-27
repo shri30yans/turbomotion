@@ -161,7 +161,7 @@ Emboss	Stylize	A	T1	todo	?	?	-	-	-
 Find Edges	Stylize	A	T0	todo	?	?	-	-	-
 Glow	Stylize	B	T0	part	yes	yes	-	glow	-
 Mosaic	Stylize	-	T1	part	yes	yes	-	pixelate	-
-Motion Tile	Stylize	A	T0	todo	?	?	-	-	-
+Motion Tile	Stylize	A	T0	done	yes	yes	-	motion_tile	an_output_of_300_percent_repeats_the_card_with_exact_pixels_at_every_tile_origin
 Posterize	Stylize	-	T1	have	no	no	-	posterize	-
 Roughen Edges	Stylize	A	T1	todo	?	?	-	-	-
 Scatter	Stylize	A	T0	todo	?	?	-	-	-

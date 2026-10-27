@@ -1,0 +1,72 @@
+// @effect motion_tile
+// @summary Repeats the layer as tiles over an output that is larger or smaller than the layer, as After Effects' Motion Tile does.
+// @bounds expand_x=box_w*(output_width-100)/200 expand_y=box_h*(output_height-100)/200
+// @space linear
+// @param tile_center vec2 0.5,0.5 -- where the middle tile sits, as a share of the layer's width and height (After Effects counts pixels)
+// @param tile_width float 100 1 1000 -- width of one tile, % of the layer's width; the whole layer is drawn into every tile
+// @param tile_height float 100 1 1000 -- height of one tile, % of the layer's height
+// @param output_width float 100 1 1000 -- width of the result, % of the layer's width; past 100 the layer grows, below 100 it is cropped
+// @param output_height float 100 1 1000 -- height of the result, % of the layer's height
+// @param mirror_edges choice off off,on -- on: every other tile is flipped, so neighbouring tiles meet edge to edge
+// @param phase float 0 -36000 36000 -- degrees; each row (or column) is shifted this far further than the one before, 360 being a whole tile
+// @param horizontal_phase_shift choice off off,on -- on: the phase shifts rows sideways; off: it shifts columns up and down
+// @param gutter_size float 0 0 1000 -- px of gap between tiles (not in After Effects)
+// @param gutter_color color #00000000 -- what fills the gaps (not in After Effects)
+// @example {"effect": "motion_tile", "tile_width": 40, "tile_height": 40, "output_width": 300, "output_height": 300, "mirror_edges": "on"}
+
+// A reduction past this many layer pixels per tile pixel is read with this many taps a side and aliases a little.
+const float MAX_TAPS = 5.0;
+
+// 1 for an odd tile number, 0 for an even one (negative numbers too).
+float is_odd(float n) { return mod(n, 2.0); }
+
+// The layer at a point of its own picture (texel centres are half-integers), averaged over the `reduction` layer pixels
+// one tile pixel covers: a grid of bilinear taps spread evenly over that footprint, one tap when the tile is as big as
+// the layer or bigger. Every tap is held at least half a pixel inside the layer, so a bilinear tap never reads the empty
+// space around it (a tile edge stays as opaque as the layer's own).
+half4 layer_at(float2 p, float2 reduction) {
+    float2 taps = clamp(ceil(reduction), 1.0, MAX_TAPS);
+    float4 sum = float4(0.0);
+    for (int j = 0; j < int(MAX_TAPS); j++) {
+        if (float(j) >= taps.y) break;
+        for (int i = 0; i < int(MAX_TAPS); i++) {
+            if (float(i) >= taps.x) break;
+            float2 spread = ((float2(float(i), float(j)) + 0.5) / taps - 0.5) * reduction;
+            sum += float4(image.eval(clamp(p + spread, float2(0.5), resolution - 0.5)));
+        }
+    }
+    return half4(sum / (taps.x * taps.y));
+}
+
+half4 main(float2 xy) {
+    float2 from_middle = xy - resolution * 0.5;
+    float2 output_size = resolution * float2(output_width, output_height) / 100.0;
+    if (any(greaterThan(abs(from_middle), output_size * 0.5))) {
+        return half4(0.0);
+    }
+    float2 tile = resolution * float2(tile_width, tile_height) / 100.0;
+    float2 pitch = tile + gutter_size;
+    // tile (0, 0) is centred on the tile centre; tile (n.x, n.y) is n pitches away
+    float2 d = xy - tile_center * resolution;
+    float shift = phase / 360.0;
+    float2 n;
+    if (horizontal_phase_shift > 0.5) {
+        n.y = floor(d.y / pitch.y + 0.5);
+        d.x += shift * n.y * pitch.x;
+        n.x = floor(d.x / pitch.x + 0.5);
+    } else {
+        n.x = floor(d.x / pitch.x + 0.5);
+        d.y += shift * n.x * pitch.y;
+        n.y = floor(d.y / pitch.y + 0.5);
+    }
+    float2 local = d - n * pitch;
+    if (gutter_size > 0.0 && any(greaterThan(abs(local), tile * 0.5))) {
+        return premul(gutter_color.rgb, gutter_color.a);
+    }
+    // 0..1 across the tile
+    float2 across = local / tile + 0.5;
+    if (mirror_edges > 0.5) {
+        across = mix(across, 1.0 - across, float2(is_odd(n.x), is_odd(n.y)));
+    }
+    return layer_at(across * resolution, 100.0 / float2(tile_width, tile_height));
+}
