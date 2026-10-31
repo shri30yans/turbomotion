@@ -5,6 +5,7 @@ use std::{
     io::Write,
     path::{Path, PathBuf},
     process::{Child, ChildStdin, Command, Stdio},
+    sync::OnceLock,
 };
 
 use anyhow::{bail, Context, Result};
@@ -70,8 +71,31 @@ pub struct VideoFormat {
 impl VideoFormat {
     /// Output options that tag the file (gamut, curve and matrix) and convert with the matrix named.
     fn tags(&self) -> Vec<String> {
-        self.profile.map_or_else(Vec::new, |p| ["-vf", "scale=out_color_matrix=bt709", "-colorspace", "bt709", "-color_primaries", p.primaries.tag(), "-color_trc", p.transfer.tag()].map(String::from).to_vec())
+        self.profile.map_or_else(Vec::new, |p| {
+            let mut scale = String::from("scale=out_color_matrix=bt709");
+            if scale_takes_colour() {
+                scale.push_str(&format!(":out_primaries={}:out_transfer={}", p.primaries.tag(), p.transfer.tag()));
+            }
+            ["-vf", scale.as_str(), "-colorspace", "bt709", "-color_primaries", p.primaries.tag(), "-color_trc", p.transfer.tag()].map(String::from).to_vec()
+        })
     }
+}
+
+/// Whether ffmpeg's scale filter can be told the output's gamut and curve itself.
+///
+/// The filter learned `out_primaries` and `out_transfer` in ffmpeg 7.1. From ffmpeg 8 on the
+/// command line's `-color_primaries` and `-color_trc` no longer reach the encoder, so a file
+/// can only be tagged through the filter; before that the filter cannot carry them and the
+/// command line is the only way. Both are given where both work.
+fn scale_takes_colour() -> bool {
+    static TAKES_COLOUR: OnceLock<bool> = OnceLock::new();
+    *TAKES_COLOUR.get_or_init(|| {
+        Command::new("ffmpeg")
+            .args(["-hide_banner", "-h", "filter=scale"])
+            .output()
+            .map(|out| String::from_utf8_lossy(&out.stdout).contains("out_primaries"))
+            .unwrap_or(false)
+    })
 }
 
 pub struct Encoder {
