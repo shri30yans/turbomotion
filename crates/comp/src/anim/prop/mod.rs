@@ -38,7 +38,7 @@ mod vector_parse;
 use anyhow::Result;
 
 use super::expr::{Arg, Env, Expr};
-pub use colour::{parse_color_static, ColorProp, Rgba};
+pub use colour::{parse_color_static, Channels, ColorProp, Rgba};
 pub use key::{Handle, Key, Point, Rove, Side, Tangents};
 pub use looping::Loop;
 pub use parse_keys::KEY_FIELDS;

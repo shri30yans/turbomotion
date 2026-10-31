@@ -74,7 +74,7 @@ fn matrix(ledger: &Ledger, out: &mut Vec<String>) {
         let status = t.val(r, "status");
         status_ok(t, status, r.line, out);
         let wp = t.val(r, "wp");
-        if !wp.is_empty() && !(wp.starts_with("WP-") && wp.len() == 5 && wp[3..].chars().all(|c| c.is_ascii_digit())) {
+        if !(wp.is_empty() || (wp.starts_with("WP-") && wp.len() == 5 && wp[3..].chars().all(|c| c.is_ascii_digit()))) {
             out.push(at(t, r.line, format!("wp {wp:?} is not WP-NN")));
         }
         if status == "done" {

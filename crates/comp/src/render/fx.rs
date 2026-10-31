@@ -239,7 +239,7 @@ mod tests {
 
     #[test]
     fn a_layer_without_a_size_cannot_be_fitted() {
-        let e = place([5.0, 5.0, 5.0, 5.0], ON, Fit::Stretch).err().expect("rejected").to_string();
+        let e = place([5.0, 5.0, 5.0, 5.0], ON, Fit::Stretch).expect_err("rejected").to_string();
         assert!(e.contains("map layer has no size"), "{e}");
         assert!(place(MAP, [0.0, 0.0, 0.0, 10.0], Fit::Center).is_err());
     }

@@ -165,7 +165,7 @@ fn the_default_camera_is_after_effects_50mm_camera_and_still_draws_the_z0_plane_
     // source: py-aep, measured in After Effects 2026: zoom = width / 0.72, so 2666.67 px for a 1920 wide comp
     let f = frame(json!({"width": 1920, "height": 1080, "dur": 1, "layers": [{"type": "camera", "id": "cam"}]}), 0.0);
     let cam = f.camera.expect("the camera");
-    assert!((cam.zoom - 2666.666_666_666_7).abs() < 1e-6, "{}", cam.zoom);
+    assert!((cam.zoom - 2_666.666_666_666_7).abs() < 1e-6, "{}", cam.zoom);
     assert!((cam.pos[2] + cam.zoom).abs() < 1e-9, "centred at (w/2, h/2, -zoom): {:?}", cam.pos);
     let p = cam.view_proj.project(100.0, 200.0, 0.0).expect("in front of the camera");
     assert!((p[0] - 100.0).abs() < 1e-6 && (p[1] - 200.0).abs() < 1e-6, "{p:?}");

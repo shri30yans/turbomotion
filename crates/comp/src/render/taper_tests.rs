@@ -11,6 +11,8 @@ const W: usize = 480;
 const H: usize = 240;
 /// How far the width of a stroke may differ from the one asked for, in pixels.
 const TOLERANCE: f64 = 0.25;
+/// An easing curve: the fraction of the way through it.
+type Ease = fn(f64) -> f64;
 
 fn to_light(level: f64) -> f64 {
     let v = level / 255.0;
@@ -73,7 +75,7 @@ fn line() -> Path {
 
 #[test]
 fn the_width_at_the_start_the_middle_and_the_end_is_the_one_asked_for_for_several_eases() {
-    let eases: [(&str, fn(f64) -> f64); 3] = [("none", |u| u), ("power2.out", |u| 1.0 - (1.0 - u).powi(3)), ("sine.inOut", |u| -((std::f64::consts::PI * u).cos() - 1.0) / 2.0)];
+    let eases: [(&str, Ease); 3] = [("none", |u| u), ("power2.out", |u| 1.0 - (1.0 - u).powi(3)), ("sine.inOut", |u| -((std::f64::consts::PI * u).cos() - 1.0) / 2.0)];
     for (name, ease) in eases {
         let taper = json!({"start": {"length": 100, "width": 0}, "end": {"length": 80, "width": 6}, "ease": name});
         // measured from each tip: the width rises from the tip's width to the full width

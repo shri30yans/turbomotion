@@ -14,6 +14,11 @@ fn handle(speed: f64, percent: f64) -> Value {
     json!({"speed": speed, "influence": percent})
 }
 
+/// One side of a key: its speed and its influence.
+type KeySide = (f64, f64);
+/// A fidelity case: the name, the start and end value, the outgoing and the incoming side.
+type Case = (&'static str, f64, f64, KeySide, KeySide);
+
 #[test]
 fn a_third_of_the_way_at_the_segments_own_speed_is_a_straight_line() {
     // influence 33.333.. % both sides at the speed 100/s: the control points sit on the chord at thirds, so the
@@ -171,7 +176,7 @@ fn a_color_or_vector_with_a_hold_key_holds_every_component() {
 fn the_cases_of_the_after_effects_fidelity_run_match_the_reference_solver() {
     // the names are those of EffectCraft's keyframe-ease run against After Effects 26.3 (only its error summary is
     // published, not its samples): each is compared with an independent bisection at 21 samples
-    let cases: [(&str, f64, f64, (f64, f64), (f64, f64)); 8] = [
+    let cases: [Case; 8] = [
         ("easy", 0.0, 100.0, (0.0, 1.0 / 3.0), (0.0, 1.0 / 3.0)),
         ("high_influence", 0.0, 100.0, (0.0, 0.9), (0.0, 0.9)),
         ("asymmetric", 0.0, 100.0, (30.0, 0.2), (-10.0, 0.75)),

@@ -237,10 +237,10 @@ pub fn run(plan: &Plan) -> anyhow::Result<Vec<Finding>> {
 /// The rules that read the evaluated frames: a map drawn on screen, layers behind the camera, plugin bounds, motion blur, text animators.
 fn visible_effect_inputs(plan: &Plan, ev: &Evaluator) -> anyhow::Result<Vec<Finding>> {
     let mut out = super::effect_inputs::run(plan, ev)?;
-    super::behind_camera::run(plan, &ev, &mut out)?;
+    super::behind_camera::run(plan, ev, &mut out)?;
     super::fx_bounds::run(plan, &mut out)?;
     super::motion_blur::run(plan, &mut out);
-    super::text_animators::run(plan, &ev, &mut out)?;
+    super::text_animators::run(plan, ev, &mut out)?;
     Ok(out)
 }
 

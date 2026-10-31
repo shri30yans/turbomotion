@@ -22,8 +22,16 @@ fn draws_nothing(kind: &Kind) -> Option<&'static str> {
     }
 }
 
+/// The files and effects a layer may reach: where its media is looked up, the library of effects, and its own slot in
+/// the shared kit.
+pub(super) struct Assets<'a> {
+    pub dir: &'a Path,
+    pub lib: &'a Library,
+    pub kit: Option<(usize, u64)>,
+}
+
 /// Plan layer `i` (`v`) of composition `c`.
-pub(super) fn plan_layer(i: usize, v: &Value, c: &schema::Composition, root: &schema::Composition, dir: &Path, lib: &Library, kit: Option<(usize, u64)>, space: EffectSpace) -> Result<LayerPlan> {
+pub(super) fn plan_layer(i: usize, v: &Value, c: &schema::Composition, root: &schema::Composition, assets: &Assets<'_>, space: EffectSpace) -> Result<LayerPlan> {
     let def = schema::parse_layer(i, v)?;
     let ty = v.get("type").and_then(Value::as_str).unwrap_or("?");
     let label = format!("layer {i} ({ty}{})", def.common.id.as_deref().map_or(String::new(), |id| format!(" {id:?}")));
@@ -34,7 +42,7 @@ pub(super) fn plan_layer(i: usize, v: &Value, c: &schema::Composition, root: &sc
         }
     };
     let start = def.common.start;
-    let media = match probe_media(&def.kind, dir, kit) {
+    let media = match probe_media(&def.kind, assets.dir, assets.kit) {
         Ok(m) => m,
         Err(e) => {
             note(Err(e));
@@ -98,19 +106,19 @@ pub(super) fn plan_layer(i: usize, v: &Value, c: &schema::Composition, root: &sc
     }
     let mut fx = Vec::new();
     for (k, f) in def.fx.iter().enumerate() {
-        match lib.plan_fx(f) {
+        match assets.lib.plan_fx(f) {
             Ok(planned) => fx.push(planned),
             Err(e) => note(Err(e.context(format!("fx {k}")))),
         }
     }
     let in_layer_space = layer_space::applies(space, &def.kind, &fx, masks.len());
     if in_layer_space {
-        for problem in layer_space::problems(&def.kind, &fx, masks.len(), lib) {
+        for problem in layer_space::problems(&def.kind, &fx, masks.len(), assets.lib) {
             note(Err(anyhow!("{problem}")));
         }
     }
     let texture = match &def.kind {
-        Kind::Texture(t) => match lib.plan(&t.shader, &t.params).and_then(|plan| lib.get(&t.shader).map(|d| (plan, d.kind))) {
+        Kind::Texture(t) => match assets.lib.plan(&t.shader, &t.params).and_then(|plan| assets.lib.get(&t.shader).map(|d| (plan, d.kind))) {
             Ok((plan, FxKind::Generator)) => Some(plan),
             Ok((_, _)) => {
                 note(Err(anyhow!("{:?} is an effect that needs an input layer; a texture layer takes a generator", t.shader)));

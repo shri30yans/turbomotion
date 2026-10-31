@@ -489,7 +489,7 @@ pub struct TextPath {
 /// Where a text path's geometry comes from.
 #[derive(Debug, Clone)]
 pub enum PathSource {
-    Geometry(super::path::PathSpec),
+    Geometry(Box<super::path::PathSpec>),
     /// The first shape item of the layer with this id.
     Layer(String),
 }
@@ -520,7 +520,7 @@ impl<'de> Deserialize<'de> for TextPath {
         };
         let source = match (layer, o.is_empty()) {
             (Some(id), true) => PathSource::Layer(id),
-            (None, false) => PathSource::Geometry(serde_json::from_value(Value::Object(o)).map_err(D::Error::custom)?),
+            (None, false) => PathSource::Geometry(Box::new(serde_json::from_value(Value::Object(o)).map_err(D::Error::custom)?)),
             _ => return Err(D::Error::custom("path needs exactly one of a geometry (d, points, ellipse, rect, polygon, star) or a layer id")),
         };
         Ok(TextPath { source, reverse, perpendicular, force_align, first_margin, last_margin, travel })

@@ -93,7 +93,7 @@ fn lens_blob_hand_capsule_and_glass_panel_load_as_compositions() {
     let v = run("shapes", r##"
 film.add(T.lens({ id: 'lens', pos: [100, 100], open: { tl, at: 0.1 } }), T.blob({ id: 'b', pos: [300, 100], morph: { tl, seed: 5, at: 0.2, dur: 1, back: true } }),
   T.hand({ id: 'h', pos: [500, 300] }), T.capsule({ from: [0, 0], to: [100, 100], w: 10, fill: '#fff' }), T.glassPanel({ id: 'g', pos: [400, 200], size: [200, 100] }));"##);
-    assert_eq!(by(&v, "b")["items"][0]["morph"]["keys"].as_array().unwrap().len() >= 3, true, "{}", by(&v, "b")["items"][0]["morph"]);
+    assert!(by(&v, "b")["items"][0]["morph"]["keys"].as_array().unwrap().len() >= 3, "{}", by(&v, "b")["items"][0]["morph"]);
     assert!(by(&v, "h")["items"].as_array().unwrap().len() == 7, "forearm, palm, four fingers, thumb");
     assert!(by(&v, "g")["items"][0]["fill"]["gradient"].is_object());
 }

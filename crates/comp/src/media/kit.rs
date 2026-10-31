@@ -262,7 +262,7 @@ mod tests {
         let d4 = k.pick("pluck/D4", 0, 9).unwrap();
         assert_eq!(d4.cue, "pluck/D#4");
         assert!((d4.rate - 2f64.powf(-1.0 / 12.0)).abs() < 1e-9);
-        assert_eq!(k.pick("kit-less", 0, 0).unwrap_err().to_string().contains("whoosh"), true);
+        assert!(k.pick("kit-less", 0, 0).unwrap_err().to_string().contains("whoosh"));
         assert!(k.pick("pluck/C9", 0, 0).unwrap_err().to_string().contains("C3 to C5"));
         assert!(k.pick("whoosh/nothing", 0, 0).unwrap_err().to_string().contains("airy-01"));
         assert!(k.pick("boom", 0, 0).unwrap().path.exists(), "old names still resolve");

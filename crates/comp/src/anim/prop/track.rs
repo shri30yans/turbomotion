@@ -124,8 +124,8 @@ impl Track {
             }
             None => {
                 let to = b.v.parts();
-                for d in 0..from.n {
-                    out[d] = seg.shape.value(d, from.v[d], to.v[d], dur, x);
+                for (d, o) in out.iter_mut().enumerate().take(from.n) {
+                    *o = seg.shape.value(d, from.v[d], to.v[d], dur, x);
                 }
             }
         }

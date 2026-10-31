@@ -37,10 +37,10 @@ pub fn resolve(layers: &mut [LayerPlan], look: &mut [PlanFx], ids: &HashMap<Stri
         }
         Ok(())
     };
-    for i in 0..layers.len() {
-        let label = layers[i].label.clone();
-        resolve_one(Some(i), &label, &mut layers[i].fx)?;
-        ensure!(!matches!(layers[i].def.kind, Kind::Adjustment) || !reads_history(&layers[i].fx, lib)?, "{label}: an adjustment layer has no picture of its own to remember, so its effects cannot use history inputs");
+    for (i, layer) in layers.iter_mut().enumerate() {
+        let label = layer.label.clone();
+        resolve_one(Some(i), &label, &mut layer.fx)?;
+        ensure!(!matches!(layer.def.kind, Kind::Adjustment) || !reads_history(&layer.fx, lib)?, "{label}: an adjustment layer has no picture of its own to remember, so its effects cannot use history inputs");
     }
     resolve_one(None, "look", look)?;
     ensure!(!reads_history(look, lib)?, "look: a composition's look cannot use history inputs (put the effect on a layer)");

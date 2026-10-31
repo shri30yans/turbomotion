@@ -26,7 +26,7 @@ use crate::{
 };
 use crate::fxlib::{Library, PlanFx, PluginPlan};
 use geometry::PathGeo;
-use layer::{plan_layer, problems_of};
+use layer::{plan_layer, problems_of, Assets};
 
 pub struct Plan {
     /// Where relative paths (`src`, fonts, plugins) are resolved from.
@@ -208,7 +208,7 @@ impl CompPlan {
         let effect_space = c.effect_space.or(root.effect_space).unwrap_or_default();
         let color = schema::color::pipeline(name, c.color.as_ref(), root.color.as_ref())?;
         for (i, v) in c.layers.iter().enumerate() {
-            match plan_layer(i, v, c, root, dir, lib, kit_order.get(&i).map(|&o| (o, spread_seed)), effect_space) {
+            match plan_layer(i, v, c, root, &Assets { dir, lib, kit: kit_order.get(&i).map(|&o| (o, spread_seed)) }, effect_space) {
                 Ok(layer) => layers.push(layer),
                 Err(e) => problems.extend(problems_of(i, v, name, e)),
             }

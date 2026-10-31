@@ -21,7 +21,7 @@ fn plan(layers: Value) -> Plan {
 
 fn text_at(p: &Plan, t: f64) -> crate::eval::text::TextState {
     let f = Evaluator::new(p).frame(ROOT, t).unwrap();
-    match f.layers.into_iter().find_map(|l| if let Content::Text(t) = l.content { Some(t) } else { None }) {
+    match f.layers.into_iter().find_map(|l| if let Content::Text(t) = l.content { Some(*t) } else { None }) {
         Some(t) => t,
         None => panic!("no text layer"),
     }
@@ -33,7 +33,7 @@ fn baseline_centre(t: &crate::eval::text::TextState, i: usize) -> ([f64; 2], f64
     let lg = &layout.glyphs[t.glyphs[i].src];
     let [a, b, c, d, e, f] = t.glyphs[i].m.0.map(f64::from);
     let (x, y) = (f64::from(lg.x + lg.w / 2.0), f64::from(lg.y));
-    ([a * x + c * y + e, b * x + d * y + f], f64::from(b).atan2(f64::from(a)).to_degrees())
+    ([a * x + c * y + e, b * x + d * y + f], b.atan2(a).to_degrees())
 }
 
 fn width_of(t: &crate::eval::text::TextState, i: usize) -> f64 {

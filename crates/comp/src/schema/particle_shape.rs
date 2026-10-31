@@ -17,7 +17,7 @@ pub enum ParticleShape {
     Star,
     Ring,
     /// Your own outline, fitted to the particle's size and turned with its spin. Any `PathSpec` geometry.
-    Path(PathSpec),
+    Path(Box<PathSpec>),
 }
 
 impl ParticleShape {
@@ -61,7 +61,7 @@ impl<'de> Deserialize<'de> for ParticleShape {
             },
             Value::Object(o) if o.len() == 1 && o.contains_key("path") => {
                 let spec: PathSpec = serde_json::from_value(o["path"].clone()).map_err(|e| D::Error::custom(format!("particle shape path: {e}")))?;
-                Ok(ParticleShape::Path(spec))
+                Ok(ParticleShape::Path(Box::new(spec)))
             }
             other => Err(D::Error::custom(format!("a particle shape is one of {} or {{\"path\": {{...}}}}, not {other}", Self::NAMES.join(", ")))),
         }

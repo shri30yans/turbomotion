@@ -152,7 +152,7 @@ pub enum Content {
     None,
     Solid { color: Rgba, size: [f64; 2] },
     Shape { items: Vec<ShapeState> },
-    Text(text::TextState),
+    Text(Box<text::TextState>),
     Mesh(mesh::MeshState),
     Image { view: media::View, parallax: Option<media::ParallaxState> },
     Video { view: media::View, src_time: f64 },
@@ -534,7 +534,7 @@ impl<'p> Evaluator<'p> {
             Kind::Text(tx) => {
                 let st = text::state(self, c, l, tx, t)?;
                 let b = st.local_bounds();
-                (Content::Text(st), Some(b))
+                (Content::Text(Box::new(st)), Some(b))
             }
             Kind::Mesh(m) => (Content::Mesh(mesh::state(self, c, l, m, t)?), None),
             Kind::Image(im) => {

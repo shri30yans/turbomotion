@@ -59,7 +59,7 @@ fn every_bad_layer_of_a_film_is_reported_at_its_own_script_line() {
     assert!(!report.success);
     let lines: Vec<&str> = report.diagnostics.lines().collect();
     for (id, line) in [("a", "film.ts:3:"), ("b", "film.ts:4:"), ("c", "film.ts:5:")] {
-        assert!(lines.iter().any(|l| l.contains(line) && l.contains(&format!("(")) && l.contains(&format!("\"{id}\")"))), "{id} missing in\n{}", report.diagnostics);
+        assert!(lines.iter().any(|l| l.contains(line) && l.contains("(") && l.contains(&format!("\"{id}\")"))), "{id} missing in\n{}", report.diagnostics);
     }
 }
 

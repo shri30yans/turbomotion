@@ -12,11 +12,20 @@ use super::{
 };
 use crate::anim::expr::Env;
 
+/// The four channels of a colour, each with its own keys and expression.
+#[derive(Debug, Clone)]
+pub struct Channels {
+    pub r: Prop,
+    pub g: Prop,
+    pub b: Prop,
+    pub a: Prop,
+}
+
 /// An RGBA colour that can animate: channels are 0..255, alpha 0..1.
 #[derive(Debug, Clone)]
 pub enum ColorProp {
     /// One property per channel, each with its own keys and expression.
-    Channels { r: Prop, g: Prop, b: Prop, a: Prop },
+    Channels(Box<Channels>),
     /// One track for the whole colour, keys written as objects with handles. The channels are interpolated as written
     /// (see `parity/specs/property_model.md` for why not in linear light).
     Joined(Track),
@@ -76,7 +85,7 @@ fn hex(s: &str) -> Result<[f64; 4]> {
 
 impl ColorProp {
     pub fn constant(c: [f64; 4]) -> ColorProp {
-        ColorProp::Channels { r: Prop::constant(c[0]), g: Prop::constant(c[1]), b: Prop::constant(c[2]), a: Prop::constant(c[3]) }
+        ColorProp::Channels(Box::new(Channels { r: Prop::constant(c[0]), g: Prop::constant(c[1]), b: Prop::constant(c[2]), a: Prop::constant(c[3]) }))
     }
 
     /// A colour, a tween `{"from": "#fff", "to": "#f00", "at", "dur", "ease"}`, keys `[[t, "#fff", ease?], ..]`, or
@@ -100,14 +109,14 @@ impl ColorProp {
                     Some(l) => Prop::parse(&serde_json::json!({"keys": list, "loop": l})),
                 }
             };
-            Ok(ColorProp::Channels { r: mk(0)?, g: mk(1)?, b: mk(2)?, a: mk(3)? })
+            Ok(ColorProp::Channels(Box::new(Channels { r: mk(0)?, g: mk(1)?, b: mk(2)?, a: mk(3)? })))
         };
         match v {
             Value::Object(o) if o.contains_key("channels") => {
                 ensure!(o.len() == 1, "colour channels cannot be combined with other fields");
                 let channels = o["channels"].as_array().ok_or_else(|| anyhow!("colour channels must be [r,g,b,a] properties"))?;
                 ensure!(channels.len() == 4, "colour channels must have four properties: [r,g,b,a]");
-                Ok(ColorProp::Channels { r: Prop::parse(&channels[0])?, g: Prop::parse(&channels[1])?, b: Prop::parse(&channels[2])?, a: Prop::parse(&channels[3])? })
+                Ok(ColorProp::Channels(Box::new(Channels { r: Prop::parse(&channels[0])?, g: Prop::parse(&channels[1])?, b: Prop::parse(&channels[2])?, a: Prop::parse(&channels[3])? })))
             }
             Value::Object(o) if o.contains_key("from") => {
                 let from = parse_color_static(&o["from"])?;
@@ -145,7 +154,7 @@ impl ColorProp {
 
     pub fn at(&self, t: f64, env: &dyn Env) -> Result<Rgba> {
         let [r, g, b, a] = match self {
-            ColorProp::Channels { r, g, b, a } => [r.at(t, env)?, g.at(t, env)?, b.at(t, env)?, a.at(t, env)?],
+            ColorProp::Channels(ch) => [ch.r.at(t, env)?, ch.g.at(t, env)?, ch.b.at(t, env)?, ch.a.at(t, env)?],
             ColorProp::Joined(track) => track.sample(t).parts().v,
         };
         Ok([r.clamp(0.0, 255.0) as f32, g.clamp(0.0, 255.0) as f32, b.clamp(0.0, 255.0) as f32, a.clamp(0.0, 1.0) as f32])

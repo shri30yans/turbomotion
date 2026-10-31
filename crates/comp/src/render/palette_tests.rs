@@ -170,8 +170,8 @@ fn a_stroke_only_palette_leaves_the_fill_and_a_both_palette_takes_both() {
     for (paint, fill_takes, stroke_takes) in [("stroke", false, true), ("fill", true, false), ("both", true, true)] {
         for (name, film) in films(item(paint)) {
             let px = render(film);
-            for i in 0..3 {
-                let colour = levels(PALETTE[i]);
+            for (i, swatch) in PALETTE[..3].iter().copied().enumerate() {
+                let colour = levels(swatch);
                 // the middle of the square is fill; the middle of the left edge (x = 10, y = 30) is stroke
                 assert_level(&format!("{name}, paint {paint}, fill of copy {i}"), pixel(&px, (30 + 100 * i, 30)), if fill_takes { colour } else { [255.0; 3] });
                 assert_level(&format!("{name}, paint {paint}, stroke of copy {i}"), pixel(&px, (10 + 100 * i, 30)), if stroke_takes { colour } else { [0.0; 3] });

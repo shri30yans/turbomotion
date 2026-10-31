@@ -37,7 +37,7 @@ impl Builder<'_> {
             return false;
         }
         // `mblur` draws only what shows at the frame time; `motion_blur` draws whatever shows at any moment of the shutter
-        if !after_effects && !(state.visible && state.opacity > 0.0) {
+        if !(after_effects || (state.visible && state.opacity > 0.0)) {
             return false;
         }
         let showing: Vec<(usize, f64)> = (1..self.frames.len()).map(|k| (k, &self.frames[k].layers[i])).filter(|(_, s)| s.visible && s.opacity > 0.0).map(|(k, s)| (k, s.opacity)).collect();

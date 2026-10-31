@@ -25,7 +25,7 @@ mod tests {
         let layer = json!({"type": "text", "text": "Hi", "box": {"fit": "text", "fill": fill}});
         let plan = Plan::from_value(json!({"width": 200, "height": 100, "dur": 1, "layers": [layer]}), std::path::Path::new(".")).unwrap();
         let Content::Text(t) = Evaluator::new(&plan).frame(ROOT, 0.0).unwrap().layers.remove(0).content else { panic!("the layer is text") };
-        t
+        *t
     }
 
     #[test]
