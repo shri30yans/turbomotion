@@ -16,6 +16,8 @@ jobs:
           toolchain: "1.89"
           components: clippy
       - uses: Swatinem/rust-cache@v2
+      # The engine renders through ffmpeg, and the SDK examples test builds a photo with it.
+      - run: brew install ffmpeg
       - run: cargo clippy --release --workspace --all-targets -- -D warnings
       - run: cargo test --release --workspace
       # The reference pages are generated; this fails when the code changed and the pages did not.
