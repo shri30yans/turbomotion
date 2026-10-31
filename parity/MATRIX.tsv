@@ -65,7 +65,7 @@ sourceRectAtTime called from expressions	Text	none	-	-	sourceRectAtTime	WP-12
 Text selector based-on and modes	Text	none	-	-	Text animator selectors	WP-32
 Variable font axes	Text	none	-	-	Variable fonts	WP-32
 Environment, reflection, refraction	3D	none	-	-	Ray-traced 3D	WP-21
-Fonts shipped in motions/lib/fonts	Assets	done	test_each_listed_file_exists_and_matches_its_hash	wp/WP-52/REPORT.md	-	WP-52
+Fonts shipped in motions/lib/fonts	Assets	done	../scripts/test_capability_index.py::test_each_listed_file_exists_and_matches_its_hash	wp/WP-52/REPORT.md	-	WP-52
 Parity ledger and parity command	Process	done	the_real_ledger_is_sound	wp/WP-00/REPORT.md	-	WP-00
 Docs and probes run as tests	Process	done	every_example_on_the_sdk_page_builds_and_passes_check	docs/reference/sdk.md	-	WP-04
 Effect bounds (effects grow the layer)	Effects	done	the_picture_is_the_layer_grown_by_its_blur_and_not_the_frame	parity/specs/effect_space.md	Effects grow layer bounds	WP-01

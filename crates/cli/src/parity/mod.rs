@@ -77,7 +77,8 @@ pub fn run(command: Command) -> Result<()> {
     match command {
         Command::Check(at) => {
             let ledger = Ledger::load(&at.dir)?;
-            let mut problems = check::check(&ledger, &catalogue_effects());
+            let outcome = check::check(&ledger, &catalogue_effects());
+            let mut problems = outcome.problems;
             problems.extend(check::bounds(&ledger, &catalogue_bounds()));
             problems.extend(linear::linear(&ledger, &catalogue_spaces()));
             if !problems.is_empty() {
@@ -85,6 +86,9 @@ pub fn run(command: Command) -> Result<()> {
                     eprintln!("{p}");
                 }
                 bail!("parity check: {} problem(s)", problems.len());
+            }
+            for note in &outcome.unverified {
+                println!("note: {note}");
             }
             println!("parity check: ok ({} core rows, {} effect rows, {} catalogue effects)", ledger.matrix.rows.len(), ledger.effects.rows.len(), catalogue_effects().len());
         }
